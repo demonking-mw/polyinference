@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "polyinference"
 version = "0.1.0"
-description = "Portable LangGraph coding agent with a minimal replaceable runtime"
+description = "Portable LangGraph coding agent with a bounded local orchestration OS"
 requires-python = ">=3.10"
 dependencies = [
   "langgraph==1.2.16",

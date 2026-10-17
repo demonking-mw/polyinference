@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import shutil
 from pathlib import Path
 
 from .inference import EndpointError, HTTPInference, UnknownExecution
@@ -52,8 +53,9 @@ def strict_output_schema(schema):
 class CodexAppServer:
     def __init__(self, endpoint):
         self.endpoint = endpoint
+        self.output_cap = 4 * 1024 * 1024
 
-    async def generate_job(self, messages, snapshot, schema, callback=None):
+    async def generate_job(self, messages, snapshot, schema, callback=None, observer=None):
         output_schema, wrapped = strict_output_schema(schema)
         if wrapped:
             messages = [
@@ -71,6 +73,14 @@ class CodexAppServer:
             ":minimal": "read",
             str(Path(snapshot).resolve()): "read",
         }
+        executable = shutil.which(self.endpoint.command[0])
+        command = list(self.endpoint.command)
+        if executable:
+            # macOS invokes the sandbox helper through the CLI path. Both the
+            # launcher and its resolved binary need read/execute access.
+            filesystem[str(Path(executable).absolute())] = "read"
+            filesystem[str(Path(executable).resolve())] = "read"
+            command[0] = str(Path(executable).resolve())
         policy = (
             "{"
             + ", ".join(
@@ -80,7 +90,7 @@ class CodexAppServer:
             + "}"
         )
         proc = await asyncio.create_subprocess_exec(
-            *self.endpoint.command,
+            *command,
             "-c",
             "permissions.polyinference_readonly.filesystem=" + policy,
             "-c",
@@ -95,18 +105,21 @@ class CodexAppServer:
             start_new_session=True,
         )
         serial, events, thread_id, turn_id = 0, [], None, None
+        event_bytes = 0
 
         async def send(message):
             proc.stdin.write(json.dumps(message).encode() + b"\n")
             await proc.stdin.drain()
 
         async def receive():
+            nonlocal event_bytes
             line = await asyncio.wait_for(proc.stdout.readline(), self.endpoint.timeout_seconds)
             if not line:
                 raise UnknownExecution("Codex app-server exited without a terminal turn")
             message = json.loads(line)
             if "method" in message:
-                if len(events) >= 2000:
+                event_bytes += len(line)
+                if len(events) >= 2000 or event_bytes > self.output_cap:
                     raise UnknownExecution("Native event limit exceeded")
                 events.append(message)
                 if "id" in message and message.get("method") == "item/tool/call" and callback:
@@ -183,6 +196,8 @@ class CodexAppServer:
                                     "enum": [
                                         "files.list",
                                         "files.read",
+                                        "files.search",
+                                        "files.patch",
                                         "files.write",
                                         "files.delete",
                                         "checks.run",
@@ -202,9 +217,14 @@ class CodexAppServer:
                                                 "name",
                                                 "script",
                                                 "cwd",
+                                                "pattern",
+                                                "old_text",
+                                                "new_text",
                                             )
                                         },
                                         "timeout_seconds": {"type": ["integer", "null"]},
+                                        "offset": {"type": ["integer", "null"]},
+                                        "limit": {"type": ["integer", "null"]},
                                         "create": {"type": ["boolean", "null"]},
                                     },
                                     "required": [
@@ -216,6 +236,11 @@ class CodexAppServer:
                                         "cwd",
                                         "timeout_seconds",
                                         "create",
+                                        "pattern",
+                                        "old_text",
+                                        "new_text",
+                                        "offset",
+                                        "limit",
                                     ],
                                     "additionalProperties": False,
                                     "description": "Supply fields for the chosen tool; use null for unused fields.",
@@ -237,6 +262,8 @@ class CodexAppServer:
                 ]
             thread = await rpc("thread/start", params)
             thread_id = thread["thread"]["id"]
+            if observer:
+                await observer("thread_started", thread_id, None)
             result = await rpc(
                 "turn/start",
                 {
@@ -248,6 +275,8 @@ class CodexAppServer:
                 },
             )
             turn_id = result["turn"]["id"]
+            if observer:
+                await observer("turn_started", thread_id, turn_id)
             # Events can arrive before the start response; inspect retained events first.
             terminal = next(
                 (

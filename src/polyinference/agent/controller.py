@@ -199,6 +199,7 @@ class ProjectAgent:
 
         async def drive():
             try:
+                app.process_status(pid, state="running", phase="development")
                 return await self.worker.ainvoke(
                     initial,
                     {"configurable": {"thread_id": pid}, "recursion_limit": 2000},
@@ -209,9 +210,41 @@ class ProjectAgent:
                 # Retain unknown effects and ownership. Definite stopped work may be parked.
                 process = app.get("process/" + pid)
                 app.update("process/" + pid, {**process, "state": "paused", "error": str(exc)[:2000]})
+                unknown = [
+                    key
+                    for key in app.ports.operations.uncertain()
+                    if app.get("effect/" + key)["request"]["scope"]["process_id"] == pid
+                ]
+                if not unknown:
+                    owner = app.ports.records.get("permit/verification/project")
+                    if owner and owner[1].get("process_id") == pid:
+                        await app.ports.workspaces.abort(task["workspace_id"])
+                        await app.ports.exclusive.release(owner[1]["permit"], pid)
+                    current_task = app.get(task_ref)
+                    app.update(
+                        task_ref, {**current_task, "execution": "interrupted", "exception": str(exc)[:2000]}
+                    )
+                    attempt_key = "attempt/" + current_task["attempt_id"]
+                    attempt = app.get(attempt_key)
+                    app.update(
+                        attempt_key,
+                        {
+                            **attempt,
+                            "revision": attempt["revision"] + 1,
+                            "execution": "interrupted",
+                            "stop_reason": str(exc)[:2000],
+                        },
+                    )
+                app.process_status(
+                    pid,
+                    state="paused",
+                    cleanup_state="uncertain" if unknown else "complete",
+                    **({} if unknown else {"permit_refs": [], "pending_operations": [], "wait": None}),
+                )
                 raise
 
-        self.workers[pid] = asyncio.create_task(drive())
+        processes = getattr(app.ports, "processes", None)
+        self.workers[pid] = processes.start(pid, drive) if processes else asyncio.create_task(drive())
 
     async def consume(self):
         app = self.app
@@ -229,13 +262,18 @@ class ProjectAgent:
             task_ref = tasks[pid]
             task = app.get(task_ref)
             if failure or task["execution"] == "interrupted":
+                unknown = bool(app.ports.operations.uncertain())
                 app.ports.records.compare_and_publish(
                     {"app/run": version},
                     {
                         "app/run": {
                             **run,
                             "starts_closed": True,
-                            "status": "paused",
+                            "status": "paused" if unknown else "active",
+                            "active_workers": run["active_workers"]
+                            if unknown
+                            else [p for p in run["active_workers"] if p != pid],
+                            "captured_workers": [p for p in run["active_workers"] if p != pid],
                             "blocker": str(failure)
                             if failure
                             else task.get("exception", "worker needs review"),
@@ -375,6 +413,9 @@ class ProjectAgent:
             "reports": [app.review_report(report) for report in reports],
             "steering": steering,
             "pending_tasks": pending,
+            "interrupted_tasks": [
+                v for _, _, v in app.ports.records.scan("task/") if v["execution"] == "interrupted"
+            ],
             "all_task_ids": [v["assignment"]["task_id"] for _, _, v in app.ports.records.scan("task/")],
             "allowed_write_paths": app.config.allowed_write_paths,
             "memory": app.memory_view(),
@@ -502,8 +543,8 @@ class ProjectAgent:
         for task_id in proposal.cancel_pending_task_ids:
             key = "task/" + task_id
             retained = app.ports.records.get(key)
-            if not retained or retained[1]["execution"] != "pending":
-                raise ValueError("Only an existing unstarted task may be cancelled")
+            if not retained or retained[1]["execution"] not in {"pending", "interrupted"}:
+                raise ValueError("Only an unstarted or safely interrupted task may be retired")
             task = retained[1]
             expected[key] = retained[0]
             updates[key] = {**task, "execution": "cancelled", "stop_reason": "superseded_by_plan"}
@@ -607,7 +648,11 @@ class ProjectAgent:
         old = app.ports.records.get(key)
         if old and old[1].get("query") == query_index:
             return
-        if disposition.action == "revert":
+        report = app.get(disposition.report_ref)
+        private = report.get("code_location") == "private"
+        if private and disposition.action == "keep":
+            raise ValueError("Private failed code cannot be kept; reject it or assign a repair")
+        if disposition.action == "revert" and not private:
             await self.revert(pid, query_index, index, disposition)
             return
         resolution = ReviewResolution(
@@ -866,7 +911,8 @@ async def wait(state, runtime: Runtime[AppContext]):
     if engine.workers:
         await asyncio.wait(engine.workers.values(), return_when=asyncio.FIRST_COMPLETED)
     else:
-        raise RuntimeError("No actionable work or active worker")
+        if not engine.app.get("app/run")["starts_closed"]:
+            raise RuntimeError("No actionable work or active worker")
     return {"logical_step": state["logical_step"] + 1}
 
 

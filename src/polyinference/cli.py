@@ -13,7 +13,7 @@ from pathlib import Path
 from .agent.controller import ProjectAgent
 from .agent.services import AgentServices
 from .config import AgentConfig
-from .runtime.adapter import StandaloneRuntime
+from .runtime.kernel import KernelRuntime
 from .runtime.storage import Conflict, Records
 
 
@@ -29,7 +29,7 @@ def load_config(path):
 
 
 async def execute(config):
-    runtime = StandaloneRuntime(config)
+    runtime = KernelRuntime(config)
     try:
         await runtime.open()
         app = AgentServices(runtime, config)
@@ -141,8 +141,38 @@ def main():
     item = sub.add_parser("operation")
     item.add_argument("state_directory")
     item.add_argument("operation_id")
+    item = sub.add_parser("events")
+    item.add_argument("state_directory")
+    item.add_argument("--after", type=int, default=0)
+    item = sub.add_parser("cancel")
+    item.add_argument("state_directory")
+    item.add_argument("process_id")
+    item.add_argument("--reason", default="operator cancellation")
+    item = sub.add_parser("reconcile")
+    item.add_argument("config")
+    item.add_argument("operation_id")
+    item.add_argument(
+        "--confirm-stopped",
+        action="store_true",
+        required=True,
+        help="Attest that provider execution AND host descendants have ended",
+    )
+    item.add_argument("--evidence", required=True, help="Text file recording termination evidence")
     args = parser.parse_args()
     try:
+        if args.command == "reconcile":
+
+            async def recover():
+                runtime = KernelRuntime(load_config(args.config))
+                try:
+                    await runtime.open()
+                    await runtime.reconcile_stopped(args.operation_id, Path(args.evidence).read_text())
+                    return runtime.diagnostics()
+                finally:
+                    await runtime.close()
+
+            print(json.dumps(asyncio.run(recover()), indent=2))
+            return
         if args.command == "ui":
             from .ui import serve
 
@@ -163,17 +193,30 @@ def main():
             return
         records = Records(Path(args.state_directory).resolve() / "records.sqlite")
         try:
-            if args.command == "status":
+            if args.command == "events":
+                print(json.dumps(records.events(args.after), indent=2))
+            elif args.command == "cancel":
+                from .runtime.processes import request_cancel
+
+                request_cancel(records, args.process_id, args.reason)
+                print("Cancellation recorded; the current effect settles before the process stops.")
+            elif args.command == "status":
                 run = records.get("app/run")
                 report = {
                     "run": run[1] if run else None,
+                    "processes": [value for _, _, value in records.scan("process-status/")],
+                    "reservations": [
+                        value for _, _, value in records.scan("reservation/") if value["state"] == "held"
+                    ],
+                    "owners": [value for _, _, value in records.scan("permit/") if value.get("process_id")],
                     "provisional": records.get("head/provisional"),
                     "reviewed": records.get("head/reviewed"),
                     "tasks": [
                         {
                             **body,
                             "resolved": bool(
-                                records.get("resolution/" + body["report_ref"])
+                                body.get("report_ref")
+                                and records.get("resolution/" + body["report_ref"])
                                 and records.get("resolution/" + body["report_ref"])[1]["action"]
                                 in {"keep", "revert"}
                             ),

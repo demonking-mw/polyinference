@@ -29,6 +29,13 @@ async def validate(state, runtime: Runtime[AppContext]):
     app = runtime.context.services
     try:
         proposal = SeniorProposal.model_validate(state["reply"])
+        reports = {report["record_id"]: report for report in state["input"].get("reports", [])}
+        for disposition in proposal.dispositions:
+            report = reports.get(disposition.report_ref)
+            if not report:
+                raise ValueError("Disposition is not in the pinned review input")
+            if report.get("code_location") == "private" and disposition.action == "keep":
+                raise ValueError("Private failed commit cannot be kept; reject it or assign a repair")
         for assignment in proposal.tasks:
             if app.config.write_scope == "explicit" and not set(assignment.write_paths) <= set(
                 app.config.allowed_write_paths

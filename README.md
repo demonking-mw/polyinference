@@ -1,4 +1,4 @@
-# PolyInference agent
+# PolyInference agent and simple OS
 
 PolyInference is a LangGraph coding agent with a small local test UI. Give it a
 repository, an objective and a command that verifies the result. A senior agent
@@ -9,10 +9,11 @@ The default UI uses **Anthropic Haiku for junior workers** and **Codex through y
 ChatGPT login for setup, planning, review and senior development**. Other supported
 backends include OpenAI, Gemini and compatible local model servers.
 
-This is an experimental implementation of the audited agent design. Its bundled
-Linux runtime is a placeholder OS: endpoint routing, tools, private workspaces and
-persistent execution state. It does not include a model server, automatic model
-downloads or the future OS scheduler.
+The bundled **simple OS v1** runs the existing LangGraph agent on macOS, Linux
+and WSL. It owns bounded inference admission, process lifecycle, brokered tools,
+private workspaces, publication and persistent recovery. It connects to an existing
+model server or cloud API; physical RAM/VRAM management is deferred. See the
+[OS deployment and recovery guide](design-docs/simplified-os/RUNBOOK.md).
 
 ## Contents
 
@@ -34,11 +35,11 @@ downloads or the future OS scheduler.
 
 | Requirement | Details |
 | --- | --- |
-| Operating system | Linux, or a Linux distribution inside WSL. Run the backend in Linux, not native PowerShell. |
+| Operating system | macOS, Linux, or Linux inside WSL. Native Windows is not supported by the POSIX runtime. |
 | Python | Python 3.10 or later, including `venv` and `pip`. |
 | System tools | Git and Bash; `curl` for the Codex installation below. |
 | Default junior provider | An Anthropic API key with access to the configured model. |
-| Default senior provider | Codex CLI installed and signed in inside the same Linux environment as PolyInference. |
+| Default senior provider | Codex CLI installed and signed in on the same macOS/Linux/WSL host as PolyInference. |
 | Project tools | Any compiler, interpreter, package manager and dependencies required by your target project's checks. |
 
 The implementation has been exercised on Ubuntu 22.04 in WSL with Python 3.10.12
@@ -52,7 +53,10 @@ needed if your target project uses them.
 
 ## Install and launch
 
-All commands below run in a Linux/WSL **Bash terminal** unless stated otherwise.
+Run the commands in **Bash** on macOS, Linux or WSL. On macOS, install Python 3.10+
+and Git using your preferred package manager; skip the Ubuntu package commands.
+`bubblewrap` execution requires Linux; use explicitly enabled `trusted` commands
+on macOS. Codex uses its own platform sandbox for native jobs.
 
 ### 1. Install the application
 
@@ -85,8 +89,8 @@ complete tested environment. To reproduce those transitive versions, install
 
 ### 2. Install Codex and sign in
 
-Install Codex **inside Linux/WSL**, even if you already use the Windows desktop
-app. Skip the installation command if `codex --version` already works there.
+Install Codex in the **same macOS/Linux/WSL environment as the backend**. WSL
+needs its own Linux installation even if you use the Windows desktop app. Skip the installation command if `codex --version` already works there.
 The official Linux installer is documented in the
 [Codex CLI quickstart](https://learn.chatgpt.com/docs/codex/cli):
 
@@ -210,10 +214,10 @@ explained below.
 
 ## Work on your own project
 
-1. Prepare a project directory on the Linux filesystem. For an existing Git
+1. Prepare a project directory on the host filesystem (inside Linux for WSL). For an existing Git
    checkout, commit or stash changes, including untracked files you want to keep.
    The runtime imports committed content and rejects a dirty source checkout.
-2. In **Root repository**, enter the absolute Linux path or use **Browse…**.
+2. In **Root repository**, enter the absolute host path or use **Browse…**.
    Select the repository root, not a `src/` subdirectory. A new project folder is
    also supported; create the directory before selecting it.
 3. Enter a specific objective: expected behavior, files or areas to change,
@@ -246,7 +250,7 @@ Checks execute in the private integrated workspace, not the source checkout.
 Ignored virtual environments and `node_modules` from the source are not copied;
 do not assume project-local installed dependencies will be present there. An
 absolute interpreter path can select an existing Python environment. Setup shell
-commands are available, but the placeholder has no dependency-cache manager.
+commands are available, but the OS has no dependency-cache manager.
 
 Without `--config`, selecting another project grants the selected directory as
 the development scope, including new files; each task still has its own explicit
@@ -342,7 +346,7 @@ objective and file names are placeholders. At minimum, update these fields:
 
 | Field | What to set |
 | --- | --- |
-| `repository` | Absolute Linux path to the target root, e.g. `/home/yourname/projects/my-app`. |
+| `repository` | Absolute host path to the target root, e.g. `/home/yourname/projects/my-app`. |
 | `state_directory` | A fresh directory, e.g. `"./my-project-state"`. In this copied config that resolves to `.polyinference/my-project-state/`. |
 | `objective` | The full development request and acceptance criteria. |
 | `allowed_write_paths` | Exact project-relative writable file names, including intended new files, when using the default `write_scope: "explicit"`. |
@@ -379,6 +383,9 @@ Additional settings worth reviewing:
 | `check_execution` | Independently enables configured checks using `trusted` or `bubblewrap`. Generic default is `disabled`, which yields unavailable check evidence. |
 | `senior_development_fraction` | Default `0.1`: target share of development tasks assigned to the specialist. |
 | `max_workers` | Concurrent started workers; UI default is 1, generic config default is 2. |
+| `POLYINFERENCE_LOCAL_BATCH_SIZE` | Environment override for local-lane `max_inflight` (1–32); pinned at startup. Use 1 for a cloud API substitution experiment. |
+| `review_token_reserve` | Parent token allowance reserved for planning/review; default 32,000. |
+| `run_spend_budget_microusd` | Optional estimated run cost bound; requires an explicit endpoint token-price estimate. |
 | `max_sprints` | UI/mixed example use 9 sprints and up to 27 senior queries; generic config default is 8 sprints. |
 | `limits` / `run_token_budget` | Per-process allowances, final-phase reserves and parent token allowance. Set them before starting. |
 
@@ -527,14 +534,17 @@ The default per-process allowance is 512 model calls, 2,048 steps and a one-hour
 wall-clock deadline, with reserved reconciliation, assessment, publication and
 cleanup capacity. Context reservations and the parent token allowance also limit
 work. Native Codex jobs have their own deadline/event bounds; there is no
-provider-enforced dollar or subscription spend cap in this placeholder.
+provider-enforced dollar or subscription spend cap. Optional token-priced spend
+estimates can bound admission; they are not a provider billing guarantee.
 
 The execution protocol is:
 
 1. Setup, when enabled, handles the initial objective's prerequisites and Git/branch instructions.
 2. Senior planning creates bounded tasks and assigns worker/specialist roles.
 3. Each worker develops privately, integrates against the current head, reconciles,
-   runs configured checks, assesses and publishes a report plus commit.
+   runs configured checks and assesses. Successful/uncertain commits may advance
+   the provisional head. A failed commit stays private, closes new starts and
+   releases verification while already-started workers finish publishing.
 4. Senior review keeps, reverts, retries or defers reports.
 5. Independent final checks guard project completion.
 
@@ -549,7 +559,10 @@ operations stay recorded, retain conflicting ownership and block replacement
 dispatch until reconciled. The runtime can reconcile verifiable host publication
 receipts; it does not blindly retry remote requests. Inspect `status` and
 `operation`, preserve the state, and establish the provider-side outcome before
-attempting recovery. Do not delete journal rows to force a retry.
+attempting recovery. Use the explicit `reconcile --confirm-stopped --evidence`
+command only after both provider work and host descendants are known to have
+ended. See the [recovery procedure](design-docs/simplified-os/RUNBOOK.md#recovery).
+Do not delete journal rows to force a retry.
 
 ## Troubleshooting
 
@@ -588,22 +601,20 @@ and adversarial execution schedules. It covers provider protocols, workspace
 contracts, setup/branch handling, brokered tools, publication/replay, steering,
 UI exports and cost accounting without requiring live provider credentials.
 
-The validation recorded on **17 October 2026** has **86 passing tests**, clean
-Ruff checks and a successful wheel build. A complete native coding run was verified with
-Codex CLI 0.163.0. Claude protocol fixtures pass, but live Anthropic completion
-has not yet been verified. These results do not establish model quality or
-compatibility with every provider deployment. See the
-[validation record](design-docs/implementation/VALIDATION.md) and
-[provider setup/live evidence](design-docs/implementation/PROVIDER_SETUP.md).
+The OS validation includes the full agent/UI/provider regression suite, the
+four-worker failure/drain/replan scenario, restart recovery and a real complete
+Codex coding run on macOS. Results and platform limits are recorded in the
+[OS validation record](design-docs/simplified-os/VALIDATION.md). Earlier agent-only
+WSL evidence remains in the [agent validation record](design-docs/implementation/VALIDATION.md).
 
 ## Project structure and design
 
 | Path | Purpose |
 | --- | --- |
 | `src/polyinference/agent/` | Controller, independent worker graphs, senior review, setup, routing and prompts. |
-| `src/polyinference/runtime/` | Replaceable standalone OS adapter, provider clients, Git/workspace operations and host tools. |
+| `src/polyinference/runtime/` | Simple OS kernel, admission, process supervision, provider clients and workspace/tool broker. |
 | `src/polyinference/contracts.py` / `workspace_contracts.py` | Packaged SDK wire and workspace types. |
-| `src/polyinference/ports.py` | Interfaces a future OS implements without changing agent graph logic. |
+| `src/polyinference/ports.py` | Runtime service interfaces implemented by the bundled kernel. |
 | `src/polyinference/ui.py` / `ui.html` | Local testing backend and frontend. |
 | `examples/` | Editable provider/task configurations. |
 | `tests/` | Implementation tests. |

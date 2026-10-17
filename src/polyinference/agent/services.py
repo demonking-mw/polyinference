@@ -211,6 +211,7 @@ class AgentServices:
             "record_id": report["record_id"],
             "task_spec_ref": report["task_spec_ref"],
             "verdict": report["verdict"],
+            "code_location": report.get("code_location", "provisional"),
             "resolution": report["resolution"],
             "comment": self.read(report["assessment_summary"]),
             "captured_head": report["captured_head"],
@@ -401,7 +402,7 @@ class AgentServices:
             omitted_refs=omitted,
         )
 
-    def sync_setup(self, state):
+    async def sync_setup(self, state):
         task_key = state["task_ledger_ref"]
         task = self.get(task_key)
         if task.get("category") != "setup":
@@ -451,7 +452,7 @@ class AgentServices:
                 "base_commit": base["commit_id"],
             }
             immutable["setup/base-adopted"] = selection[1]
-        self.ports.workspaces.retag_task_spec(manifest.workspace_id, spec_id, updates, immutable)
+        await self.ports.workspaces.retag_task_spec(manifest.workspace_id, spec_id, updates, immutable)
 
     async def model(self, state, senior=False):
         pid = state["process_id"]
@@ -462,7 +463,7 @@ class AgentServices:
             if result.state != "succeeded":
                 raise RuntimeError(str(output))
             if not senior:
-                self.sync_setup(state)
+                await self.sync_setup(state)
             try:
                 reply = json.loads(output["text"])
                 if not senior and state["phase"] == "assessment" and reply.get("kind") == "assessment":
@@ -556,7 +557,7 @@ class AgentServices:
         if len(output["text"].encode()) > self.config.limits.max_output_bytes:
             raise ValueError("Model output exceeds cap")
         if not senior:
-            self.sync_setup(state)
+            await self.sync_setup(state)
         try:
             reply = json.loads(output["text"])
             if not senior and state["phase"] == "assessment" and reply.get("kind") == "assessment":

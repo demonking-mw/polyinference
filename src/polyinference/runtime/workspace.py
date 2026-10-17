@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-import asyncio
 import os
 import platform
 import shutil
-import signal
 import sys
 from pathlib import Path
 
 from ..contracts import CodeRevision
 from ..domain import canonical, digest
 from ..workspace_contracts import CopiedFile, DeltaChange, WorkspaceDelta, WorkspaceManifest, relative_path
+from .blocking import BlockingIO
+from .commands import command
 
 IGNORED = {
     "__pycache__",
@@ -30,6 +30,7 @@ class Workspaces:
     def __init__(self, config, records, exclusive, artifacts, scope):
         self.config, self.records, self.exclusive = config, records, exclusive
         self.artifacts, self.scope = artifacts, scope
+        self.blocking = BlockingIO()
         self.environment_digest = digest(
             canonical(
                 {
@@ -50,9 +51,9 @@ class Workspaces:
     async def prepare_snapshot(self, code, snapshot_id):
         tree = await self.tree(code.commit_id, snapshot_id)
         root = self.config.state_path / "snapshots" / snapshot_id
-        if root.exists() and self.scan(root) != tree:
+        if root.exists() and await self.scan_async(root) != tree:
             raise ValueError("An immutable native snapshot cannot be replaced")
-        self.materialize(root, tree)
+        await self.materialize_async(root, tree)
         endpoint = getattr(self.config, self.config.role_bindings["senior"])
         proxy_root = None
         if endpoint.protocol == "codex_proxy":
@@ -67,13 +68,13 @@ class Workspaces:
                 raise ValueError("Proxy snapshot cannot be a symlink")
             proxy_root.mkdir(parents=True, exist_ok=True)
             # Preserve the directory inode: the separately launched proxy may use it as CWD.
-            self.scan(proxy_root)
+            await self.scan_async(proxy_root)
             for entry in proxy_root.iterdir():
                 if entry.is_dir():
                     shutil.rmtree(entry)
                 else:
                     entry.unlink()
-            self.materialize(proxy_root, tree)
+            await self.materialize_async(proxy_root, tree)
         self.records.put_once(
             "snapshot/" + snapshot_id,
             {
@@ -94,29 +95,25 @@ class Workspaces:
 
     async def command(self, args, process_id="runtime", input_data=None, env=None):
         permit = await self.exclusive.acquire("shell/installation", process_id)
-        process = None
         try:
-            process = await asyncio.create_subprocess_exec(
-                *args,
-                stdin=asyncio.subprocess.PIPE,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                env={**os.environ, "GIT_CONFIG_NOSYSTEM": "1", **(env or {})},
-                start_new_session=True,
+            status, output, error = await command(
+                args,
+                timeout=self.config.max_command_seconds,
+                output_limit=self.config.max_workspace_bytes + self.config.limits.max_output_bytes,
+                input_data=input_data,
+                env={
+                    **os.environ,
+                    "GIT_CONFIG_NOSYSTEM": "1",
+                    "GIT_CONFIG_GLOBAL": "/dev/null",
+                    **(env or {}),
+                },
             )
-            output, error = await process.communicate(input_data)
-            if process.returncode:
+            if status:
                 raise RuntimeError(
-                    f"Trusted command failed ({process.returncode}): {error.decode(errors='replace')[:1000]}"
+                    f"Trusted command failed ({status}): {error.decode(errors='replace')[:1000]}"
                 )
             return output
         finally:
-            if process is not None and process.returncode is None:
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-                await process.wait()
             # Trusted Git process groups have ended before ownership is released.
             await self.exclusive.release(permit, process_id)
 
@@ -296,7 +293,7 @@ class Workspaces:
             if retained[1]["branch"] != name:
                 raise ValueError("The initial branch was already selected")
             return retained[1]
-        before = self.scan(self.root_for(manifest))
+        before = await self.scan_async(self.root_for(manifest))
         if any(
             digest(before[file.path][1]) != file.copied_digest
             for file in manifest.copied_files
@@ -344,7 +341,7 @@ class Workspaces:
                 ],
             }
         )
-        self.materialize(self.root_for(new), tree)
+        await self.materialize_async(self.root_for(new), tree)
         key = "workspace/" + workspace_id
         result = {"branch": name, "code": code.model_dump(mode="json"), "workspace_id": workspace_id}
         self.records.compare_and_publish(
@@ -357,7 +354,7 @@ class Workspaces:
         )
         return result
 
-    def retag_task_spec(self, workspace_id, spec_id, updates, immutable):
+    async def retag_task_spec(self, workspace_id, spec_id, updates, immutable):
         manifest = self.current(workspace_id)
         generation = manifest.generation + 1
         new = manifest.model_copy(
@@ -368,7 +365,7 @@ class Workspaces:
                 "private_root_ref": workspace_id + ":" + str(generation),
             }
         )
-        self.materialize(self.root_for(new), self.scan(self.root_for(manifest)))
+        await self.materialize_async(self.root_for(new), await self.scan_async(self.root_for(manifest)))
         updates = {**updates, "workspace/" + workspace_id: new.model_dump(mode="json")}
         self.records.compare_and_publish(
             {key: self.records.get(key)[0] for key in updates},
@@ -376,7 +373,7 @@ class Workspaces:
             {**immutable, "manifest/" + new.manifest_id: new.model_dump(mode="json")},
         )
 
-    def extend_setup_scope(self, workspace_id, paths):
+    async def extend_setup_scope(self, workspace_id, paths):
         manifest = self.current(workspace_id)
         spec = self.records.get(manifest.task_spec_ref)
         if not spec or not spec[1].get("extensions", {}).get("polyinference/project-write"):
@@ -393,7 +390,7 @@ class Workspaces:
                 "allowed_write_paths": sorted(set(manifest.allowed_write_paths) | set(added)),
             }
         )
-        self.materialize(self.root_for(new), self.scan(self.root_for(manifest)))
+        await self.materialize_async(self.root_for(new), await self.scan_async(self.root_for(manifest)))
         key = "workspace/" + workspace_id
         self.records.compare_and_publish(
             {key: self.records.get(key)[0]},
@@ -445,6 +442,7 @@ class Workspaces:
 
     def scan(self, root):
         tree = {}
+        total = 0
         for path in sorted(root.rglob("*")):
             relative = path.relative_to(root)
             if any(p in IGNORED for p in relative.parts):
@@ -455,17 +453,43 @@ class Workspaces:
                 continue
             name = relative.as_posix()
             relative_path(name)
-            tree[name] = ("100755" if path.stat().st_mode & 0o111 else "100644", path.read_bytes())
-            if sum(len(v[1]) for v in tree.values()) > self.config.max_workspace_bytes:
+            total += path.stat().st_size
+            if total > self.config.max_workspace_bytes:
                 raise RuntimeError("Workspace budget exceeded")
+            tree[name] = ("100755" if path.stat().st_mode & 0o111 else "100644", path.read_bytes())
         return tree
+
+    async def scan_async(self, root):
+        return await self.blocking.run(self.scan, root)
+
+    async def materialize_async(self, root, tree):
+        return await self.blocking.run(self.materialize, root, tree)
 
     async def revision(self, workspace_id):
         manifest = self.current(workspace_id)
-        return self.code(self.scan(self.root_for(manifest)))
+        return self.code(await self.scan_async(self.root_for(manifest)))
 
     def materialize(self, root, tree):
+        size = sum(len(value[1]) for value in tree.values())
+        if size > self.config.max_workspace_bytes:
+            raise RuntimeError("Workspace copy budget exceeded")
+        roots = [self.root, self.config.state_path / "snapshots", self.config.state_path / "proxy-snapshot"]
+        used = sum(
+            p.stat().st_size
+            for directory in roots
+            for p in directory.rglob("*")
+            if p.is_file() and not p.is_symlink()
+        )
+        existing = sum(p.stat().st_size for p in root.rglob("*") if p.is_file()) if root.exists() else 0
+        if used + size - existing > self.config.max_workspace_total_bytes:
+            raise RuntimeError("Retained workspace storage budget exceeded")
         root.mkdir(parents=True, exist_ok=True)
+        # An interrupted materialization may have left files outside the new tree.
+        for path in root.rglob("*"):
+            if path.is_symlink():
+                raise ValueError("Workspace symlinks are forbidden")
+            if path.is_file() and path.relative_to(root).as_posix() not in tree:
+                path.unlink()
         for name, (mode, data) in tree.items():
             target = root / name
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -505,7 +529,7 @@ class Workspaces:
             closure_basis_ref=task_ref,
             preserved_delta_ref=None,
         )
-        self.materialize(self.root_for(manifest), scoped)
+        await self.materialize_async(self.root_for(manifest), scoped)
         self.records.put_once("manifest/" + manifest.manifest_id, manifest.model_dump(mode="json"))
         self.records.compare_and_publish(
             {"workspace/" + workspace_id: 0}, {"workspace/" + workspace_id: manifest.model_dump(mode="json")}
@@ -520,7 +544,7 @@ class Workspaces:
         if manifest.view != "development":
             raise RuntimeError("Only original development view defines the private delta")
         base = await self.tree(manifest.original_base.commit_id, manifest.process_id)
-        current = self.scan(self.root_for(manifest))
+        current = await self.scan_async(self.root_for(manifest))
         copied = {f.path for f in manifest.copied_files}
         changed = {p for p in copied | set(current) if base.get(p) != current.get(p)}
         if not changed <= set(manifest.allowed_write_paths):
@@ -588,18 +612,19 @@ class Workspaces:
                         (scratch / label).write_bytes(value[1])
                     permit = await self.exclusive.acquire("shell/installation", manifest.process_id)
                     try:
-                        proc = await asyncio.create_subprocess_exec(
-                            "git",
-                            "merge-file",
-                            "-p",
-                            str(scratch / "current"),
-                            str(scratch / "base"),
-                            str(scratch / "private"),
-                            stdout=asyncio.subprocess.PIPE,
-                            stderr=asyncio.subprocess.PIPE,
+                        status, output, _ = await command(
+                            [
+                                "git",
+                                "merge-file",
+                                "-p",
+                                str(scratch / "current"),
+                                str(scratch / "base"),
+                                str(scratch / "private"),
+                            ],
+                            timeout=self.config.max_command_seconds,
+                            output_limit=self.config.max_workspace_bytes,
                         )
-                        output, _ = await proc.communicate()
-                        if proc.returncode not in {0, 1}:
+                        if status not in range(128):
                             raise ValueError("Merge failed")
                         private = (private[0], output)
                     finally:
@@ -629,7 +654,7 @@ class Workspaces:
                 "preserved_delta_ref": delta_ref,
             }
         )
-        self.materialize(self.root_for(new), integrated)
+        await self.materialize_async(self.root_for(new), integrated)
         rev = self.records.get("workspace/" + workspace_id)[0]
         self.records.compare_and_publish(
             {"workspace/" + workspace_id: rev},
@@ -643,7 +668,9 @@ class Workspaces:
         if manifest.view == "development":
             return
         # Keep original delta and abandoned integrated files; retire old generation.
-        dev = self.records.get("manifest/" + workspace_id + ":1")[1]
+        preserved = self.records.get("private-delta/" + workspace_id)
+        dev_ref = preserved[1]["development_manifest_ref"] if preserved else workspace_id + ":1"
+        dev = self.records.get("manifest/" + dev_ref)[1]
         generation = manifest.generation + 1
         restored = WorkspaceManifest.model_validate(
             {
@@ -654,7 +681,7 @@ class Workspaces:
             }
         )
         original = WorkspaceManifest.model_validate(dev)
-        self.materialize(self.root_for(restored), self.scan(self.root_for(original)))
+        await self.materialize_async(self.root_for(restored), await self.scan_async(self.root_for(original)))
         rev = self.records.get("workspace/" + workspace_id)[0]
         self.records.compare_and_publish(
             {"workspace/" + workspace_id: rev},
@@ -667,7 +694,7 @@ class Workspaces:
         if existing:
             return CodeRevision.model_validate(existing[1])
         manifest = self.current(workspace_id)
-        final = self.scan(self.root_for(manifest))
+        final = await self.scan_async(self.root_for(manifest))
         previous = await self.tree(head.commit_id, manifest.process_id)
         changed = {p for p in final.keys() | previous.keys() if final.get(p) != previous.get(p)}
         if not changed <= set(manifest.allowed_write_paths):
@@ -720,5 +747,18 @@ class Workspaces:
             .strip()
         )
         code = self.code(final, commit)
-        self.records.put_once("commit/" + operation_id, code.model_dump(mode="json"))
+        self.records.compare_and_publish(
+            {},
+            {},
+            {
+                "commit/" + operation_id: code.model_dump(mode="json"),
+                "commit-info/" + operation_id: {
+                    "code": code.model_dump(mode="json"),
+                    "parent": head.model_dump(mode="json"),
+                    "process_id": manifest.process_id,
+                    "workspace_id": workspace_id,
+                    "generation": manifest.generation,
+                },
+            },
+        )
         return code

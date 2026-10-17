@@ -33,7 +33,7 @@ async def run(tools, manifest, arguments):
     cwd = (root / (arguments.get("cwd") or ".")).resolve()
     if not cwd.is_relative_to(root.resolve()) or not cwd.is_dir():
         raise ValueError("Shell cwd must be an existing directory inside the workspace")
-    before = tools.workspaces.scan(root)
+    before = await tools.workspaces.scan_async(root)
     argv = ["bash", "-c", script]
     if tools.config.shell_execution == "bubblewrap":
         if not shutil.which("bwrap"):
@@ -98,12 +98,12 @@ async def run(tools, manifest, arguments):
                 pass
             await process.wait()
         try:
-            after = tools.workspaces.scan(root)
+            after = await tools.workspaces.scan_async(root)
             changed = {p for p in set(before) | set(after) if before.get(p) != after.get(p)}
             if not changed <= set(manifest.allowed_write_paths):
-                tools.workspaces.extend_setup_scope(manifest.workspace_id, sorted(changed))
+                await tools.workspaces.extend_setup_scope(manifest.workspace_id, sorted(changed))
         except Exception:
-            restore(tools.workspaces, root, before)
+            await tools.workspaces.blocking.run(restore, tools.workspaces, root, before)
             raise
         return {
             "stdout": output.decode(errors="replace"),

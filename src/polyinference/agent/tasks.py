@@ -6,7 +6,15 @@ from ..contracts import CodeRevision, Prerequisite, TaskAttempt, TaskSpec
 
 
 def coding_tools(config, setup=False):
-    tools = ["files.list", "files.read", "files.write", "files.delete", "checks.run"]
+    tools = [
+        "files.list",
+        "files.read",
+        "files.search",
+        "files.patch",
+        "files.write",
+        "files.delete",
+        "checks.run",
+    ]
     if config.shell_execution != "disabled":
         tools.append("shell.run")
     if setup:

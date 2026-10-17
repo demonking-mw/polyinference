@@ -12,7 +12,7 @@ from pydantic import Field, model_validator
 from .contracts import Limits, PhaseReserve, Wire
 from .workspace_contracts import RelativePath
 
-PROGRAM_VERSION = "agent-2-setup-shell-routing"
+PROGRAM_VERSION = "agent-3-simple-os-private-failure"
 STATE_VERSION = "2.1"
 
 
@@ -145,6 +145,8 @@ class Action(Wire):
     tool: Literal[
         "files.list",
         "files.read",
+        "files.search",
+        "files.patch",
         "files.write",
         "files.delete",
         "checks.run",

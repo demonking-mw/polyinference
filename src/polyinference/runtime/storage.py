@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import json
 import os
 import sqlite3
@@ -25,6 +26,10 @@ class Records:
         self.db.execute(
             "CREATE TABLE IF NOT EXISTS records (key TEXT PRIMARY KEY, revision INTEGER, body TEXT)"
         )
+        self.db.execute(
+            "CREATE TABLE IF NOT EXISTS events (sequence INTEGER PRIMARY KEY AUTOINCREMENT, body TEXT)"
+        )
+        self.changed = asyncio.Event()
 
     @contextmanager
     def transaction(self):
@@ -69,6 +74,28 @@ class Records:
                     "INSERT OR REPLACE INTO records VALUES (?,?,?)",
                     (key, expected[key] + 1, canonical(body).decode()),
                 )
+            changes = {
+                key: {"revision": expected[key] + 1, "state": body.get("state", body.get("status"))}
+                for key, body in updates.items()
+            }
+            if changes or immutable:
+                self.db.execute(
+                    "INSERT INTO events(body) VALUES (?)",
+                    (canonical({"changes": changes, "immutable": list(immutable or {})}).decode(),),
+                )
+                self.db.execute(
+                    "DELETE FROM events WHERE sequence <= (SELECT MAX(sequence)-10000 FROM events)"
+                )
+        self.changed.set()
+
+    def events(self, after=0, limit=100):
+        return [
+            {"sequence": seq, **json.loads(body)}
+            for seq, body in self.db.execute(
+                "SELECT sequence,body FROM events WHERE sequence>? ORDER BY sequence LIMIT ?",
+                (after, min(max(limit, 1), 1000)),
+            )
+        ]
 
     def put_once(self, key, body):
         self.compare_and_publish({}, {}, {key: body})

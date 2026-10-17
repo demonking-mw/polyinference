@@ -237,7 +237,8 @@ async def test_native_terminal_failure_releases_resources_but_unknown_retains_th
         assert client.calls == 1
         assert runtime.admission["local"].active == (0 if known_end else 1)
         permit = runtime.records.get("permit/shell/installation")[1]
-        assert permit["process_id"] == (None if known_end else "fixture")
+        # Direct Codex reasoning never owns shell; actual broker callbacks acquire it.
+        assert permit["process_id"] is None
         effect = runtime.records.scan("effect/")[0][2]
         assert effect["state"] == ("failed" if known_end else "uncertain")
         if known_end:

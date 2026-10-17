@@ -12,8 +12,9 @@ from ..domain import digest
 class Exclusive:
     """Durable logical ownership plus installation-wide OS advisory shell lock."""
 
-    def __init__(self, records):
+    def __init__(self, records, wait_timeout=3600):
         self.records = records
+        self.wait_timeout = wait_timeout
         self.conditions = {}
         self.shell_handles = {}
         self.depth = {}
@@ -42,7 +43,10 @@ class Exclusive:
         if key.startswith("verification") and any(p == process_id for p, _ in self.shell_handles.values()):
             raise RuntimeError("Cannot acquire verification while owning shell")
         condition = self.conditions.setdefault(key, asyncio.Lock())
-        await condition.acquire()
+        try:
+            await asyncio.wait_for(condition.acquire(), self.wait_timeout)
+        except asyncio.TimeoutError as exc:
+            raise RuntimeError("Ownership queue deadline expired: " + key) from exc
         handle = None
         try:
             # An old logical owner is never expired automatically.
@@ -52,11 +56,14 @@ class Exclusive:
             if key == "shell/installation":
                 path = Path(tempfile.gettempdir()) / f"polyinference-shell-{os.getuid()}.lock"
                 handle = path.open("a+")
+                deadline = asyncio.get_running_loop().time() + self.wait_timeout
                 while True:
                     try:
                         fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
                         break
                     except BlockingIOError:
+                        if asyncio.get_running_loop().time() >= deadline:
+                            raise RuntimeError("Installation shell queue deadline expired")
                         await asyncio.sleep(0.05)
             version = held[0] if held else 0
             permit = digest(f"{key}:{process_id}:{version + 1}".encode())

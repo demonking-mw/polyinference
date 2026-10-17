@@ -8,6 +8,7 @@ from langgraph.runtime import Runtime
 from pydantic import TypeAdapter
 
 from ..contracts import (
+    CapabilityCall,
     CheckEvidence,
     CodeRevision,
     ExpectedVersion,
@@ -19,6 +20,7 @@ from ..contracts import (
     UsageMeasure,
 )
 from ..domain import Action, Assessment, Candidate, NeedsReview, WorkerReply, digest
+from ..os_contracts import PrivateCommitReceipt, PrivateTaskReport, task_report
 
 
 class WorkerState(TypedDict, total=False):
@@ -67,6 +69,9 @@ async def load(state, runtime: Runtime[AppContext]):
 
 async def model(state, runtime: Runtime[AppContext]):
     app = runtime.context.services
+    control = app.ports.records.get("process-control/" + state["process_id"])
+    if control and control[1].get("cancel_requested"):
+        return {"reply": {"kind": "needs_review", "reason": control[1]["reason"]}}
     limits = app.config.limits
     calls = state.get("calls", 0)
     reserve = limits.final_phase_reserve
@@ -85,6 +90,9 @@ async def model(state, runtime: Runtime[AppContext]):
 
 async def consume(state, runtime: Runtime[AppContext]):
     app = runtime.context.services
+    control = app.ports.records.get("process-control/" + state["process_id"])
+    if control and control[1].get("cancel_requested"):
+        return {"route": "park", "interrupted": control[1]["reason"]}
     step = state["logical_step"]
     try:
         reply = TypeAdapter(WorkerReply).validate_python(state["reply"])
@@ -129,7 +137,12 @@ async def tool(state, runtime: Runtime[AppContext]):
     reply = Action.model_validate(state["reply"])
     manifest = app.ports.workspaces.current(state["workspace_id"])
     arguments = {**reply.arguments, "generation": manifest.generation}
-    if state["phase"] == "assessment" and reply.tool in {"files.write", "files.delete", "shell.run"}:
+    if state["phase"] == "assessment" and reply.tool in {
+        "files.write",
+        "files.patch",
+        "files.delete",
+        "shell.run",
+    }:
         # An edit is a repair, not assessment evidence.
         if state.get("repairs", 0) >= app.config.limits.max_repairs:
             observation = {"error": "Repair allowance exhausted; assess the current tree"}
@@ -146,10 +159,17 @@ async def tool(state, runtime: Runtime[AppContext]):
             arguments,
             "private_write"
             if reply.tool
-            in {"files.write", "files.delete", "checks.run", "shell.run", "repository.select_branch"}
+            in {
+                "files.write",
+                "files.patch",
+                "files.delete",
+                "checks.run",
+                "shell.run",
+                "repository.select_branch",
+            }
             else "read",
         )
-    app.sync_setup(state)
+    await app.sync_setup(state)
     history = app.append_history(
         state.get("trajectory_ref"),
         f"turn-{state['logical_step']}",
@@ -164,7 +184,7 @@ async def tool(state, runtime: Runtime[AppContext]):
     }
     if (
         state["phase"] == "assessment"
-        and reply.tool in {"files.write", "files.delete", "shell.run"}
+        and reply.tool in {"files.write", "files.patch", "files.delete", "shell.run"}
         and result
         and result.state == "succeeded"
         and (reply.tool != "shell.run" or observation.get("changed"))
@@ -177,6 +197,7 @@ async def acquire(state, runtime: Runtime[AppContext]):
     app = runtime.context.services
     await app.ports.workspaces.preserve_delta(state["workspace_id"])
     permit = await app.ports.exclusive.acquire("verification/project", state["process_id"])
+    app.process_status(state["process_id"], phase="verification", permit_refs=[permit])
     return {"verification_permit_ref": permit}
 
 
@@ -241,7 +262,9 @@ async def publish(state, runtime: Runtime[AppContext]):
         head = CodeRevision.model_validate(state["captured_head"])
         manifest = app.ports.workspaces.current(state["workspace_id"])
         hazard_refs = ["hazard/" + state["attempt_id"]] if verdict != "successful" else []
-        report = TaskReport(
+        private = verdict == "fail"
+        report_type = PrivateTaskReport if private else TaskReport
+        report = report_type(
             **app.base(report_ref),
             task_spec_ref=state["task_spec_ref"],
             attempt_id=state["attempt_id"],
@@ -281,6 +304,15 @@ async def publish(state, runtime: Runtime[AppContext]):
             publication_record_revision=head_version + 1,
             event_intent_refs=[],
         )
+        if private:
+            receipt = PrivateCommitReceipt(
+                **app.base(receipt_ref),
+                publication_operation_id=receipt.publication_operation_id,
+                report_ref=report_ref,
+                previous_head=head,
+                candidate=final,
+                verification_permit_ref=state["verification_permit_ref"],
+            )
         task_version, task = app.ports.records.get(state["task_ledger_ref"])
         attempt_key = "attempt/" + state["attempt_id"]
         attempt_version, attempt_body = app.ports.records.get(attempt_key)
@@ -316,7 +348,7 @@ async def publish(state, runtime: Runtime[AppContext]):
             retention_policy_ref="retain-run",
             tier_preference="working",
             pinned_by_refs=[report_ref],
-            hazard_code_location="provisional",
+            hazard_code_location="private" if private else "provisional",
         )
         immutable[note_ref] = memory.model_dump(mode="json")
         if hazard_refs:
@@ -325,14 +357,14 @@ async def publish(state, runtime: Runtime[AppContext]):
                 "verdict": verdict,
                 "commit": final.commit_id,
                 "summary": summary,
-                "location": "provisional",
+                "location": "private" if private else "provisional",
             }
         batch = {
             "permit_ref": state["verification_permit_ref"],
             "receipt_ref": receipt_ref,
             "expected": expected,
             "updates": {
-                "head/provisional": {"code": final.model_dump(mode="json")},
+                **({} if private else {"head/provisional": {"code": final.model_dump(mode="json")}}),
                 attempt_key: attempt.model_dump(mode="json"),
                 state["task_ledger_ref"]: {**task, "execution": "completed", "report_ref": report_ref},
             },
@@ -340,7 +372,7 @@ async def publish(state, runtime: Runtime[AppContext]):
         }
         app.ports.records.compare_and_publish({}, {}, {"staged/" + receipt_ref: batch})
     batch = app.get("staged/" + receipt_ref)
-    report = TaskReport.model_validate(batch["immutable"][report_ref])
+    report = task_report(batch["immutable"][report_ref])
     payload = Publication(
         expected_versions=[ExpectedVersion(record_ref=k, revision=v) for k, v in batch["expected"].items()],
         expected_head=report.captured_head,
@@ -354,6 +386,17 @@ async def publish(state, runtime: Runtime[AppContext]):
         receipt_ref=receipt_ref,
         event_intent_refs=[],
     )
+    if report.code_location == "private":
+        payload = CapabilityCall(
+            capability_id="workspace.retain",
+            schema_digest=digest(b"workspace.retain/1"),
+            arguments=app.artifact({"receipt_ref": receipt_ref}, pid),
+            model_call_id=None,
+            workspace_id=state["workspace_id"],
+            expected_code=report.final_code,
+            effect_class="shared_write",
+            reconciliation_strategy_ref="journal/1",
+        )
     result, output = await app.effect(pid, "publication", payload, protected=True)
     if result.state != "succeeded" or not app.ports.records.get(receipt_ref):
         raise RuntimeError("Publication lacks durable receipt: " + str(output))
@@ -384,7 +427,10 @@ async def release(state, runtime: Runtime[AppContext]):
 
 async def park(state, runtime: Runtime[AppContext]):
     app = runtime.context.services
-    if app.ports.operations.uncertain():
+    if any(
+        app.get("effect/" + operation)["request"]["scope"]["process_id"] == state["process_id"]
+        for operation in app.ports.operations.uncertain()
+    ):
         raise RuntimeError("Unknown effects retain ownership")
     if state.get("verification_permit_ref"):
         await app.ports.workspaces.abort(state["workspace_id"])
@@ -395,7 +441,9 @@ async def park(state, runtime: Runtime[AppContext]):
         {**task, "execution": "interrupted", "exception": state.get("interrupted", "needs_review")},
     )
     process = app.get("process/" + state["process_id"])
-    app.update("process/" + state["process_id"], {**process, "state": "paused"})
+    control = app.ports.records.get("process-control/" + state["process_id"])
+    lifecycle = "cancelled" if control and control[1].get("cancel_requested") else "paused"
+    app.update("process/" + state["process_id"], {**process, "state": lifecycle})
     attempt_key = "attempt/" + state["attempt_id"]
     attempt_version, attempt_body = app.ports.records.get(attempt_key)
     attempt = TaskAttempt.model_validate(attempt_body).model_copy(
@@ -410,7 +458,7 @@ async def park(state, runtime: Runtime[AppContext]):
     )
     app.process_status(
         state["process_id"],
-        state="paused",
+        state=lifecycle,
         cleanup_state="complete",
         permit_refs=[],
         pending_operations=[],

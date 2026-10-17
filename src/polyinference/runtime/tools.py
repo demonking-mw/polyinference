@@ -44,20 +44,46 @@ class Tools:
         if tool == "checks.run":
             return await self.check(manifest.workspace_id, arguments["name"])
         if tool == "files.list":
-            return {"paths": sorted(self.workspaces.scan(root))}
+            paths = sorted((await self.workspaces.scan_async(root)))
+            limit = min(max(int(arguments.get("limit") or 1000), 1), 1000)
+            offset = max(int(arguments.get("offset") or 0), 0)
+            return {
+                "paths": paths[offset : offset + limit],
+                "total": len(paths),
+                "offset": offset,
+                "truncated": offset + limit < len(paths),
+            }
+        if tool == "files.search":
+            pattern = arguments.get("pattern")
+            if not isinstance(pattern, str) or not pattern or len(pattern) > 1000:
+                raise ValueError("Search requires a nonempty literal pattern of at most 1000 characters")
+            matches, size = [], 0
+            for path, (_, content) in (await self.workspaces.scan_async(root)).items():
+                if b"\x00" in content:
+                    continue
+                for line, text in enumerate(content.decode(errors="replace").splitlines(), 1):
+                    if pattern in text:
+                        match = {"path": path, "line": line, "text": text[:1000]}
+                        size += len(canonical(match))
+                        if len(matches) >= 100 or size > self.config.limits.max_output_bytes:
+                            return {"matches": matches, "truncated": True, "view": manifest.view}
+                        matches.append(match)
+            return {"matches": matches, "truncated": False, "view": manifest.view}
         path = relative_path(arguments["path"])
         target = root / path
         if not target.resolve().is_relative_to(root.resolve()) or target.is_symlink():
             raise ValueError("Path escapes workspace")
         if tool == "files.read":
             if not target.exists():
+                if path in {entry.path for entry in manifest.copied_files}:
+                    raise ValueError("File was deleted in this workspace")
                 # Bounded closure expansion at pinned B; no write authority expansion.
                 base = await self.workspaces.tree(manifest.original_base.commit_id, manifest.process_id)
                 if path not in base:
                     raise ValueError("Path does not exist at pinned base")
                 if manifest.view != "development":
                     raise ValueError("Unknown path in complete integration tree")
-                updated_tree = self.workspaces.scan(root)
+                updated_tree = await self.workspaces.scan_async(root)
                 updated_tree[path] = base[path]
                 from ..workspace_contracts import CopiedFile
 
@@ -77,7 +103,7 @@ class Tools:
                         ],
                     }
                 )
-                self.workspaces.materialize(self.workspaces.root_for(new), updated_tree)
+                await self.workspaces.materialize_async(self.workspaces.root_for(new), updated_tree)
                 key = "workspace/" + manifest.workspace_id
                 rev = self.workspaces.records.get(key)[0]
                 self.workspaces.records.compare_and_publish(
@@ -87,16 +113,22 @@ class Tools:
                 )
                 target = self.workspaces.root_for(new) / path
             data = target.read_bytes()
-            cap = self.config.limits.max_output_bytes
+            cap = min(
+                max(int(arguments.get("limit") or self.config.limits.max_output_bytes), 1),
+                self.config.limits.max_output_bytes,
+            )
+            offset = max(int(arguments.get("offset") or 0), 0)
             return {
                 "path": path,
-                "content": data[:cap].decode(errors="replace"),
+                "content": data[offset : offset + cap].decode(errors="replace"),
                 "digest": digest(data),
-                "truncated": len(data) > cap,
+                "truncated": len(data) > offset + cap,
+                "offset": offset,
+                "next_offset": offset + cap if len(data) > offset + cap else None,
                 "generation": self.workspaces.current(manifest.workspace_id).generation,
             }
         if path not in manifest.allowed_write_paths:
-            manifest = self.workspaces.extend_setup_scope(manifest.workspace_id, [path])
+            manifest = await self.workspaces.extend_setup_scope(manifest.workspace_id, [path])
             root = self.workspaces.root_for(manifest)
             target = root / path
         existing = target.read_bytes() if target.exists() else None
@@ -104,8 +136,17 @@ class Tools:
             raise ValueError("Write requires the current file digest (null only for new files)")
         if tool == "files.delete":
             target.unlink()
-        elif tool == "files.write":
-            data = arguments["content"].encode()
+        elif tool in {"files.write", "files.patch"}:
+            if tool == "files.patch":
+                old, new = arguments.get("old_text"), arguments.get("new_text")
+                if not existing or not isinstance(old, str) or not old or not isinstance(new, str):
+                    raise ValueError("Patch requires an existing file and literal old_text/new_text")
+                text = existing.decode()
+                if text.count(old) != 1:
+                    raise ValueError("Patch must match exactly one occurrence")
+                data = text.replace(old, new, 1).encode()
+            else:
+                data = arguments["content"].encode()
             if len(data) > self.config.limits.max_output_bytes:
                 raise ValueError("File write exceeds output limit")
             if existing is None:
@@ -120,7 +161,11 @@ class Tools:
             temporary.replace(target)
         else:
             raise ValueError("Unknown capability")
-        return {"path": path, "changed": True}
+        return {
+            "path": path,
+            "changed": True,
+            "digest": digest(target.read_bytes()) if target.exists() else None,
+        }
 
     async def check(self, workspace_id, name):
         manifest = self.workspaces.current(workspace_id)
