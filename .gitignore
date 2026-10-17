@@ -14,13 +14,16 @@ Thumbs.db
 # Local environments and secrets (keep examples and lockfiles tracked)
 .env
 .env.*
-!.env.example
-!.env.sample
-!.env.template
-.venv/
+*.env
+*.env.*
+!*.env.example
+!*.env.sample
+!*.env.template
+.venv*/
 venv/
 env/
 .direnv/
+/.codex/auth.json*
 *.pem
 *.key
 
@@ -86,3 +89,10 @@ test-results/
 /logs/
 /tmp/
 *.log
+
+# Standalone runtime files in custom state directories
+records.sqlite
+records.sqlite-*
+checkpoints.sqlite
+checkpoints.sqlite-*
+coordinator.lock

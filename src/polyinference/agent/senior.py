@@ -1,0 +1,68 @@
+from __future__ import annotations
+
+from typing import TypedDict
+
+from langgraph.graph import END, START, StateGraph
+from langgraph.runtime import Runtime
+
+from ..domain import SeniorProposal
+from .worker import AppContext
+
+
+class SeniorState(TypedDict, total=False):
+    process_id: str
+    workspace_id: str
+    mode: str
+    input: dict
+    logical_step: int
+    trajectory_ref: dict | None
+    reply: dict
+    proposal: dict
+    error: str | None
+
+
+async def submit(state, runtime: Runtime[AppContext]):
+    return {"reply": await runtime.context.services.model(state, senior=True)}
+
+
+async def validate(state, runtime: Runtime[AppContext]):
+    app = runtime.context.services
+    try:
+        proposal = SeniorProposal.model_validate(state["reply"])
+        for assignment in proposal.tasks:
+            if not set(assignment.write_paths) <= set(app.config.allowed_write_paths):
+                raise ValueError("Proposed write scope exceeds user grant")
+            if not set(assignment.checks) <= {c.name for c in app.config.checks}:
+                raise ValueError("Unknown configured check")
+        return {"proposal": proposal.model_dump(mode="json"), "error": None}
+    except ValueError as exc:
+        history = app.append_history(
+            state.get("trajectory_ref"),
+            f"invalid-{state['logical_step']}",
+            {"kind": "action", "tool": "proposal.validation"},
+            {"error": str(exc)[:2000]},
+        )
+        return {"trajectory_ref": history, "logical_step": state["logical_step"] + 1, "error": str(exc)}
+
+
+def build_senior(checkpointer):
+    graph = StateGraph(SeniorState, context_schema=AppContext)
+    graph.add_node("submit", submit)
+    graph.add_node("validate", validate)
+    graph.add_edge(START, "submit")
+    graph.add_edge("submit", "validate")
+
+    def route(state):
+        if state.get("error") and state["logical_step"] <= 1:
+            return "submit"
+        return END
+
+    def bounded_route(state, config):
+        if state.get("error") and state["logical_step"] <= config.get("configurable", {}).get(
+            "corrections", 1
+        ):
+            return "submit"
+        return END
+
+    graph.add_conditional_edges("validate", bounded_route)
+    return graph.compile(checkpointer=checkpointer)

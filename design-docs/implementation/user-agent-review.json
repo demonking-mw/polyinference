@@ -1,0 +1,82 @@
+{
+  "design": "agent",
+  "language": "en",
+  "program_version": "proposal-4-audited-core",
+  "source_provenance": [
+    {
+      "path": "design-docs/langgraph-agent/README.md",
+      "digest": "c8c33197d4d36b4c739f6d01ddf0219dc5282224beb8c9141028161d7e629ee2"
+    },
+    {
+      "path": "design-docs/simplified-os/README.md",
+      "digest": "28d583bd29e675e62676d11c8c8e5600b25ce5d1cedafccd2449bd6c1cc44d2a"
+    },
+    {
+      "path": "design-docs/INTEGRATION_AUDIT.md",
+      "digest": "f58e63e41a25b92e964bbab7f2302b335a8fecbf150d63455db29b0fbfe386b8"
+    },
+    {
+      "path": "design-docs/polyinference-design/polyinference-agent-design-merged.json",
+      "digest": "55f9db3f1191943fd1d100424bf658c0b5fb0561809e230c1bff7dfbbd02fae9"
+    }
+  ],
+  "exported_at": "2026-10-17T18:53:40.841Z",
+  "judgments": [
+    {
+      "id": "A01",
+      "question": "Is the controller deterministic where it should be?",
+      "status": "Concern",
+      "note": "result processor should give a verdict of the next control flow: continue looping, enter merge/test/commit, or stuff alike. THe controller itself is deterministic. Refer to the mini-swe-agent design, its basically that for the local loop control",
+      "source": "../langgraph-agent/README.md#41-sprint-controller"
+    },
+    {
+      "id": "A02",
+      "question": "Can every worker finish honestly within its grant?",
+      "status": "Concern",
+      "note": "Assume a pretty high loop count allowance for local agents. Also assume all agents that don't mess up can finish within the allowance (you might have to adjust the allowance up quite a bit). Assume all out of budgets to be from infinife loop or something like that.",
+      "source": "../langgraph-agent/README.md#42-coding-worker"
+    },
+    {
+      "id": "A03",
+      "question": "Does reconciliation inspect semantic changes?",
+      "status": "Concern",
+      "note": "YES ABSOLUTELy. After merging the code from another agent in, the agent should run at least one (or more) dev loops to confirm no collateral damage is done to the code integrity. Then will it enfer the testing and commiting efforts.",
+      "source": "../simplified-os/README.md#62-delta-and-complete-integration-view"
+    },
+    {
+      "id": "A04",
+      "question": "Are verdict, publication and acceptance separate?",
+      "status": "Concern",
+      "note": "Verdict is one of the 3: success fail uncestain\npublication is (usually) the code change in a commit\nresolved is always false when the task is first completed, till a sprint manager tests and confirms it.\nThere should also be a comment section that writes comment or note justifying the verdict and leave notes for other agents working on overlapping stuff (should be appended to the memory seciton, stay in it till the sprint manager compresses/updates/refines the memory. COmment should also stay with the verdict and resolved var for the sprint manager or others to check upon when looking at the task.",
+      "source": "../langgraph-agent/README.md#10-publication-and-review"
+    },
+    {
+      "id": "A05",
+      "question": "Can steering and review coexist without revoking workers?",
+      "status": "Concern",
+      "note": "when steering is received, all processes that's currently \"running\" are to be finished\nDefinition of \"running\": the status of a process in the task queue is: pending, running, success/fail/uncertain, running is when the process has already started.\nSprint management happens after all running processes are finished to steer.",
+      "source": "../langgraph-agent/README.md#11-steering-and-recovery"
+    },
+    {
+      "id": "A06",
+      "question": "Can senior undo preserve later work?",
+      "status": "Satisfied",
+      "note": "use your judgement. senior should have more authority than local llm agents.",
+      "source": "../INTEGRATION_AUDIT.md"
+    },
+    {
+      "id": "A07",
+      "question": "Can project completion race anything?",
+      "status": "Satisfied",
+      "note": "the locks are to eliminate race condition where it matters, but in other places where race don't matter it should be fine. The reason is that the design of the unitary tasks by the sprint planner should try its best to reduce two processes working on one part of the codebase",
+      "source": "../langgraph-agent/README.md#10-publication-and-review"
+    },
+    {
+      "id": "A08",
+      "question": "Does the experiment isolate model placement from harness changes?",
+      "status": "Concern",
+      "note": "the experiment should support using a codex plan as agentd (like how I'd query codex on thea pp), straight llm api, alongside local inference. For v1 testing, allow the use of a llm api in replacement of local inference.",
+      "source": "../langgraph-agent/README.md#12-evolution-and-first-build"
+    }
+  ]
+}

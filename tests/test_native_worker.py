@@ -1,0 +1,95 @@
+"""A real stdio native job owns its internal loop; callbacks remain host effects."""
+
+from __future__ import annotations
+
+import sys
+
+from conftest import ScriptedAgent
+
+from polyinference.agent.controller import ProjectAgent
+from polyinference.agent.services import AgentServices
+from polyinference.runtime.adapter import StandaloneRuntime
+
+
+async def test_codex_brokered_worker_uses_same_phase_and_publication_protocol(config, tmp_path):
+    script = tmp_path / "native.py"
+    script.write_text(r"""import json,sys
+def send(value):
+ print(json.dumps(value),flush=True)
+def receive():
+ return json.loads(sys.stdin.readline())
+for line in sys.stdin:
+ message=json.loads(line); method=message.get("method")
+ if method=="initialize":
+  assert message["params"]["capabilities"]["experimentalApi"]
+  send({"id":message["id"],"result":{}})
+ elif method=="thread/start":
+  assert message["params"]["dynamicTools"][0]["name"]=="polyinference_tool"
+  assert message["params"]["permissions"]=="polyinference_readonly"
+  send({"id":message["id"],"result":{"thread":{"id":"native-thread"}}})
+ elif method=="turn/start":
+  messages=json.loads(message["params"]["input"][0]["text"])
+  data=json.loads(next(m["content"] for m in messages if "Pinned application inputs:" in m["content"]).split("Pinned application inputs:\n".replace("\\n","\n"),1)[1])
+  phase=data["phase"]
+  if phase=="development":
+   from hashlib import sha256
+   send({"id":3,"method":"item/tool/call","params":{"threadId":"native-thread","turnId":"native-turn",
+      "callId":"write-native","tool":"polyinference_tool","arguments":{"tool":"files.write","arguments":{
+       "path":"a.py","expected_digest":"sha256:"+sha256(b"VALUE = 1\n".replace(b"\\n",b"\n")).hexdigest(),
+       "content":"VALUE = 2\n".replace("\\n","\n")}}}})
+   response=receive()
+   assert response["id"]==3
+   observation=json.loads(response["result"]["contentItems"][0]["text"])
+   assert observation["state"]=="succeeded",observation
+  send({"id":message["id"],"result":{"turn":{"id":"native-turn"}}})
+  reply={"kind":"assessment","verdict":"successful","summary":"Native phase and host evidence inspected"} if phase=="assessment" else {"kind":"candidate","summary":"Native phase finished"}
+  send({"method":"thread/tokenUsage/updated","params":{"threadId":"native-thread","turnId":"native-turn","tokenUsage":{"total":{"totalTokens":70000}}}})
+  send({"method":"item/completed","params":{"item":{"type":"agentMessage","text":json.dumps({"reply":reply})}}})
+  send({"method":"turn/completed","params":{"turn":{"id":"native-turn","status":"completed","items":[]}}})
+""")
+    # Simplify the quoted fixture so its generated source uses actual newline escapes.
+    value = script.read_text().replace(
+        'Pinned application inputs:\\n".replace("\\\\n","\\n")', 'Pinned application inputs:\\n"'
+    )
+    value = value.replace('b"VALUE = 1\\n".replace(b"\\\\n",b"\\n")', 'b"VALUE = 1\\n"')
+    value = value.replace('"VALUE = 2\\n".replace("\\\\n","\\n")', '"VALUE = 2\\n"')
+    script.write_text(value)
+    native = config.local.model_copy(
+        update={
+            "protocol": "codex_app_server",
+            "brokered_tools": True,
+            "command": [sys.executable, str(script)],
+            "timeout_seconds": 5,
+        }
+    )
+    config = config.model_copy(update={"local": native})
+    runtime = await StandaloneRuntime(config).open()
+    await runtime.clients["cloud"].close()
+    runtime.clients["cloud"] = ScriptedAgent(two=False)
+    app = AgentServices(runtime, config)
+    try:
+        result = await ProjectAgent(app).run()
+        assert result["outcome"] == "completed", app.get("app/run")
+        report = runtime.records.scan("report/")[0][2]
+        assert report["verdict"] == "successful"
+        assert report["reconciliation_turn_refs"] and report["assessment_turn_refs"]
+        children = [
+            value for _, _, value in runtime.records.scan("effect/") if value["request"]["causal_parent_ref"]
+        ]
+        assert len(children) == 1
+        assert children[0]["request"]["payload"]["capability_id"] == "files.write"
+        parent = app.get("effect/" + children[0]["request"]["causal_parent_ref"])
+        assert parent["request"]["payload"]["kind"] == "agent_job"
+        assert parent["state"] == "succeeded"
+        assert parent["result"]["usage"][0]["value"] == 70000
+        assert (
+            runtime.records.get("budget/process/" + parent["request"]["scope"]["process_id"])[1][
+                "reserved_or_used"
+            ]
+            >= 210000
+        )
+        tree = await runtime.workspaces.tree(report["candidate_commit_id"])
+        assert tree["a.py"][1] == b"VALUE = 2\n"
+        assert runtime.records.get("permit/shell/installation")[1]["process_id"] is None
+    finally:
+        await runtime.close()
