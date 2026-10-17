@@ -24,6 +24,52 @@ ruff check src tests
 Direct dependencies are pinned in `pyproject.toml`; `requirements.lock` captures
 the tested complete environment. LangGraph source is unchanged.
 
+## Simple test UI
+
+From the project directory in WSL:
+
+```bash
+source .venv-linux/bin/activate
+polyinference ui
+```
+
+Open **http://localhost:8765** and click **Run test**. The default is a tiny Codex
+greeting task using your existing subscription. Each click creates fresh state.
+After the run, processes and executed nodes appear in order. Click a blue model
+node to see its prompt and response. Other nodes show their input, output and
+recorded tool results. The run selector keeps previous tests available.
+
+The extra controls are deliberately small:
+
+* **Root repository**: enter a WSL/Linux Git root or click **Browse…**. Commit or
+  stash local changes first. The agent develops in a private copy of committed
+  HEAD. For another repository, enter its objective and inspect **Check command**;
+  Python and npm test commands are suggested when available. Without `--config`,
+  all committed regular files are in scope. With `--config`, its explicit file
+  grants, endpoint bindings and checks remain in force.
+* **Export JSON**: download the selected run's processes, full node input/output,
+  prompts, responses, operation artifacts, reports, steering and cost estimates.
+* **Costs**: per-run Codex/Haiku estimates and the total across saved runs update
+  automatically. Missing prices or usage produce a `+` and an explanation under
+  **About cost estimates**. Codex shows an API-equivalent estimate, not the cost
+  charged to your subscription. Rates are recorded with their date and source
+  links in the export; no billing API is required.
+* **Steering**: while a run is active, expand the steering panel, enter updated
+  instructions and click **Send update**. The panel tracks received and pending
+  instructions. Started workers finish before the senior reviews the update;
+  it does not stop workers immediately.
+
+To use your own configured task or inspect an existing run:
+
+```bash
+polyinference ui --config path/to/agent.json
+polyinference ui --state path/to/state-directory
+```
+
+The UI reads the real LangGraph checkpoints and operation artifacts. It also
+shows failed/interrupted runs, and binds only to the local machine. UI run state
+is stored under `.polyinference/ui/`. Use `--port 8766` if needed.
+
 ## Configure endpoints
 
 Copy [the example](examples/agent.openai.json) and replace the repository, objective,

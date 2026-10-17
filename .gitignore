@@ -80,6 +80,9 @@ test-results/
 .hf_cache/
 .ollama/
 
+# Disposable projects built by the agent (keep the tests/ suite tracked)
+/testing/
+
 # Local agent state and generated artifacts
 /.polyinference/
 /.langgraph_api/

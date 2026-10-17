@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>PolyInference · Test agent</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:#24313e;background:#f5f6f8;font-size:14px}
+*{box-sizing:border-box}body{margin:0}header{background:white;border-bottom:1px solid #e1e5ea;padding:24px 32px}
+h1{font-size:22px;letter-spacing:-.5px;margin:0 0 5px}p{color:#667481;line-height:1.5;margin:0}
+main{max-width:1500px;margin:auto;padding:24px 32px}.controls{display:block;background:white;border:1px solid #dfe4e9;border-radius:10px;padding:18px}
+label{display:block;font-size:12px;font-weight:600;color:#52616f;margin-bottom:7px}.objective{flex:1}textarea{resize:vertical;min-height:58px;max-height:160px;width:100%;font:inherit;line-height:1.5;padding:10px;border:1px solid #cbd3dd;border-radius:6px}
+button,select,input{font:inherit}input{width:100%;padding:10px;border:1px solid #cbd3dd;border-radius:6px}.fieldrow,.launch{display:flex;gap:12px;align-items:end}.fieldrow input{flex:1;min-width:0}.launch{margin-top:15px}.check-settings{margin:12px 0}.check-settings input{margin-top:8px}.button{font:inherit;display:inline-block;color:#24313e;text-decoration:none;padding:8px 12px;border:1px solid #cbd3dd;border-radius:6px;background:white}.button[aria-disabled=true]{pointer-events:none;opacity:.5}.costbar{font-size:12px;display:flex;gap:15px;flex-wrap:wrap;margin:0 0 12px;color:#52616f}.costbar strong{color:#24313e}.steering{background:white;border:1px solid #dfe4e9;border-radius:8px;padding:12px;margin:0 0 20px}.steering textarea{margin:12px 0 8px}.steering small{color:#667481;margin-left:10px}dialog{width:520px;max-width:95vw;border:1px solid #cbd3dd;border-radius:10px;padding:20px}dialog::backdrop{background:#24313e55}.folders{display:grid;max-height:45vh;overflow:auto;margin:12px 0;gap:5px}.folders button{text-align:left}.dialog-title{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}.dialog-title h2{font-size:16px;margin:0}#directoryError{color:#9d302b;font-size:12px;margin-top:8px}
+button,select{font:inherit}button{cursor:pointer;border:1px solid #cbd3dd;border-radius:6px;padding:10px 15px;background:white;color:#24313e}
+button:hover{border-color:#687a93}button:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #b0c9ff;outline-offset:2px}
+button:disabled{opacity:.55;cursor:wait}#start{background:#295fe9;border-color:#295fe9;color:white;font-weight:600;white-space:nowrap;height:42px}
+.runbar{display:flex;align-items:center;gap:12px;margin:20px 0}select{max-width:380px;padding:8px;border:1px solid #cbd3dd;background:white;border-radius:6px}
+.badge{font-size:12px;border-radius:20px;background:#e5eaf1;padding:4px 9px;text-transform:capitalize}
+.badge.completed{background:#e1f2e9;color:#246547}.badge.failed,.badge.interrupted{background:#fbe8e6;color:#9d302b}.badge.running{background:#e8efff;color:#295fe9}
+#message{font-size:13px;color:#667481}#error{color:#9d302b;margin:12px 0;white-space:pre-wrap}
+.layout{display:grid;grid-template-columns:minmax(300px,.9fr) minmax(400px,1.1fr);gap:20px;align-items:start}
+.panel{background:white;border:1px solid #dfe4e9;border-radius:10px;padding:20px;min-width:0}
+.panel h2{font-size:15px;margin:0 0 5px}.hint{font-size:12px;margin-bottom:18px}
+.process{border-top:1px solid #e8ebef;padding-top:17px;margin-top:17px}.process:first-child{margin-top:0;border-top:0;padding-top:0}
+.process-title{display:flex;align-items:center;gap:9px;font-weight:650;margin-bottom:12px;overflow-wrap:anywhere}.role{font-size:11px;font-weight:500;color:#667481;background:#f0f3f6;padding:3px 7px;border-radius:4px}
+.nodes{display:flex;flex-wrap:wrap;align-items:center;gap:7px}.node{position:relative;text-align:left;padding:8px 11px;font-size:12px;background:#f8f9fb;max-width:100%}
+.node .phase{display:block;font-size:10px;color:#728091;margin-top:2px}.node.model{background:#edf3ff;border-color:#c5d6fb;color:#254d9f}.node.selected{box-shadow:0 0 0 2px #295fe9;border-color:#295fe9}
+.node.failed{border-color:#d96c64;background:#fff2f0}.node.running{border-style:dashed}.arrow{color:#a4afbb;font-size:12px}
+#inspector{position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto}#nodeMeta{font-size:12px;color:#667481;margin:6px 0 20px;overflow-wrap:anywhere}
+h3{font-size:12px;margin:20px 0 8px;text-transform:uppercase;letter-spacing:.06em;color:#667481}
+pre{font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;background:#f6f8fa;padding:13px;border:1px solid #e5e9ee;border-radius:6px;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;max-height:300px;overflow:auto}
+details{margin-top:14px}summary{cursor:pointer;font-size:12px;color:#52616f}.empty{padding:35px 15px;text-align:center;color:#7c8996;line-height:1.6}.operation{border-top:1px solid #e5e9ee;margin-top:20px;padding-top:4px}
+footer{padding-top:15px;font-size:11px;color:#86919c;overflow-wrap:anywhere}
+@media(max-width:850px){header{padding:20px}main{padding:20px}.launch{align-items:stretch;flex-direction:column}.layout{grid-template-columns:1fr}#inspector{position:static;max-height:none}.runbar{flex-wrap:wrap}}
+</style>
+</head>
+<body>
+<header><h1>PolyInference</h1><p>Run a small agent test, then inspect each process and node.</p></header>
+<main>
+<div class="controls">
+<label for="repository">Root repository</label>
+<div class="fieldrow"><input id="repository" placeholder="/home/mawa/projects/my-repository" spellcheck="false"><button id="browse" type="button">Browse…</button></div>
+<p class="hint" id="repoInfo" style="margin:7px 0 0">Development uses a private copy of committed HEAD.</p>
+<details class="check-settings" id="checkSettings"><summary>Check command</summary><input id="checkCommand" aria-label="Check command" spellcheck="false"></details>
+<div class="launch">
+<div class="objective"><label for="objective">Test objective</label><textarea id="objective" rows="2"></textarea></div>
+<button id="start" type="button">Run test</button>
+</div></div>
+<div class="runbar"><select id="runs" aria-label="Choose a run"><option value="">No runs yet</option></select><a id="export" class="button" aria-disabled="true" download>Export JSON</a><span id="status" class="badge">Ready</span><span id="message">Ready to run the configured test.</span></div>
+<div class="costbar"><strong id="runCost">Run ≈ $0.0000</strong><span id="codexCost">Codex ≈ $0.0000</span><span id="haikuCost">Haiku ≈ $0.0000</span><span id="allCost"></span></div>
+<details style="margin:-3px 0 16px"><summary>About cost estimates</summary><p class="hint" id="costNote">Standard USD API estimates. Codex is shown as an API-equivalent value, not a subscription charge.</p></details>
+<details class="steering" id="steeringPanel"><summary>Steering · update this run's instructions</summary><textarea id="steeringText" aria-label="Steering instructions" rows="2" placeholder="Describe a correction or new instruction for this run…"></textarea><button id="sendSteering" type="button" disabled>Send update</button><small id="steeringStatus">Start a run to send instructions.</small></details>
+<div id="error" role="alert"></div>
+<div class="layout">
+<section class="panel"><h2>Processes & nodes</h2><p class="hint">Nodes are shown in execution order. Blue nodes call a model.</p><div id="processes"><div class="empty">Run a test to see its execution.</div></div><footer id="statePath"></footer></section>
+<section id="inspector" class="panel" aria-live="polite"><div class="empty">Click a node to inspect its prompt and response.</div></section>
+</div>
+<footer id="configuration"></footer>
+</main>
+<dialog id="folderDialog"><div class="dialog-title"><h2>Choose repository root</h2><button id="closeFolders" type="button">Close</button></div><div class="fieldrow"><button id="upFolder" type="button">Up</button><input id="folderPath" aria-label="Browse directory" spellcheck="false"><button id="openFolder" type="button">Go</button></div><div id="directoryError" role="alert"></div><div class="folders" id="folders"></div><button id="selectFolder" type="button" disabled>Use this repository</button></dialog>
+<script>
+const $=id=>document.getElementById(id);
+let current=null,selectedNode=null,polling=false,renderedKey="",selectedRepository="",initialObjective="",browseRoot="",parentFolder="";
+const pretty=value=>typeof value==="string"?value:JSON.stringify(value,null,2);
+const element=(tag,text,className)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node};
+async function api(path,options){const response=await fetch(path,options);const data=await response.json();if(!response.ok)throw Error(data.error||"Request failed");return data}
+function error(message){$("error").textContent=message||""}
+function block(parent,title,value){parent.append(element("h3",title),element("pre",pretty(value)))}
+const dollars=value=>Number(value||0).toFixed(4);
+function showCost(cost){
+ $("runCost").textContent="Run ≈ $"+dollars(cost.estimated_usd)+(cost.partial?"+":"");
+ $("codexCost").textContent="Codex ≈ $"+dollars(cost.by_provider.codex?.estimated_usd);
+ $("haikuCost").textContent="Haiku ≈ $"+dollars(cost.by_provider.haiku?.estimated_usd);
+ $("costNote").textContent=cost.note+" Rates checked "+cost.pricing_date+". "+cost.priced_calls+" priced calls; "+cost.unpriced_calls+" missing usage/prices; "+cost.pending_calls+" pending. "+cost.estimated_token_calls+" calls use rough token counts.";
+}
+async function applyRepository(path){
+ if(path===selectedRepository)return;
+ const data=await api("/api/repository?"+new URLSearchParams({path}));
+ selectedRepository=data.repository;$("repository").value=data.repository;$("checkCommand").value=data.check_command;
+ $("repoInfo").textContent=data.scope+" · "+data.file_count+" committed files. Development uses a private copy.";
+ if(data.clear_objective&&$("objective").value===initialObjective)$("objective").value="";
+ if(!data.check_command)$("checkSettings").open=true;
+ error("");
+}
+async function folders(path){
+ try{
+  const data=await api("/api/directories?"+new URLSearchParams({path}));
+  $("directoryError").textContent="";$("folderPath").value=data.path;parentFolder=data.parent;
+  $("selectFolder").disabled=!data.is_repository;
+  const list=$("folders");list.replaceChildren();
+  for(const entry of data.directories){const button=element("button",entry.name+"/");button.type="button";button.onclick=()=>folders(entry.path);list.append(button)}
+  if(!data.directories.length)list.append(element("p","No subdirectories.","hint"));
+ }catch(exc){$("directoryError").textContent=exc.message}
+}
+function inspect(data){
+ const box=$("inspector");box.replaceChildren(element("h2",data.name));
+ const meta=element("div",data.process_id+" · "+(data.phase?data.phase+" · ":"")+data.status);meta.id="nodeMeta";box.append(meta);
+ const models=data.operations.filter(operation=>operation.prompt.length);
+ if(models.length){
+  for(const operation of models){
+   block(box,"Prompt",operation.prompt.map(message=>message.role.toUpperCase()+"\n"+message.content).join("\n\n"));
+   const response=operation.response;
+   let text=response&&typeof response==="object"&&"text" in response?response.text:response||operation.error||"No response was recorded.";
+   if(typeof text==="string"){try{text=JSON.parse(text)}catch{}}
+   block(box,"Response",text);
+   if(response&&response.usage)block(box,"Usage",response.usage);
+  }
+ }else{
+  box.append(element("p","This node runs application logic and has no model prompt.","hint"));
+  block(box,"Input",data.input);block(box,"Output",data.output);
+ }
+ const tools=data.operations.filter(operation=>!operation.prompt.length);
+ for(const operation of tools){
+  const div=element("div",undefined,"operation");div.append(element("h3",(operation.tool||operation.kind)+" · "+operation.status));
+  if(operation.arguments)block(div,"Arguments",operation.arguments);
+  block(div,"Result",operation.response||operation.error||"No result recorded.");box.append(div);
+ }
+ const details=element("details");details.append(element("summary","Full node record"),element("pre",pretty(data)));box.append(details);
+ if(matchMedia("(max-width:850px)").matches)box.scrollIntoView({behavior:"auto",block:"start"});
+}
+async function selectNode(id){
+ selectedNode=id;
+ document.querySelectorAll(".node").forEach(node=>node.classList.toggle("selected",node.dataset.id===id));
+ try{const run=current;const data=await api("/api/node?"+new URLSearchParams({run,id}));if(current===run&&selectedNode===id)inspect(data)}catch(exc){error(exc.message)}
+}
+function render(data){
+ $("status").textContent=data.status;$("status").className="badge "+data.status;
+ const running=data.status==="running";
+ $("message").textContent=running?"Running… you can inspect recorded nodes as they finish.":data.status==="completed"?"Finished. Click any node to inspect it.":"Select a node to inspect the recorded run.";
+ error(data.error);$("statePath").textContent=(data.repository?data.repository+" · ":"")+data.state;
+ showCost(data.cost);
+ $("sendSteering").disabled=!running;
+ $("steeringStatus").textContent=running?(data.steering_received+" received · "+(data.steering_received-data.steering_applied)+" awaiting review. Started workers finish before updates apply."):"Steering is available while a run is running.";
+ $("export").href="/api/export?"+new URLSearchParams({id:data.id});$("export").setAttribute("aria-disabled","false");
+ const key=JSON.stringify([data.id,data.status,data.processes]);
+ if(key===renderedKey)return;renderedKey=key;
+ const container=$("processes");container.replaceChildren();
+ for(const process of data.processes){
+  const section=element("div",undefined,"process"),title=element("div",undefined,"process-title");
+  title.append(element("span",process.id),element("span",process.role,"role"));section.append(title);
+  const nodes=element("div",undefined,"nodes");
+  process.nodes.forEach((node,index)=>{
+   if(index)nodes.append(element("span","→","arrow"));
+   const button=element("button",node.name,"node "+node.status+(node.model_call?" model":"")+(node.id===selectedNode?" selected":""));
+   button.type="button";button.dataset.id=node.id;button.title=node.status;
+   button.setAttribute("aria-label",process.id+": "+node.name+" "+node.phase);
+   if(node.phase)button.append(element("span",node.phase,"phase"));
+   button.onclick=()=>selectNode(node.id);nodes.append(button);
+  });section.append(nodes);container.append(section);
+ }
+ if(!data.processes.length)container.append(element("div",running?"Starting the agent…":"No node checkpoints were recorded.","empty"));
+}
+async function refresh(){
+ if(polling)return;polling=true;
+ try{
+  const data=await api("/api/runs");
+  if(!$("objective").dataset.loaded){
+   initialObjective=data.objective;$("objective").value=data.objective;$("objective").dataset.loaded="true";
+   selectedRepository=data.repository;$("repository").value=data.repository;$("checkCommand").value=data.check_command;browseRoot=data.browse_root;
+  }
+  $("allCost").textContent="All saved runs ≈ $"+dollars(data.total_cost.estimated_usd)+(data.total_cost.partial?"+":"");
+  $("configuration").textContent="Configuration: "+data.configuration;
+  const select=$("runs");select.replaceChildren();
+  if(!data.runs.length)select.append(new Option("No runs yet",""));
+  for(const run of data.runs)select.append(new Option(run.id+" · "+run.status,run.id));
+  if(!current&&data.runs.length)current=data.runs[0].id;
+  select.value=current||"";
+  $("start").disabled=data.runs.some(run=>run.status==="running");
+  if(current){const id=current;const view=await api("/api/run?"+new URLSearchParams({id}));if(current===id)render(view)}
+ }catch(exc){error(exc.message)}finally{polling=false}
+}
+$("runs").onchange=()=>{current=$("runs").value;selectedNode=null;$("inspector").replaceChildren(element("div","Click a node to inspect its prompt and response.","empty"));refresh()};
+$("start").onclick=async()=>{
+ $("start").disabled=true;error("");
+ try{
+  await applyRepository($("repository").value);
+  const data=await api("/api/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({objective:$("objective").value,repository:$("repository").value,check_command:$("checkCommand").value})});
+  current=data.id;selectedNode=null;$("inspector").replaceChildren(element("div","Select a node when it appears.","empty"));await refresh();
+ }catch(exc){error(exc.message);$("start").disabled=false}
+};
+$("browse").onclick=()=>{$("folderDialog").showModal();folders(browseRoot)};
+$("closeFolders").onclick=()=>$("folderDialog").close();
+$("openFolder").onclick=()=>folders($("folderPath").value);
+$("upFolder").onclick=()=>folders(parentFolder);
+$("folderPath").onkeydown=event=>{if(event.key==="Enter"){event.preventDefault();folders($("folderPath").value)}};
+$("selectFolder").onclick=async()=>{try{await applyRepository($("folderPath").value);$("folderDialog").close()}catch(exc){$("directoryError").textContent=exc.message}};
+$("repository").onchange=()=>applyRepository($("repository").value).catch(exc=>error(exc.message));
+$("sendSteering").onclick=async()=>{
+ $("sendSteering").disabled=true;
+ try{
+  const data=await api("/api/steer",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:current,text:$("steeringText").value})});
+  $("steeringText").value="";$("steeringStatus").textContent="Update #"+data.sequence+" queued. Started workers finish before review.";await refresh();
+ }catch(exc){error(exc.message)}finally{$("sendSteering").disabled=$("status").textContent!=="running"}
+};
+refresh();setInterval(refresh,2000);
+</script>
+</body></html>

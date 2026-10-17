@@ -3,15 +3,27 @@
 Environment: Ubuntu 22.04 / WSL, Python 3.10.12. Runtime versions are pinned in
 `pyproject.toml` and the tested environment is recorded in `requirements.lock`.
 
-* Full behavioral suite after provider integration: **62 passed**, 81.17 seconds.
-* Additional runtime checks: **8 passed**, 3.44 seconds, including two new tests
-  distinguishing confirmed native failure from unknown execution. These extend the
-  covered suite to 64 distinct tests. Unknown execution retains its slot/tokens.
+* Full behavioral suite, including the test UI: **77 passed**, 74.53 seconds.
+* Seven UI tests exercise actual HTTP launches, fresh run state, persisted node
+  history, prompt/response artifacts, failure handling, local-origin checks,
+  repository switching, full JSON exports and shared CLI/UI steering writes.
+* Six cost tests cover mixed Codex/Haiku totals, cached and cache-write usage,
+  long prompts, native usage recovery, deduplication and missing usage/prices.
+* Browser checks verified the repository picker, expanded steering panel, saved
+  run totals and a real JSON download containing four processes and 25 nodes.
+  The browser reported no JavaScript errors.
+* A live Codex test started through the UI completed successfully: four processes,
+  25 executed graph nodes, successful worker verdict, and passed check evidence.
+  Browser interaction verified node selection and actual prompt/response display.
+* Native failure tests distinguish confirmed termination from unknown execution;
+  unknown execution retains its slot/tokens.
 * Final Codex endpoint/native-worker/runtime regression checks: **22 passed**,
   7.69 seconds, including early host callbacks with colliding RPC IDs.
 * Ruff lint and formatting checks passed; Python compilation and Git whitespace
   checks passed.
 * All four OpenAI, Gemini, Claude and Codex example configurations pass validation.
+* Package wheel builds successfully and includes the UI HTML asset and server.
+  UI JavaScript syntax and browser rendering checks passed.
 * Original agent validator: 35 illustrative records, 41 invalid combinations.
 * Original workspace validator: six views, three deltas, 35 invalid combinations.
 * Original diagram checker: all 159 visible routes passed using Node 20.18.0.

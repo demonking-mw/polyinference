@@ -14,7 +14,7 @@ from .agent.controller import ProjectAgent
 from .agent.services import AgentServices
 from .config import AgentConfig
 from .runtime.adapter import StandaloneRuntime
-from .runtime.storage import Records
+from .runtime.storage import Conflict, Records
 
 
 def load_config(path):
@@ -76,12 +76,57 @@ async def probe_endpoint(config, name):
         await client.close()
 
 
+def record_steering(state_directory, text):
+    """Share the same atomic steering write between the CLI and local UI."""
+    if not isinstance(text, str) or not text.strip() or len(text) > 16000:
+        raise ValueError("Enter steering instructions of 1–16000 characters")
+    path = Path(state_directory).resolve() / "records.sqlite"
+    if not path.is_file():
+        raise ValueError("Wait until the run has initialized")
+    records = Records(path)
+    try:
+        for _ in range(5):
+            retained = records.get("app/run")
+            if not retained:
+                raise ValueError("Wait until the run has initialized")
+            version, run = retained
+            if run["status"] == "completed":
+                raise ValueError("Completed run is immutable; start a new run")
+            sequence = run["steering_received"] + 1
+            try:
+                records.compare_and_publish(
+                    {"app/run": version},
+                    {
+                        "app/run": {
+                            **run,
+                            "starts_closed": True,
+                            "steering_received": sequence,
+                            "captured_workers": sorted(
+                                set(run["captured_workers"]) | set(run["active_workers"])
+                            ),
+                            "completion_proposed": False,
+                        }
+                    },
+                    {f"steering/{sequence:08d}": {"sequence": sequence, "text": text.strip()}},
+                )
+                return sequence
+            except Conflict:
+                continue
+        raise ValueError("Run state changed repeatedly; please send the update again")
+    finally:
+        records.db.close()
+
+
 def main():
     parser = argparse.ArgumentParser(description="PolyInference portable LangGraph coding agent")
     sub = parser.add_subparsers(dest="command", required=True)
     for name in ("run", "resume", "validate-config"):
         item = sub.add_parser(name)
         item.add_argument("config")
+    item = sub.add_parser("ui")
+    item.add_argument("--port", type=int, default=8765)
+    item.add_argument("--config")
+    item.add_argument("--state")
     item = sub.add_parser("probe")
     item.add_argument("config")
     item.add_argument("--endpoint", choices=["local", "cloud"], default="cloud")
@@ -98,6 +143,11 @@ def main():
     item.add_argument("operation_id")
     args = parser.parse_args()
     try:
+        if args.command == "ui":
+            from .ui import serve
+
+            serve(args.port, args.config, args.state)
+            return
         if args.command == "probe":
             print(json.dumps(asyncio.run(probe_endpoint(load_config(args.config), args.endpoint)), indent=2))
             return
@@ -155,25 +205,7 @@ def main():
                 value = records.get("effect/" + args.operation_id)
                 print(json.dumps(value[1] if value else None, indent=2))
             else:
-                version, run = records.get("app/run")
-                if run["status"] == "completed":
-                    raise ValueError("Completed run is immutable; create a new run for a new objective")
-                sequence = run["steering_received"] + 1
-                records.compare_and_publish(
-                    {"app/run": version},
-                    {
-                        "app/run": {
-                            **run,
-                            "starts_closed": True,
-                            "steering_received": sequence,
-                            "captured_workers": sorted(
-                                set(run["captured_workers"]) | set(run["active_workers"])
-                            ),
-                            "completion_proposed": False,
-                        }
-                    },
-                    {f"steering/{sequence:08d}": {"sequence": sequence, "text": args.text}},
-                )
+                sequence = record_steering(args.state_directory, args.text)
                 print(f"Steering {sequence} recorded; started workers finish before review.")
         finally:
             records.db.close()
