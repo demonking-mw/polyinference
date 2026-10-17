@@ -1,0 +1,667 @@
+{
+  "schema": "polyinference.diagram.v1",
+  "version": 1,
+  "graph": "proposal",
+  "nodes": [
+    {
+      "id": "start",
+      "title": "Task + workspace",
+      "subtitle": "START · one active writer",
+      "x": 465,
+      "y": 55,
+      "kind": "main",
+      "body": "The runner binds a task, acceptance criteria, workspace, effective configuration, and stable thread identity. One task owns the working tree in Stage 1.",
+      "facts": [
+        "This is graph input, not an extra agent.",
+        "New tasks get their own budget and state lifecycle."
+      ],
+      "links": [
+        [
+          "../../PROJECT_BRIEF.md",
+          "Project brief"
+        ]
+      ]
+    },
+    {
+      "id": "prepare",
+      "title": "Prepare context",
+      "subtitle": "node 1 · bounded request",
+      "x": 465,
+      "y": 170,
+      "kind": "main",
+      "body": "Checks task limits and constructs a provider-independent request view from task state and external artifacts. Preserve instructions, current patch/check evidence, and complete tool-call/result pairs.",
+      "facts": [
+        "Paginate reads and spool large tool output.",
+        "Compact completed history only when pressure requires it.",
+        "Do not lose task identity or limits when changing models."
+      ],
+      "links": [
+        [
+          "https://docs.langchain.com/oss/python/langgraph/graph-api",
+          "LangGraph state and nodes"
+        ]
+      ]
+    },
+    {
+      "id": "route",
+      "title": "Select inference route",
+      "subtitle": "node 2 · ordinary code",
+      "x": 465,
+      "y": 285,
+      "kind": "main",
+      "body": "Selects the next model using phase, capability, context fit, endpoint health, budget, and cloud permission. The first hybrid policy permits bounded local discovery and keeps cloud sticky after escalation.",
+      "facts": [
+        "No paid supervisor/classifier call on every turn.",
+        "Host-observed failures beat model self-confidence.",
+        "Unavailable required cloud inference stops or pauses honestly."
+      ],
+      "links": [
+        [
+          "#routing-lab",
+          "Routing policy simulator"
+        ]
+      ]
+    },
+    {
+      "id": "infer",
+      "title": "One inference gateway",
+      "subtitle": "node 3 · same agent state",
+      "x": 465,
+      "y": 491.1125266513641,
+      "kind": "main",
+      "body": "Calls the selected model adapter, records usage and latency, normalizes the response, and determines whether there are tool calls, a completion candidate, or a bounded recoverable failure.",
+      "facts": [
+        "Local/cloud endpoints are services, not independent agents.",
+        "Every retry attempt is accounted for.",
+        "Provider-specific request conversion must preserve valid call/result structure."
+      ],
+      "links": [
+        [
+          "../../PROJECT_BRIEF.md",
+          "Inference-layer objective"
+        ]
+      ]
+    },
+    {
+      "id": "local",
+      "title": "Local endpoint",
+      "subtitle": "bounded discovery policy",
+      "x": -95.91639871382637,
+      "y": 367.459807073955,
+      "kind": "local",
+      "body": "The initial hybrid policy advertises only search/read during eligible discovery. A small allowance limits extra turns before cloud handover. Model/runtime choices remain open until hardware is known.",
+      "facts": [
+        "Input must fit this model's actual context/output budget.",
+        "Do not execute a mutation because the local model guessed another tool name."
+      ],
+      "links": [
+        [
+          "#proposal",
+          "Proposed routing policy"
+        ]
+      ]
+    },
+    {
+      "id": "cloud",
+      "title": "Cloud endpoint",
+      "subtitle": "implementation / recovery",
+      "x": -101.60129068748745,
+      "y": 489.4855305466238,
+      "kind": "cloud",
+      "body": "Handles implementation, difficult recovery, and final reasoning in the first hybrid policy. It receives a compatible view of the existing task, not a fresh agent with forgotten history.",
+      "facts": [
+        "Requires configured data-sharing permission and budget.",
+        "Sticky selection limits routing churn and repeated transfer."
+      ],
+      "links": [
+        [
+          "#proposal",
+          "Proposed routing policy"
+        ]
+      ]
+    },
+    {
+      "id": "guard",
+      "title": "Validate + authorize",
+      "subtitle": "node 4 · before effects",
+      "x": 463.37302646452974,
+      "y": 660.6173813994675,
+      "kind": "main",
+      "body": "Validates tool name, arguments, IDs, scope, and effective authority. Applies deterministic policy and pauses for approval when needed. Denials return matched observations and may trigger escalation.",
+      "facts": [
+        "An approval applies to the exact operation/input hash.",
+        "Keep effects outside the pre-interrupt portion of this node.",
+        "Do not equate a tool schema with safe command semantics."
+      ],
+      "links": [
+        [
+          "https://docs.langchain.com/oss/python/langgraph/interrupts",
+          "LangGraph interrupts"
+        ]
+      ]
+    },
+    {
+      "id": "human",
+      "title": "Human decision",
+      "subtitle": "durable interrupt / resume",
+      "x": 801.3890855795318,
+      "y": 448.2925954738997,
+      "kind": "optional",
+      "body": "The host presents the proposed action and resumes the same thread with a decision. The node can restart from its beginning, so approval handling must be free of earlier effects.",
+      "facts": [
+        "Unattended mode needs a reject/allow/pause policy.",
+        "A persisted decision is not a broad future capability grant."
+      ],
+      "links": [
+        [
+          "https://docs.langchain.com/oss/python/langgraph/interrupts",
+          "Interrupt and resume semantics"
+        ]
+      ]
+    },
+    {
+      "id": "execute",
+      "title": "Execute approved tools",
+      "subtitle": "node 5 · serial effects",
+      "x": 468.2540373480205,
+      "y": 856.1543769468449,
+      "kind": "main",
+      "body": "Calls the capability runtime for the approved batch. Model actions append paired results; configured host checks record typed evidence and return directly to verification.",
+      "facts": [
+        "Four built-ins: search, read_file, apply_patch, run_command.",
+        "Unknown mutation outcomes require inspection, not blind retry.",
+        "Invalidate relevant verification after mutations."
+      ],
+      "links": [
+        [
+          "#implementation",
+          "Execution contracts"
+        ]
+      ]
+    },
+    {
+      "id": "mcp",
+      "title": "Configured MCP adapter",
+      "subtitle": "optional existing client",
+      "x": -53.61413888225985,
+      "y": 842.3247407870277,
+      "kind": "optional",
+      "body": "When required by a task, manage one configured server through the same capability contract. Filter a small read-only catalog; reuse an existing transport/client implementation.",
+      "facts": [
+        "Connect/discover/call/close belongs to kernel resource ownership.",
+        "The graph does not require MCP for ordinary repository work."
+      ],
+      "links": [
+        [
+          "#proposal",
+          "Minimal MCP scope"
+        ]
+      ]
+    },
+    {
+      "id": "store",
+      "title": "Run + artifact store",
+      "subtitle": "checkpoint / events / ledger",
+      "x": 93.57611618743098,
+      "y": 108.24789610564834,
+      "kind": "service",
+      "body": "A persistent checkpointer tracks graph state. An event record and operation ledger retain execution evidence; artifact storage keeps large content outside messages.",
+      "facts": [
+        "External effects are not rolled back by a checkpoint.",
+        "Keep credentials and live clients out of serialized state."
+      ],
+      "links": [
+        [
+          "https://docs.langchain.com/oss/python/langgraph/persistence",
+          "LangGraph persistence"
+        ]
+      ]
+    },
+    {
+      "id": "verify",
+      "title": "Check completion evidence",
+      "subtitle": "node 6 · no reviewer agent",
+      "x": 790,
+      "y": 745,
+      "kind": "main",
+      "body": "A local no-tool response closes discovery and escalates. A cloud candidate is checked against current evidence. Missing configured checks go through guard/execute and return here without another inference.",
+      "facts": [
+        "Stale evidence after an edit cannot validate completion.",
+        "Host checks are evidence events, not unmatched tool messages.",
+        "Bound repair loops and allow an honest blocked/failed outcome."
+      ],
+      "links": [
+        [
+          "#implementation",
+          "Verification contract"
+        ]
+      ]
+    },
+    {
+      "id": "finalize",
+      "title": "Persist outcome → END",
+      "subtitle": "node 7 · truthful status",
+      "x": 790,
+      "y": 855,
+      "kind": "main",
+      "body": "Records final patch/evidence references, usage, routing decisions, and completion status. END can mean completed, failed, blocked, or budget-stopped; it must not imply success in every case.",
+      "facts": [
+        "Attach exact checked revision/workspace identity where possible.",
+        "No unmeasured quality or savings claim."
+      ],
+      "links": [
+        [
+          "../../PROJECT_BRIEF.md",
+          "Stage 1 completion criteria"
+        ]
+      ]
+    },
+    {
+      "id": "user_node_mvaa79gb_1",
+      "title": "Generate Plan",
+      "subtitle": "Cloud model",
+      "x": 80.44789058768075,
+      "y": 699.9218599119065,
+      "kind": "main",
+      "body": "The cloud model can give plan to the future actions for the small models to perform (think of it like the pm in a sprint meeting",
+      "facts": [
+        "Diagram design only; implementation remains to be defined."
+      ],
+      "links": []
+    },
+    {
+      "id": "user_node_mvaaa1gw_3",
+      "title": "Local Model Action Queue",
+      "subtitle": "User-added component",
+      "x": 128.9406847936427,
+      "y": 309.3853965952771,
+      "kind": "main",
+      "body": "A queue set of local model actions to be performed or just completed, much like \"the program\" in a traditional process",
+      "facts": [
+        "Diagram design only; implementation remains to be defined."
+      ],
+      "links": []
+    }
+  ],
+  "edges": [
+    {
+      "id": "p-start",
+      "from": "start",
+      "to": "prepare",
+      "label": "begin / resume",
+      "body": "The host supplies or resumes serializable task state under a stable thread identity.",
+      "payload": "Task, workspace, acceptance criteria, configuration and limits.",
+      "kind": "flow",
+      "via": null
+    },
+    {
+      "id": "p-route",
+      "from": "prepare",
+      "to": "route",
+      "label": "request fits policy",
+      "body": "The prepared context and remaining resources become inputs to deterministic selection.",
+      "payload": "Phase, context size/capabilities, health, budget and recent failures.",
+      "kind": "flow",
+      "via": null
+    },
+    {
+      "id": "p-infer",
+      "from": "route",
+      "to": "infer",
+      "label": "selected model",
+      "body": "A successful route selects one adapter inside the same inference node. This is not agent delegation.",
+      "payload": "Model key, route reason and provider-specific request settings.",
+      "kind": "flow",
+      "via": null
+    },
+    {
+      "id": "p-local",
+      "from": "infer",
+      "to": "local",
+      "label": "selected: local",
+      "body": "The gateway invokes the local endpoint for a policy-eligible discovery request and normalizes its response.",
+      "payload": "Bounded context plus read/search schema; response and usage.",
+      "kind": "flow",
+      "via": null,
+      "both": true
+    },
+    {
+      "id": "p-cloud",
+      "from": "infer",
+      "to": "cloud",
+      "label": "selected: cloud",
+      "body": "The same gateway invokes cloud after eligibility, data-sharing and budget checks. Existing task state is retained.",
+      "payload": "Compatible context/tool schema; response and usage.",
+      "kind": "flow",
+      "via": null,
+      "both": true
+    },
+    {
+      "id": "p-tools",
+      "from": "infer",
+      "to": "guard",
+      "label": "tool calls",
+      "body": "A parsed proposal goes through policy before any effect. Invalid/malformed output is handled under bounded repair rules.",
+      "payload": "Assistant message, named calls, arguments and IDs.",
+      "kind": "flow",
+      "via": null
+    },
+    {
+      "id": "p-approved",
+      "from": "guard",
+      "to": "execute",
+      "label": "allowed calls",
+      "body": "Only approved calls execute. If one call is denied, preserve a result for it and never silently widen authority.",
+      "payload": "Validated operations bound to decisions and input hashes.",
+      "kind": "flow",
+      "via": null
+    },
+    {
+      "id": "p-loop",
+      "from": "execute",
+      "to": "prepare",
+      "label": "model observations",
+      "body": "For model-originated actions, paired observations and mutation metadata enter the next context view.",
+      "payload": "Tool results, artifact refs, workspace revision and usage.",
+      "kind": "flow",
+      "via": [
+        [
+          315,
+          630
+        ],
+        [
+          315,
+          225
+        ],
+        [
+          365,
+          225
+        ]
+      ]
+    },
+    {
+      "id": "p-candidate",
+      "from": "infer",
+      "to": "verify",
+      "label": "no-tool candidate",
+      "body": "A no-tool response is interpreted according to phase. Local discovery text escalates; a cloud final response must pass the evidence gate.",
+      "payload": "Completion candidate, phase and current verification records.",
+      "kind": "flow",
+      "via": [
+        [
+          625,
+          400
+        ],
+        [
+          625,
+          745
+        ]
+      ]
+    },
+    {
+      "id": "p-repair",
+      "from": "verify",
+      "to": "prepare",
+      "label": "repair / escalate",
+      "body": "Failed checks, missing evidence, or a local discovery completion update phase and continue within limits.",
+      "payload": "Failure observations, required checks and escalation reason.",
+      "kind": "flow",
+      "via": [
+        [
+          930,
+          745
+        ],
+        [
+          930,
+          225
+        ],
+        [
+          565,
+          225
+        ]
+      ]
+    },
+    {
+      "id": "p-finish",
+      "from": "verify",
+      "to": "finalize",
+      "label": "accepted / terminal",
+      "body": "Evidence supports completion, or policy requires an honest non-success terminal outcome. Persist the distinction.",
+      "payload": "Outcome, patch and check evidence references.",
+      "kind": "flow",
+      "via": null
+    },
+    {
+      "id": "p-stop",
+      "from": "route",
+      "to": "finalize",
+      "label": "route unavailable",
+      "body": "If the required route violates permission or budget, stop/pause rather than silently degrading the policy.",
+      "payload": "Blocked or budget-stopped reason.",
+      "kind": "support",
+      "via": [
+        [
+          955,
+          285
+        ],
+        [
+          955,
+          855
+        ]
+      ]
+    },
+    {
+      "id": "p-limit",
+      "from": "prepare",
+      "to": "finalize",
+      "label": "task limit",
+      "body": "Whole-task step/time/spend exhaustion bypasses further inference. No model request is required to announce the stop.",
+      "payload": "Limit status and retained partial-work evidence.",
+      "kind": "support",
+      "via": [
+        [
+          970,
+          170
+        ],
+        [
+          970,
+          890
+        ],
+        [
+          790,
+          890
+        ]
+      ]
+    },
+    {
+      "id": "p-approval",
+      "from": "guard",
+      "to": "human",
+      "label": "interrupt / resume",
+      "body": "A durable human decision happens before effects. Resuming restarts the affected node, so revalidation must be safe.",
+      "payload": "Exact proposed operation and decision payload.",
+      "kind": "optional",
+      "via": null,
+      "both": true
+    },
+    {
+      "id": "p-mcp",
+      "from": "execute",
+      "to": "mcp",
+      "label": "configured tool",
+      "body": "An enabled MCP tool uses the same invocation policy/result contract and an existing client transport.",
+      "payload": "Filtered schema, call, server result or lifecycle error.",
+      "kind": "optional",
+      "via": null,
+      "both": true
+    },
+    {
+      "id": "p-checkpoint",
+      "from": "store",
+      "to": "prepare",
+      "label": "restore / reference",
+      "body": "Checkpoint and artifact references reconstruct context and task continuity, not a filesystem rollback.",
+      "payload": "Serializable state and bounded retrieval references.",
+      "kind": "support",
+      "via": [
+        [
+          140,
+          170
+        ]
+      ]
+    },
+    {
+      "id": "p-record",
+      "from": "execute",
+      "to": "store",
+      "label": "record outcome",
+      "body": "Record operation status and full-output refs for inspection and ambiguous-failure handling.",
+      "payload": "Operation ID, outcome, timings, artifacts and mutation metadata.",
+      "kind": "support",
+      "via": [
+        [
+          265,
+          630
+        ],
+        [
+          265,
+          285
+        ]
+      ]
+    },
+    {
+      "id": "p-denied",
+      "from": "guard",
+      "to": "prepare",
+      "label": "denial / escalation",
+      "body": "Denied or out-of-phase calls receive matched feedback. A local mutation request escalates without executing it.",
+      "payload": "Policy result, call ID and route reason.",
+      "kind": "support",
+      "via": [
+        [
+          610,
+          515
+        ],
+        [
+          610,
+          170
+        ]
+      ]
+    },
+    {
+      "id": "p-retry",
+      "from": "infer",
+      "to": "prepare",
+      "label": "bounded recovery",
+      "body": "A recoverable inference/protocol failure updates counters and route eligibility. No malformed assistant call is silently left in the next provider request.",
+      "payload": "Failure evidence, charged attempt and explicit retry/escalation reason.",
+      "kind": "support",
+      "via": [
+        [
+          650,
+          400
+        ],
+        [
+          650,
+          110
+        ],
+        [
+          465,
+          110
+        ]
+      ]
+    },
+    {
+      "id": "p-checks",
+      "from": "verify",
+      "to": "guard",
+      "label": "missing checks",
+      "body": "Queue configured missing checks as host-originated operations and reuse authorization. Do not run verification commands through an ungoverned side path.",
+      "payload": "Typed check operation, current revision, origin and required policy.",
+      "kind": "flow",
+      "via": [
+        [
+          890,
+          745
+        ],
+        [
+          890,
+          570
+        ],
+        [
+          565,
+          570
+        ]
+      ]
+    },
+    {
+      "id": "p-check-results",
+      "from": "execute",
+      "to": "verify",
+      "label": "check evidence",
+      "body": "For host-scheduled checks, record evidence and return directly to the deterministic gate. A passing check does not require another model round trip.",
+      "payload": "Exit status, output artifact, checked revision and operation outcome.",
+      "kind": "flow",
+      "via": [
+        [
+          675,
+          630
+        ],
+        [
+          675,
+          745
+        ]
+      ]
+    },
+    {
+      "id": "user_edge_mvaa7w13_2",
+      "from": "infer",
+      "to": "user_node_mvaa79gb_1",
+      "label": "Result is Plan",
+      "body": "User-added relationship. Define its trigger, payload, and implementation contract.",
+      "payload": "User-defined payload.",
+      "kind": "flow",
+      "via": null
+    },
+    {
+      "id": "user_edge_mvaab2gp_4",
+      "from": "user_node_mvaaa1gw_3",
+      "to": "infer",
+      "label": "Insert Local Action",
+      "body": "User-added relationship. Define its trigger, payload, and implementation contract.",
+      "payload": "User-defined payload.",
+      "kind": "flow",
+      "via": null
+    },
+    {
+      "id": "user_edge_mvaadwyf_5",
+      "from": "user_node_mvaaa1gw_3",
+      "to": "route",
+      "label": "Check if direction required",
+      "body": "If the queue suggest that cloud model need to review, judge, or revise plan, make cloud model query",
+      "payload": "User-defined payload.",
+      "kind": "flow",
+      "via": null
+    },
+    {
+      "id": "user_edge_mvaaf3n3_6",
+      "from": "user_node_mvaa79gb_1",
+      "to": "user_node_mvaaa1gw_3",
+      "label": "Modify Queue",
+      "body": "User-added relationship. Define its trigger, payload, and implementation contract.",
+      "payload": "User-defined payload.",
+      "kind": "flow",
+      "via": null
+    },
+    {
+      "id": "user_edge_mvaag60w_7",
+      "from": "user_node_mvaaa1gw_3",
+      "to": "store",
+      "label": "Trap/Swap Frame",
+      "body": "User-added relationship. Define its trigger, payload, and implementation contract.",
+      "payload": "User-defined payload.",
+      "kind": "flow",
+      "via": null
+    }
+  ]
+}

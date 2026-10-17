@@ -1,0 +1,380 @@
+{
+  "schema": "polyinference.diagram.v2",
+  "version": 2,
+  "documentId": "polyinference-sprint-v1-revision2",
+  "title": "Polyinference · two-pipe sprint architecture",
+  "description": "Two vertical pipes: cloud strategy and local execution, connected by sprint assignments and evidence-backed reports.",
+  "nodes": [
+    {
+      "id": "senior_review",
+      "title": "Cloud · senior engineer",
+      "subtitle": "CLOUD PIPE / STRATEGY",
+      "x": 96,
+      "y": 108,
+      "kind": "cloud",
+      "body": "One cloud-model node owns all senior work. Its prompt changes with the invocation reason, rather than creating a separate node for each prompt. INITIAL: receive the user objective, repository snapshot, acceptance criteria, and run limits; interpret the project and propose a first sprint. SPRINT REVIEW: compare planned work with task reports, commits, and test evidence; explain what went well and wrong, revise assumptions, and assign the next sprint. SPECIALIST TASK: occasionally solve an explicitly assigned difficult problem using the same bounded tool and evidence contracts as the local worker. COMPLETION REVIEW: decide whether project-level verification is justified. The first model inference in a new run is always here.",
+      "facts": [
+        "Think of this model as the senior engineer and the sprint meeting. It is called at sprint boundaries or concrete exceptions, not after every local action.",
+        "A planning response contains a short sprint goal and scoped work items: task ID, dependencies, base revision, allowed tools, instructions, acceptance checks, local/cloud role, and attempt limits.",
+        "Review prompts receive a bounded retrospective packet with successful/failed work, observations, tests, checkpoint SHAs, unresolved risks, queue state, and remaining resources; full traces remain retrievable artifacts.",
+        "Review, planning, difficult-task execution, and completion use modes of this same node. A single response can review the previous sprint and plan the next.",
+        "The common inference gateway enforces context fit, sharing policy, endpoint health, retries, usage accounting, and reserved cloud budget. Required cloud access that is unavailable pauses or stops the run honestly."
+      ],
+      "contract": {
+        "input": "invocation_reason: initial | sprint_review | plan_correction | specialist_task | specialist_observation | specialist_repair | completion_review; objective; evidence_refs; remaining_budget",
+        "output": "sprint plan + retrospective | bounded specialist action/candidate | completion_candidate | blocked"
+      },
+      "links": [
+        [
+          "claude-code-agent-handbook.md",
+          "Claude Code study"
+        ]
+      ]
+    },
+    {
+      "id": "queue",
+      "title": "Sprint task queue",
+      "subtitle": "CLOUD PIPE / ASSIGNMENTS",
+      "x": 96,
+      "y": 276,
+      "kind": "store",
+      "body": "Host code validates the senior plan and atomically publishes a versioned sprint queue. It checks scopes, dependencies, acceptance checks, tools, and budgets before any assignment can run. Dispatch one ready local item without consulting another model. Each dispatch acquires an atomic lease and the writer lock, records a base SHA, prepares an isolated task branch and scoped context, and resets that task's mini-agent allowance. Keep the longer-term backlog separate from this short sprint.",
+      "facts": [
+        "Queue states: queued, ready, leased, passed, failed, blocked, cancelled, and superseded. Dependencies unblock only after host-accepted success.",
+        "Start with one active repository writer and one local endpoint serving sequential assignments. Concurrent juniors require isolated worktrees and explicit integration.",
+        "A cloud-only difficult assignment is deliberate, leased, and budgeted; it is dispatched to the same senior node in specialist mode.",
+        "An empty or stalled queue with no live lease requests a meeting. If a worker is still active, await its result instead.",
+        "Reject an invalid plan and request a bounded correction from the senior; do not silently widen tool authority or switch the assigned model role."
+      ],
+      "contract": {
+        "input": "validated work_items[], sprint_goal, plan_version, review_triggers",
+        "output": "leased task contract + task_id/attempt_id + branch/base_sha + prepared context, or no-ready-work reason"
+      },
+      "links": [
+        [
+          "deepagents-agent-handbook.md",
+          "Deep Agents study"
+        ]
+      ]
+    },
+    {
+      "id": "event_gate",
+      "title": "Sprint coordinator",
+      "subtitle": "CLOUD PIPE / HANDOFF",
+      "x": 96,
+      "y": 444,
+      "kind": "host",
+      "body": "The host ingests each result, verifies its report and commit against recorded evidence, and integrates only accepted successful work into the sprint branch. Then it makes the cheap routing decision: dispatch another ready task while the sprint remains healthy, or reconvene the senior when the queue is exhausted/stalled, a bounded attempt fails, assumptions change, or integration regresses. This is an event-driven agile cadence, not a weekly timer.",
+      "facts": [
+        "Ordinary accepted task completion does not call the cloud: update dependencies and return to the queue.",
+        "A sprint meeting is a deduplicated event. Assemble what was planned, what passed/failed, causes, commits, checks, remaining work, and resources for the senior to review.",
+        "Keep failed checkpoint commits on their task branches. Never promote failed work or release dependent tasks merely because a commit exists.",
+        "If integration changes a tested tree, rerun relevant checks before accepting its evidence.",
+        "Deterministic rules decide normal handoffs. A reserved, bounded senior call may classify an ambiguous exception; no paid supervisor runs on every worker step.",
+        "All states use the durable run/operation ledger. Recover uncertain effects and stale leases before resuming; checkpoints do not undo filesystem or tool effects."
+      ],
+      "contract": {
+        "input": "result packet + verified commit/tree + integrated revision + queue/dependency state",
+        "output": "continue_sprint | review(reason, retrospective_packet) | paused/terminal_stop"
+      },
+      "links": [
+        [
+          "deepagents-agent-handbook.md",
+          "Deep Agents study"
+        ]
+      ]
+    },
+    {
+      "id": "final",
+      "title": "Project acceptance",
+      "subtitle": "CLOUD PIPE / DELIVERY",
+      "x": 96,
+      "y": 612,
+      "kind": "host",
+      "body": "After the senior proposes completion, run the independent integration/regression checks required by the project against the integrated tree using the shared guarded tool runtime. Complete the project only when both the senior decision and current host evidence support it. Failed integration returns to the senior with concrete evidence for the next sprint. Also persist truthful blocked, budget_stopped, failed, or cancelled outcomes when the coordinator stops the run; these do not imply project success.",
+      "facts": [
+        "An exhausted sprint queue triggers a retrospective; it is not project completion.",
+        "Task-level success does not prove the combined system works. Unavailable or stale required checks cannot yield completed.",
+        "Persist integrated commit references, checks, unresolved backlog/risks, and separate cloud/local resource accounting.",
+        "No model call is needed simply to announce a hard budget stop. Resumable interruptions retain their continuation and partial branches."
+      ],
+      "contract": {
+        "input": "senior completion_candidate + integrated tree + project criteria, OR explicit non-success stop reason",
+        "output": "completed + final_revision + evidence_refs, OR truthful non-success/paused status"
+      },
+      "links": []
+    },
+    {
+      "id": "local_infer",
+      "title": "Local · coding agent",
+      "subtitle": "LOCAL PIPE / BOUNDED LOOP",
+      "x": 656,
+      "y": 108,
+      "kind": "local",
+      "body": "One local-model node performs each scoped assignment in a mini-swe-agent-style loop. Start with the leased task contract, repository rules, relevant context, and available tools. Propose the next tool action, inspect its returned observation, and repeat for a few bounded steps. A candidate, inability to continue, or exhausted allowance proceeds to host verification. Different task instructions and step prompts are modes of this same worker node, not separate agents.",
+      "facts": [
+        "Local work includes implementation and tests. It is not restricted to read-only reconnaissance.",
+        "Each assignment has a fresh task transcript and explicit step/time/token limits; preserve complete tool-call/result pairs and artifact references when reducing context.",
+        "Tool errors and failed checks can be repaired locally while meaningful progress and allowance remain. No cloud review is needed for every ordinary failure.",
+        "The worker cannot expand its scope, rewrite sprint dependencies, or grant itself more budget. The host enforces these boundaries.",
+        "Malformed outputs receive bounded corrective feedback. Model confidence or a prose success claim never substitutes for check evidence."
+      ],
+      "contract": {
+        "input": "leased task + scope/base_sha + instructions/tools + observations + remaining task allowance",
+        "output": "tool proposal | completion_candidate | cannot_complete | budget_exhausted"
+      },
+      "links": [
+        [
+          "../mini-swe-agent/src/minisweagent/agents/default.py",
+          "mini-swe-agent loop"
+        ]
+      ]
+    },
+    {
+      "id": "execute",
+      "title": "Tools & observations",
+      "subtitle": "LOCAL PIPE / ACT",
+      "x": 656,
+      "y": 276,
+      "kind": "host",
+      "body": "Host code validates the proposed tool and arguments, checks scope/authority and remaining limits, executes approved operations, records their effects and output, and returns a matched observation to the active task model. Use one shared runtime for search, reads, patches, commands, checks, and optional MCP tools. The normal active model is local; an explicitly assigned cloud specialist uses exactly this boundary and receives its own observations.",
+      "facts": [
+        "Authorization, exact-operation human decisions when required, process/environment isolation, and operation IDs are host responsibilities.",
+        "Pair results and denials with their call IDs; spool full output into artifacts and pass a bounded observation to the model.",
+        "Record exit codes, timings, usage, mutation metadata, and current tree. Edits invalidate affected evidence.",
+        "Tool errors are observations. Repeated errors or no progress close the bounded attempt instead of looping forever.",
+        "Inspect ambiguous mutation/timeout outcomes before replay. If effects cannot be established, preserve state and pause.",
+        "Task/project verification uses this same guarded runtime internally; it does not need another model call merely to read an exit status."
+      ],
+      "contract": {
+        "input": "active task/model role + validated tool proposal + operation/input identity",
+        "output": "paired observation + exit status + output_ref + revision/mutation metadata + updated limits"
+      },
+      "links": [
+        [
+          "../mini-swe-agent/src/minisweagent/agents/default.py",
+          "mini-swe-agent loop"
+        ],
+        [
+          "claude-code-agent-handbook.md",
+          "Claude Code study"
+        ]
+      ]
+    },
+    {
+      "id": "verdict",
+      "title": "Task verification",
+      "subtitle": "LOCAL PIPE / CHECK",
+      "x": 656,
+      "y": 444,
+      "kind": "host",
+      "body": "Run the assignment's configured acceptance checks through the shared guarded runtime, then compare the recorded evidence with the exact task tree. A meaningful repair may return to the model assigned to this task while its allowance remains. Otherwise close with passed, failed, blocked, or budget_exhausted. This evidence gate is shared by ordinary local tasks and the rare cloud specialist task.",
+      "facts": [
+        "Record command, availability/status, exit code, output artifact, and checked tree/revision for each test.",
+        "No extra reviewer model is required to interpret a configured pass/fail criterion.",
+        "Missing required checks, stale evidence, or an unsupported success claim cannot produce passed.",
+        "A failed test with repair budget stays inside the task loop; an exhausted or unrecoverable attempt closes and is reported before sprint review.",
+        "Retain the assigned model role during repairs. Switching to cloud is a senior assignment decision, not an implicit fallback."
+      ],
+      "contract": {
+        "input": "candidate or stopping reason + task criteria + exact workspace tree + recorded checks",
+        "output": "repair observations + remaining allowance, OR verdict + tested_tree_id + evidence_refs"
+      },
+      "links": []
+    },
+    {
+      "id": "report",
+      "title": "Commit & task report",
+      "subtitle": "LOCAL PIPE / RETURN",
+      "x": 656,
+      "y": 612,
+      "kind": "host",
+      "body": "Close every finished task attempt with an auditable checkpoint commit and a structured result packet. Commit only scoped changes to the task branch; a no-diff task uses a metadata-only empty commit. This applies to passed, failed, blocked, and budget-exhausted attempts. Record the real SHA before emitting the report, then return it to the sprint coordinator. The model may draft the observation, but host records supply the verdict, test facts, revision, and usage.",
+      "facts": [
+        "Required packet fields: task/attempt ID, verdict, observation, test results, base SHA, checkpoint SHA, evidence refs, usage, and unresolved issues.",
+        "Passed work is only a candidate for integration. Failed or partial work remains reachable on its own branch.",
+        "Tie tests to the tested tree ID; a new commit of the identical tree may retain that evidence, while changed content requires new checks.",
+        "If Git fails or its outcome is uncertain, reconcile by task/attempt ID and inspect the branch. Do not fabricate a SHA.",
+        "A crash before a checkpoint can exist is an interrupted attempt, not a completed task. Resume/reconcile or retain an explicit paused status."
+      ],
+      "contract": {
+        "input": "closed verdict + scoped tree + tests + task/attempt identity",
+        "output": "{ task_id, attempt_id, verdict, observation, tests:[{command,status,exit_code,revision,output_ref}], base_sha, commit_sha, evidence_refs, usage, blockers }"
+      },
+      "links": []
+    }
+  ],
+  "edges": [
+    {
+      "id": "senior_review--queue",
+      "from": "senior_review",
+      "to": "queue",
+      "label": "Sprint planning handoff",
+      "body": "The senior turns the objective and retrospective into the next short sprint: a goal, small testable assignments, dependencies, tool scopes, checks, budgets, and explicit meeting triggers. Host code validates the response and atomically replaces or revises the queue. Initial, retrospective, and planning prompts all belong to the same cloud node.",
+      "payload": "sprint_goal, plan_version, work_items[], review_triggers, remaining cloud reserve",
+      "kind": "flow"
+    },
+    {
+      "id": "queue--local_infer",
+      "from": "queue",
+      "to": "local_infer",
+      "label": "Assign the next local task",
+      "body": "Like a junior taking the next sprint ticket, the worker receives one ready, leased assignment with a base revision and a clear definition of done. The host acquires the writer lock, prepares the task branch and bounded context, and resets the task allowance. No senior call is needed for ordinary dispatch.",
+      "payload": "task_id, attempt_id, lease, branch, base_sha, acceptance_checks, tools, scoped prompt, limits",
+      "kind": "flow"
+    },
+    {
+      "id": "local_infer--execute",
+      "from": "local_infer",
+      "to": "execute",
+      "label": "Propose a tool action",
+      "body": "The local worker chooses its next useful repository action. The host validates the proposal and authority before any effect; model instructions cannot expand the assigned scope. This is one turn of the bounded mini-swe loop, not a new sprint or a new cloud request.",
+      "payload": "active_role=local, task/attempt ID, call IDs, tool names/arguments, remaining allowance",
+      "kind": "flow"
+    },
+    {
+      "id": "execute--local_infer",
+      "from": "execute",
+      "to": "local_infer",
+      "label": "Return the local observation",
+      "body": "When the originating task is local, feed matched outputs, errors, exit codes, and revision changes back to that same worker transcript. It can inspect, patch, test, and retry within its small allowance. This is the normal inner loop and does not summon the senior.",
+      "payload": "paired observations, artifact_refs, workspace tree, mutation flags, usage/counters",
+      "kind": "flow"
+    },
+    {
+      "id": "local_infer--verdict",
+      "from": "local_infer",
+      "to": "verdict",
+      "label": "Submit candidate or stop attempt",
+      "body": "The worker proposes completion, cannot proceed, or reaches its bounded stop condition. Host verification checks the actual task tree even if the model claimed success. Exhaustion records a non-success reason; it does not grant another unbounded model turn.",
+      "payload": "candidate or stop_reason, task contract, exact tree, prior check records",
+      "kind": "flow"
+    },
+    {
+      "id": "verdict--local_infer",
+      "from": "verdict",
+      "to": "local_infer",
+      "label": "Repair within the local allowance",
+      "body": "A specific failing/missing check can return to the local worker if a justified repair remains within its original task budget. This is a junior fixing their ticket, not a sprint meeting. Exhausted or unrecoverable work instead closes through the checkpoint/report node.",
+      "payload": "active_role=local, concrete failed-check observations, tree ID, remaining repair/step/time allowance",
+      "kind": "exception"
+    },
+    {
+      "id": "verdict--report",
+      "from": "verdict",
+      "to": "report",
+      "label": "Close with an evidence-backed verdict",
+      "body": "Host checks resolve passed, failed, blocked, or budget_exhausted. Every closed attempt proceeds to the same checkpoint/report contract, regardless of which model performed the work. A failure remains a failure even though its partial work gets a commit.",
+      "payload": "verdict, tested_tree_id, check records, evidence_refs, blockers, usage",
+      "kind": "flow"
+    },
+    {
+      "id": "report--event_gate",
+      "from": "report",
+      "to": "event_gate",
+      "label": "Return the completed ticket",
+      "body": "The worker returns its verdict, observation, test results, and real Git checkpoint SHA to the sprint coordinator. The host verifies the packet, integrates only accepted success, preserves failed branches, updates dependency readiness, and decides whether the sprint can continue. This is the principal return handoff between the two pipes.",
+      "payload": "task result packet, checkpoint/base SHAs, tested tree, integrated revision or rejection reason",
+      "kind": "flow"
+    },
+    {
+      "id": "event_gate--queue",
+      "from": "event_gate",
+      "to": "queue",
+      "label": "Keep the sprint running",
+      "body": "After an accepted result, continue with the next ready assignment when the sprint remains healthy. Dependency updates and dispatch are programmatic. The senior remains idle while juniors can productively execute the agreed queue.",
+      "payload": "accepted task status, updated dependencies/queue, integrated base revision, remaining resources",
+      "kind": "flow"
+    },
+    {
+      "id": "queue--event_gate",
+      "from": "queue",
+      "to": "event_gate",
+      "label": "No ready assignment remains",
+      "body": "If no task is runnable, inspect live leases before declaring exhaustion. Await any active worker. If no worker is active, distinguish a completed sprint queue from a dependency stall and let the coordinator request the appropriate retrospective. Queue exhaustion alone never means the entire project is complete.",
+      "payload": "queue_empty | dependency_stall, live leases, pending/finished/failed task IDs",
+      "kind": "flow"
+    },
+    {
+      "id": "event_gate--senior_review",
+      "from": "event_gate",
+      "to": "senior_review",
+      "label": "Reconvene the sprint meeting",
+      "body": "Call the senior when the queue runs out or stalls, a task has failed beyond its repair allowance, assumptions are invalidated, or integration regresses. Send one deduplicated retrospective packet: planned versus actual work, what went well/wrong, observations, tests, commits, unresolved work, and resources. The senior adjusts strategy and replenishes the next sprint; ordinary local tool failures do not cause this edge.",
+      "payload": "mode=sprint_review, review_reason, sprint evidence, task packets, queue state, budget/latency ledger",
+      "kind": "exception"
+    },
+    {
+      "id": "senior_review--final",
+      "from": "senior_review",
+      "to": "final",
+      "label": "Propose project acceptance",
+      "body": "After reviewing the latest sprint evidence and remaining backlog, the senior may judge that the user objective is satisfied. The project acceptance node still runs independent checks against the integrated tree. A cloud opinion alone cannot mark the project completed.",
+      "payload": "mode=completion_review, completion_candidate, rationale, acceptance matrix, integrated revision",
+      "kind": "flow"
+    },
+    {
+      "id": "final--senior_review",
+      "from": "final",
+      "to": "senior_review",
+      "label": "Integration needs another sprint",
+      "body": "Independent project checks fail or required acceptance evidence is unavailable. Return the exact integrated revision, failing commands, output artifacts, and unresolved criteria to the senior so the next sprint targets the actual gap. If a required resource or budget prevents review, retain an honest paused/non-success outcome.",
+      "payload": "mode=sprint_review, reason=integration_failure, project check evidence, final tree, remaining resources",
+      "kind": "exception"
+    },
+    {
+      "id": "event_gate--final",
+      "from": "event_gate",
+      "to": "final",
+      "label": "Record a non-success stop",
+      "body": "A hard run limit, cancellation, unrecoverable policy/endpoint problem, or explicit blocked outcome can end or pause the run without another paid model call. This branch records partial work and evidence; it never follows the successful-completion path merely because time or money ran out.",
+      "payload": "explicit failed | blocked | budget_stopped | cancelled | paused status, partial branches, evidence, continuation",
+      "kind": "exception"
+    },
+    {
+      "id": "queue--senior_review",
+      "from": "queue",
+      "to": "senior_review",
+      "label": "Rare senior assignment or plan correction",
+      "body": "Normally the queue feeds local work. Exception 1: the senior explicitly reserved a hard ticket for itself; lease it with the same ownership contract and invoke the existing cloud node in specialist_task mode. Exception 2: a proposed plan fails host validation; return structured errors in plan_correction mode under a bounded correction allowance. These reasons select different prompts inside the same cloud node.",
+      "payload": "invocation_reason=specialist_task with leased task contract, OR plan_correction with validation errors",
+      "kind": "exception"
+    },
+    {
+      "id": "senior_review--execute",
+      "from": "senior_review",
+      "to": "execute",
+      "label": "Senior specialist tool action",
+      "body": "Only when an explicitly assigned difficult task needs tools, let the senior propose a bounded action through the exact same guarded runtime as the local worker. This is exceptional hands-on senior work, not a second permanent worker or a critic of each local action.",
+      "payload": "active_role=cloud_specialist, leased task/attempt, tool proposal, reserved step/spend limits",
+      "kind": "exception"
+    },
+    {
+      "id": "execute--senior_review",
+      "from": "execute",
+      "to": "senior_review",
+      "label": "Return the specialist observation",
+      "body": "If the originating task role is cloud_specialist, return the paired tool result to the same cloud node in specialist_observation mode. Preserve its task identity and tight budget. Local-originated observations instead return exclusively to the local node.",
+      "payload": "mode=specialist_observation, paired results/artifact refs, tree ID, remaining specialist allowance",
+      "kind": "exception"
+    },
+    {
+      "id": "senior_review--verdict",
+      "from": "senior_review",
+      "to": "verdict",
+      "label": "Senior specialist candidate",
+      "body": "A completed or exhausted senior-only assignment uses the same independent task checks, verdict, commit, and report path as a local assignment. Its result will reach the coordinator rather than being accepted merely because the stronger model produced it.",
+      "payload": "active_role=cloud_specialist, task candidate or stop reason, exact tree, usage/trace refs",
+      "kind": "exception"
+    },
+    {
+      "id": "verdict--senior_review",
+      "from": "verdict",
+      "to": "senior_review",
+      "label": "Repair the assigned senior task",
+      "body": "Only for an already cloud-assigned specialist task with a justified remaining repair allowance, return concrete check failures to the same senior node in specialist_repair mode. A local task does not take this edge by itself; escalation closes its attempt and goes through sprint review and an explicit new assignment.",
+      "payload": "mode=specialist_repair, existing task identity, failing-check evidence, remaining reserved budget",
+      "kind": "exception"
+    }
+  ]
+}

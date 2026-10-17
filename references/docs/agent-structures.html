@@ -1,0 +1,711 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<meta name="description" content="Interactive, source-grounded agent structures for Claude Code, Deep Agents, mini-swe-agent, and a minimal LangGraph design for Polyinference.">
+<title>Agent structures · Polyinference</title>
+<style>
+:root{--paper:#f5f4ef;--surface:#fffefa;--ink:#20313a;--muted:#5b6b71;--line:#d8dedb;--accent:#b94625;--accent-soft:#fff0e7;--teal:#126b64;--teal-soft:#e8f4ef;--purple:#765396;--purple-soft:#f1ecf7;--blue:#355f9a;--blue-soft:#edf2fb;--radius:18px;font-family:Inter,"Segoe UI",system-ui,sans-serif;color:var(--ink);background:var(--paper);font-synthesis:none}
+*{box-sizing:border-box}body{margin:0;line-height:1.6}a{color:var(--teal);text-underline-offset:3px}a:hover{color:var(--accent)}button,input,select{font:inherit}button,select,input[type=checkbox]{cursor:pointer}button{border:1px solid #b8c4bf;border-radius:8px;padding:7px 12px;background:var(--surface);color:var(--ink);font-size:13px;font-weight:600;min-height:36px}button:hover{background:var(--teal-soft);border-color:var(--teal)}button:disabled{cursor:default;opacity:.45}button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:3px}button.primary{color:white;background:var(--teal);border-color:var(--teal)}button.primary:hover{background:#0d5751}select{max-width:100%;background:var(--surface);border:1px solid #b8c4bf;border-radius:8px;padding:8px;color:var(--ink);font-size:13px;min-height:38px}input[type=checkbox]{accent-color:var(--teal);width:17px;height:17px;flex:none}code,pre,.mono{font-family:"Cascadia Code",Consolas,monospace}code{font-size:.9em;overflow-wrap:anywhere}p{margin:0 0 14px}h1,h2,h3,h4{line-height:1.2;letter-spacing:-.025em}h1{font-size:clamp(35px,4.8vw,66px);font-weight:650;max-width:950px;margin:16px 0 24px}h2{font-size:clamp(27px,3vw,38px);font-weight:650;margin:8px 0 16px}h3{font-size:21px;margin:24px 0 12px}h4{font-size:16px;margin:16px 0 8px}ul,ol{padding-left:23px;margin:10px 0 20px}li{margin:7px 0}.wrap{max-width:1480px;padding:0 46px;margin:auto}.topbar{position:sticky;top:0;z-index:20;background:rgba(245,244,239,.96);border-bottom:1px solid var(--line);backdrop-filter:blur(10px)}.topbar .wrap{display:flex;justify-content:space-between;align-items:center;gap:20px;min-height:62px;padding-top:8px;padding-bottom:8px}.brand{font-weight:750;letter-spacing:-.04em;font-size:19px;text-decoration:none;color:var(--ink)}.brand b{color:var(--accent);font-weight:750}.nav{display:flex;gap:7px 22px;flex-wrap:wrap}.nav a{font-size:13px;color:var(--muted);text-decoration:none}.nav a:hover{color:var(--accent)}.eyebrow{text-transform:uppercase;font-size:12px;letter-spacing:.14em;color:var(--teal);font-weight:700}.hero{padding-top:64px;padding-bottom:42px}.lede{font-size:20px;max-width:920px;color:var(--muted);line-height:1.65}.hero-footer{display:flex;gap:12px 28px;flex-wrap:wrap;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:22px;margin-top:30px}.hero-footer strong{color:var(--ink)}.reading-note{border-left:3px solid var(--accent);padding-left:18px;max-width:1070px;font-size:14px;margin-top:22px;color:var(--muted)}section{scroll-margin-top:90px}.agent-section{padding:34px 0 44px;border-top:1px solid var(--line)}.section-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:24px}.section-heading p{max-width:920px;color:var(--muted)}.section-number{font-family:Consolas,monospace;font-size:15px;padding-top:13px;color:var(--accent)}.snapshot{font-size:12px;color:var(--muted);display:flex;gap:8px 16px;align-items:center;flex-wrap:wrap;margin:18px 0}.snapshot code{font-size:12px}.tag{border-radius:30px;padding:4px 10px;background:#e9ece7;color:#405b51;font-size:12px;white-space:nowrap}.tag.optional{background:var(--purple-soft);color:var(--purple)}.graph-explorer{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}.graph-toolbar{display:flex;gap:9px 18px;align-items:center;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--line);flex-wrap:wrap}.graph-controls{display:flex;gap:7px;align-items:center;flex-wrap:wrap}.check-label{display:flex;align-items:center;gap:7px;font-size:13px;line-height:1.35}.zoom-readout{font-size:12px;font-variant-numeric:tabular-nums;color:var(--muted);min-width:40px;text-align:center}.graph-layout{display:grid;grid-template-columns:minmax(0,1fr) 325px;align-items:stretch}.graph-main{min-width:0}.canvas-shell{height:650px;position:relative;overflow:hidden;background-color:#f9faf5;background-image:radial-gradient(#d6ded7 .8px,transparent .8px);background-size:19px 19px}.graph-svg{width:100%;height:100%;display:block;touch-action:none;user-select:none;cursor:grab}.graph-svg.dragging{cursor:grabbing}.canvas-caption{position:absolute;bottom:10px;left:12px;right:12px;display:flex;justify-content:space-between;gap:10px;font-size:11px;color:#586b63;pointer-events:none}.canvas-caption span{background:rgba(249,250,245,.93);padding:3px 6px;border-radius:4px}.graph-inspector{padding:22px 23px;border-left:1px solid var(--line);background:var(--surface);min-width:0}.detail-eyebrow{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);font-weight:700}.detail-title{font-size:22px;margin:10px 0 15px;letter-spacing:-.03em;overflow-wrap:anywhere}.detail-body{font-size:14px;color:var(--muted)}.detail-facts{font-size:13px;margin:16px 0 20px;padding-left:18px}.detail-facts li{margin-bottom:9px}.detail-sources{border-top:1px solid var(--line);padding-top:12px;font-size:12px}.detail-sources a{display:block;overflow-wrap:anywhere;margin-top:8px}.detail-relations{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 18px}.detail-relations button{font-size:11px;padding:5px 7px;min-height:29px;max-width:100%;text-align:left;overflow-wrap:anywhere}.legend{display:flex;gap:9px 18px;flex-wrap:wrap;padding:12px 18px;font-size:12px;border-top:1px solid var(--line);color:var(--muted)}.legend span{display:flex;gap:7px;align-items:center}.legend i{width:22px;border-top:2px solid #75867f;display:inline-block}.legend i.support{border-top-style:dashed}.legend i.optional{border-top:2px dotted var(--purple)}.legend .dot{width:9px;height:9px;border-radius:50%;background:var(--accent);border:0}.walkthrough{display:grid;grid-template-columns:230px auto minmax(220px,1fr);gap:14px;align-items:center;padding:16px 18px;background:#f0f4ed;border-top:1px solid var(--line)}.walkthrough label{display:flex;flex-direction:column;gap:4px;font-size:11px;color:var(--muted);font-weight:600}.walk-buttons{display:flex;gap:6px;align-items:center}.walk-text{font-size:13px;margin:0;min-height:42px}.walk-position{display:block;font-size:11px;letter-spacing:.05em;color:var(--teal);margin-bottom:2px}.graph-select{max-width:350px;min-width:180px}.graph-node{cursor:grab;outline:none}.graph-node rect{fill:#fffefa;stroke:#9eafa6;stroke-width:1.35;transition:fill .12s}.graph-node.external rect{fill:var(--blue-soft);stroke:#9ab0c9}.graph-node.optional rect{fill:var(--purple-soft);stroke:#b9a4ca;stroke-dasharray:4 3}.graph-node.service rect{fill:var(--teal-soft);stroke:#91b7a8}.graph-node.local rect{fill:var(--teal-soft);stroke:#66a093}.graph-node.cloud rect{fill:var(--blue-soft);stroke:#7c9fc8}.graph-node.selected rect,.graph-node:focus-visible rect{fill:var(--accent-soft);stroke:var(--accent);stroke-width:2.7}.graph-node.neighbor rect{stroke:#537f6a;stroke-width:2}.node-title{font-family:Inter,"Segoe UI",sans-serif;font-size:16px;font-weight:650;fill:var(--ink);pointer-events:none}.node-subtitle{font-family:Inter,"Segoe UI",sans-serif;font-size:11.5px;fill:#4e655b;pointer-events:none}.graph-edge{cursor:pointer;outline:none}.edge-line{fill:none;stroke:#899a90;stroke-width:1.5;stroke-linejoin:round;stroke-linecap:round}.graph-edge.support .edge-line{stroke-dasharray:6 5;stroke:#94a599}.graph-edge.optional .edge-line{stroke-dasharray:2 5;stroke:var(--purple)}.graph-edge.visited .edge-line{stroke:#497f69;stroke-width:2}.graph-edge.selected .edge-line,.graph-edge:focus-visible .edge-line{stroke:var(--accent);stroke-width:3}.edge-hit{fill:none;stroke:transparent;stroke-width:20;pointer-events:stroke}.edge-label rect{fill:#f9faf5;opacity:.96}.edge-label text{font-size:11px;font-family:Inter,"Segoe UI",sans-serif;fill:#425f50;text-anchor:middle;dominant-baseline:central}.graph-edge.selected .edge-label text{fill:var(--accent);font-weight:700}.text-column{max-width:980px}.comparison,.proposal{padding:40px 0;border-top:1px solid var(--line)}.table-wrap{overflow-x:auto;margin:22px 0}table{border-collapse:collapse;width:100%;font-size:14px}th{text-align:left;font-size:12px;letter-spacing:.04em;color:var(--muted);font-weight:650;background:#eef1e9}th,td{padding:15px 16px;border-bottom:1px solid var(--line);vertical-align:top}td:first-child{font-weight:650}td code{font-weight:400}blockquote{margin:25px 0;padding:2px 0 2px 22px;border-left:3px solid var(--accent);font-size:21px;max-width:1000px;line-height:1.6}.proposal-intro{max-width:1050px}.two-col{display:grid;grid-template-columns:1fr 1fr;gap:32px}.note{padding:18px 22px;border-left:3px solid var(--teal);background:var(--teal-soft);margin:20px 0;font-size:14px}.warning-note{border-left-color:var(--accent);background:var(--accent-soft)}.kernel-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:22px;margin:25px 0}.kernel-grid article{border-top:2px solid var(--teal);padding-top:12px}.kernel-grid h4{margin-top:0}.kernel-grid p{font-size:14px;color:var(--muted)}.router-lab{padding:24px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);margin:28px 0}.router-lab h3{margin-top:0}.router-grid{display:grid;grid-template-columns:minmax(280px,1fr) 1.1fr;gap:32px}.router-fields{display:grid;gap:12px}.router-fields .field{display:grid;gap:5px;font-size:13px}.router-fields select{width:100%}.route-result{border-left:1px solid var(--line);padding-left:28px;display:flex;flex-direction:column;justify-content:center}.route-result .destination{font-size:32px;font-weight:700;letter-spacing:-.04em;margin:8px 0}.route-result .reason{font-size:14px;max-width:480px}.route-result .trace-code{font-size:12px;color:var(--muted);line-height:1.8}.small{font-size:13px;color:var(--muted)}details{border-top:1px solid var(--line);padding:18px 0}summary{cursor:pointer;font-weight:650}details p,details pre{margin-top:16px}pre{background:#e9eee7;padding:22px;border-radius:10px;overflow:auto;font-size:12px;line-height:1.8;tab-size:4}.source-list{font-size:13px}.source-list li{margin:12px 0}.footer{padding:36px 0 55px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}.footer .wrap{display:flex;justify-content:space-between;gap:25px;flex-wrap:wrap}.skip-link{position:absolute;left:-9999px}.skip-link:focus{left:12px;top:12px;z-index:50;background:var(--surface);padding:10px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.graph-editor{padding:18px;border-top:1px solid var(--line);background:#f7f8f2}.graph-editor>summary{color:var(--teal)}.editor-note{font-size:12px;color:var(--muted);margin:12px 0}.editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px}.editor-grid form{display:grid;align-content:start;gap:10px}.editor-grid h4{margin:8px 0}.editor-field{font-size:12px;display:grid;gap:4px}.editor-field input,.editor-field textarea,.json-editor{width:100%;min-width:0;border:1px solid #b8c4bf;border-radius:7px;padding:8px;background:var(--surface);color:var(--ink);font:inherit}.editor-field textarea{min-height:65px;resize:vertical}.editor-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.editor-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:20px}.editor-actions .danger{color:#9c3426;border-color:#c69688}.editor-status{font-size:12px;min-height:20px;margin:12px 0 0;color:var(--teal)}.editor-status.error{color:#9c3426}.editor-stats{font-size:12px;color:var(--muted);margin-left:auto}.json-editor{min-height:160px;font-family:Consolas,monospace;font-size:12px;line-height:1.6;resize:vertical}.json-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.proposal-editor-warning{font-size:12px;padding:10px 12px;background:var(--accent-soft);border-radius:6px;margin:12px 0}
+@media(max-width:790px){.editor-grid{grid-template-columns:1fr}.editor-row{grid-template-columns:1fr}.editor-stats{margin-left:0;flex-basis:100%}.editor-field input,.editor-field textarea,.json-editor{font-size:16px}}
+@media(min-width:1600px){.canvas-shell{height:700px}}
+@media(max-width:1100px){.wrap{padding-left:28px;padding-right:28px}.graph-layout{grid-template-columns:minmax(0,1fr) 285px}.graph-inspector{padding:18px}.walkthrough{grid-template-columns:210px 1fr}.walk-text{grid-column:1/-1}.canvas-shell{height:640px}.kernel-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:790px){.wrap{padding-left:18px;padding-right:18px}.topbar .wrap{align-items:flex-start;gap:8px;flex-direction:column}.nav{gap:8px 18px}.hero{padding-top:36px}.lede{font-size:17px}.graph-layout{grid-template-columns:1fr}.graph-inspector{border-left:0;border-top:1px solid var(--line)}.canvas-shell{height:550px}.detail-title{font-size:21px}.graph-toolbar{padding:12px}.graph-select{max-width:100%;width:100%}.graph-controls{width:100%}.graph-toolbar>label{width:100%}.walkthrough{grid-template-columns:1fr}.walk-text{grid-column:auto}.walkthrough label{max-width:100%}.walk-buttons{justify-content:flex-start}.router-grid,.two-col,.kernel-grid{grid-template-columns:1fr;gap:16px}.route-result{border-left:0;border-top:1px solid var(--line);padding:18px 0 0}.router-lab{padding:18px}.section-heading{gap:12px}.snapshot{margin-top:12px}th,td{padding:11px;font-size:13px}section{scroll-margin-top:110px}.hero-footer{gap:12px}.canvas-caption{font-size:10px}.reading-note{font-size:13px}blockquote{font-size:18px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+@media print{.topbar,.graph-toolbar,.walkthrough,.router-fields,.canvas-caption{display:none}.wrap{max-width:none;padding:0 15px}.graph-layout{grid-template-columns:1fr 270px}.canvas-shell{height:550px}.graph-explorer{break-inside:avoid}.hero{padding-top:15px}body{background:white}.graph-inspector{font-size:12px}section{break-before:auto}a{color:inherit}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#claude">Skip to the graphs</a>
+<header class="topbar"><div class="wrap"><a class="brand" href="#top">poly<b>inference</b> <span class="small">/ architecture study</span></a><nav class="nav" aria-label="Document sections"><a href="#claude">Claude Code</a><a href="#deep">Deep Agents</a><a href="#mini">mini-swe-agent</a><a href="#proposal">Stage 1 proposal</a><a href="#implementation">Implementation</a></nav></div></header>
+<main class="wrap" id="top">
+<div class="hero">
+  <div class="eyebrow">Source → structure → a buildable first iteration</div>
+  <h1>Agent structures,<br>made explorable.</h1>
+  <p class="lede">Trace three coding-agent designs, inspect the boundaries that make their loops work, then explore a small LangGraph architecture for mixing local and cloud inference in Polyinference.</p>
+  <div class="hero-footer"><span><strong>3</strong> cloned source snapshots</span><span><strong>1</strong> proposed reference agent</span><span>Nodes <strong>and edges</strong> have details</span><span>Prepared 15 October 2026</span></div>
+  <p class="reading-note">These are architectural projections of the inspected code, not generated call graphs. Solid lines show principal flow; dashed lines show supporting services; dotted lines show optional capabilities. Source references and configuration caveats appear in the inspector. The Claude Code mirror is incomplete and does not establish current product behavior. Walkthroughs are illustrative, not recorded executions.</p>
+</div>
+
+<section class="agent-section" id="claude" aria-labelledby="claude-heading">
+  <div class="section-heading"><div><div class="eyebrow">01 / a product-sized harness</div><h2 id="claude-heading">Claude Code snapshot</h2><p>A shared, streaming query loop surrounded by a rich tool runtime, permissions, context management, session storage, and optional delegation. A child agent runs another instance of the core loop.</p></div><span class="section-number">01</span></div>
+  <div class="snapshot"><span class="tag">Reconstructed mirror · incomplete</span><code>a371abbe75ff</code><a href="claude-code-agent-handbook.md">Full source handbook</a><a href="../claude-code/src/query.ts">Core loop source</a></div>
+  <div class="graph-explorer" data-graph="claude"></div>
+</section>
+
+<section class="agent-section" id="deep" aria-labelledby="deep-heading">
+  <div class="section-heading"><div><div class="eyebrow">02 / compose the harness around a runtime</div><h2 id="deep-heading">Deep Agents</h2><p>The SDK assembles middleware and backends, then delegates the model–tool graph to LangChain and LangGraph. The terminal coding application adds MCP, web tools, hosting, approvals, and its own lifecycle.</p></div><span class="section-number">02</span></div>
+  <div class="snapshot"><span class="tag">SDK 0.7.25 · Code 0.1.85</span><code>825acb3ca03b</code><a href="deepagents-agent-handbook.md">Full source handbook</a><a href="../deepagents/libs/deepagents/deepagents/graph.py">Assembly source</a></div>
+  <div class="graph-explorer" data-graph="deep"></div>
+</section>
+
+<section class="agent-section" id="mini" aria-labelledby="mini-heading">
+  <div class="section-heading"><div><div class="eyebrow">03 / keep the feedback loop small</div><h2 id="mini-heading">mini-swe-agent v2</h2><p>A model adapter, an execution environment, and a short agent loop. Coding operations are shell commands. This cloned v2 snapshot supports native tool calling; it is not the original text-only v1 design.</p></div><span class="section-number">03</span></div>
+  <div class="snapshot"><span class="tag">v2.4.6 · sequential actions</span><code>04d809ceab9d</code><a href="mini-swe-agent-handbook.md">Full source handbook</a><a href="../mini-swe-agent/src/minisweagent/agents/default.py">Loop source</a></div>
+  <div class="graph-explorer" data-graph="mini"></div>
+</section>
+
+<section class="comparison" id="comparison" aria-labelledby="comparison-heading">
+  <div class="eyebrow">What the structures tell us</div><h2 id="comparison-heading">The useful difference is the surrounding machinery.</h2>
+  <p class="text-column">All three connect model decisions to tool observations and repeat. Their main differences are what the host guarantees, how much context it manages, and how many lifecycles it supervises. More components do not establish better task performance; fewer components do not establish lower end-to-end cost.</p>
+  <div class="table-wrap"><table><caption class="sr-only">Structural comparison of the three source snapshots</caption><thead><tr><th>Concern</th><th>Claude Code mirror</th><th>Deep Agents SDK / Code</th><th>mini-swe-agent v2</th></tr></thead><tbody>
+    <tr><td>Control flow</td><td>Application-owned streaming query loop.</td><td>LangChain factory graph on LangGraph; middleware wraps requests and tools.</td><td>Small Python loop; model and environment protocols.</td></tr>
+    <tr><td>Coding capabilities</td><td>Dedicated tools, shell, language intelligence; dynamically assembled.</td><td>Filesystem tools and execution-capable backends. Code adds product tools.</td><td>One Bash tool; the model composes the developer workflow.</td></tr>
+    <tr><td>Context and continuity</td><td>Compaction, output artifacts, transcripts, instructions, several memory systems.</td><td>Summary events, effective history, artifact offload, checkpoints; optional memory/skills.</td><td>Linear history, bounded observations, JSON trajectories; no default durable resume service.</td></tr>
+    <tr><td>Delegation</td><td>Child loops, forks, background tasks; gated teams/coordinator features.</td><td>Isolated/forked children; optional remote async lifecycle.</td><td>No native subagent supervisor. Benchmark workers are independent tasks.</td></tr>
+    <tr><td>External tools</td><td>MCP adapters share the internal tool contract.</td><td>Code manages MCP sessions; SDK accepts caller-provided tools.</td><td>Shell-invoked integrations, unless the host is extended.</td></tr>
+    <tr><td>What to borrow</td><td>A common effect boundary, bounded context, recoverable state.</td><td>Explicit graph/state semantics and capability/backend separation.</td><td>One understandable loop and replaceable inference/execution interfaces.</td></tr>
+  </tbody></table></div>
+</section>
+
+<section class="proposal" id="proposal" aria-labelledby="proposal-heading">
+  <div class="eyebrow">04 / proposed · not existing project code</div><h2 id="proposal-heading">One coding agent. A small inference kernel.</h2>
+  <div class="proposal-intro"><blockquote>Keep one task state and one tool loop. Route inference calls between models inside that loop.</blockquote><p>Implement a thin <code>StateGraph</code> rather than adopting the full terminal application. Reproduce mini-swe-agent's clear feedback mechanics on LangGraph, add a few necessities from the richer harnesses, and make the model gateway the main experimental boundary. The proposed graph has seven executable nodes; local/cloud endpoints and persistence are services, not extra agents.</p><p>This matches Stage 1: one repository, one task, one active writer, one local endpoint, and one cloud endpoint. The kernel supports only the graph behavior this agent uses. A general optimizer for arbitrary agent designs can follow once there is evidence that the routing policy helps.</p></div>
+  <div class="note warning-note"><strong>Performance is an evaluation requirement, not an architectural guarantee.</strong> Local exploration can add turns and duplicate cloud prefill. Start with a cloud-only baseline, then enable the hybrid policy on the same tasks. Keep a change only when measured quality, cost, and latency meet predeclared targets.</div>
+  <div class="snapshot"><span class="tag">Recommendation</span><span class="tag">Baseline: 7 executable nodes</span><span class="tag">4 built-in effectful tools</span><a href="../../PROJECT_BRIEF.md">Project brief</a></div>
+  <div class="graph-explorer" data-graph="proposal"></div>
+
+  <div class="router-lab" id="routing-lab">
+    <div class="eyebrow">Try the policy</div><h3>When does the same agent switch models?</h3><p class="small">A deterministic routing illustration. This does not call a model, predict quality, or estimate prices. The selected route is highlighted in the proposal graph.</p>
+    <div class="router-grid"><form class="router-fields" id="route-form">
+      <label class="field">Current work<select id="route-phase" aria-label="Current work"><option value="discovery">Bounded, read-only discovery</option><option value="implementation">Implementation or debugging</option><option value="verification">Final reasoning after checks</option><option value="sticky">Cloud already selected for this task</option></select></label>
+      <label class="check-label"><input type="checkbox" id="route-context" checked> Prepared input fits the local model's budget</label>
+      <label class="check-label"><input type="checkbox" id="route-health" checked> Local endpoint and action protocol are healthy</label>
+      <label class="check-label"><input type="checkbox" id="route-turns" checked> Local discovery allowance remains</label>
+      <label class="check-label"><input type="checkbox" id="route-cloud" checked> Cloud data sharing is permitted</label>
+      <label class="check-label"><input type="checkbox" id="route-budget" checked> A cloud inference is within budget</label>
+    </form><div class="route-result" aria-live="polite"><span class="eyebrow">Next inference</span><div class="destination" id="route-destination">Local model</div><p class="reason" id="route-reason"></p><code class="trace-code" id="route-trace"></code><p class="small">Global time/step limits still apply. A blocked required cloud call pauses or stops the task; it does not silently fall back to a weaker route.</p></div></div>
+  </div>
+
+  <h3>The initial routing policy</h3>
+  <div class="two-col"><div><h4>Local: a bounded discovery window</h4><p>Allow local inference only for an explicitly eligible, read-only discovery phase. Advertise <code>search</code> and <code>read_file</code>. Use a small configurable allowance, initially up to three model turns as an experiment setting. A no-tool response ends discovery and passes its observations into the same task state.</p><p>Escalate when the phase ends, the local context does not fit, an endpoint/protocol fails within the retry policy, a forbidden mutation is requested, or the discovery allowance is exhausted. Host-observable signals drive this decision; the local model's self-reported confidence is insufficient.</p></div><div><h4>Cloud: implementation and recovery</h4><p>Use cloud inference for edits, difficult debugging, and final reasoning. Once selected, remain on cloud for the task in the first hybrid policy. This deliberately limits routing complexity and repeated context transfer. Model changes never reset tool policy or grant new authority.</p><p>The cloud receives a provider-compatible view of the same task, observed file content, current patch/check evidence, and relevant dialogue. Preserve tool-call/result pairing. Normalize provider-specific content; do not blindly forward another provider's cache or reasoning blocks.</p></div></div>
+  <p class="small">These are proposed starting rules, not a claim that discovery is always easy or that three turns is optimal. Cloud-only and local-only baselines may use each model for the whole task; record that intentional policy difference when interpreting the hybrid experiment.</p>
+
+  <h3>The few additions worth having immediately</h3>
+  <div class="kernel-grid">
+    <article><h4>1. A model gateway</h4><p>One inference contract, two adapters, explicit capability/context limits, bounded inference retries, usage and timing. Keep routing in ordinary code before paying for a learned router.</p></article>
+    <article><h4>2. A capability boundary</h4><p>Typed input, valid call IDs, a policy decision, execution, and a matched result. Use serial effects first. Approval and actual workspace/process confinement remain separate responsibilities.</p></article>
+    <article><h4>3. Durable task state</h4><p>A persistent LangGraph checkpointer plus a small append-only event record. Keep external artifacts and operation outcomes addressable. A checkpoint does not roll back the working tree.</p></article>
+    <article><h4>4. A bounded context view</h4><p>Paginate reads; spool large output to files; count full input against the selected model. Compact completed history only under pressure while retaining task, patch, check evidence, and artifact references.</p></article>
+    <article><h4>5. Resource limits</h4><p>Whole-task step, time, and spend limits; per-tool timeouts and output caps. An estimated reservation reduces overshoot but is not a provider-enforced exact spending guarantee.</p></article>
+    <article><h4>6. Evidence-based completion</h4><p>Use the project's configured checks and current diff. Do not run a second verifier model every turn. Invalidate evidence after relevant mutations and report failures or unavailable checks explicitly.</p></article>
+  </div>
+
+  <h3>A small, useful tool set</h3>
+  <div class="table-wrap"><table><thead><tr><th>Tool</th><th>Contract</th><th>Why it earns its place</th></tr></thead><tbody>
+    <tr><td><code>search</code></td><td>Structured file discovery and bounded text search; workspace-relative paths and truncation metadata.</td><td>Lets local discovery work without pretending an arbitrary shell command is provably read-only. Reuse ripgrep and filesystem APIs.</td></tr>
+    <tr><td><code>read_file</code></td><td>Bounded line windows, file identity/content hash, continuation offset.</td><td>Limits context pressure and supplies a precondition for edits.</td></tr>
+    <tr><td><code>apply_patch</code></td><td>Exact patch/replace, expected file hash, workspace scope; stale or ambiguous changes fail with feedback.</td><td>Gives edits explicit freshness and ambiguity checks. Keep semantics narrow.</td></tr>
+    <tr><td><code>run_command</code></td><td>Command, cwd, timeout; policy/approval and constrained process environment; result plus full-output reference.</td><td>Uses existing test/build/Git tooling. A shell string has broad authority and cannot be governed by cwd alone.</td></tr>
+  </tbody></table></div>
+  <p>A normal assistant response without tool calls proposes completion. A deterministic gate checks evidence and either finalizes, requests repair, or records a blocked/unverified outcome. No separate planning, handoff, or finish tool is required for this first graph.</p>
+
+  <h3>MCP: one adapter, the same invocation path</h3>
+  <p class="text-column">If a Stage 1 task requires MCP, use an existing client for one explicitly configured server. The kernel owns connect → discover/filter → invoke → close, timeout handling, and conversion into the same tool/result contract. Start with a small read-only catalog. Do not build an MCP implementation, marketplace, dynamic tool-search system, or OAuth manager before the workload requires them. The adapter seam should exist even when the first benchmark runs with no MCP server.</p>
+
+  <h3>Deliberately deferred</h3>
+  <p class="text-column">A supervisor, specialist agent tree, autonomous reviewer, background workers, team mailboxes, memory consolidation, skill/plugin discovery, embedding retrieval, LSP integration, graph rewriting, and a terminal client/server product. A small project-instruction file can be loaded once at task start; it does not require a skills platform. Add any deferred feature only against an observed failure or measured bottleneck.</p>
+</section>
+
+<section class="proposal" id="implementation" aria-labelledby="implementation-heading">
+  <div class="eyebrow">Build contract</div><h2 id="implementation-heading">A direct mapping to LangGraph</h2>
+  <p class="text-column">Use a typed state and seven node functions. Conditional edges choose continuation; the inference node calls the selected adapter. Compile with a persistent checkpointer, pass a stable thread identity, and use durable interrupts for approvals. These are standard LangGraph concepts; the routing policy and kernel contracts below are Polyinference recommendations. <a href="https://docs.langchain.com/oss/python/langgraph/graph-api">Graph API</a> · <a href="https://docs.langchain.com/oss/python/langgraph/interrupts">Interrupts</a> · <a href="https://docs.langchain.com/oss/python/langgraph/persistence">Persistence</a></p>
+  <div class="table-wrap"><table><thead><tr><th>Executable node</th><th>Work</th><th>Next step</th></tr></thead><tbody>
+    <tr><td><code>prepare</code></td><td>Check whole-task limits; build a bounded request view; load referenced evidence.</td><td><code>route</code>, or <code>finalize</code> with an explicit stopped/blocked outcome.</td></tr>
+    <tr><td><code>route</code></td><td>Select model using phase, capabilities, context fit, health, budget, and cloud permission.</td><td><code>infer</code>, or <code>finalize</code> if the required route is unavailable.</td></tr>
+    <tr><td><code>infer</code></td><td>Call the gateway; normalize output; charge every attempt; retain a valid assistant message.</td><td><code>guard</code> for tool calls; <code>verify</code> for a completion candidate; <code>prepare</code> for bounded repair/escalation.</td></tr>
+    <tr><td><code>guard</code></td><td>Validate proposed calls and policy. Interrupt before effects if approval is needed. Denials produce matched results.</td><td><code>execute</code> for allowed calls; <code>prepare</code> after denial/escalation; or a durable human wait.</td></tr>
+    <tr><td><code>execute</code></td><td>Run the approved batch sequentially; record outcomes, output references, and observations/evidence according to its origin.</td><td><code>prepare</code> for model actions; <code>verify</code> for host-scheduled checks. Unknown mutation outcomes require inspection.</td></tr>
+    <tr><td><code>verify</code></td><td>Local discovery text escalates. A cloud candidate checks current-revision evidence; missing configured checks are queued through the same guard/executor.</td><td><code>guard</code> for missing checks, <code>prepare</code> for repair, or <code>finalize</code> with a truthful terminal status.</td></tr>
+    <tr><td><code>finalize</code></td><td>Persist outcome, final patch/check references, budgets, and explanation.</td><td><code>END</code>. This includes completed, failed, blocked, or budget-stopped outcomes.</td></tr>
+  </tbody></table></div>
+  <details><summary>Graph assembly sketch</summary><p class="small">Illustrative wiring, not a runnable implementation. Node bodies, conditional functions, adapters, state schema, and checkpointer setup must implement the contracts above. Use one routing mechanism per outgoing branch; do not accidentally add an unconditional edge alongside a conflicting dynamic route.</p><pre><code>builder = StateGraph(AgentState)
+for name, fn in nodes.items():
+    builder.add_node(name, fn)
+
+builder.add_edge(START, "prepare")
+builder.add_conditional_edges("prepare", after_prepare,
+    {"route": "route", "stop": "finalize"})
+builder.add_conditional_edges("route", after_route,
+    {"call": "infer", "stop": "finalize"})
+builder.add_conditional_edges("infer", after_infer,
+    {"tools": "guard", "candidate": "verify", "repair": "prepare"})
+builder.add_conditional_edges("guard", after_guard,
+    {"allowed": "execute", "feedback": "prepare"})
+builder.add_conditional_edges("execute", after_execute,
+    {"loop": "prepare", "check": "verify"})
+builder.add_conditional_edges("verify", after_verify,
+    {"continue": "prepare", "checks": "guard", "finish": "finalize"})
+builder.add_edge("finalize", END)
+graph = builder.compile(checkpointer=persistent_checkpointer)</code></pre></details>
+  <details><summary>Small state schema and service boundary</summary><p>Keep durable state serializable and credentials in runtime-owned services. Do not checkpoint open clients or subprocess objects.</p><pre><code>AgentState
+  task / acceptance_criteria / workspace_id / config_version
+  messages                    # stable IDs; paired calls and results
+  phase / selected_model / cloud_sticky / route_reason
+  local_discovery_turns / retry_counters
+  prepared_view_refs          # reconstructable; full artifacts live outside state
+  pending_ops / origin        # model calls or configured host checks
+  approvals                   # bind decisions to exact operation/input hashes
+  workspace_revision / evidence_refs
+  usage / elapsed / limits / status / final_result
+
+Kernel services
+  model_gateway       local + cloud adapters, capabilities, retry, usage
+  capability_runtime  registry, policy, process owner, optional MCP adapter
+  context_store       request view, output artifacts, pressure-triggered rollup
+  run_store           checkpoint integration, events, operation ledger</code></pre><p class="small">For a small prototype these can be ordinary modules in one process. The boundary is about ownership and contracts, not separate services, daemons, or microservices.</p></details>
+  <details><summary>Crash, approval, and model-switch invariants</summary><ul><li>An interrupted node can restart from its beginning. Keep the approval node free of effects before the interrupt; validate the resumed decision against the exact proposed call.</li><li>Checkpointing does not make shell or MCP mutations exactly once. Record operation identities and outcomes; pause on unknown mutation results rather than automatically replaying them.</li><li>Changing models retains task identity, instruction priority, workspace, limits, approvals, and observed evidence. It changes the request representation and available model-facing tools only through explicit policy.</li><li>Every pending model call receives a corresponding result or a deliberate repair record before that transcript is sent to another provider. Host-scheduled checks are typed events/evidence; do not create an unsolicited tool-role message without an assistant call.</li><li>Preserve current workspace/diff/check evidence across context rollup. Never compact away half of a call/result pair.</li><li>Any operation that can mutate the workspace invalidates relevant verification. For arbitrary commands, assume mutation unless an enforceable restricted operation proves otherwise; a model's “read-only” label is insufficient.</li><li>Missing configured checks pass through the same guard and executor, then return directly to verification. The host does not need another model call merely to read a successful exit status. Bound failed-check repair and check rescheduling separately.</li></ul></details>
+
+  <h3>Measure before adding machinery</h3>
+  <div class="table-wrap"><table><thead><tr><th>Experiment</th><th>What stays comparable</th><th>Question answered</th></tr></thead><tbody>
+    <tr><td>Cloud-only</td><td>Same harness, tools, task revisions, limits, and evaluator.</td><td>What quality and latency does the chosen cloud model achieve here?</td></tr>
+    <tr><td>Local-only</td><td>Same task/effect/verification contracts; local model drives the whole loop.</td><td>What can the local stack solve without cloud help?</td></tr>
+    <tr><td>Hybrid, bounded discovery</td><td>Same tasks and evaluator; record its intentional phase/tool-routing restriction.</td><td>Does local navigation save more than its extra turns and cloud context transfer cost?</td></tr>
+    <tr><td>Hybrid ablations</td><td>Change one policy or context feature at a time.</td><td>Which addition improves the quality–cost–latency tradeoff?</td></tr>
+  </tbody></table></div>
+  <p class="text-column">Record task success, cloud spend with a dated pricing basis, local GPU/CPU time, total wall time, per-node latency, token counts, retries, escalation reasons, and final verification. Repeat nondeterministic tasks and report uncertainty. Set the acceptable quality and latency margin before reviewing the hybrid results. A smaller cloud token count alone does not establish a better agent.</p>
+  <p class="text-column">Implement the cloud-only graph first. Add the second adapter and explicit switch tests. Then enable the local discovery policy. A local SQLite-backed checkpointer plus artifact/event files is a reasonable initial persistence arrangement; reuse the available integration rather than building another checkpoint engine. Add MCP only for a task that uses it. Profile before introducing a learned router, read parallelism, repo indexing, or another agent.</p>
+</section>
+
+<section class="proposal" id="sources" aria-labelledby="sources-heading">
+  <div class="eyebrow">Evidence and limits</div><h2 id="sources-heading">Pinned sources, explicit recommendations.</h2>
+  <ul class="source-list"><li><strong>Claude Code mirror:</strong> <code>a371abbe75ffa0d0a3c92290e2bbf56a7ef54367</code>. <a href="claude-code-agent-handbook.md">Handbook and provenance</a>. Available source supports the loop and tool boundaries; missing modules and gates prevent a complete runtime reconstruction.</li><li><strong>Deep Agents:</strong> <a href="https://github.com/langchain-ai/deepagents/tree/825acb3ca03bd103e4df6013b122eca8475d1982"><code>825acb3ca03bd103e4df6013b122eca8475d1982</code></a>. <a href="deepagents-agent-handbook.md">Handbook</a>. The factory loop was inspected in the exact LangChain 1.4.5 wheel recorded in the SDK lockfile; the graph shows the inherited runtime boundary.</li><li><strong>mini-swe-agent:</strong> <a href="https://github.com/SWE-agent/mini-swe-agent/tree/04d809ceab9df28f9adaed044884180159172930"><code>04d809ceab9df28f9adaed044884180159172930</code></a>. <a href="mini-swe-agent-handbook.md">Handbook</a>. V2 native tool calling and environment completion semantics are distinguished from historical v1 descriptions.</li><li><strong>LangGraph API feasibility:</strong> official <a href="https://docs.langchain.com/oss/python/langgraph/graph-api">graph/state/routing documentation</a>, <a href="https://docs.langchain.com/oss/python/langgraph/interrupts">interrupt and resume documentation</a>, and <a href="https://docs.langchain.com/oss/python/langgraph/persistence">persistence documentation</a>, checked for this study. Pin dependency versions when implementing the sketch.</li></ul>
+  <p class="small">The proposed design is original engineering guidance for this brief. No model-quality benchmark, claimed savings percentage, full source build, or security audit is implied. This document runs locally without external scripts, fonts, or model calls; source links are navigation only.</p>
+</section>
+<noscript><p class="note warning-note">Enable JavaScript for graph interaction. The source handbooks linked above contain static graphs and full explanations; the proposal and implementation tables remain readable here.</p></noscript>
+</main>
+<footer class="footer"><div class="wrap"><span>Polyinference · agent structure study · 15 October 2026</span><span><a href="../../PROJECT_BRIEF.md">Project brief</a> · <a href="#top">Back to top ↑</a></span></div></footer>
+<script>
+"use strict";
+const source = {
+  cq:"../claude-code/src/query.ts", ch:"../claude-code/src/QueryEngine.ts", ca:"../claude-code/src/services/api/claude.ts",
+  ct:"../claude-code/src/Tool.ts", ce:"../claude-code/src/services/tools/toolExecution.ts", cs:"../claude-code/src/services/tools/toolOrchestration.ts",
+  cc:"../claude-code/src/context.ts", cm:"../claude-code/src/services/mcp/client.ts", cchild:"../claude-code/src/tools/AgentTool/runAgent.ts",
+  ccompact:"../claude-code/src/services/compact", cstore:"../claude-code/src/utils/sessionStorage.ts", ctask:"../claude-code/src/Task.ts",
+  dg:"../deepagents/libs/deepagents/deepagents/graph.py", df:"../deepagents/libs/deepagents/deepagents/middleware/filesystem.py",
+  db:"../deepagents/libs/deepagents/deepagents/backends/protocol.py", dc:"../deepagents/libs/deepagents/deepagents/middleware/summarization.py",
+  ds:"../deepagents/libs/deepagents/deepagents/middleware/subagents.py", da:"../deepagents/libs/deepagents/deepagents/middleware/async_subagents.py",
+  dapp:"../deepagents/libs/code/deepagents_code/agent.py", dmcp:"../deepagents/libs/code/deepagents_code/mcp_tools.py",
+  dserver:"../deepagents/libs/code/deepagents_code/server_graph.py", dstate:"../deepagents/libs/deepagents/deepagents/_messages_reducer.py",
+  ma:"../mini-swe-agent/src/minisweagent/agents/default.py", mm:"../mini-swe-agent/src/minisweagent/models/litellm_model.py",
+  mp:"../mini-swe-agent/src/minisweagent/models/utils/actions_toolcall.py", mt:"../mini-swe-agent/src/minisweagent/models/utils/actions_text.py",
+  mi:"../mini-swe-agent/src/minisweagent/agents/interactive.py", me:"../mini-swe-agent/src/minisweagent/environments/local.py",
+  md:"../mini-swe-agent/src/minisweagent/environments/docker.py", mr:"../mini-swe-agent/src/minisweagent/run/mini.py",
+  lg:"https://docs.langchain.com/oss/python/langgraph/graph-api", li:"https://docs.langchain.com/oss/python/langgraph/interrupts",
+  lp:"https://docs.langchain.com/oss/python/langgraph/persistence"
+};
+const N=(id,title,subtitle,x,y,kind,body,facts=[],links=[])=>({id,title,subtitle,x,y,kind,body,facts,links});
+const E=(id,from,to,label,body,payload,kind="flow",via=null,extra={})=>({id,from,to,label,body,payload,kind,via,...extra});
+const S=(target,text)=>({target,text});
+const graphs={
+claude:{title:"Claude Code",width:980,height:820,initial:"loop",nodes:[
+ N("host","Session host","REPL / QueryEngine",470,55,"main","Owns conversational lifecycle and receives user, SDK, or remote input. The interactive REPL and headless QueryEngine both reach the shared query generator.",["The UI is a host around the loop, not the reasoning engine.","Session state can outlive a single model/tool iteration."],[[source.ch,"QueryEngine.ts"],["../claude-code/src/screens/REPL.tsx","Interactive REPL"]]),
+ N("store","Session records","transcripts · file history",140,55,"service","Transcripts, metadata, task output, and file history support inspection and recovery. These stores have different lifetimes and do not automatically undo external effects.",["Subagents can have separate transcript sidechains.","A transcript and the current model-visible context are different representations."],[[source.cstore,"Session storage"]]),
+ N("loop","Shared query loop","query() / queryLoop()",470,170,"main","The central async generator prepares context, streams a model response, executes requested tools, appends observations, and continues. Recovery and stop hooks can require another iteration.",["Tool-use blocks, not only a stop-reason string, determine tool execution.","The same core machinery is reused by child runs."],[[source.cq,"query.ts"]]),
+ N("context","Context assembly","instructions · attachments",140,170,"service","Builds model-facing instructions and relevant task material: project rules, environment, attachments, queued input, and configured memory. Repository details are usually discovered through tools.",["The whole repository is not loaded into every request.","Instruction sources and tool availability depend on configuration."],[[source.cc,"context.ts"]]),
+ N("budget","Context management","offload · compact · cache",800,170,"service","Limits expensive history and tool output. Large results can live in artifacts; compaction can replace old dialogue with a summary. Additional strategies are gated.",["Raw transcript, UI history, and inference context can differ.","Compaction must preserve enough state for continued work."],[[source.ccompact,"Compaction services"],["../claude-code/src/utils/toolResultStorage.ts","Tool-result storage"]]),
+ N("model","Model API adapter","stream · retry · usage",470,285,"external","Converts application messages and tool definitions into provider requests and normalizes streamed responses. The model service is external to the leaked source.",["Provider branches and feature gates affect the request.","Eligible tool execution may overlap streamed output under a gated path."],[[source.ca,"Claude API adapter"]]),
+ N("decision","Inspect response","tool calls or completion?",470,400,"main","Actual response content selects continuation. Tool requests enter the execution boundary; a response without them goes through recovery and stop-hook checks before completion.",["A no-tool response is normally a finish candidate.","Stop hooks and recoverable conditions may continue the loop."],[[source.cq,"Response and continuation handling"]]),
+ N("finish","Complete the turn","or continue via recovery",800,400,"main","The generator finishes when no tool work or continuation is required. The host presents and persists the result; external code changes remain in the workspace.",["Finishing the turn is not proof that all desired tests passed.","Continuation can return to the same query loop."],[[source.cq,"query.ts terminal paths"]]),
+ N("scheduler","Tool scheduler","safe batches · barriers",470,515,"main","Partitions consecutive concurrency-safe calls into batches and keeps unsafe actions behind serial barriers. Safety comes from each tool's validated metadata.",["This is not arbitrary parallel execution.","Context modifiers are applied in a controlled order."],[[source.cs,"toolOrchestration.ts"]]),
+ N("guard","Execution boundary","schema · policy · hooks",470,625,"main","Resolves tools, validates input, runs lifecycle hooks, decides allow/ask/deny, and invokes approved capabilities. The permission decision and execution sandbox are distinct boundaries.",["Tool calls retain IDs for their matching results.","Authorization lives in host code as well as model-facing guidance."],[[source.ce,"toolExecution.ts"],[source.ct,"Tool contract"]]),
+ N("native","Native coding tools","read · edit · shell · LSP",140,735,"main","Dedicated capabilities implement code discovery, reads, edits, execution, and configured language intelligence. File-edit validation includes observed-file and freshness checks.",["The model chooses the investigation and verification strategy.","Errors become observations that can drive repair."],[["../claude-code/src/tools.ts","Tool registry"],["../claude-code/src/tools","Tool implementations"]]),
+ N("mcp","MCP adapter","external capability calls",470,735,"optional","Connects to MCP servers and adapts their tools into the same internal tool contract. Discovery, connection/auth, content conversion, and optional tool deferral surround invocation.",["MCP is not the agent loop or ordinary child-agent transport.","External tool availability is configuration-dependent."],[[source.cm,"MCP client and adaptation"]]),
+ N("child","Agent tool / child loop","assignment → child report",800,625,"optional","A selected agent definition creates a child context and runs the shared query machinery. Ordinary assignments and explicit conversation forks have different inheritance rules.",["Child transcripts and mutable bookkeeping are separated.","Background calls return handles and deliver later notifications."],[[source.cchild,"runAgent.ts"]]),
+ N("teams","Background / team modes","gated orchestration",800,735,"optional","Optional task, teammate, mailbox, and coordinator machinery extends child runs. Presence in the mirror does not establish that a feature shipped or was enabled.",["Not required for a normal coding turn.","Some referenced modules are absent from the mirror."],[[source.ctask,"Task.ts"],["claude-code-agent-handbook.md#16-background-tasks-teams-and-coordinator-mode","Gates and orchestration details"]])
+ ],edges:[
+ E("c-start","host","loop","input","The host supplies a turn's messages and context dependencies to the shared generator.","Messages, tool-use context, cancellation and permission callbacks."),
+ E("c-store","store","host","resume / persist","Session records support host continuity and inspection. Restoring dialogue is not a rollback of the filesystem.","Transcript records, metadata, file-history references.","support"),
+ E("c-context","context","loop","context","The loop receives stable instructions plus current task/environment material. Additional context can be attached after tools.","System prompt, user/system context, attachments.","support"),
+ E("c-budget","budget","loop","bounded view","Context-management paths prepare a usable model view as history and outputs grow.","Summaries, previews, artifact paths, cache-related metadata.","support"),
+ E("c-infer","loop","model","infer","The loop invokes the model adapter with the prepared conversation and advertised tools.","Provider-compatible messages, system prompt and tool schemas."),
+ E("c-response","model","decision","streamed response","Normalized assistant content is inspected for actual tool requests and continuation conditions.","Assistant messages, tool-use blocks, usage and stream events."),
+ E("c-tools","decision","scheduler","tool calls","Actual tool requests are scheduled under each tool's concurrency contract.","Tool name, validated input, call ID and associated assistant messages."),
+ E("c-gate","scheduler","guard","scheduled batch","Each scheduled invocation passes through the common effect boundary; parallel eligibility does not waive authorization.","A call plus permission callbacks, abort signal and execution context."),
+ E("c-native","guard","native","approved native call","The approved action reaches the native implementation. Read/edit/shell operations have different validation and effect semantics.","Typed tool input and current tool-use context.","flow",[[310,625],[310,735]]),
+ E("c-mcp","guard","mcp","external call","Configured MCP capabilities use the same host-side tool boundary before crossing the server transport.","External server/tool identity and converted arguments.","optional"),
+ E("c-child","guard","child","delegate","The Agent tool selects an agent definition and builds the child context. This is another run of the loop rather than a separate deterministic planner pipeline.","Assignment, agent definition, allowed tools/model and inheritance policy.","optional"),
+ E("c-observe","native","loop","results","Native results are normalized, paired with call IDs, and fed back into the next query iteration.","Tool results, errors, output references and context updates.","flow",[[35,735],[35,225],[370,225]]),
+ E("c-mcp-result","mcp","loop","results","The MCP adapter converts server content into model-visible results with the originating call identity.","Converted content, errors, media or artifact references.","optional",[[610,735],[610,225]]),
+ E("c-child-result","child","loop","report / notification","A child returns a report or background completion notification. The ordinary path does not insert the full child transcript into the parent.","Child report, task identity or completion notification.","optional",[[925,625],[925,225],[570,225]]),
+ E("c-finish","decision","finish","no tool calls","No-tool output passes through recovery and stop-hook checks before the turn is declared complete.","Finish candidate and continuation state."),
+ E("c-continue","finish","loop","continuation","A recovery condition or stop hook can require another iteration instead of returning control to the user.","Updated continuation/recovery state.","support",[[940,400],[940,110],[570,110]]),
+ E("c-team","teams","child","optional modes","Team and background orchestration adds lifecycles around child runs. These are gated, not prerequisites of the principal loop.","Task ownership, mailbox/lifecycle data, background handles.","optional")
+ ],scenarios:[
+ {name:"A normal coding turn",steps:[S("host","The host receives a task and resolves session state."),S("c-infer","The shared loop prepares a model request."),S("c-response","The model proposes tool use."),S("c-gate","The scheduler and policy boundary validate the call."),S("native","Native discovery, editing, or execution produces observations."),S("c-observe","Matching results return to the loop; the model can iterate."),S("c-finish","A later no-tool response reaches completion checks.")]},
+ {name:"Delegate a bounded assignment",steps:[S("loop","The main agent has enough context to assign a bounded task."),S("c-child","An approved Agent invocation creates a child context."),S("child","The child reuses the same core loop with its configured prompt/tools."),S("c-child-result","A report or later task notification returns to the parent.")]},
+ {name:"Context pressure",steps:[S("budget","Large observations/history require a smaller model-facing view."),S("c-budget","Artifact references and/or a summary enter the next request."),S("c-infer","Inference continues on the reduced view; raw history can remain elsewhere.")]}
+ ]},
+deep:{title:"Deep Agents",width:980,height:815,initial:"model",nodes:[
+ N("config","Caller configuration","model · backend · features",465,55,"main","The caller chooses capabilities and persistence. The default backend is thread-scoped graph-state files, not a local shell or automatically connected MCP host.",["SDK defaults differ from terminal-application defaults.","The inspected snapshot is SDK 0.7.25."],[[source.dg,"create_deep_agent()"]]),
+ N("assembly","Harness assembly","create_deep_agent()",465,170,"main","Resolves model/profile, backend, children, and middleware, then calls LangChain create_agent. The resulting compiled graph executes on LangGraph.",["No new handwritten central runtime loop.","No universal authored base prompt or unconditional todo middleware in this snapshot."],[[source.dg,"graph.py"]]),
+ N("context","Request middleware","summary · optional memory",140,285,"service","Middleware prepares the effective history and prompt/tool surface around inference. Summaries and offloaded artifacts preserve a retrieval path; memory and skills are conditional.",["Effective history and durable raw messages differ.","Tools cannot replace middleware's pre-request transformations."],[[source.dc,"Summarization middleware"],[source.df,"Filesystem/output middleware"]]),
+ N("model","Model node + wrappers","LangChain / LangGraph",465,285,"external","The inherited model node builds a request from messages, system content, tools, state, and runtime. Deep Agents middleware can change that request before the provider call.",["The exact LangChain 1.4.5 factory was inspected separately.","Provider-native capabilities need not be local Python tools."],[[source.dg,"Factory invocation"],["deepagents-agent-handbook.md#7-the-model-tool-loop","Dependency boundary and routing"]]),
+ N("state","State / checkpoints","reducers · optional store",790,170,"service","Graph state carries messages and middleware fields. Message deltas and stable IDs support long histories. Persistence depends on the supplied checkpointer/host.",["A store and a checkpointer solve different lifetimes.","Checkpoint recovery does not undo shell effects."],[[source.dstate,"Message reducer"],[source.dg,"State and persistence configuration"]]),
+ N("dispatch","Conditional routing","pending calls or final output",465,400,"main","LangChain schedules pending tool calls through its tool node and returns to the model. Middleware routing, structured output, and return-direct tools can change normal termination.",["This is inherited framework control flow.","A model completion is not automatically task verification."],[["deepagents-agent-handbook.md#7-the-model-tool-loop","Factory control flow"]]),
+ N("finish","Graph output","final message / structured data",790,400,"main","A normal no-tool response can end the graph. Application goal/rubric behavior can add acceptance checks; it is not universal SDK behavior.",["The SDK returns a runnable graph.","Hosting and user interaction are separate responsibilities."],[[source.dg,"create_agent configuration"]]),
+ N("tools","Tool node + wrappers","policy · dispatch · results",465,515,"main","Local callable tools execute under middleware. Built-in filesystem rules apply to that tool layer; they are not an automatic policy over arbitrary backend or extension code.",["A tool may return a ToolMessage or a Command with state updates.","Tool-call IDs must remain paired with results."],[[source.df,"Tool wrapping and permissions"]]),
+ N("backend","Filesystem / execute","typed backend operations",140,630,"main","Filesystem middleware implements ls/read/write/edit/delete/glob/grep and optional execute over a selected backend. Composite routing selects storage by path prefix.",["Shell capability requires an execution-capable backend.","Virtual routes are not automatically shell mounts."],[[source.df,"Filesystem tools"],[source.db,"Backend contracts"]]),
+ N("child","task → child graph","isolated / fork / compiled",465,630,"main","The configurable default general-purpose child and caller-defined children run their own loops. Isolated assignments and conversation forks use different inheritance/filtering rules.",["A default child can be disabled or replaced.","Shared workspace effects are distinct from shared conversation history."],[[source.ds,"SubAgentMiddleware"],[source.dg,"Child assembly"]]),
+ N("async","Remote async agents","start · check · update · cancel",790,630,"optional","Optional Agent Protocol clients manage independent remote thread/run lifecycles. This is different from awaiting a local child with an async Python method.",["A human wait is a nonterminal task state.","Shipped instructions report a task ID and avoid immediate polling."],[[source.da,"Async-subagent middleware"]]),
+ N("app","Code application tools","MCP · web · host policy",790,515,"optional","deepagents-code adds managed MCP sessions, Tavily search, page fetch, application approvals, hooks, and client/server hosting. These are not automatically present in a default SDK graph.",["Current MCP code uses FastMCP and LangChain conversion.","Host configuration and credentials determine availability."],[[source.dapp,"Coding application assembly"],[source.dmcp,"MCP manager"],[source.dserver,"Server graph resources"]]),
+ N("results","Messages + state updates","ToolMessage / Command",465,750,"main","Tool feedback and declared state updates feed the next model request through graph reducers. Private fields and child state are selectively propagated.",["A child report need not include its complete message log.","State updates and external effects have different replay behavior."],[[source.ds,"Child result mapping"],[source.dstate,"Message updates"]])
+ ],edges:[
+ E("d-build","config","assembly","construct","Construction binds the chosen model, capabilities, middleware, and persistence into a runnable graph.","Model/profile, tools, backend, children, checkpointer and store."),
+ E("d-enter","assembly","model","invoke graph","After construction, input/thread configuration begins the inherited runtime model/tool loop.","Initial messages and runtime configuration."),
+ E("d-context","context","model","request view","Middleware wraps the model request to apply context, prompt, and optional skill/tool disclosure behavior.","Effective history, rendered instructions and tool catalog.","support"),
+ E("d-state","state","assembly","persistence config","The caller/host supplies checkpoint/store behavior. SDK message state uses stable IDs and delta reduction.","State schema, reducers, checkpointer/store handles.","support"),
+ E("d-response","model","dispatch","assistant output","The framework inspects completed assistant output and determines whether pending calls remain.","Assistant message, tool-call IDs, structured-output state."),
+ E("d-calls","dispatch","tools","pending calls","Pending calls reach the inherited tool node and registered wrappers. Runtime concurrency is not a complete effect-conflict classifier.","Named calls and current graph/runtime context."),
+ E("d-finish","dispatch","finish","no calls / direct","Normal no-tool output, direct-return behavior, or structured output can complete the graph under framework rules.","Final state and configured response format."),
+ E("d-files","tools","backend","file / execute call","Built-in wrappers validate and enforce their configured policy before backend operations.","Typed path/content/search/command arguments.","flow",[[300,515],[300,630]]),
+ E("d-task","tools","child","task call","The task wrapper starts the selected child with an assignment or filtered fork context.","Child type, description, eligible shared state and tool-call ID."),
+ E("d-async","tools","async","background task","Optional remote lifecycle tools start or inspect independently tracked runs. Remote authority belongs to the remote host.","Graph identity, remote thread/run identity, task record.","optional",[[620,515],[620,630]]),
+ E("d-app","tools","app","application call","Optional Code-hosted tools add MCP/web and other capabilities through the same tool abstraction.","Application tool input and workspace-bound resources.","optional"),
+ E("d-file-results","backend","results","observations","Backend results are formatted as bounded observations, errors, and artifact/state references.","Typed backend result converted to model feedback.","flow",[[140,750]]),
+ E("d-child-results","child","results","report + updates","A selected report or structured response and allowed changed state return to the parent.","ToolMessage and optional Command state updates."),
+ E("d-async-results","async","results","task record / result","Lifecycle tools return status, identity, result, or pending human-wait information.","Tracked task state and remote result/interrupt metadata.","optional",[[790,750]]),
+ E("d-app-results","app","results","external results","Managed application tools return converted observations under host policy.","MCP content, search results, page content, or errors.","optional",[[940,515],[940,790],[465,790]]),
+ E("d-loop","results","model","continue","Reduced state enters another request. Context middleware reconstructs the effective history before inference.","Updated messages/state, not necessarily every raw stored payload.","flow",[[30,750],[30,345],[365,345]]),
+ E("d-compact","context","backend","history artifact","Compaction/offloading stores displaced material through the configured backend; storage routing determines persistence and size benefit.","History/tool-output artifacts and later retrieval paths.","support",[[255,285],[255,575],[140,575]])
+ ],scenarios:[
+ {name:"SDK coding loop",steps:[S("d-build","Construction assembles a graph; it does not itself execute the task."),S("model","The inherited model node invokes the selected provider through wrappers."),S("d-calls","Pending calls enter tool middleware."),S("backend","Coding requires a configured real filesystem/execution backend."),S("d-file-results","Typed backend output becomes a bounded observation."),S("d-loop","The graph continues with updated state."),S("d-finish","A later no-tool response can finish.")]},
+ {name:"Task delegation",steps:[S("d-task","The model selects a named child through the task tool."),S("child","The child runs its own configured graph/context."),S("d-child-results","A report and allowed state changes return; the full child log is not blindly copied."),S("d-loop","The parent resumes reasoning on that report.")]},
+ {name:"Code host + MCP / web",steps:[S("app","The Code application has constructed workspace-bound connections and tools."),S("d-app","A selected application tool crosses its policy/transport boundary."),S("d-app-results","Results rejoin the same feedback loop.")]},
+ {name:"Remote child waits for human",steps:[S("d-async","An async tool creates a remote task identity."),S("async","Report the identity; check when requested. A successful run may still have an interrupted thread."),S("d-async-results","The parent receives waiting status, not a false completion.")]}
+ ]},
+mini:{title:"mini-swe-agent v2",width:980,height:780,initial:"agent",nodes:[
+ N("runner","Runner + configuration","mini / benchmark script",470,55,"main","Selects model, environment, prompts, limits, and output paths, then constructs the agent. CLI and benchmark hosts reuse the component protocols.",["The interactive CLI defaults differ from DefaultAgent alone.","V2's normal adapter uses native tool calls."],[[source.mr,"CLI run script"],["../mini-swe-agent/src/minisweagent/__init__.py","Component protocols"]]),
+ N("agent","Agent loop","DefaultAgent.run / step",470,170,"main","Owns ordered messages and repeats query plus action execution until an internal exit record is appended. Expected control-flow exceptions carry messages into the loop.",["No native planner/worker hierarchy.","run() clears messages but does not reset every constructor-owned budget counter."],[[source.ma,"DefaultAgent"]]),
+ N("limits","Limits + accounting","steps · spend · wall time",140,170,"service","Checks caps before the next model request, counts calls and costs, and handles consecutive format errors. Per-command and provider timeouts remain separate controls.",["A spend threshold can overshoot on the next billed request.","Format failures can still incur inference cost."],[[source.ma,"query() and FormatError handling"]]),
+ N("trajectory","Trajectory records","JSON + inspector",800,170,"service","Serializes messages, raw metadata, effective configuration, usage, and terminal outcome. Saving occurs after loop passes when configured.",["Not a complete checkpoint/resume service.","The log does not recreate the execution environment."],[[source.ma,"serialize() / save()"],["../mini-swe-agent/src/minisweagent/run/utilities/inspector.py","Trajectory inspector"]]),
+ N("model","Model adapter","API + request shaping",470,285,"external","Calls the selected provider and owns action parsing and observation formatting. The loop does not need provider-specific branches.",["LiteLLM, Responses, and text variants share contracts.","Prepared provider messages can differ from raw trajectory records."],[[source.mm,"LiteLLM adapter"],["../mini-swe-agent/src/minisweagent/models/litellm_response_model.py","Responses adapter"]]),
+ N("parse","Action protocol","bash(command)",470,400,"main","Native parsing requires at least one valid Bash call; the text variant requires one marked command block. Actions retain call IDs where applicable.",["Schema/parsing is not semantic command authorization.","Native V2 can contain multiple actions in one response."],[[source.mp,"Native action protocol"],[source.mt,"Text protocol"]]),
+ N("approval","Interactive approval","optional confirm / human mode",140,400,"optional","InteractiveAgent adds human commands, batch confirmation, regex whitelisting, and live continuation. DefaultAgent alone does not provide this interaction.",["Confirmation is not a shell-aware safety proof.","The interactive executor preserves partial observations in finally."],[[source.mi,"InteractiveAgent"]]),
+ N("execute","Sequential actions","env.execute for each action",470,515,"main","The default executor gathers action results sequentially and then asks the adapter to format observations. It does not schedule safe parallel batches.",["A mid-batch exception differs from the interactive partial-result path.","Tool transport and effect execution stay separate."],[[source.ma,"execute_actions()"]]),
+ N("environment","Execution environment","fresh shell · persistent files",470,630,"main","Runs commands locally or through a chosen container/service. A new shell per action avoids relying on persistent interpreter state; files and containers may persist.",["Local cwd does not provide confinement.","Cleanup and remote timeout guarantees depend on the implementation."],[[source.me,"LocalEnvironment"],[source.md,"DockerEnvironment"]]),
+ N("observe","Observation formatting","bounded output + return code",140,630,"main","The model adapter turns result dictionaries into tool-ID messages or text observations using templates. Raw output can remain in trajectory metadata.",["Output clipping is not history compaction.","Nonzero command exits normally become repair feedback."],[[source.mp,"Native result formatter"],[source.mm,"Observation formatting"]]),
+ N("finish","Submitted → exit record","marker + zero return code",800,630,"main","The environment recognizes a successful output whose first relevant line is COMPLETE_TASK_AND_SUBMIT_FINAL_OUTPUT. It raises Submitted; the exit metadata becomes the run result.",["Ordinary prose without the action convention does not finish the default loop.","The benchmark patch is prepared by the model, not automatically computed by the environment."],[[source.me,"_check_finished()"],[source.ma,"Exit handling"]])
+ ],edges:[
+ E("m-start","runner","agent","construct + run","The runner creates the model/environment/agent triple and supplies the task.","Effective configuration, task template variables and initial messages."),
+ E("m-limits","limits","agent","before inference","Budget checks gate the next query; accounting includes billed malformed responses through a special error path.","Call count, accumulated cost, elapsed time and limits.","support"),
+ E("m-save","agent","trajectory","save in finally","The run serializes configured state after each loop pass, including many failure paths.","Messages, configuration, costs and exit metadata.","support"),
+ E("m-query","agent","model","query(messages)","The complete accumulated conversation is prepared by the adapter and sent to the selected provider.","Linear message list plus adapter configuration."),
+ E("m-parse","model","parse","response → actions","The adapter translates provider output into a common extra.actions representation, retaining billed/raw evidence on parsing failure.","Action dictionaries with command and optional tool-call ID."),
+ E("m-act","parse","execute","default path","DefaultAgent executes the parsed actions without an interactive confirmation service.","Actions stored in the assistant message's extra metadata."),
+ E("m-ask","parse","approval","interactive override","The interactive subclass can ask before a command batch or obtain human-supplied commands instead.","Command text, whitelist match and human response.","optional"),
+ E("m-approved","approval","execute","approved batch","Approved commands enter the same environment contract. Rejected commands instead produce model feedback.","Approved actions with original call identities.","optional",[[290,400],[290,515]]),
+ E("m-reject","approval","agent","reject / feedback","A rejected batch becomes conversation feedback so the model can revise its proposal.","User message and explicit unexecuted-action observations as applicable.","optional",[[35,400],[35,230],[370,230]]),
+ E("m-effect","execute","environment","command","Each action runs independently under the environment's cwd, timeout, credential, and isolation behavior.","Shell command and execution settings."),
+ E("m-observe","environment","observe","ordinary result","Output and return code return to the adapter. Errors/timeouts can include partial output and exception metadata.","Result dictionary; no authenticated finish event on this branch."),
+ E("m-loop","observe","agent","append + repeat","Formatted observations enter linear history and drive the next inference. Old messages are not automatically summarized.","Paired tool results or user-role observations.","flow",[[35,630],[35,110],[370,110]]),
+ E("m-submit","environment","finish","finish marker","Only the marker convention with a zero return code triggers the completion exception. Ordinary tool output takes the observation path.","Submitted exit message containing the remaining printed text."),
+ E("m-terminal","finish","trajectory","terminal metadata","The loop persists the terminal exit record and the runner consumes its submission.","Exit status, submission, final usage and configuration.","support",[[930,630],[930,170]])
+ ],scenarios:[
+ {name:"Default coding loop",steps:[S("m-start","The runner chooses components and renders the task."),S("m-query","The adapter queries a provider using accumulated messages."),S("m-parse","Native tool calls or a marked text action become command dictionaries."),S("m-effect","Commands execute sequentially in the selected environment."),S("m-observe","Output becomes an observation."),S("m-loop","The next inference can diagnose, edit, or test again."),S("m-submit","A later successful finish-marker command raises Submitted.")]},
+ {name:"Interactive rejection",steps:[S("m-ask","InteractiveAgent intercepts a command batch that requires confirmation."),S("approval","The human rejects it; the shell has not executed the rejected actions."),S("m-reject","Feedback returns to the model so it can propose a different action.")]},
+ {name:"A test fails",steps:[S("environment","The test command exits nonzero."),S("m-observe","The result becomes a normal observation, not automatic task termination."),S("m-loop","The same loop lets the model inspect and repair the failure.")]}
+ ]},
+proposal:{title:"Polyinference Stage 1",width:980,height:905,initial:"route",editable:true,nodes:[
+ N("start","Task + workspace","START · one active writer",465,55,"main","The runner binds a task, acceptance criteria, workspace, effective configuration, and stable thread identity. One task owns the working tree in Stage 1.",["This is graph input, not an extra agent.","New tasks get their own budget and state lifecycle."],[["../../PROJECT_BRIEF.md","Project brief"]]),
+ N("prepare","Prepare context","node 1 · bounded request",465,170,"main","Checks task limits and constructs a provider-independent request view from task state and external artifacts. Preserve instructions, current patch/check evidence, and complete tool-call/result pairs.",["Paginate reads and spool large tool output.","Compact completed history only when pressure requires it.","Do not lose task identity or limits when changing models."],[[source.lg,"LangGraph state and nodes"]]),
+ N("route","Select inference route","node 2 · ordinary code",465,285,"main","Selects the next model using phase, capability, context fit, endpoint health, budget, and cloud permission. The first hybrid policy permits bounded local discovery and keeps cloud sticky after escalation.",["No paid supervisor/classifier call on every turn.","Host-observed failures beat model self-confidence.","Unavailable required cloud inference stops or pauses honestly."],[["#routing-lab","Routing policy simulator"]]),
+ N("infer","One inference gateway","node 3 · same agent state",465,400,"main","Calls the selected model adapter, records usage and latency, normalizes the response, and determines whether there are tool calls, a completion candidate, or a bounded recoverable failure.",["Local/cloud endpoints are services, not independent agents.","Every retry attempt is accounted for.","Provider-specific request conversion must preserve valid call/result structure."],[["../../PROJECT_BRIEF.md","Inference-layer objective"]]),
+ N("local","Local endpoint","bounded discovery policy",140,400,"local","The initial hybrid policy advertises only search/read during eligible discovery. A small allowance limits extra turns before cloud handover. Model/runtime choices remain open until hardware is known.",["Input must fit this model's actual context/output budget.","Do not execute a mutation because the local model guessed another tool name."],[["#proposal","Proposed routing policy"]]),
+ N("cloud","Cloud endpoint","implementation / recovery",790,400,"cloud","Handles implementation, difficult recovery, and final reasoning in the first hybrid policy. It receives a compatible view of the existing task, not a fresh agent with forgotten history.",["Requires configured data-sharing permission and budget.","Sticky selection limits routing churn and repeated transfer."],[["#proposal","Proposed routing policy"]]),
+ N("guard","Validate + authorize","node 4 · before effects",465,515,"main","Validates tool name, arguments, IDs, scope, and effective authority. Applies deterministic policy and pauses for approval when needed. Denials return matched observations and may trigger escalation.",["An approval applies to the exact operation/input hash.","Keep effects outside the pre-interrupt portion of this node.","Do not equate a tool schema with safe command semantics."],[[source.li,"LangGraph interrupts"]]),
+ N("human","Human decision","durable interrupt / resume",790,515,"optional","The host presents the proposed action and resumes the same thread with a decision. The node can restart from its beginning, so approval handling must be free of earlier effects.",["Unattended mode needs a reject/allow/pause policy.","A persisted decision is not a broad future capability grant."],[[source.li,"Interrupt and resume semantics"]]),
+ N("execute","Execute approved tools","node 5 · serial effects",465,630,"main","Calls the capability runtime for the approved batch. Model actions append paired results; configured host checks record typed evidence and return directly to verification.",["Four built-ins: search, read_file, apply_patch, run_command.","Unknown mutation outcomes require inspection, not blind retry.","Invalidate relevant verification after mutations."],[["#implementation","Execution contracts"]]),
+ N("mcp","Configured MCP adapter","optional existing client",140,630,"optional","When required by a task, manage one configured server through the same capability contract. Filter a small read-only catalog; reuse an existing transport/client implementation.",["Connect/discover/call/close belongs to kernel resource ownership.","The graph does not require MCP for ordinary repository work."],[["#proposal","Minimal MCP scope"]]),
+ N("store","Run + artifact store","checkpoint / events / ledger",140,285,"service","A persistent checkpointer tracks graph state. An event record and operation ledger retain execution evidence; artifact storage keeps large content outside messages.",["External effects are not rolled back by a checkpoint.","Keep credentials and live clients out of serialized state."],[[source.lp,"LangGraph persistence"]]),
+ N("verify","Check completion evidence","node 6 · no reviewer agent",790,745,"main","A local no-tool response closes discovery and escalates. A cloud candidate is checked against current evidence. Missing configured checks go through guard/execute and return here without another inference.",["Stale evidence after an edit cannot validate completion.","Host checks are evidence events, not unmatched tool messages.","Bound repair loops and allow an honest blocked/failed outcome."],[["#implementation","Verification contract"]]),
+ N("finalize","Persist outcome → END","node 7 · truthful status",790,855,"main","Records final patch/evidence references, usage, routing decisions, and completion status. END can mean completed, failed, blocked, or budget-stopped; it must not imply success in every case.",["Attach exact checked revision/workspace identity where possible.","No unmeasured quality or savings claim."],[["../../PROJECT_BRIEF.md","Stage 1 completion criteria"]])
+ ],edges:[
+ E("p-start","start","prepare","begin / resume","The host supplies or resumes serializable task state under a stable thread identity.","Task, workspace, acceptance criteria, configuration and limits."),
+ E("p-route","prepare","route","request fits policy","The prepared context and remaining resources become inputs to deterministic selection.","Phase, context size/capabilities, health, budget and recent failures."),
+ E("p-infer","route","infer","selected model","A successful route selects one adapter inside the same inference node. This is not agent delegation.","Model key, route reason and provider-specific request settings."),
+ E("p-local","infer","local","selected: local","The gateway invokes the local endpoint for a policy-eligible discovery request and normalizes its response.","Bounded context plus read/search schema; response and usage.","flow",null,{both:true}),
+ E("p-cloud","infer","cloud","selected: cloud","The same gateway invokes cloud after eligibility, data-sharing and budget checks. Existing task state is retained.","Compatible context/tool schema; response and usage.","flow",null,{both:true}),
+ E("p-tools","infer","guard","tool calls","A parsed proposal goes through policy before any effect. Invalid/malformed output is handled under bounded repair rules.","Assistant message, named calls, arguments and IDs."),
+ E("p-approved","guard","execute","allowed calls","Only approved calls execute. If one call is denied, preserve a result for it and never silently widen authority.","Validated operations bound to decisions and input hashes."),
+ E("p-loop","execute","prepare","model observations","For model-originated actions, paired observations and mutation metadata enter the next context view.","Tool results, artifact refs, workspace revision and usage.","flow",[[315,630],[315,225],[365,225]]),
+ E("p-candidate","infer","verify","no-tool candidate","A no-tool response is interpreted according to phase. Local discovery text escalates; a cloud final response must pass the evidence gate.","Completion candidate, phase and current verification records.","flow",[[625,400],[625,745]]),
+ E("p-repair","verify","prepare","repair / escalate","Failed checks, missing evidence, or a local discovery completion update phase and continue within limits.","Failure observations, required checks and escalation reason.","flow",[[930,745],[930,225],[565,225]]),
+ E("p-finish","verify","finalize","accepted / terminal","Evidence supports completion, or policy requires an honest non-success terminal outcome. Persist the distinction.","Outcome, patch and check evidence references."),
+ E("p-stop","route","finalize","route unavailable","If the required route violates permission or budget, stop/pause rather than silently degrading the policy.","Blocked or budget-stopped reason.","support",[[955,285],[955,855]]),
+ E("p-limit","prepare","finalize","task limit","Whole-task step/time/spend exhaustion bypasses further inference. No model request is required to announce the stop.","Limit status and retained partial-work evidence.","support",[[970,170],[970,890],[790,890]]),
+ E("p-approval","guard","human","interrupt / resume","A durable human decision happens before effects. Resuming restarts the affected node, so revalidation must be safe.","Exact proposed operation and decision payload.","optional",null,{both:true}),
+ E("p-mcp","execute","mcp","configured tool","An enabled MCP tool uses the same invocation policy/result contract and an existing client transport.","Filtered schema, call, server result or lifecycle error.","optional",null,{both:true}),
+ E("p-checkpoint","store","prepare","restore / reference","Checkpoint and artifact references reconstruct context and task continuity, not a filesystem rollback.","Serializable state and bounded retrieval references.","support",[[140,170]]),
+ E("p-record","execute","store","record outcome","Record operation status and full-output refs for inspection and ambiguous-failure handling.","Operation ID, outcome, timings, artifacts and mutation metadata.","support",[[265,630],[265,285]]),
+ E("p-denied","guard","prepare","denial / escalation","Denied or out-of-phase calls receive matched feedback. A local mutation request escalates without executing it.","Policy result, call ID and route reason.","support",[[610,515],[610,170]]),
+ E("p-retry","infer","prepare","bounded recovery","A recoverable inference/protocol failure updates counters and route eligibility. No malformed assistant call is silently left in the next provider request.","Failure evidence, charged attempt and explicit retry/escalation reason.","support",[[650,400],[650,110],[465,110]]),
+ E("p-checks","verify","guard","missing checks","Queue configured missing checks as host-originated operations and reuse authorization. Do not run verification commands through an ungoverned side path.","Typed check operation, current revision, origin and required policy.","flow",[[890,745],[890,570],[565,570]]),
+ E("p-check-results","execute","verify","check evidence","For host-scheduled checks, record evidence and return directly to the deterministic gate. A passing check does not require another model round trip.","Exit status, output artifact, checked revision and operation outcome.","flow",[[675,630],[675,745]])
+ ],scenarios:[
+ {name:"Local discovery → cloud edit",steps:[S("p-start","Bind one task, one workspace, one budget."),S("p-route","Build context and select an eligible local discovery route."),S("p-local","The local model can search and read through a restricted schema."),S("p-tools","Its tool proposals still cross the guard."),S("p-loop","Observations update the same conversation."),S("p-candidate","Discovery ends or reaches its bound; this is not final task completion."),S("p-repair","Set cloud sticky and retain discovered evidence."),S("p-cloud","The cloud model continues the task and can implement changes."),S("p-approved","Approved edits/tests execute under the same policy."),S("p-finish","Complete only with current evidence or an explicit non-success outcome.")]},
+ {name:"Approval before a command",steps:[S("p-tools","The model proposes a command."),S("guard","Validate its exact scope and policy."),S("p-approval","Interrupt before executing; persist enough to resume safely."),S("p-approved","A matching approval lets the exact operation proceed."),S("p-record","Persist outcome; inspect ambiguity instead of blindly repeating a mutation.")]},
+ {name:"A check fails",steps:[S("verify","The final candidate has failing current-revision evidence."),S("p-repair","Return failure evidence to the same loop."),S("p-cloud","Use cloud recovery within limits."),S("p-loop","After repair, invalidate stale evidence and collect fresh results."),S("p-finish","Finish after acceptance or a truthful terminal failure.")]},
+ {name:"Missing checks, no extra inference",steps:[S("verify","The candidate is missing configured verification evidence."),S("p-checks","Queue the missing check through the common authorization boundary."),S("p-approved","Approved host check operations execute under the same policy."),S("p-check-results","Record typed evidence and return directly to verification."),S("p-finish","A successful check can complete the candidate without another model call.")]},
+ {name:"Cloud required but unavailable",steps:[S("route","Local eligibility is false or cloud is already sticky."),S("p-stop","Permission or budget blocks the required cloud call."),S("finalize","Record blocked/budget-stopped; do not pretend a weaker fallback satisfies the policy.")]}
+ ]}
+};
+const clone=value=>JSON.parse(JSON.stringify(value));
+const NS="http://www.w3.org/2000/svg";
+function ui(tag,attrs={},text){
+  const node=document.createElement(tag);
+  for(const [key,value] of Object.entries(attrs)) if(value!==false && value!=null) node.setAttribute(key,value===true?"":String(value));
+  if(text!=null) node.textContent=String(text);
+  return node;
+}
+function svgNode(tag,attrs={},text){
+  const node=document.createElementNS(NS,tag);
+  for(const [key,value] of Object.entries(attrs)) node.setAttribute(key,String(value));
+  if(text!=null) node.textContent=String(text);
+  return node;
+}
+function safeLink(href){
+  return typeof href==="string" && (/^https?:\/\//i.test(href) || /^(?:\.\.\/|\.\/|#|[a-z0-9][a-z0-9._-]*\.md(?:#|$))/i.test(href)) && !/[\u0000-\u001f]/.test(href);
+}
+function linesOf(text,max=22){
+  const words=String(text).split(/\s+/).flatMap(word=>word.match(new RegExp(".{1,"+max+"}","g"))||[]),lines=[];let line="";
+  for(const word of words){if(line && line.length+word.length+1>max){lines.push(line);line=word;}else line+=(line?" ":"")+word;}
+  if(line) lines.push(line);const visible=lines.slice(0,2);if(lines.length>2)visible[1]=visible[1].slice(0,max-1)+"…";return visible;
+}
+function validateDiagram(input){
+  if(!input || !Array.isArray(input.nodes) || !Array.isArray(input.edges)) throw Error("Expected nodes and edges arrays.");
+  if(input.nodes.length>80 || input.edges.length>220) throw Error("Use at most 80 nodes and 220 edges.");
+  const ids=new Set(),kinds=new Set(["main","service","external","optional","local","cloud"]);
+  const text=(v,max)=>String(v==null?"":v).slice(0,max);
+  const id=v=>{if(typeof v!=="string" || !/^[a-zA-Z0-9_-]{1,90}$/.test(v) || ids.has(v))throw Error("IDs must be unique letters, numbers, hyphens or underscores.");ids.add(v);return v;};
+  const coord=v=>{if(typeof v!=="number" || !Number.isFinite(v) || Math.abs(v)>20000)throw Error("Node positions must be finite coordinates.");return v;};
+  const links=v=>Array.isArray(v)?v.filter(x=>Array.isArray(x)&&safeLink(x[0])).slice(0,6).map(x=>[text(x[0],1000),text(x[1],160)]):[];
+  const nodes=input.nodes.map(n=>({id:id(n.id),title:text(n.title,70)||"Untitled node",subtitle:text(n.subtitle,80),x:coord(n.x),y:coord(n.y),kind:kinds.has(n.kind)?n.kind:"main",body:text(n.body,3500),facts:Array.isArray(n.facts)?n.facts.slice(0,8).map(v=>text(v,700)):[],links:links(n.links)}));
+  const nodeIds=new Set(nodes.map(n=>n.id));
+  const edges=input.edges.map(e=>{
+    const edge={id:id(e.id),from:String(e.from),to:String(e.to),label:text(e.label,70),body:text(e.body,3500),payload:text(e.payload,1500),kind:["flow","support","optional"].includes(e.kind)?e.kind:"flow",both:e.both===true,links:links(e.links),via:null};
+    if(!nodeIds.has(edge.from)||!nodeIds.has(edge.to))throw Error("Every edge must connect existing nodes.");
+    if(Array.isArray(e.via))edge.via=e.via.slice(0,12).map(p=>{if(!Array.isArray(p)||p.length!==2)throw Error("Invalid edge waypoint.");return [coord(p[0]),coord(p[1])];});
+    return edge;
+  });
+  return {nodes,edges};
+}
+class GraphExplorer{
+  constructor(root,key,data){
+    this.root=root;this.key=key;this.original=clone(data);this.data=clone(data);this.showOptional=true;
+    this.camera={x:0,y:0,scale:1};this.selection=data.initial;this.undoStack=[];this.redoStack=[];this.serial=0;this.walkIndex=-1;this.scenarioIndex=-1;this.visited=new Set();
+    this.storageKey="polyinference-proposed-structure-v1";this.restoreMessage="";
+    if(data.editable){try{const raw=localStorage.getItem(this.storageKey);if(raw){const saved=JSON.parse(raw);if(saved.version===1){Object.assign(this.data,validateDiagram(saved));this.restoreMessage="Restored your saved diagram from this browser.";}}}catch(error){this.restoreMessage="No saved view was loaded. JSON export remains available.";}}
+    this.build();this.render();this.select(this.selection);this.resizeObserver=new ResizeObserver(()=>this.fit(false));this.resizeObserver.observe(this.canvas);
+  }
+  button(label,action,attrs={}){
+    const button=ui("button",{type:"button",...attrs},label);button.addEventListener("click",action);return button;
+  }
+  build(){
+    const toolbar=ui("div",{class:"graph-toolbar"}),controls=ui("div",{class:"graph-controls"});
+    controls.append(this.button("−",()=>this.zoom(.82),{"aria-label":"Zoom out "+this.data.title}),this.button("+",()=>this.zoom(1.22),{"aria-label":"Zoom in "+this.data.title}),this.button("Fit",()=>this.fit(true)),this.button("Reset layout",()=>this.resetLayout()));
+    this.zoomLabel=ui("span",{class:"zoom-readout"});controls.append(this.zoomLabel);
+    this.optionalCheckbox=ui("input",{type:"checkbox",checked:true});const optionLabel=ui("label",{class:"check-label"});optionLabel.append(this.optionalCheckbox,document.createTextNode("Show optional branches"));
+    this.optionalCheckbox.addEventListener("change",()=>{this.showOptional=this.optionalCheckbox.checked;this.render();this.select(this.selection);});
+    controls.append(optionLabel);
+    if(this.data.editable)controls.append(this.button("Edit graph",()=>{this.editor.open=true;this.editor.scrollIntoView({block:"center",behavior:"auto"});this.nodeTitle.focus();},{class:"primary"}));
+    const selectLabel=ui("label",{class:"sr-only",for:this.key+"-inspect"},"Inspect a node or edge");
+    this.targetSelect=ui("select",{id:this.key+"-inspect",class:"graph-select","aria-label":this.data.title+": inspect a node or edge"});
+    this.targetSelect.addEventListener("change",()=>{this.select(this.targetSelect.value);this.centerSelection();});
+    toolbar.append(controls,selectLabel,this.targetSelect);this.root.append(toolbar);
+    const layout=ui("div",{class:"graph-layout"}),main=ui("div",{class:"graph-main"});
+    this.canvas=ui("div",{class:"canvas-shell"});
+    this.svg=svgNode("svg",{class:"graph-svg",role:"group","aria-label":this.data.title+" interactive architecture graph"});
+    const title=svgNode("title",{},this.data.title+" architecture"),desc=svgNode("desc",{},"Select nodes or edges for details. Drag nodes or the background. Use the selection menu as a keyboard alternative.");
+    const defs=svgNode("defs");
+    for(const [suffix,color] of [["normal","#899a90"],["active","#b94625"]]){
+      const marker=svgNode("marker",{id:this.key+"-arrow-"+suffix,viewBox:"0 0 10 10",refX:9,refY:5,markerWidth:6,markerHeight:6,orient:"auto-start-reverse",markerUnits:"strokeWidth"});
+      marker.append(svgNode("path",{d:"M 0 1 L 9 5 L 0 9 z",fill:color}));defs.append(marker);
+    }
+    this.world=svgNode("g",{class:"graph-world"});this.edgeLayer=svgNode("g");this.nodeLayer=svgNode("g");this.world.append(this.edgeLayer,this.nodeLayer);this.svg.append(title,desc,defs,this.world);
+    const caption=ui("div",{class:"canvas-caption"});caption.append(ui("span",{},"Drag nodes or background · Ctrl + scroll to zoom"),ui("span",{},this.data.editable?"Editable proposal":"Source-based projection"));
+    this.canvas.append(this.svg,caption);main.append(this.canvas);
+    this.inspector=ui("aside",{class:"graph-inspector","aria-label":this.data.title+" selected item details","aria-live":"polite"});
+    layout.append(main,this.inspector);this.root.append(layout);
+    const legend=ui("div",{class:"legend","aria-label":"Graph legend"});
+    for(const [kind,label] of [["flow","Principal flow"],["support","Supporting relation"],["optional","Optional capability"],["dot","Selected / current step"]]){
+      const item=ui("span");item.append(ui("i",{class:kind,"aria-hidden":"true"}),document.createTextNode(label));legend.append(item);
+    }
+    this.root.append(legend);this.buildWalkthrough();if(this.data.editable)this.buildEditor();
+    this.svg.addEventListener("pointerdown",event=>{
+      if(event.button!==0 || event.target.closest(".graph-node,.graph-edge"))return;
+      event.preventDefault();this.drag={kind:"pan",x:event.clientX,y:event.clientY,camera:{...this.camera},moved:false};this.svg.setPointerCapture(event.pointerId);this.svg.classList.add("dragging");
+    });
+    this.svg.addEventListener("pointermove",event=>this.onPointerMove(event));
+    this.svg.addEventListener("pointerup",()=>this.endDrag());
+    this.svg.addEventListener("pointercancel",()=>this.endDrag());
+    this.svg.addEventListener("wheel",event=>{if(!event.ctrlKey)return;event.preventDefault();const box=this.svg.getBoundingClientRect();this.zoom(event.deltaY>0?.9:1.1,event.clientX-box.left,event.clientY-box.top);},{passive:false});
+  }
+  buildWalkthrough(){
+    const row=ui("div",{class:"walkthrough"}),label=ui("label",{},"Illustrative path");
+    this.walkSelect=ui("select",{"aria-label":this.data.title+": choose a walkthrough"});
+    this.walkSelect.append(ui("option",{value:""},"Choose an example path"));
+    this.data.scenarios.forEach((s,i)=>this.walkSelect.append(ui("option",{value:i},s.name)));
+    label.append(this.walkSelect);
+    this.walkSelect.addEventListener("change",()=>{this.scenarioIndex=this.walkSelect.value===""?-1:Number(this.walkSelect.value);this.walkIndex=-1;this.visited.clear();this.paintSelection();this.updateWalk();});
+    const buttons=ui("div",{class:"walk-buttons"});
+    this.prevButton=this.button("← Back",()=>this.walk(-1));this.nextButton=this.button("Next →",()=>this.walk(1),{class:"primary"});
+    buttons.append(this.prevButton,this.nextButton);
+    this.walkText=ui("p",{class:"walk-text","aria-live":"polite"});row.append(label,buttons,this.walkText);this.root.append(row);this.updateWalk();
+  }
+  nodes(){return new Map(this.data.nodes.map(n=>[n.id,n]));}
+  edge(id){return this.data.edges.find(e=>e.id===id);}
+  item(id){return this.data.nodes.find(n=>n.id===id)||this.edge(id);}
+  visibleNode(n){return this.showOptional||n.kind!=="optional";}
+  render(){
+    this.nodeElements=new Map();this.edgeElements=new Map();this.edgeLayer.replaceChildren();this.nodeLayer.replaceChildren();this.updateSelect();
+    const nodes=this.nodes(),visible=new Set(this.data.nodes.filter(n=>this.visibleNode(n)).map(n=>n.id));
+    for(const edge of this.data.edges){
+      if(!visible.has(edge.from)||!visible.has(edge.to)||(!this.showOptional&&edge.kind==="optional"))continue;
+      const group=svgNode("g",{class:"graph-edge "+edge.kind,role:"button",tabindex:0,"aria-label":"Edge: "+nodes.get(edge.from).title+" to "+nodes.get(edge.to).title+(edge.label?", "+edge.label:"")});
+      const line=svgNode("path",{class:"edge-line","marker-end":"url(#"+this.key+"-arrow-normal)"}),hit=svgNode("path",{class:"edge-hit"});
+      if(edge.both)line.setAttribute("marker-start","url(#"+this.key+"-arrow-normal)");
+      group.append(line,hit,svgNode("title",{},edge.body));let label=null;
+      if(edge.label){label=svgNode("g",{class:"edge-label"});const shown=edge.label.length>32?edge.label.slice(0,30)+"…":edge.label,w=Math.max(30,shown.length*6.2+14);label.append(svgNode("rect",{x:-w/2,y:-10,width:w,height:20,rx:4}),svgNode("text",{},shown));group.append(label);}
+      const choose=()=>this.select(edge.id);group.addEventListener("click",choose);group.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();choose();}});
+      this.edgeLayer.append(group);this.edgeElements.set(edge.id,{group,line,hit,label});
+    }
+    for(const node of this.data.nodes){
+      if(!visible.has(node.id))continue;
+      const group=svgNode("g",{class:"graph-node "+node.kind,role:"button",tabindex:0,"aria-label":"Node: "+node.title+". "+node.subtitle});
+      group.append(svgNode("rect",{x:-96,y:-37,width:192,height:74,rx:11}),svgNode("title",{},node.body));
+      const titleLines=linesOf(node.title),title=svgNode("text",{class:"node-title","text-anchor":"middle"});
+      titleLines.forEach((text,i)=>title.append(svgNode("tspan",{x:0,y:titleLines.length===1?-2:-12+i*19},text)));group.append(title,svgNode("text",{class:"node-subtitle",x:0,y:titleLines.length===1?19:25,"text-anchor":"middle"},node.subtitle.length>31?node.subtitle.slice(0,29)+"…":node.subtitle));
+      group.addEventListener("pointerdown",event=>{
+        if(event.button!==0)return;event.preventDefault();event.stopPropagation();
+        this.drag={kind:"node",id:node.id,x:event.clientX,y:event.clientY,start:{x:node.x,y:node.y},snapshot:this.data.editable?this.snapshot():null,moved:false};
+        group.setPointerCapture(event.pointerId);this.svg.classList.add("dragging");
+      });
+      group.addEventListener("click",event=>{event.stopPropagation();if(this.suppressClick){this.suppressClick=false;return;}this.select(node.id);});
+      group.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();this.select(node.id);}});
+      this.nodeLayer.append(group);this.nodeElements.set(node.id,group);
+    }
+    if(!this.data.nodes.length)this.nodeLayer.append(svgNode("text",{x:465,y:300,"text-anchor":"middle",fill:"#5b6b71","font-size":20},"Add a node to begin your structure."));
+    this.drawPositions();this.paintSelection();if(this.data.editable)this.updateEditor();
+  }
+  edgePoints(edge){
+    const a=this.nodes().get(edge.from),b=this.nodes().get(edge.to);
+    if(a===b)return [[a.x+96,a.y],[a.x+145,a.y],[a.x+145,a.y+90],[a.x,a.y+90],[a.x,a.y+37]];
+    const via=edge.via&&edge.via.length?edge.via:null;
+    const anchor=(n,t)=>{const dx=t[0]-n.x,dy=t[1]-n.y;return Math.abs(dx)/96>Math.abs(dy)/37?[n.x+Math.sign(dx)*96,n.y]:[n.x,n.y+Math.sign(dy)*37];};
+    const start=anchor(a,via?via[0]:[b.x,b.y]),end=anchor(b,via?via[via.length-1]:[a.x,a.y]);
+    if(via)return [start,...via,end];
+    if(Math.abs(start[0]-end[0])<1||Math.abs(start[1]-end[1])<1)return [start,end];
+    const middle=(start[1]+end[1])/2;return [start,[start[0],middle],[end[0],middle],end];
+  }
+  drawPositions(){
+    for(const node of this.data.nodes){const element=this.nodeElements.get(node.id);if(element)element.setAttribute("transform","translate("+node.x+" "+node.y+")");}
+    for(const edge of this.data.edges){
+      const element=this.edgeElements.get(edge.id);if(!element)continue;
+      const points=this.edgePoints(edge),d=points.map((p,i)=>(i?"L":"M")+p[0]+" "+p[1]).join(" ");
+      element.line.setAttribute("d",d);element.hit.setAttribute("d",d);
+      if(element.label){const length=element.line.getTotalLength(),point=element.line.getPointAtLength(length/2);element.label.setAttribute("transform","translate("+point.x+" "+point.y+")");}
+    }
+    this.applyCamera();
+  }
+  onPointerMove(event){
+    if(!this.drag)return;
+    const dx=event.clientX-this.drag.x,dy=event.clientY-this.drag.y;if(Math.hypot(dx,dy)>3)this.drag.moved=true;
+    if(this.drag.kind==="pan"){this.camera.x=this.drag.camera.x+dx;this.camera.y=this.drag.camera.y+dy;this.applyCamera();return;}
+    const node=this.nodes().get(this.drag.id);if(!node)return;
+    node.x=Math.max(-19000,Math.min(19000,this.drag.start.x+dx/this.camera.scale));node.y=Math.max(-19000,Math.min(19000,this.drag.start.y+dy/this.camera.scale));this.drawPositions();
+  }
+  endDrag(){
+    if(!this.drag)return;const drag=this.drag;this.drag=null;this.svg.classList.remove("dragging");
+    if(drag.kind==="node"){this.suppressClick=drag.moved;if(drag.moved&&this.data.editable){this.undoStack.push(drag.snapshot);this.undoStack=this.undoStack.slice(-40);this.redoStack=[];this.persist("Node position saved.");}this.select(drag.id);this.updateEditor();}
+  }
+  applyCamera(){
+    this.world.setAttribute("transform","translate("+this.camera.x+" "+this.camera.y+") scale("+this.camera.scale+")");
+    if(this.zoomLabel)this.zoomLabel.textContent=Math.round(this.camera.scale*100)+"%";
+  }
+  fit(overview){
+    const width=this.canvas.clientWidth,height=this.canvas.clientHeight;this.svg.setAttribute("viewBox","0 0 "+width+" "+height);
+    const nodes=this.data.nodes;
+    let minX=0,maxX=this.data.width,minY=0,maxY=this.data.height;
+    if(nodes.length){minX=Math.min(...nodes.map(n=>n.x-120),0);maxX=Math.max(...nodes.map(n=>n.x+120),this.data.width);minY=Math.min(...nodes.map(n=>n.y-60),0);maxY=Math.max(...nodes.map(n=>n.y+60),this.data.height);}
+    let scale=Math.min((width-24)/(maxX-minX),(height-28)/(maxY-minY),1.1);
+    const narrow=width<550&&!overview;if(narrow)scale=Math.max(.62,scale);
+    this.camera={scale,x:width/2-(narrow?465:(minX+maxX)/2)*scale,y:narrow?25-minY*scale:height/2-(minY+maxY)/2*scale};this.applyCamera();
+  }
+  zoom(factor,x=this.canvas.clientWidth/2,y=this.canvas.clientHeight/2){
+    const old=this.camera.scale,next=Math.min(2.6,Math.max(.25,old*factor)),wx=(x-this.camera.x)/old,wy=(y-this.camera.y)/old;
+    this.camera={scale:next,x:x-wx*next,y:y-wy*next};this.applyCamera();
+  }
+  centerSelection(){
+    let node=this.nodes().get(this.selection);const edge=this.edge(this.selection);if(!node&&edge)node=this.nodes().get(edge.to);if(!node)return;
+    const x=node.x*this.camera.scale+this.camera.x,y=node.y*this.camera.scale+this.camera.y,w=this.canvas.clientWidth,h=this.canvas.clientHeight;
+    if(x<100||x>w-100||y<65||y>h-65){this.camera.x=w/2-node.x*this.camera.scale;this.camera.y=h/2-node.y*this.camera.scale;this.applyCamera();}
+  }
+  updateSelect(){
+    this.targetSelect.replaceChildren();const nodes=ui("optgroup",{label:"Nodes"}),edges=ui("optgroup",{label:"Edges"}),map=this.nodes();
+    const visible=new Set(this.data.nodes.filter(n=>this.visibleNode(n)).map(n=>n.id));
+    for(const n of this.data.nodes)if(visible.has(n.id))nodes.append(ui("option",{value:n.id},n.title));
+    for(const e of this.data.edges)if(visible.has(e.from)&&visible.has(e.to)&&(this.showOptional||e.kind!=="optional"))edges.append(ui("option",{value:e.id},map.get(e.from).title+" → "+map.get(e.to).title+(e.label?" · "+e.label:"")));
+    this.targetSelect.append(nodes,edges);this.targetSelect.value=this.selection;
+  }
+  select(id){
+    let item=this.item(id);
+    const hidden=item&&((item.from&&(!this.showOptional&&(item.kind==="optional"||this.nodes().get(item.from).kind==="optional"||this.nodes().get(item.to).kind==="optional")))||(!item.from&&!this.visibleNode(item)));
+    if(!item||hidden){item=this.data.nodes.find(n=>this.visibleNode(n));id=item?item.id:"";}
+    this.selection=id;this.targetSelect.value=id;this.paintSelection();this.renderInspector();if(this.data.editable)this.updateEditor();
+  }
+  paintSelection(){
+    const edge=this.edge(this.selection),node=this.nodes().get(this.selection);
+    const neighbors=new Set();if(edge){neighbors.add(edge.from);neighbors.add(edge.to);}else if(node){for(const e of this.data.edges)if(e.from===node.id)neighbors.add(e.to);else if(e.to===node.id)neighbors.add(e.from);}
+    for(const [id,element] of this.nodeElements){element.classList.toggle("selected",id===this.selection);element.classList.toggle("neighbor",neighbors.has(id));element.setAttribute("aria-pressed",String(id===this.selection));}
+    for(const [id,element] of this.edgeElements){const selected=id===this.selection;element.group.classList.toggle("selected",selected);element.group.classList.toggle("visited",this.visited.has(id));element.line.setAttribute("marker-end","url(#"+this.key+"-arrow-"+(selected?"active":"normal")+")");if(this.edge(id).both)element.line.setAttribute("marker-start","url(#"+this.key+"-arrow-"+(selected?"active":"normal")+")");}
+  }
+  renderInspector(){
+    this.inspector.replaceChildren();const item=this.item(this.selection);
+    if(!item){this.inspector.append(ui("div",{class:"detail-eyebrow"},"Empty diagram"),ui("h3",{class:"detail-title"},"Build your structure"),ui("p",{class:"detail-body"},"Use Add node below, then connect your nodes with directed edges."));return;}
+    const isEdge=Object.hasOwn(item,"from"),map=this.nodes();
+    this.inspector.append(ui("div",{class:"detail-eyebrow"},isEdge?"Edge · "+item.kind:"Node · "+item.kind),ui("h3",{class:"detail-title"},isEdge?(item.label||"Connection"):item.title),ui("p",{class:"detail-body"},item.body||"User-added architectural element."));
+    const facts=ui("ul",{class:"detail-facts"});
+    if(isEdge){facts.append(ui("li",{},map.get(item.from).title+(item.both?" ↔ ":" → ")+map.get(item.to).title));if(item.payload)facts.append(ui("li",{},"Carries: "+item.payload));}else for(const fact of item.facts||[])facts.append(ui("li",{},fact));
+    this.inspector.append(facts);
+    const relations=ui("div",{class:"detail-relations","aria-label":"Connected elements"});
+    if(isEdge){for(const id of [item.from,item.to])relations.append(this.button(map.get(id).title,()=>{this.select(id);this.centerSelection();}));}
+    else for(const e of this.data.edges.filter(e=>e.from===item.id||e.to===item.id))relations.append(this.button((e.from===item.id?"→ ":"← ")+(e.label||map.get(e.from===item.id?e.to:e.from).title),()=>this.select(e.id)));
+    this.inspector.append(relations);
+    const links=isEdge?[...(item.links||[]),...(map.get(item.from).links||[]),...(map.get(item.to).links||[])]:item.links||[];
+    const unique=new Map(links.filter(x=>safeLink(x[0])).map(x=>[x[0],x[1]]));
+    if(unique.size){const sources=ui("div",{class:"detail-sources"});sources.append(ui("strong",{},this.data.editable?"Context / reference":"Source pointers"));for(const [href,label] of unique)sources.append(ui("a",{href},label));this.inspector.append(sources);}
+    if(this.data.editable)this.inspector.append(ui("p",{class:"small"},"Diagram edits describe a design; they do not change the fixed routing simulator or execute a LangGraph."));
+  }
+  steps(){if(this.scenarioIndex<0)return [];return this.data.scenarios[this.scenarioIndex].steps.filter(step=>this.item(step.target));}
+  walk(delta){
+    const steps=this.steps();if(!steps.length)return;this.walkIndex=Math.max(0,Math.min(steps.length-1,this.walkIndex+delta));const step=steps[this.walkIndex],item=this.item(step.target);
+    if(item&&(item.kind==="optional"||(item.from&&(this.nodes().get(item.from).kind==="optional"||this.nodes().get(item.to).kind==="optional")))){this.showOptional=true;this.optionalCheckbox.checked=true;this.render();}
+    this.visited=new Set(steps.slice(0,this.walkIndex+1).map(s=>s.target));this.select(step.target);this.centerSelection();this.updateWalk();
+  }
+  updateWalk(){
+    if(!this.walkText)return;const steps=this.steps();this.prevButton.disabled=this.walkIndex<=0;this.nextButton.disabled=!steps.length||this.walkIndex>=steps.length-1;
+    this.walkText.replaceChildren();
+    if(this.scenarioIndex<0){this.walkText.append(ui("span",{class:"walk-position"},"Explore freely"),document.createTextNode("Choose an example path, then step through it. Every node and line can also be selected directly."));return;}
+    if(!steps.length){this.walkText.textContent="This original path has no remaining elements in the edited diagram.";return;}
+    const current=this.walkIndex<0?null:steps[Math.min(this.walkIndex,steps.length-1)];
+    this.walkText.append(ui("span",{class:"walk-position"},current?"Step "+(this.walkIndex+1)+" / "+steps.length:"Ready · "+steps.length+" steps"),document.createTextNode(current?current.text:"Press Next to trace the example. Edited proposals retain only original steps whose elements still exist."));
+  }
+  snapshot(){return JSON.stringify({nodes:this.data.nodes,edges:this.data.edges,selection:this.selection});}
+  remember(){this.undoStack.push(this.snapshot());this.undoStack=this.undoStack.slice(-40);this.redoStack=[];}
+  commit(message){
+    this.walkIndex=-1;this.visited.clear();this.render();this.select(this.selection);this.updateWalk();this.persist(message);
+  }
+  persist(message){
+    if(!this.data.editable)return;
+    try{localStorage.setItem(this.storageKey,JSON.stringify({version:1,nodes:this.data.nodes,edges:this.data.edges}));this.editStatus.textContent=message+" Saved in this browser.";}
+    catch(error){this.editStatus.textContent=message+" Browser storage unavailable; use JSON export to keep it.";}
+    this.editStatus.classList.remove("error");this.updateEditor();
+  }
+  resetLayout(){
+    if(this.data.editable)this.remember();const originals=new Map(this.original.nodes.map(n=>[n.id,n]));
+    this.data.nodes.forEach((node,i)=>{const original=originals.get(node.id);node.x=original?original.x:140+(i%3)*325;node.y=original?original.y:170+Math.floor(i/3)*115;});
+    this.render();this.select(this.selection);this.fit(false);if(this.data.editable)this.persist("Layout reset. Nodes and edges retained.");
+  }
+  buildEditor(){
+    this.editor=ui("details",{class:"graph-editor",open:true});this.editor.append(ui("summary",{},"Edit the proposed structure"));
+    this.editor.append(ui("p",{class:"editor-note"},"Add a node, connect existing nodes, or select an item in the graph and remove it. Drag to reposition. Undo/redo and JSON export preserve alternatives."));
+    this.editor.append(ui("p",{class:"proposal-editor-warning"},"This edits an architecture diagram. The prose, original walkthroughs, and routing simulator continue to describe the baseline proposal. JSON loading checks diagram references, not whether a LangGraph implementation would compile."));
+    const grid=ui("div",{class:"editor-grid"});
+    const field=(label,control)=>{const wrapper=ui("label",{class:"editor-field"});wrapper.append(document.createTextNode(label),control);return wrapper;};
+    const nodeForm=ui("form",{"aria-label":"Add proposal node"});nodeForm.append(ui("h4",{},"Add node"));
+    this.nodeTitle=ui("input",{type:"text",required:true,maxlength:44,placeholder:"e.g. Repository map"});
+    const nodeSubtitle=ui("input",{type:"text",maxlength:48,placeholder:"Short responsibility"});
+    const nodeKind=ui("select",{"aria-label":"New node category"});
+    for(const value of ["main","service","external","optional","local","cloud"])nodeKind.append(ui("option",{value},value[0].toUpperCase()+value.slice(1)));
+    const nodeBody=ui("textarea",{maxlength:2500,placeholder:"What should this component do?"});
+    nodeForm.append(field("Node name",this.nodeTitle),field("Subtitle",nodeSubtitle),field("Category",nodeKind),field("Details",nodeBody),ui("button",{type:"submit",class:"primary"},"Add node"));
+    nodeForm.addEventListener("submit",event=>{
+      event.preventDefault();const title=this.nodeTitle.value.trim();if(!title){this.setEditorStatus("Give the node a name.",true);return;}
+      this.remember();const id=this.newId("user_node"),cx=(this.canvas.clientWidth/2-this.camera.x)/this.camera.scale,cy=(this.canvas.clientHeight/2-this.camera.y)/this.camera.scale;
+      const node=N(id,title,nodeSubtitle.value.trim()||"User-added component",Math.round(cx+(this.serial%3)*24),Math.round(cy+(this.serial%3)*24),nodeKind.value,nodeBody.value.trim()||"User-added component in the proposed architecture.",["Diagram design only; implementation remains to be defined."],[]);
+      this.data.nodes.push(node);this.selection=id;this.showOptional=true;this.optionalCheckbox.checked=true;nodeForm.reset();this.commit("Added node “"+title+"”.");this.centerSelection();
+    });
+    const edgeForm=ui("form",{"aria-label":"Add proposal edge"});edgeForm.append(ui("h4",{},"Add edge"));
+    this.edgeFrom=ui("select",{"aria-label":"Edge source node"});this.edgeTo=ui("select",{"aria-label":"Edge destination node"});
+    const row=ui("div",{class:"editor-row"});row.append(field("From",this.edgeFrom),field("To",this.edgeTo));
+    const edgeLabel=ui("input",{type:"text",maxlength:45,placeholder:"e.g. retrieve context"});
+    const edgeKind=ui("select",{"aria-label":"New edge relationship"});
+    for(const [value,label] of [["flow","Principal flow"],["support","Supporting relation"],["optional","Optional capability"]])edgeKind.append(ui("option",{value},label));
+    const edgeBody=ui("textarea",{maxlength:2500,placeholder:"Trigger, data passed, or condition"});
+    this.addEdgeButton=ui("button",{type:"submit",class:"primary"},"Add edge");
+    edgeForm.append(row,field("Label",edgeLabel),field("Relationship",edgeKind),field("Details",edgeBody),this.addEdgeButton);
+    edgeForm.addEventListener("submit",event=>{
+      event.preventDefault();if(!this.nodes().has(this.edgeFrom.value)||!this.nodes().has(this.edgeTo.value)){this.setEditorStatus("Add source and destination nodes first.",true);return;}
+      this.remember();const id=this.newId("user_edge");
+      const edge=E(id,this.edgeFrom.value,this.edgeTo.value,edgeLabel.value.trim()||"new relation",edgeBody.value.trim()||"User-added relationship. Define its trigger, payload, and implementation contract.","User-defined payload.",edgeKind.value);
+      this.data.edges.push(edge);this.selection=id;this.showOptional=true;this.optionalCheckbox.checked=true;edgeLabel.value="";edgeBody.value="";this.commit("Added edge. Select its line to inspect or remove it.");
+    });
+    grid.append(nodeForm,edgeForm);this.editor.append(grid);
+    const actions=ui("div",{class:"editor-actions"});
+    this.deleteButton=this.button("Remove selected node",()=>this.removeSelected(),{class:"danger"});
+    this.undoButton=this.button("Undo",()=>this.travelHistory(false));this.redoButton=this.button("Redo",()=>this.travelHistory(true));
+    const restore=this.button("Restore baseline",()=>{this.remember();this.data.nodes=clone(this.original.nodes);this.data.edges=clone(this.original.edges);this.selection=this.original.initial;this.showOptional=true;this.optionalCheckbox.checked=true;this.commit("Baseline restored. Undo can recover your previous design.");this.fit(false);});
+    this.editorStats=ui("span",{class:"editor-stats"});
+    actions.append(this.deleteButton,this.undoButton,this.redoButton,restore,this.editorStats);this.editor.append(actions);
+    this.editStatus=ui("p",{class:"editor-status",role:"status"},this.restoreMessage||"Changes are saved in this browser when storage is available. Export JSON to keep a portable copy.");this.editor.append(this.editStatus);
+    const jsonDetails=ui("details");jsonDetails.append(ui("summary",{},"Save or reload diagram JSON"));
+    const jsonLabel=ui("label",{class:"editor-field"},"Diagram JSON");
+    this.jsonText=ui("textarea",{class:"json-editor","aria-label":"Proposal diagram JSON",spellcheck:"false",placeholder:"Choose Fill JSON, or paste a previously exported diagram."});jsonLabel.append(this.jsonText);jsonDetails.append(jsonLabel);
+    const jsonActions=ui("div",{class:"json-actions"});
+    jsonActions.append(this.button("Fill JSON",()=>{this.jsonText.value=this.exportJSON();this.setEditorStatus("Current diagram placed in the JSON field. Copy it or download it.");}),
+      this.button("Download JSON",()=>{this.jsonText.value=this.exportJSON();const url=URL.createObjectURL(new Blob([this.jsonText.value],{type:"application/json"}));const anchor=ui("a",{href:url,download:"polyinference-agent-structure.json"});document.body.append(anchor);anchor.click();anchor.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);this.setEditorStatus("Diagram JSON download requested.");}),
+      this.button("Load JSON",()=>{try{if(this.jsonText.value.length>1000000)throw Error("JSON is too large.");const parsed=JSON.parse(this.jsonText.value);if(parsed.version!==1)throw Error("Expected diagram version 1.");const next=validateDiagram(parsed);this.remember();this.data.nodes=next.nodes;this.data.edges=next.edges;this.selection=next.nodes[0]?.id||"";this.showOptional=true;this.optionalCheckbox.checked=true;this.commit("Diagram loaded. Undo can restore the previous design.");this.fit(false);}catch(error){this.setEditorStatus("Could not load: "+error.message,true);}}));
+    jsonDetails.append(jsonActions,ui("p",{class:"editor-note"},"JSON stores only diagram nodes, edges, positions, and descriptions. It contains no executable code, model credentials, or LangGraph runtime."));
+    this.editor.append(jsonDetails);this.root.append(this.editor);
+  }
+  newId(prefix){
+    let value;do{value=prefix+"_"+Date.now().toString(36)+"_"+(++this.serial);}while(this.item(value));return value;
+  }
+  updateEditor(){
+    if(!this.data.editable||!this.editor)return;
+    const from=this.edgeFrom.value,to=this.edgeTo.value;this.edgeFrom.replaceChildren();this.edgeTo.replaceChildren();
+    for(const node of this.data.nodes){this.edgeFrom.append(ui("option",{value:node.id},node.title));this.edgeTo.append(ui("option",{value:node.id},node.title));}
+    if(this.nodes().has(from))this.edgeFrom.value=from;
+    if(this.nodes().has(to))this.edgeTo.value=to;else if(this.data.nodes.length>1)this.edgeTo.selectedIndex=1;
+    this.addEdgeButton.disabled=!this.data.nodes.length;this.edgeFrom.disabled=!this.data.nodes.length;this.edgeTo.disabled=!this.data.nodes.length;
+    const item=this.item(this.selection);this.deleteButton.disabled=!item;this.deleteButton.textContent=item?(Object.hasOwn(item,"from")?"Remove selected edge":"Remove selected node"):"Nothing selected";
+    this.undoButton.disabled=!this.undoStack.length;this.redoButton.disabled=!this.redoStack.length;
+    this.editorStats.textContent=this.data.nodes.length+" diagram nodes · "+this.data.edges.length+" edges";
+  }
+  setEditorStatus(message,error=false){if(this.editStatus){this.editStatus.textContent=message;this.editStatus.classList.toggle("error",error);}}
+  removeSelected(){
+    const item=this.item(this.selection);if(!item)return;this.remember();
+    if(Object.hasOwn(item,"from")){this.data.edges=this.data.edges.filter(e=>e.id!==item.id);this.selection=item.from;this.commit("Edge removed. Undo restores it.");}
+    else{const incident=this.data.edges.filter(e=>e.from===item.id||e.to===item.id).length;this.data.nodes=this.data.nodes.filter(n=>n.id!==item.id);this.data.edges=this.data.edges.filter(e=>e.from!==item.id&&e.to!==item.id);this.selection=this.data.nodes[0]?.id||"";this.commit("Node and "+incident+" incident edge(s) removed. Undo restores them.");}
+  }
+  travelHistory(redo){
+    const from=redo?this.redoStack:this.undoStack,to=redo?this.undoStack:this.redoStack;if(!from.length)return;
+    to.push(this.snapshot());const previous=JSON.parse(from.pop());this.data.nodes=previous.nodes;this.data.edges=previous.edges;this.selection=previous.selection;this.showOptional=true;this.optionalCheckbox.checked=true;this.commit(redo?"Change redone.":"Change undone.");
+  }
+  exportJSON(){return JSON.stringify({schema:"polyinference.diagram.v1",version:1,graph:"proposal",nodes:this.data.nodes,edges:this.data.edges},null,2);}
+}
+const explorers=new Map();
+for(const root of document.querySelectorAll(".graph-explorer")){const key=root.dataset.graph;explorers.set(key,new GraphExplorer(root,key,graphs[key]));}
+function updateRouter(){
+  const phase=document.getElementById("route-phase").value;
+  const read=id=>document.getElementById(id).checked;
+  const eligible=phase==="discovery"&&read("route-context")&&read("route-health")&&read("route-turns");
+  let title,reason,target,trace;
+  if(eligible){title="Local model";reason="This is bounded read-only discovery, the request fits, and the local allowance/endpoint are available. Expose search and read_file only.";target="p-local";trace="prepare → route → infer(local) → guard → execute";}
+  else if(!read("route-cloud")){title="Pause / blocked";reason="The policy requires cloud inference, but cloud data sharing is disabled. Retain task state and report the blocked route; do not silently downgrade.";target="p-stop";trace="prepare → route → finalize(blocked)";}
+  else if(!read("route-budget")){title="Stop / budget";reason="Cloud is required but its configured inference budget is unavailable. Preserve partial work and a budget-stopped status.";target="p-stop";trace="prepare → route → finalize(budget_stopped)";}
+  else{title="Cloud model";const causes=[];if(phase!=="discovery")causes.push(phase==="sticky"?"cloud is already sticky":"this phase requires implementation/final reasoning");if(!read("route-context"))causes.push("the local request does not fit");if(!read("route-health"))causes.push("the local endpoint/protocol is unhealthy");if(!read("route-turns"))causes.push("local discovery allowance is exhausted");reason="Escalate because "+causes.join("; ")+". Keep the same state and remain on cloud for this task.";target="p-cloud";trace="prepare → route → infer(cloud) → guard / verify";}
+  document.getElementById("route-destination").textContent=title;document.getElementById("route-destination").style.color=eligible?"var(--teal)":target==="p-stop"?"var(--accent)":"var(--blue)";
+  document.getElementById("route-reason").textContent=reason;document.getElementById("route-trace").textContent=trace;
+  const graph=explorers.get("proposal");if(graph.item(target))graph.select(target);else graph.setEditorStatus("The routing example is unchanged; its original highlighted edge was removed from your diagram.");
+}
+document.getElementById("route-form").addEventListener("change",updateRouter);
+document.getElementById("route-form").addEventListener("submit",event=>event.preventDefault());
+updateRouter();
+</script>
+</body>
+</html>
