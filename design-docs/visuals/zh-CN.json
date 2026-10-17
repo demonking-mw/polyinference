@@ -1,0 +1,2558 @@
+{
+  "content": {
+    "agent": {
+      "title": "智能体设计",
+      "eyebrow": "应用层 · 可移植的 LANGGRAPH 图",
+      "headline": "智能体决定下一步做什么。",
+      "description": "确定性的迭代控制器协调资深角色规划、有界编码工作智能体和基于证据的审查。底层运行时提供外部操作与执行保证。",
+      "nodes": {
+        "input": {
+          "title": "目标与后续指令",
+          "brief": "按顺序接收用户输入",
+          "purpose": "持久保存项目目标和后续指令；不得悄然改写正在执行的任务。",
+          "inputs": [
+            "用户目标、验收标准和运行限制",
+            "带有单调递增序号的后续指令"
+          ],
+          "outputs": [
+            "已固定版本的目标与验收标准",
+            "持久化的指令屏障及已捕获的工作进程集合"
+          ],
+          "rules": [
+            "接收指令时，以同一原子边界关闭新编码任务的启动，并与工作进程认领操作串行化。",
+            "已捕获且已启动的工作进程继续执行原指令；尚未启动的任务保持待处理状态。",
+            "后续消息只有在规划器实际消费其输入范围后，才可标记为已应用。"
+          ],
+          "question": "审查期间到达的消息，是否可能丢失或被提前确认已应用？",
+          "source": "../langgraph-agent/README.md#11-steering-and-recovery",
+          "tag": "应用层",
+          "tone": "neutral"
+        },
+        "controller": {
+          "title": "迭代控制器",
+          "brief": "确定性的控制流程",
+          "purpose": "由宿主代码协调迭代、任务派发、审查屏障和项目验收。常规路由决策不消耗模型调用。",
+          "inputs": [
+            "运行与计划版本，以及持久化事件",
+            "任务报告、依赖状态、后续指令和剩余预算"
+          ],
+          "outputs": [
+            "工作进程认领和资深角色查询",
+            "通过校验的计划激活，或受条件保护的项目结果发布"
+          ],
+          "rules": [
+            "默认情况下，首次模型调用由资深角色进行初始规划。",
+            "常规审查先关闭新任务启动，等待现有工作进程结束，再固定审查输入包。",
+            "查询或工作进程等待期间，仍持续接收输入、状态和完成事件。"
+          ],
+          "question": "每个控制分支是否都由权威记录驱动，而不是直接相信模型文本？",
+          "source": "../langgraph-agent/README.md#41-sprint-controller",
+          "tag": "宿主控制",
+          "tone": "neutral"
+        },
+        "senior": {
+          "title": "资深角色查询图",
+          "brief": "规划、审查与纠偏",
+          "purpose": "复用一个资深工程师角色，根据初始规划、迭代审查、计划纠偏和完成审查等模式切换提示词。",
+          "inputs": [
+            "已固定的版本头、报告、指令范围和预期计划版本",
+            "有界上下文、输出模式和查询预算"
+          ],
+          "outputs": [
+            "结构化的计划、处置或完成提案",
+            "必要时单独记录的受阻或无效响应"
+          ],
+          "rules": [
+            "参考配置绑定云端模型；实验开始前也可固定其他满足要求的静态角色映射。",
+            "模型提案不得直接修改权威状态。",
+            "过期结果不得确认未见过的输入，也不得擅自把回退操作改指向其他版本。"
+          ],
+          "question": "资深角色是否基于稳定、完整且带有明确版本校验的输入包进行审查？",
+          "source": "../langgraph-agent/README.md#43-senior-queries-and-specialists",
+          "tag": "默认云端",
+          "tone": "cloud"
+        },
+        "ledger": {
+          "title": "任务台账",
+          "brief": "认领、依赖与执行尝试",
+          "purpose": "应用层保存范围明确、不可变的任务分配，并分别跟踪执行状态与资深角色的认可状态。",
+          "inputs": [
+            "通过校验的计划和 TaskSpec",
+            "依赖处置结果、具体输入和不可变基准版本 B"
+          ],
+          "outputs": [
+            "每次执行尝试仅有一次原子认领",
+            "有界工作进程及其私有工作区初始化"
+          ],
+          "rules": [
+            "从认领和初始化开始，就计入 W 的常驻工作进程占用。",
+            "启动前须满足前置依赖；仅发布代码不能满足要求已保留或已审查的依赖。",
+            "基准版本或范围变更，需要替代任务规格和关联的新执行尝试。"
+          ],
+          "question": "并发认领或指令接收竞态，是否可能启动未经授权的重复工作进程？",
+          "source": "../langgraph-agent/README.md#41-sprint-controller",
+          "tag": "应用层",
+          "tone": "neutral"
+        },
+        "worker": {
+          "title": "编码工作智能体图",
+          "brief": "有界的私有开发",
+          "purpose": "独立调用复用同一工作图；每次调用分别拥有上下文、任务分配、预算和范围受限的私有代码副本。",
+          "inputs": [
+            "不可变 TaskSpec、原始基准 B 和允许写入的范围",
+            "已固定的上下文、模型绑定和最终阶段预留预算"
+          ],
+          "outputs": [
+            "受范围约束的动作及配对观察结果",
+            "申请进入核验的候选结果，或已挂起的异常"
+          ],
+          "rules": [
+            "参考映射中，普通工作智能体使用本地推理；专家任务也遵守相同协议。",
+            "每条 shell 命令都须取得全局 shell 排他许可。",
+            "三个阶段为开发、合并后协调和最终评估。"
+          ],
+          "question": "当范围、证据或预算不足时，工作智能体能否如实停止？",
+          "source": "../langgraph-agent/README.md#42-coding-worker",
+          "tag": "默认本地",
+          "tone": "local"
+        },
+        "publication": {
+          "title": "提交与待处置报告",
+          "brief": "释放门控前完成发布",
+          "purpose": "每个正常完成评估的结果，都要将可归属的提交和不可变待处置报告发布到共享暂定历史。",
+          "inputs": [
+            "当前核验持有者、已捕获的前序版本 H 和最终评估代码树",
+            "真实提交 P、判定、证据、风险提示和预期版本"
+          ],
+          "outputs": [
+            "暂定版本头更新为 P，且 P 的唯一父提交为 H",
+            "原子可见的报告、持久化回执和事件意图"
+          ],
+          "rules": [
+            "successful、fail、uncertain 均须发布；发布不等于资深角色认可。",
+            "私有 Git 提交不足以证明发布完成。正常结束前必须读取已提交的持久化回执。",
+            "尚未完成评估的工作按中断状态保留，不得虚构判定。"
+          ],
+          "question": "下一位核验持有者能否看到实际已发布的前序版本及其风险提示？",
+          "source": "../langgraph-agent/README.md#10-publication-and-review",
+          "tag": "受保护阶段",
+          "tone": "gate"
+        },
+        "context": {
+          "title": "上下文与文档",
+          "brief": "固定版本、可追溯的连续状态",
+          "purpose": "保留各进程独立历史、带版本的笔记与风险，以及持久化的文档更新积压；不共享可变的对话记录。",
+          "inputs": [
+            "关联来源的笔记、动作、观察结果，以及报告与处置事件",
+            "已固定的记忆和文档版本，以及有界检索需求"
+          ],
+          "outputs": [
+            "有界 ContextView，保留完整且顺序正确的工具调用与结果配对",
+            "文档任务，以及文档版本和消费游标的原子发布"
+          ],
+          "rules": [
+            "摘要只是派生的连续状态，不是验收证据，也不是新的用户指令。",
+            "精确标准、当前差异和未核实操作必须仍可取得。",
+            "丰富的存储分层、向量检索和自主整合属于未来扩展。"
+          ],
+          "question": "能否在不信任摘要的前提下，把一条结论追溯到其代码版本和来源？",
+          "source": "../langgraph-agent/README.md#8-multi-stage-memory-and-documentation",
+          "tag": "应用层",
+          "tone": "neutral"
+        },
+        "resolution": {
+          "title": "资深角色处置",
+          "brief": "保留 · 回退 · 重试 · 暂缓",
+          "purpose": "独立于工作智能体判定执行资深角色的决策；认可对象是合并后形成的整体版本。",
+          "inputs": [
+            "针对已固定报告和版本头范围的资深角色提案",
+            "原始提交、后续依赖和影响范围证据"
+          ],
+          "outputs": [
+            "不可变处置记录和后续任务",
+            "需要移除代码时，串行生成的逆向提交"
+          ],
+          "rules": [
+            "保留表示认可已发布代码；重试和暂缓都不会移除它。",
+            "回退须取得核验门控，检查结果代码树，并为版本头更新建立独立操作日志。",
+            "部分完成的处置批次须逐项核实回执，再激活下一版计划。"
+          ],
+          "question": "回退是否会破坏后续工作，或让已认可版本越过尚未处置的祖先提交？",
+          "source": "../langgraph-agent/README.md#10-publication-and-review",
+          "tag": "资深角色决策",
+          "tone": "cloud"
+        },
+        "acceptance": {
+          "title": "项目验收",
+          "brief": "独立的最终判断",
+          "purpose": "仅当资深角色意图和独立项目检查共同支持当前已认可版本时，才能记录项目已完成。",
+          "inputs": [
+            "一致的已认可版本与暂定版本，以及匹配的资深角色完成提案",
+            "不存在活动编码工作进程、未处置贡献、待应用指令或相关不确定操作"
+          ],
+          "outputs": [
+            "受条件保护且绑定精确代码内容与环境的项目结果",
+            "检查失败或权限状态变化时，返回具体审查问题"
+          ],
+          "rules": [
+            "取得核验门控之前，先关闭新任务启动，并等待已捕获工作进程结束。",
+            "在完整私有视图上运行所需项目检查；逐条命令取得 shell 许可。",
+            "记录完成时比较版本头、计划、输入水位和持有者；新指令会使快照失效。"
+          ],
+          "question": "项目完成是否可能与新消息、代码发布或尚未结束的操作发生竞态？",
+          "source": "../langgraph-agent/README.md#10-publication-and-review",
+          "tag": "受保护阶段",
+          "tone": "gate"
+        },
+        "assignment": {
+          "title": "加载任务分配",
+          "brief": "基准 B 上的私有局部副本",
+          "purpose": "只有在认领已被跟踪且工作区初始化成功后，才能启动工作。",
+          "inputs": [
+            "TaskSpec、允许的路径和不可变基准 B"
+          ],
+          "outputs": [
+            "文件清单、第 1 代工作区和进程独立上下文"
+          ],
+          "rules": [
+            "复制分配文件及必要的读取、构建和测试依赖闭包。",
+            "省略的路径不表示删除，也不能证明该路径在 B 中不存在。"
+          ],
+          "question": "依赖闭包是否足以支持有意义的私有开发？",
+          "source": "../simplified-os/README.md#6-each-agents-private-part-of-the-code",
+          "tag": "应用层",
+          "tone": "neutral"
+        },
+        "development": {
+          "title": "私有开发",
+          "brief": "推理 → 动作 → 观察",
+          "purpose": "通过有界的本地模型与工具循环开展工作；其他工作智能体可同时独立推进。",
+          "inputs": [
+            "当前上下文和配对观察结果"
+          ],
+          "outputs": [
+            "相对 B 的显式私有差异",
+            "候选结果，或 needs_review 异常"
+          ],
+          "rules": [
+            "每个进程至多有一个活动顶层操作；不共享对话记录。",
+            "shell 排他权逐条命令取得，不得跨模型推理持有。",
+            "常规开发不能耗尽最终阶段所需的预留预算。"
+          ],
+          "question": "能否在限制内推进，同时保留如实结束所需的预算？",
+          "source": "../langgraph-agent/README.md#42-coding-worker",
+          "tag": "本地模型推理",
+          "tone": "local"
+        },
+        "gate": {
+          "title": "取得核验门控",
+          "brief": "先释放阶段外的 shell 许可",
+          "purpose": "只有在相关工具操作已核实结束、且最终阶段预留预算可行时，才排队申请项目排他许可。",
+          "inputs": [
+            "已保存的开发差异，且未持有阶段外的 shell 许可"
+          ],
+          "outputs": [
+            "当前有效、带代际隔离的项目排他权"
+          ],
+          "rules": [
+            "取得顺序为核验门控在先、shell 在后。",
+            "不得跨越该等待持有元数据锁。",
+            "其他符合条件的推理请求和控制工作仍可推进。"
+          ],
+          "question": "是否可能出现仍持有 shell 却等待核验门控的工作进程？",
+          "source": "../simplified-os/README.md#7-mergetestcommit-is-one-critical-section",
+          "tag": "受保护阶段",
+          "tone": "gate"
+        },
+        "reconcile": {
+          "title": "捕获 H 并协调代码",
+          "brief": "完整的私有集成视图",
+          "purpose": "物化最新暂定版本 H，并将相对原始 B 的私有差异合并到该视图中。",
+          "inputs": [
+            "当前暂定版本 H、原始 B 和已保存差异"
+          ],
+          "outputs": [
+            "新一代工作区，以及用于最终阶段的集成代码树"
+          ],
+          "rules": [
+            "即使 Git 干净合并，也至少执行一轮合并后协调开发。",
+            "完整视图扩大可见范围，不扩大写权限。",
+            "中止会废弃该视图；恢复时重新捕获 H，并从原始私有差异重建。"
+          ],
+          "question": "工作智能体是否适配了传入的语义变化，而不只是接受干净的 Git 合并？",
+          "source": "../simplified-os/README.md#62-delta-and-complete-integration-view",
+          "tag": "受保护阶段",
+          "tone": "gate"
+        },
+        "checks": {
+          "title": "运行所需检查",
+          "brief": "精确内容与环境",
+          "purpose": "宿主工具在任务授权范围内，为集成代码树采集独立证据。",
+          "inputs": [
+            "集成内容标识和配置的检查标准"
+          ],
+          "outputs": [
+            "通过、失败、不可用或无法定论的检查记录"
+          ],
+          "rules": [
+            "每条命令单独取得 shell 许可。",
+            "测试、格式化器或钩子改变评估输入时，相关证据失效。",
+            "局部副本上的检查仅用于开发反馈，不能替代完整项目集成证据。"
+          ],
+          "question": "是否确实在最终输入上检查了全部必需标准？",
+          "source": "../langgraph-agent/README.md#42-coding-worker",
+          "tag": "受保护阶段",
+          "tone": "gate"
+        },
+        "assess": {
+          "title": "最终模型评估",
+          "brief": "失败 · 不确定 · 成功",
+          "purpose": "由分配的模型审视最终代码树与证据，并由宿主校验约束其判定。",
+          "inputs": [
+            "当前检查记录、精确代码树和评估模式提示词"
+          ],
+          "outputs": [
+            "已完成且判定如实的评估"
+          ],
+          "rules": [
+            "必需标准明确失败则判定 fail；所需证据缺失或无法定论则判定 uncertain。",
+            "修复后须返回协调或开发，再次完成最终评估。",
+            "缺少最终评估意味着中断或等待评估，不是正常完成。"
+          ],
+          "question": "模型解释能否推翻失败的必需检查？不得如此。",
+          "source": "../langgraph-agent/README.md#42-coding-worker",
+          "tag": "受保护的模型轮次",
+          "tone": "gate"
+        },
+        "release": {
+          "title": "释放并结束",
+          "brief": "执行完成，仍待处置",
+          "purpose": "读取持久化发布回执、并核实受保护操作结束后，才能结束工作智能体协议。",
+          "inputs": [
+            "已校验回执、确认已结束的操作和清理状态"
+          ],
+          "outputs": [
+            "已释放核验许可与工作进程占用",
+            "保留的报告和恢复工件"
+          ],
+          "rules": [
+            "报告仍须等待资深角色审查认可。",
+            "保留记录消耗存储配额，不占已完成工作进程的执行名额。",
+            "发布或命令结果不确定时，须保留冲突排他权。"
+          ],
+          "question": "释放所有权是因为操作确已结束，还是仅仅因为计时器到期？",
+          "source": "../simplified-os/README.md#failure-and-abort",
+          "tag": "应用层",
+          "tone": "neutral"
+        },
+        "barrier": {
+          "title": "关闭新任务启动",
+          "brief": "审查或后续指令边界",
+          "purpose": "原子关闭新编码任务启动，并捕获已认领的工作进程，包括正在初始化或等待门控的进程。",
+          "inputs": [
+            "审查触发条件，或按序收到的后续指令"
+          ],
+          "outputs": [
+            "稳定的已捕获集合；未启动任务保持待处理"
+          ],
+          "rules": [
+            "常规审查采用同样保守的迭代边界。",
+            "后续指令把仍已启动的进程并入尚待完成的集合。"
+          ],
+          "question": "关闭新启动是否意外阻止了已捕获工作进程结束？",
+          "source": "../langgraph-agent/README.md#11-steering-and-recovery",
+          "tag": "应用层",
+          "tone": "neutral"
+        },
+        "drain": {
+          "title": "等待已捕获进程结束",
+          "brief": "保留原有完成路径",
+          "purpose": "等待现有工作按原任务结束，同时不持有它们完成所需的门控。",
+          "inputs": [
+            "已捕获的进程 ID 及其持久化状态"
+          ],
+          "outputs": [
+            "已确定的工作结果，或明确的中断阻塞项"
+          ],
+          "rules": [
+            "不等待尚未启动的待处理任务。",
+            "不得悄然取消卡住的工作进程，也不得编造报告。",
+            "异常审查不等于常规后续指令等待已完成。"
+          ],
+          "question": "屏障能否准确解释当前在等待什么？",
+          "source": "../langgraph-agent/README.md#41-sprint-controller",
+          "tag": "应用层",
+          "tone": "neutral"
+        },
+        "plan": {
+          "title": "激活下一版计划",
+          "brief": "仅确认实际消费的输入",
+          "purpose": "审查操作结果确定后，再激活经过校验的不可变计划。",
+          "inputs": [
+            "已核实处置、预期版本和已消费指令范围"
+          ],
+          "outputs": [
+            "新计划指针和范围精确的应用确认"
+          ],
+          "rules": [
+            "后续输入继续待应用，并保持新启动关闭。",
+            "不得原地修改正在执行的 TaskSpec。",
+            "完成候选提案须经过独立的项目验收。"
+          ],
+          "question": "计划激活和输入确认是否恰好覆盖已审查范围？",
+          "source": "../langgraph-agent/README.md#41-sprint-controller",
+          "tag": "应用层",
+          "tone": "neutral"
+        }
+      },
+      "maps": [
+        {
+          "label": "智能体全景",
+          "title": "由三个可复用图构成的迭代循环",
+          "description": "资深查询提出建议，控制器校验，独立工作智能体实现任务并返回证据。",
+          "positions": [
+            {
+              "id": "input",
+              "row": 0,
+              "col": 0
+            },
+            {
+              "id": "controller",
+              "row": 0,
+              "col": 1
+            },
+            {
+              "id": "senior",
+              "row": 0,
+              "col": 2
+            },
+            {
+              "id": "ledger",
+              "row": 1,
+              "col": 0
+            },
+            {
+              "id": "worker",
+              "row": 1,
+              "col": 1
+            },
+            {
+              "id": "publication",
+              "row": 1,
+              "col": 2
+            },
+            {
+              "id": "context",
+              "row": 2,
+              "col": 0
+            },
+            {
+              "id": "resolution",
+              "row": 2,
+              "col": 1
+            },
+            {
+              "id": "acceptance",
+              "row": 2,
+              "col": 2
+            }
+          ],
+          "edges": [
+            {
+              "a": "input",
+              "b": "controller",
+              "label": ""
+            },
+            {
+              "a": "controller",
+              "b": "senior",
+              "label": "",
+              "both": true
+            },
+            {
+              "a": "controller",
+              "b": "ledger",
+              "label": "已校验计划"
+            },
+            {
+              "a": "ledger",
+              "b": "worker",
+              "label": ""
+            },
+            {
+              "a": "worker",
+              "b": "publication",
+              "label": ""
+            },
+            {
+              "a": "publication",
+              "b": "resolution",
+              "label": "待处置报告",
+              "data": true
+            },
+            {
+              "a": "resolution",
+              "b": "acceptance",
+              "label": ""
+            },
+            {
+              "a": "context",
+              "b": "worker",
+              "label": "固定版本上下文",
+              "data": true,
+              "targetOffset": -0.28
+            }
+          ],
+          "initial": "controller",
+          "footnote": "箭头仅表示主要交接，不覆盖所有控制转换。审查通过控制器和资深角色查询图执行。"
+        },
+        {
+          "label": "工作阶段",
+          "title": "从私有差异到持久共享结果",
+          "description": "先从左向右阅读，再沿下一行反向阅读。从取得许可到发布结束始终持有核验门控，包括最终模型评估。",
+          "positions": [
+            {
+              "id": "assignment",
+              "row": 0,
+              "col": 0
+            },
+            {
+              "id": "development",
+              "row": 0,
+              "col": 1
+            },
+            {
+              "id": "gate",
+              "row": 0,
+              "col": 2
+            },
+            {
+              "id": "reconcile",
+              "row": 1,
+              "col": 2
+            },
+            {
+              "id": "checks",
+              "row": 1,
+              "col": 1
+            },
+            {
+              "id": "assess",
+              "row": 1,
+              "col": 0
+            },
+            {
+              "id": "publication",
+              "row": 2,
+              "col": 0
+            },
+            {
+              "id": "release",
+              "row": 2,
+              "col": 1
+            }
+          ],
+          "edges": [
+            {
+              "a": "assignment",
+              "b": "development",
+              "label": ""
+            },
+            {
+              "a": "development",
+              "b": "gate",
+              "label": ""
+            },
+            {
+              "a": "gate",
+              "b": "reconcile",
+              "label": ""
+            },
+            {
+              "a": "reconcile",
+              "b": "checks",
+              "label": ""
+            },
+            {
+              "a": "checks",
+              "b": "assess",
+              "label": ""
+            },
+            {
+              "a": "assess",
+              "b": "publication",
+              "label": ""
+            },
+            {
+              "a": "publication",
+              "b": "release",
+              "label": ""
+            }
+          ],
+          "initial": "reconcile",
+          "footnote": "修复后重复协调、检查和评估。needs_review 在安全确认外部操作后挂起异常，不编造报告。"
+        },
+        {
+          "label": "审查边界",
+          "title": "先结束现有工作，再改变其指令",
+          "description": "屏障关闭的是新启动，而不是已捕获工作进程的完成路径。等待资深审查时不持有工作进程所需的核验门控。",
+          "positions": [
+            {
+              "id": "barrier",
+              "row": 0,
+              "col": 0
+            },
+            {
+              "id": "drain",
+              "row": 0,
+              "col": 1
+            },
+            {
+              "id": "senior",
+              "row": 0,
+              "col": 2
+            },
+            {
+              "id": "resolution",
+              "row": 1,
+              "col": 2
+            },
+            {
+              "id": "plan",
+              "row": 1,
+              "col": 1
+            },
+            {
+              "id": "acceptance",
+              "row": 1,
+              "col": 0
+            }
+          ],
+          "edges": [
+            {
+              "a": "barrier",
+              "b": "drain",
+              "label": ""
+            },
+            {
+              "a": "drain",
+              "b": "senior",
+              "label": ""
+            },
+            {
+              "a": "senior",
+              "b": "resolution",
+              "label": ""
+            },
+            {
+              "a": "resolution",
+              "b": "plan",
+              "label": ""
+            },
+            {
+              "a": "resolution",
+              "b": "acceptance",
+              "label": "完成验收路径",
+              "route": "below"
+            }
+          ],
+          "initial": "barrier",
+          "footnote": "可以激活下一版计划，或进入受条件保护的项目验收。后续指令继续待应用；异常审查不得虚报受阻等待已经完成。"
+        }
+      ],
+      "review": [
+        {
+          "id": "A01",
+          "title": "控制器是否在应确定的地方保持确定性？",
+          "why": "常规路由不应在每个工具结果之后，都额外调用监督模型。",
+          "inspect": "追踪初始规划、就绪任务派发、受阻依赖和队列耗尽分支。每个分支应使用记录与策略，仅在真正需要规划或审查时调用资深角色。",
+          "source": "../langgraph-agent/README.md#41-sprint-controller"
+        },
+        {
+          "id": "A02",
+          "title": "每个工作智能体能否在授权和预算内如实结束？",
+          "why": "工作智能体可能在强制最终阶段前耗尽预算，或把中断误作已经评估的失败。",
+          "inspect": "检查最终阶段预留、修复次数上限、范围异常和 needs_review 出口。没有最终评估，就不能产生正常 TaskReport。",
+          "source": "../langgraph-agent/README.md#42-coding-worker"
+        },
+        {
+          "id": "A03",
+          "title": "合并后协调是否检查语义变化？",
+          "why": "干净合并仍可能破坏工作智能体之间的假设。",
+          "inspect": "捕获 H 后必须执行一轮开发。检查完整集成证据、传入风险，以及每次修复后的重新检查。",
+          "source": "../simplified-os/README.md#62-delta-and-complete-integration-view"
+        },
+        {
+          "id": "A04",
+          "title": "判定、发布和认可是否彼此独立？",
+          "why": "本地成功判定不等于资深认可；本设计中 fail 或 uncertain 代码仍进入暂定历史。",
+          "inspect": "分别追踪三种已评估判定，确认都产生真实提交、待处置报告和持久回执，并核实依赖门控与资深处置。",
+          "source": "../langgraph-agent/README.md#10-publication-and-review"
+        },
+        {
+          "id": "A05",
+          "title": "后续指令与审查能否共存，而不撤销现有工作权限？",
+          "why": "已捕获工作仍执行时变更计划，可能使其权限失效，或让等待过程无法结束。",
+          "inspect": "在初始化、门控等待、资深查询和验收期间注入输入。已捕获集合继续原指令；仅确认实际消费的输入已应用。",
+          "source": "../langgraph-agent/README.md#11-steering-and-recovery"
+        },
+        {
+          "id": "A06",
+          "title": "资深回退能否保护后续工作？",
+          "why": "Git 逆向修改可能与后续提交引入的语义或构建依赖冲突。",
+          "inspect": "检查影响范围分析、结果代码树检查和独立版本头更新回执。重试或暂缓不得悄然移除已经发布的代码。",
+          "source": "../INTEGRATION_AUDIT.md"
+        },
+        {
+          "id": "A07",
+          "title": "项目完成是否可能与其他事件竞态？",
+          "why": "如果输入、工作进程或暂定历史已改变，旧快照通过检查并不足够。",
+          "inspect": "检查原子完成条件：已认可版本与暂定版本相同；无活动编码工作或不确定操作；无未处置贡献或待应用输入；持有者有效，且必需检查精确匹配。",
+          "source": "../langgraph-agent/README.md#10-publication-and-review"
+        },
+        {
+          "id": "A08",
+          "title": "实验是否把模型位置变化与执行框架变化区分开？",
+          "why": "云端令牌减少，可能掩盖更多修复、更长延迟或换用另一套执行框架。",
+          "inspect": "保持目标、代码树、标准和执行框架可比。确认静态角色策略可行，并测量认可结果、总用量、延迟、合并成本和评估校准。",
+          "source": "../langgraph-agent/README.md#12-evolution-and-first-build"
+        }
+      ],
+      "takeaway": "工作智能体可以成功完成执行，但其报告仍待处置。只有资深审查与独立项目检查，才能共同支持项目验收。"
+    },
+    "os": {
+      "title": "简化 OS 设计",
+      "eyebrow": "运行时 · 权限、资源与外部操作",
+      "headline": "OS 让每个外部操作可追溯、可核实。",
+      "description": "四个小型模块负责准入、代码隔离、排他权和外部操作恢复。一个共享本地模型可并发服务多个请求；连续批处理与令牌调度由推理引擎负责。",
+      "nodes": {
+        "programs": {
+          "title": "LangGraph 应用",
+          "brief": "控制器、工作图与资深查询",
+          "purpose": "可移植应用通过显式运行时端口发起操作；LangGraph 负责图转换与公开的检查点语义。",
+          "inputs": [
+            "已固定的图、状态、提示词版本和进程输入"
+          ],
+          "outputs": [
+            "ProcessSpec、有界模型与工具请求、发布意图"
+          ],
+          "rules": [
+            "每次调用只有一个当前驱动器；图节点不是独立进程。",
+            "运行时客户端放在活动上下文中，不进入序列化图状态。",
+            "无需修改 LangGraph 或 Pregel 私有实现。"
+          ],
+          "question": "所有外部操作是否都通过公开适配器边界显式发出，并可恢复？",
+          "source": "../simplified-os/README.md#9-agent-cooperation-and-additive-langgraph-integration",
+          "tag": "应用层",
+          "tone": "neutral"
+        },
+        "kernel": {
+          "title": "运行时内核与控制面",
+          "brief": "标识、准入、日志与事件",
+          "purpose": "单个小型异步协调器权威管理操作、资源预留、排他所有权和持久化事件发布。",
+          "inputs": [
+            "经认证的调用者、授权、已固定版本和有界意图"
+          ],
+          "outputs": [
+            "已准入操作，或明确的等待与拒绝",
+            "持久化进程与操作状态，以及定向唤醒"
+          ],
+          "rules": [
+            "派发前持久保存意图和指纹；先查询重放记录，再检查新派发条件。",
+            "短元数据事务不得跨模型或工具等待。",
+            "控制器、恢复路径和资深查询的容量，须独立于 W 预留。"
+          ],
+          "question": "工作进程池满载或操作结果不确定时，控制面是否会被冻结？",
+          "source": "../simplified-os/README.md#4-processes-and-operations",
+          "tag": "宿主控制",
+          "tone": "neutral"
+        },
+        "gateway": {
+          "title": "推理网关",
+          "brief": "本地模型与一种云端协议",
+          "purpose": "校验绑定、数据策略、上下文适配和容量，再提交、跟踪、取消或核实有界操作。",
+          "inputs": [
+            "ModelQuery 或受支持的 AgentJob、上下文和角色策略"
+          ],
+          "outputs": [
+            "实际后端结果、操作确定性和如实的用量记录"
+          ],
+          "rules": [
+            "角色绑定在一次运行内固定；不自动溢出到其他提供方，也不迁移运行中模型。",
+            "多个独立本地请求可以并存；令牌批处理由推理服务负责。",
+            "原始模型推理与原生智能体作业是两种不同执行协议。"
+          ],
+          "question": "所选端点是否真正实现适配器承诺的保证？",
+          "source": "../simplified-os/README.md#5-scheduling-local-continuous-batching-and-cloud-work",
+          "tag": "运行时组件",
+          "tone": "neutral"
+        },
+        "broker": {
+          "title": "工作区与工具代理",
+          "brief": "私有文件、工具与双门控",
+          "purpose": "为每个受管编码操作统一约束源码访问、限定范围的修改、前台命令和精确代码树证据。",
+          "inputs": [
+            "工作区 ID、清单、代次、内容前置条件与授权"
+          ],
+          "outputs": [
+            "带范围归属的观察结果和变更证据",
+            "完整集成视图和可归属的 Git 对象"
+          ],
+          "rules": [
+            "仅设置当前目录不能实现隔离；执行后端必须实际约束范围。",
+            "拒绝路径越界、Git 控制数据访问和未经授权的最终 H→P 写入。",
+            "命令及相关后代进程在确认结束前，仍受原持有者管理。"
+          ],
+          "question": "shell、钩子、缓存或原生作业能否绕过声明的权限边界？",
+          "source": "../simplified-os/README.md#6-each-agents-private-part-of-the-code",
+          "tag": "运行时组件",
+          "tone": "neutral"
+        },
+        "endpoints": {
+          "title": "共享执行服务",
+          "brief": "一个本地模型与一个云端端点",
+          "purpose": "复用现有模型与推理服务；本地权重仅装载一次，不为每个智能体重复装载。",
+          "inputs": [
+            "已准入的有界生成请求，或兼容的原生作业"
+          ],
+          "outputs": [
+            "独立结果、提供方或宿主句柄，以及用量证据"
+          ],
+          "rules": [
+            "推理引擎负责序列、预填充与解码，以及 GPU 令牌调度。",
+            "可变云端会话须串行使用；账户配额独立于本地容量。",
+            "终止状态未知时保留资源预留；关闭传输连接不能证明取消成功。"
+          ],
+          "question": "容量和取消保证，是经过测量的估计，还是实际可强制执行的约束？",
+          "source": "../simplified-os/README.md#53-cloud-execution",
+          "tag": "执行后端",
+          "tone": "neutral"
+        },
+        "persistence": {
+          "title": "持久化与投影视图",
+          "brief": "SQLite、工件、Git 与检查点",
+          "purpose": "保存权威元数据、不可变证据和图续执行状态，同时明确各自独立的一致性边界。",
+          "inputs": [
+            "任务认领、操作意图与结果、保留工件和真实 Git 对象"
+          ],
+          "outputs": [
+            "元数据中的版本头、报告、回执和事件意图原子发布",
+            "可恢复的 Git 引用、通知和图续执行状态"
+          ],
+          "rules": [
+            "推进权威指针前，不可变 Git 与证据对象必须已经存在。",
+            "不存在横跨 SQLite、Git、图检查点存储和提供方的单一事务。",
+            "便捷 Git 引用是可修复的投影视图；元数据发布记录才是权威。"
+          ],
+          "question": "恢复流程能否区分私有提交与已持久提交的共享版本头回执？",
+          "source": "../simplified-os/README.md#8-minimal-storage-and-state",
+          "tag": "运行时组件",
+          "tone": "neutral"
+        },
+        "ownership": {
+          "title": "shell 与核验排他权",
+          "brief": "相互独立，按序取得",
+          "purpose": "在安装范围串行执行一条 shell 命令，并在项目范围串行执行一个最终阶段；不独占全部推理容量。",
+          "inputs": [
+            "资源键、持有者代次、FIFO 等待者和受保护操作"
+          ],
+          "outputs": [
+            "带代际隔离的排他权、可见等待或经核实后的释放"
+          ],
+          "rules": [
+            "顺序为核验在先、shell 在后。不得持有阶段外的 shell 而排队等待核验。",
+            "核验持有期覆盖捕获、合并、协调、检查、评估、提交和发布。",
+            "超时、异常和租约到期均不能证明可以安全释放。"
+          ],
+          "question": "finally 清理代码是否可能在写入者仍活动时释放门控？",
+          "source": "../simplified-os/README.md#7-mergetestcommit-is-one-critical-section",
+          "tag": "受保护阶段",
+          "tone": "gate"
+        },
+        "workers": {
+          "title": "W：工作进程常驻量",
+          "brief": "从初始化到必要清理",
+          "purpose": "独立于模型并发量，约束常驻编码调用及其宿主状态和私有工作区资源。",
+          "inputs": [
+            "已认领工作进程、初始化、等待和清理"
+          ],
+          "outputs": [
+            "有界的常驻工作，或排队等待的新启动"
+          ],
+          "rules": [
+            "等待模型或门控的进程仍计入 W。",
+            "已完成发布的工作进程释放 W，即使其报告仍待审查处置。",
+            "控制器、恢复路径和一个资深查询具有独立的有界容量。"
+          ],
+          "question": "保留的待处置历史是否意外占满了全部工作进程名额？",
+          "source": "../simplified-os/README.md#4-processes-and-operations",
+          "tag": "运行时组件",
+          "tone": "neutral"
+        },
+        "local": {
+          "title": "L／E／T：本地准入",
+          "brief": "请求、引擎序列与上下文",
+          "purpose": "在请求数量与保守上下文容量约束内，准入相互独立的本地生成请求。",
+          "inputs": [
+            "输入令牌数与预留的最大输出量",
+            "在途请求上限 L、引擎容量 E 和上下文预留上限 T"
+          ],
+          "outputs": [
+            "已准入的独立本地请求，或明确的容量等待"
+          ],
+          "rules": [
+            "要求在途数小于 L，且总上下文预留加新请求不超过 T；单序列也必须能容纳。",
+            "此核心设计保持 L≤E；已进入引擎排队的请求仍计数。",
+            "核验持有者收尾队列与普通队列同时等待时，交替给予准入机会；不等待凑满批次。"
+          ],
+          "question": "能否在不超出测量容量的前提下，让至少两个独立请求重叠执行？",
+          "source": "../simplified-os/README.md#51-independent-limits",
+          "tag": "共享本地模型",
+          "tone": "local"
+        },
+        "cloud": {
+          "title": "C：云端在途占用",
+          "brief": "账户、端点与会话",
+          "purpose": "独立于本地模型资源预留云端操作，并跟踪实际所选端点的限制。",
+          "inputs": [
+            "符合条件的静态绑定、账户预算和有界查询或作业"
+          ],
+          "outputs": [
+            "已准入云端调用，或有界等待与停止"
+          ],
+          "rules": [
+            "必需云端访问不可用时，严格绑定的资深查询须等待。",
+            "原生作业执行由代理管理的下属工具回调时，父作业仍为活动状态。",
+            "估计的订阅额度百分比，不是精确且可强制执行的令牌预留。"
+          ],
+          "question": "账户限制和真实成本上界是否可知，或可被强制执行？",
+          "source": "../simplified-os/README.md#53-cloud-execution",
+          "tag": "云端端点",
+          "tone": "cloud"
+        },
+        "shell": {
+          "title": "shell：容量为 1",
+          "brief": "一条命令及相关后代进程",
+          "purpose": "保护所有受管 shell 或脚本命令，包括 Git、测试和兼容原生作业的工具操作。",
+          "inputs": [
+            "已授权前台命令和当前工作区代次"
+          ],
+          "outputs": [
+            "配对的输出与操作效应，以及已确认完成或不确定状态"
+          ],
+          "rules": [
+            "逐条命令取得排他许可。",
+            "不得跨模型推理持有 shell。",
+            "不允许未受管后台服务或未声明的共享修改。"
+          ],
+          "question": "是否在命令启动之后仍跟踪相关后代进程和共享缓存？",
+          "source": "../simplified-os/README.md#7-mergetestcommit-is-one-critical-section",
+          "tag": "受保护操作",
+          "tone": "gate"
+        },
+        "verification": {
+          "title": "核验：容量为 1",
+          "brief": "完整的最终阶段",
+          "purpose": "从读取暂定版本 H 之前，一直独占项目到持久发布结束，或经核实的显式中止。",
+          "inputs": [
+            "不存在待确定的冲突工具操作、差异已保存、最终阶段预算可行"
+          ],
+          "outputs": [
+            "串行确定的最终代码树、证据、提交 P 和发布回执"
+          ],
+          "rules": [
+            "等待推理时继续持有，但不预留整个本地模型。",
+            "资深角色回退和最终项目验收也使用该门控。",
+            "持有门控时，不得等待其他工作进程进入或等待资深审查。"
+          ],
+          "question": "门控持有时间和最终阶段的可完成性，是否都有明确上界？",
+          "source": "../simplified-os/README.md#7-mergetestcommit-is-one-critical-section",
+          "tag": "受保护阶段",
+          "tone": "gate"
+        },
+        "memory": {
+          "title": "内存与有界存储",
+          "brief": "按物理资源域分别核算",
+          "purpose": "让服务、活动推理与 KV 缓存、宿主状态、工具和安全余量在容量内共存，且不重复计数。",
+          "inputs": [
+            "测量得到的 RAM 与 VRAM 资源域，以及保守的后端与令牌容量",
+            "有界提示词、输出、工作区和工件大小"
+          ],
+          "outputs": [
+            "已准入的同时资源需求向量",
+            "固定保留的活动输入和恢复证据"
+          ],
+          "rules": [
+            "共享模型常驻量仅计一次；不得把独立显存直接加到系统内存。",
+            "除非后端强制执行预留，否则令牌准入只是一种近似。",
+            "保留证据和存储限制，独立于执行名额限制。"
+          ],
+          "question": "选定的 W、L 和上下文限制，依据了哪些实际容量测量？",
+          "source": "../simplified-os/README.md#51-independent-limits",
+          "tag": "运行时组件",
+          "tone": "neutral"
+        },
+        "intent": {
+          "title": "准备稳定操作意图",
+          "brief": "进程＋逻辑步骤 → 操作",
+          "purpose": "派发前，把一个逻辑外部操作映射到稳定标识和语义指纹。",
+          "inputs": [
+            "经认证的进程与步骤、请求和预期版本"
+          ],
+          "outputs": [
+            "持久化的 PREPARED 意图及同时资源预留"
+          ],
+          "rules": [
+            "重试的图节点复用此映射。",
+            "同一 ID 下意图变更会被拒绝。",
+            "有意发起的新修复应推进逻辑步骤。"
+          ],
+          "question": "中断后重跑的节点，是否可能为同一意图生成第二个 ID？",
+          "source": "../simplified-os/README.md#4-processes-and-operations",
+          "tag": "运行时组件",
+          "tone": "neutral"
+        },
+        "submitting": {
+          "title": "记录正在提交",
+          "brief": "发送前先持久化",
+          "purpose": "在联系工具或提供方之前，记录派发边界。",
+          "inputs": [
+            "已准备意图和当前新派发权限"
+          ],
+          "outputs": [
+            "已提交句柄、已知结果或明确的不确定结果"
+          ],
+          "rules": [
+            "提供方与元数据之间不存在原子事务。",
+            "发送后、取得提供方 ID 前崩溃，可能留下不确定状态。"
+          ],
+          "question": "发送后立即断线时，系统究竟能证明什么？",
+          "source": "../langgraph-agent/README.md#11-steering-and-recovery",
+          "tag": "运行时组件",
+          "tone": "neutral"
+        },
+        "active": {
+          "title": "跟踪活动操作",
+          "brief": "等待仍可能占用资源",
+          "purpose": "图控制协程让出执行机会，但外部操作仍使用的资源必须保留。",
+          "inputs": [
+            "宿主或提供方 ID，以及实际进度"
+          ],
+          "outputs": [
+            "已知结果，或须核实的不确定状态"
+          ],
+          "rules": [
+            "进度不代表完成。",
+            "取消在确认终止之前，只是一项请求。",
+            "顶层作业执行下属回调期间，仍持有云端占用。"
+          ],
+          "question": "等待时是否只让出宿主协程，还是错误释放了仍在使用的资源？",
+          "source": "../simplified-os/README.md#4-processes-and-operations",
+          "tag": "运行时组件",
+          "tone": "neutral"
+        },
+        "uncertain": {
+          "title": "保留不确定状态",
+          "brief": "保留冲突排他权",
+          "purpose": "不得猜测超时操作已经停止、失败或从未发生。",
+          "inputs": [
+            "断线、超时或崩溃，以及保留的原始意图"
+          ],
+          "outputs": [
+            "可见的不确定状态、持有者、资源预留和诊断信息"
+          ],
+          "rules": [
+            "不得自动盲重试结果不确定的修改操作。",
+            "不得仅因许可过期或图执行异常而解锁。",
+            "保存部分证据，但不虚构已评估判定。"
+          ],
+          "question": "系统能否暴露阻塞项，同时继续处理状态、取消和用户输入？",
+          "source": "../simplified-os/README.md#failure-and-abort",
+          "tag": "保留的排他权",
+          "tone": "gate"
+        },
+        "recover": {
+          "title": "核实结果并恢复",
+          "brief": "单个当前协调器与驱动器",
+          "purpose": "先隔离过期写入者，再检查日志和外部证据，最后选择已知安全的续执行路径。",
+          "inputs": [
+            "持久日志、后代进程、Git 对象和发布回执"
+          ],
+          "outputs": [
+            "原始已保留结果、继续安全监督，或经核实的显式中止"
+          ],
+          "rules": [
+            "找到发布回执后返回原提交，不创建第二个撤销单元。",
+            "中止后废弃集成代次，捕获新 H，并从原始私有差异重建。",
+            "不兼容且已固定的程序版本不得悄然续执行。"
+          ],
+          "question": "旧驱动器和重启驱动器是否可能同时继续写入？",
+          "source": "../simplified-os/README.md#10-steering-recovery-and-progress",
+          "tag": "运行时组件",
+          "tone": "neutral"
+        },
+        "settled": {
+          "title": "仅结算一次",
+          "brief": "效应已确定，用量如实记录",
+          "purpose": "持久保存已核实结果，并仅释放确认不再使用的资源。",
+          "inputs": [
+            "已确认终态，以及测量、估计或未知的用量"
+          ],
+          "outputs": [
+            "保留原始结果，对日志结算去重"
+          ],
+          "rules": [
+            "重复结果投递仅结算一次日志记账。",
+            "提供方实际执行仍会计费；不承诺外部恰好一次计费。",
+            "即使旧工作区或许可代次已变更，重放也返回该原始结果。"
+          ],
+          "question": "结算是否会丢失用量，或因当前视图改变而重新执行既有操作？",
+          "source": "../simplified-os/README.md#4-processes-and-operations",
+          "tag": "运行时组件",
+          "tone": "neutral"
+        }
+      },
+      "maps": [
+        {
+          "label": "四个模块",
+          "title": "位于应用与外部操作之间的小型运行时",
+          "description": "应用通过可移植端口发起操作；OS 准入并记录操作，现有后端负责实际执行。",
+          "positions": [
+            {
+              "id": "programs",
+              "row": 0,
+              "col": 1
+            },
+            {
+              "id": "kernel",
+              "row": 1,
+              "col": 1
+            },
+            {
+              "id": "gateway",
+              "row": 1,
+              "col": 0
+            },
+            {
+              "id": "endpoints",
+              "row": 2,
+              "col": 0
+            },
+            {
+              "id": "broker",
+              "row": 1,
+              "col": 2
+            },
+            {
+              "id": "ownership",
+              "row": 2,
+              "col": 2
+            },
+            {
+              "id": "persistence",
+              "row": 2,
+              "col": 1
+            }
+          ],
+          "edges": [
+            {
+              "a": "programs",
+              "b": "kernel",
+              "label": ""
+            },
+            {
+              "a": "kernel",
+              "b": "gateway",
+              "label": ""
+            },
+            {
+              "a": "kernel",
+              "b": "broker",
+              "label": ""
+            },
+            {
+              "a": "gateway",
+              "b": "endpoints",
+              "label": ""
+            },
+            {
+              "a": "kernel",
+              "b": "persistence",
+              "label": "操作日志",
+              "data": true
+            },
+            {
+              "a": "broker",
+              "b": "ownership",
+              "label": ""
+            }
+          ],
+          "initial": "kernel",
+          "footnote": "持久化模块由内核与工具代理共用。shell 和核验许可属于应用级排他所有权，不是长时间持有的数据库锁。"
+        },
+        {
+          "label": "独立资源限制",
+          "title": "工作进程数不等于模型并发数",
+          "description": "分别检查每个限制：W、L／E／T、C 和两个排他许可约束的是不同生命周期。",
+          "positions": [
+            {
+              "id": "workers",
+              "row": 0,
+              "col": 0
+            },
+            {
+              "id": "local",
+              "row": 0,
+              "col": 1
+            },
+            {
+              "id": "cloud",
+              "row": 0,
+              "col": 2
+            },
+            {
+              "id": "verification",
+              "row": 1,
+              "col": 0
+            },
+            {
+              "id": "shell",
+              "row": 1,
+              "col": 1
+            },
+            {
+              "id": "memory",
+              "row": 1,
+              "col": 2
+            }
+          ],
+          "edges": [],
+          "initial": "local",
+          "footnote": "这些是独立约束，不是线性流水线。执行场景中的容量仅作示例，不是部署建议。"
+        },
+        {
+          "label": "操作与恢复",
+          "title": "每个外部操作都由持久意图包围",
+          "description": "正常执行取得已知结果；结果不确定时保留所有权，进入显式的结果核实流程。",
+          "positions": [
+            {
+              "id": "intent",
+              "row": 0,
+              "col": 0
+            },
+            {
+              "id": "submitting",
+              "row": 0,
+              "col": 1
+            },
+            {
+              "id": "active",
+              "row": 0,
+              "col": 2
+            },
+            {
+              "id": "uncertain",
+              "row": 1,
+              "col": 1
+            },
+            {
+              "id": "recover",
+              "row": 1,
+              "col": 0
+            },
+            {
+              "id": "settled",
+              "row": 1,
+              "col": 2
+            }
+          ],
+          "edges": [
+            {
+              "a": "intent",
+              "b": "submitting",
+              "label": ""
+            },
+            {
+              "a": "submitting",
+              "b": "active",
+              "label": ""
+            },
+            {
+              "a": "active",
+              "b": "settled",
+              "label": ""
+            },
+            {
+              "a": "active",
+              "b": "uncertain",
+              "label": "结果不确定"
+            },
+            {
+              "a": "uncertain",
+              "b": "recover",
+              "label": ""
+            },
+            {
+              "a": "recover",
+              "b": "settled",
+              "label": "结果已确定",
+              "route": "below"
+            }
+          ],
+          "initial": "uncertain",
+          "footnote": "不假定任意提供方具备恰好一次执行保证。恢复须保留原操作、原回执和实际计费用量。"
+        }
+      ],
+      "review": [
+        {
+          "id": "O01",
+          "title": "运行时权限边界是否无法绕过？",
+          "why": "提示词或路径标签不能真正约束文件系统、账户或工具权限。",
+          "inspect": "追踪每个模型、工具、Git 和原生作业操作的认证、授权、当前代次及内容校验。测试源码写入、Git 元数据、钩子和共享缓存。",
+          "source": "../simplified-os/README.md#6-each-agents-private-part-of-the-code"
+        },
+        {
+          "id": "O02",
+          "title": "独立资源限制是否匹配实际占用生命周期？",
+          "why": "工作进程常驻量、引擎内排队请求、云端会话和模型权重消耗不同资源。",
+          "inspect": "检查 W、L、E、T、C 及 shell 与核验许可。要求按资源域测量适配能力、保守核算令牌；等待仍须保留实际占用资源。",
+          "source": "../simplified-os/README.md#51-independent-limits"
+        },
+        {
+          "id": "O03",
+          "title": "并发是否真正到达同一个共享模型？",
+          "why": "即使配置了工作进程池，全局图锁或客户端锁也可能把请求串行化。",
+          "inspect": "演示一个常驻服务上两个独立有界本地请求同时在途、分别返回结果，且没有等待凑批的屏障。",
+          "source": "../simplified-os/README.md#52-dispatch-policy"
+        },
+        {
+          "id": "O04",
+          "title": "两个门控是否可能死锁或提前释放？",
+          "why": "shell→核验的逆序取得，以及未确认的后代进程，都会破坏活性与排他性。",
+          "inspect": "强制核验→shell 顺序、最终阶段有界、FIFO 队列和持有者推进。控制与资深容量须可用；不能仅靠超时或 finally 解锁。",
+          "source": "../simplified-os/README.md#7-mergetestcommit-is-one-critical-section"
+        },
+        {
+          "id": "O05",
+          "title": "局部工作区的变更归属是否准确？",
+          "why": "省略文件、冲突重命名或过期视图，可能删除或覆盖无关工作。",
+          "inspect": "对新增和重命名目标证明其在 B 中不存在；授权两个重命名端点；保留原始差异；校验 H→P 范围，并拒绝废弃代次。",
+          "source": "../simplified-os/README.md#62-delta-and-complete-integration-view"
+        },
+        {
+          "id": "O06",
+          "title": "每个派发与发布边界是否都能安全恢复？",
+          "why": "图检查点不能与提供方效应、Git 和元数据共同原子持久化。",
+          "inspect": "在发送前后、Git 提交后和记录发布后制造崩溃。恢复原操作与回执，或保留可见不确定状态。中止的集成须捕获新 H 后重建。",
+          "source": "../simplified-os/README.md#failure-and-abort"
+        },
+        {
+          "id": "O07",
+          "title": "云端适配器是否实现了真实执行协议？",
+          "why": "API 兼容文本不能证明原生工具执行、作业有界或取消已确认。",
+          "inspect": "固定实际使用的原始推理或原生作业适配器。检查阶段控制、回调因果关系、工作区代理约束、输出模式，以及成本与取消保证；拒绝不透明编码作业。",
+          "source": "../simplified-os/README.md#53-cloud-execution"
+        },
+        {
+          "id": "O08",
+          "title": "第一版实现能否保持小规模、可测量？",
+          "why": "可选接口字段可能在主要保证尚未成立前，就把核心系统扩成通用平台。",
+          "inspect": "保持四个模块、一个本地服务、一种云端协议、直接工具和普通记录。暂缓 MCP 生命周期、加权路由、分层记忆、迁移与分布式协调。",
+          "source": "../simplified-os/README.md#1-scope-and-authority"
+        }
+      ],
+      "takeaway": "核验阶段串行，不代表所有推理都串行。当前持有者在发布前持续持有项目许可；其他符合条件的私有工作和模型请求仍可推进。"
+    },
+    "stories": {
+      "normal": {
+        "title": "双工作进程 → 项目审查与验收",
+        "source": "../simplified-os/README.md#7-mergetestcommit-is-one-critical-section",
+        "frames": [
+          {
+            "title": "首次推理由资深角色规划",
+            "agent": "控制器请求资深角色提出范围明确的首轮计划。响应是提案，不直接授予任务执行权限。",
+            "os": "推理网关准入一个云端查询；规划不占工作进程名额或本地推理名额。",
+            "rule": "等待资深推理时，控制器仍保持响应。",
+            "state": {
+              "controller": "等待资深角色初始提案",
+              "A": "尚未启动",
+              "B": "尚未启动",
+              "C": "尚未启动",
+              "w": 0,
+              "l": 0,
+              "cloud": 1,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "H0",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "无",
+              "journal": "active",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "认领两个私有工作进程",
+            "agent": "校验后的计划创建 A 和 B，各自拥有任务、上下文，以及不可变基准 B＝H0 上的私有局部副本。",
+            "os": "原子认领预留两个工作进程名额；就绪之前，工作区初始化已经被跟踪。",
+            "rule": "工作进程从认领和初始化起就已进入进行中状态，不是从模型开始推理才算。",
+            "state": {
+              "controller": "派发符合条件的工作",
+              "A": "开发 · H0 上的局部视图",
+              "B": "开发 · H0 上的局部视图",
+              "C": "尚未启动",
+              "w": 2,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "H0",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "无",
+              "journal": "settled",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "两个本地生成请求重叠执行",
+            "agent": "独立工作图分别等待自己的模型结果，历史始终彼此隔离。",
+            "os": "同一个共享本地模型服务同时处理两个有界请求。引擎批处理令牌；OS 预留请求名额与上下文容量。",
+            "rule": "W 和 L 是不同限制；不得跨生成过程持有全局图锁或客户端锁。",
+            "state": {
+              "controller": "派发符合条件的工作",
+              "A": "本地生成执行中",
+              "B": "本地生成执行中",
+              "C": "尚未启动",
+              "w": 2,
+              "l": 2,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "H0",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "无",
+              "journal": "active",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "A 捕获 H0，B 继续工作",
+            "agent": "A 保存私有差异、取得核验门控、构建完整 H0 视图，并开始强制协调开发；B 继续私有开发。",
+            "os": "核验排他权属于 A。A 的一个生成请求占用 L；B 的私有编辑既不需要模型名额，也不需要全局 shell 许可。",
+            "rule": "核验保护的是最终阶段，不是全部推理容量的独占权。",
+            "state": {
+              "controller": "派发符合条件的工作",
+              "A": "协调 · H0 的完整视图",
+              "B": "私有范围内编辑",
+              "C": "尚未启动",
+              "w": 2,
+              "l": 1,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "A",
+              "provisional": "H0",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "无",
+              "journal": "active",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "A 运行集成检查",
+            "agent": "工作智能体通过受管工具检查集成代码树；此前局部副本的检查仅作开发反馈。",
+            "os": "A 在持有核验门控的同时，为此次检查取得 shell。其先前生成已经结束，因此本地在途数为零。",
+            "rule": "shell 许可逐条命令取得，不跨模型推理持有。",
+            "state": {
+              "controller": "派发符合条件的工作",
+              "A": "所需集成检查执行中",
+              "B": "私有搜索或读取",
+              "C": "尚未启动",
+              "w": 2,
+              "l": 0,
+              "cloud": 0,
+              "shell": "A",
+              "verifier": "A",
+              "provisional": "H0",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "无",
+              "journal": "active",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "A 完成最终评估",
+            "agent": "检查后，由分配的模型评估精确的最终代码树。只有当前充分证据支持成功，宿主校验才接受该判定。",
+            "os": "评估生成已经结束，shell 空闲。A 继续持有核验许可，直到提交与持久发布结束。",
+            "rule": "任何修复或评估输入变化，都要求重新检查并再次最终评估。",
+            "state": {
+              "controller": "派发符合条件的工作",
+              "A": "评估完成 · 成功",
+              "B": "私有搜索或读取",
+              "C": "尚未启动",
+              "w": 2,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "A",
+              "provisional": "H0",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "无",
+              "journal": "settled",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "P1 发布，仍待处置",
+            "agent": "A 创建真实 P1，其唯一父提交为 H0；随后原子发布 P1、报告、回执和事件意图。资深角色尚未认可该结果。",
+            "os": "Git 与证据对象先于元数据事务存在。A 在核实已提交回执前仍持有核验排他权。",
+            "rule": "每种正常已评估判定都暂定发布，包括 fail 与 uncertain。",
+            "state": {
+              "controller": "派发符合条件的工作",
+              "A": "P1 已发布 · 待处置",
+              "B": "私有搜索或读取",
+              "C": "尚未启动",
+              "w": 2,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "A",
+              "provisional": "P1",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "A 待处置",
+              "journal": "settled",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "B 收到 P1，而不是 H0",
+            "agent": "A 核实回执并释放后，B 取得核验门控，基于新暂定版本 P1 协调，并接收 A 的待处置来源信息。",
+            "os": "A 在确认清理完成后释放工作进程名额。B 此时持有核验许可，并有一个有界本地协调请求。",
+            "rule": "待处置报告占用保留存储，而不占已完成工作进程的执行名额。",
+            "state": {
+              "controller": "派发符合条件的工作",
+              "A": "已结束 · 报告保留",
+              "B": "协调 · P1 的完整视图",
+              "C": "尚未启动",
+              "w": 1,
+              "l": 1,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "B",
+              "provisional": "P1",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "A 待处置",
+              "journal": "active",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "B 完成最终阶段后发布 P2",
+            "agent": "B 已完成自身协调、检查和评估。P2 的父提交为 P1，第二份报告仍待处置。",
+            "os": "第二次 Git 与证据准备以及原子发布均已结束。B 核实回执后才释放许可。",
+            "rule": "发布形成串行链 H0→P1→P2；任务判定仍与审查状态独立。",
+            "state": {
+              "controller": "派发符合条件的工作",
+              "A": "已结束 · 报告保留",
+              "B": "P2 已发布 · 待处置",
+              "C": "尚未启动",
+              "w": 1,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "B",
+              "provisional": "P2",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "A 与 B 待处置",
+              "journal": "settled",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "先等待结束，再进行资深审查",
+            "agent": "两个工作进程均已结束，新启动已关闭。资深角色读取固定的 P2 输入包，提出处置及是否应进入完成检查。",
+            "os": "不占工作进程或核验名额。独立预留容量的资深查询占用一个云端操作。",
+            "rule": "不得持有工作进程的核验许可而等待资深审查。",
+            "state": {
+              "controller": "审查屏障 · 已固定 P2 输入包",
+              "A": "已结束 · 报告保留",
+              "B": "已结束 · 报告保留",
+              "C": "尚未启动",
+              "w": 0,
+              "l": 0,
+              "cloud": 1,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "P2",
+              "reviewed": "H0",
+              "starts": "Closed",
+              "reports": "A 与 B 待处置",
+              "journal": "active",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "仅验收已检查的结果版本",
+            "agent": "资深角色保留各项贡献。P2 上的独立项目检查已经结束；最终比较确认无活动工作进程、待应用输入或不确定操作后，才记录已完成。",
+            "os": "已认可版本与暂定版本均为 P2。核验门控保护验收比较；shell 与检查操作均已确定。持有者在结果持久提交后释放。",
+            "rule": "资深完成提案和任务级成功不能替代当前项目证据。",
+            "state": {
+              "controller": "在 P2 上按保护条件记录项目完成",
+              "A": "已结束 · 报告保留",
+              "B": "已结束 · 报告保留",
+              "C": "尚未启动",
+              "w": 0,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "项目验收",
+              "provisional": "P2",
+              "reviewed": "P2",
+              "starts": "Closed",
+              "reports": "A 与 B 已认可保留",
+              "journal": "settled",
+              "received": 0,
+              "applied": 0
+            }
+          }
+        ]
+      },
+      "steering": {
+        "title": "工作与审查期间的后续指令",
+        "source": "../langgraph-agent/README.md#11-steering-and-recovery",
+        "frames": [
+          {
+            "title": "接收 S1 并捕获已启动进程",
+            "agent": "后续指令 S1 关闭新启动，并捕获 A、B。A 正在协调，B 等待核验；尚未启动的 C 保持待处理。",
+            "os": "指令接收与认领共用短事务。等待门控或模型也算已启动；待处理的 C 不占 W。",
+            "rule": "关闭新启动，必须保留已捕获进程进入最终阶段的路径。",
+            "state": {
+              "controller": "为 S1 等待已捕获的 {A, B} 结束",
+              "A": "按原规格协调代码",
+              "B": "等待核验 · 保持原任务规格",
+              "C": "待处理 · 未被捕获",
+              "w": 2,
+              "l": 1,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "A",
+              "provisional": "H0",
+              "reviewed": "H0",
+              "starts": "Closed",
+              "reports": "无",
+              "journal": "—",
+              "received": 1,
+              "applied": 0
+            }
+          },
+          {
+            "title": "A 发布并释放",
+            "agent": "A 完成原任务，发布待处置的 P1，并在确认结束后释放。S1 未改变其执行指令。",
+            "os": "在回执与清理完成后，A 的许可及常驻占用结束；等待中的 B 仍常驻。",
+            "rule": "收到后续指令不等于撤销授权，也不等于悄然取消工作。",
+            "state": {
+              "controller": "为 S1 等待已捕获的 {A, B} 结束",
+              "A": "已结束 · P1 待处置",
+              "B": "等待核验 · 保持原任务规格",
+              "C": "待处理 · 未被捕获",
+              "w": 1,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "P1",
+              "reviewed": "H0",
+              "starts": "Closed",
+              "reports": "A 待处置",
+              "journal": "—",
+              "received": 1,
+              "applied": 0
+            }
+          },
+          {
+            "title": "允许 B 进入核验",
+            "agent": "B 捕获 P1，按原指令执行强制协调和最终阶段。C 仍不启动。",
+            "os": "尽管新启动屏障关闭，核验队列仍准入已捕获的 B；其本地请求照常判断资格。",
+            "rule": "等待对象是已启动工作，不是把所有待处理队列清空。",
+            "state": {
+              "controller": "为 S1 等待已捕获的 {A, B} 结束",
+              "A": "已结束 · P1 待处置",
+              "B": "基于 P1 协调代码",
+              "C": "待处理 · 未被捕获",
+              "w": 1,
+              "l": 1,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "B",
+              "provisional": "P1",
+              "reviewed": "H0",
+              "starts": "Closed",
+              "reports": "A 待处置",
+              "journal": "—",
+              "received": 1,
+              "applied": 0
+            }
+          },
+          {
+            "title": "等待过程到达真实完成边界",
+            "agent": "B 的检查、评估、P2 发布与释放均结束。控制器此时可固定这批工作报告及 S1。",
+            "os": "两个工作进程名额及冲突许可都已释放；保留报告仍持久存在。",
+            "rule": "卡住或中断的工作进程会形成明确阻塞项，不能虚报完成。",
+            "state": {
+              "controller": "已捕获工作结束 · 可固定 S1",
+              "A": "已结束 · P1 待处置",
+              "B": "已结束 · P2 待处置",
+              "C": "待处理 · 未被捕获",
+              "w": 0,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "P2",
+              "reviewed": "H0",
+              "starts": "Closed",
+              "reports": "A 与 B 待处置",
+              "journal": "—",
+              "received": 1,
+              "applied": 0
+            }
+          },
+          {
+            "title": "资深查询固定 S1",
+            "agent": "资深查询消费截止 S1 的输入包，并绑定预期版本头 P2 和已捕获报告。",
+            "os": "云端准入独立于工作进程容量；新启动继续关闭。",
+            "rule": "每次查询记录其精确输入范围及预期权限版本。",
+            "state": {
+              "controller": "资深审查 · 快照截止 S1",
+              "A": "已结束 · P1 待处置",
+              "B": "已结束 · P2 待处置",
+              "C": "待处理 · 未被捕获",
+              "w": 0,
+              "l": 0,
+              "cloud": 1,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "P2",
+              "reviewed": "H0",
+              "starts": "Closed",
+              "reports": "A 与 B 待处置",
+              "journal": "—",
+              "received": 1,
+              "applied": 0
+            }
+          },
+          {
+            "title": "查询期间收到 S2",
+            "agent": "控制器立即记录 S2。当前资深查询仍只覆盖 S1，响应不能声称已经消费 S2。",
+            "os": "云端等待期间输入接收仍响应。已接收水位增至 2，已应用水位保持 0。",
+            "rule": "后续输入继续待应用，新编码启动保持关闭。",
+            "state": {
+              "controller": "资深审查 · 快照截止 S1",
+              "A": "已结束 · P1 待处置",
+              "B": "已结束 · P2 待处置",
+              "C": "待处理 · 未被捕获",
+              "w": 0,
+              "l": 0,
+              "cloud": 1,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "P2",
+              "reviewed": "H0",
+              "starts": "Closed",
+              "reports": "A 与 B 待处置",
+              "journal": "—",
+              "received": 2,
+              "applied": 0
+            }
+          },
+          {
+            "title": "只应用实际消费的范围",
+            "agent": "若版本头、计划和报告比较仍成立，则 S1 提案处置已审查报告并确认 S1。S2 仍待应用，因此不重开启动。",
+            "os": "应用只发布精确的已应用范围；S2 由另一次审查处理，不能由过期输入包代为确认。",
+            "rule": "已应用水位≤规划快照水位≤已接收水位；相关版本冲突时保留提案并刷新审查。",
+            "state": {
+              "controller": "S1 已应用 · S2 仍待应用",
+              "A": "已结束 · P1 待处置",
+              "B": "已结束 · P2 待处置",
+              "C": "待处理 · 未被捕获",
+              "w": 0,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "P2",
+              "reviewed": "P2",
+              "starts": "Closed",
+              "reports": "A 与 B 已处置",
+              "journal": "—",
+              "received": 2,
+              "applied": 1
+            }
+          },
+          {
+            "title": "重开启动前先审查 S2",
+            "agent": "下一次资深查询固定 S2。其计划通过校验并发布后，已应用水位到达 2，才可按新不可变计划重开启动。",
+            "os": "该快照位于有界查询与发布结束之后。新的认领须再次预留 W。",
+            "rule": "不能为了声称后续指令等待已完成，就自动执行旧的待处理队列。",
+            "state": {
+              "controller": "新计划已激活 · 已消费至 S2",
+              "A": "已结束 · P1 待处置",
+              "B": "已结束 · P2 待处置",
+              "C": "仅可按新计划判断执行资格",
+              "w": 0,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "P2",
+              "reviewed": "P2",
+              "starts": "Open",
+              "reports": "A 与 B 已处置",
+              "journal": "—",
+              "received": 2,
+              "applied": 2
+            }
+          }
+        ]
+      },
+      "failed": {
+        "title": "失败判定 → 资深角色回退",
+        "source": "../langgraph-agent/README.md#10-publication-and-review",
+        "frames": [
+          {
+            "title": "评估发现明确失败",
+            "agent": "A 已协调并评估最终代码树。某项必需标准失败，因此正常判定为 fail。",
+            "os": "A 仍持有核验许可；最终评估已完成，相关工具和模型操作已经结束。",
+            "rule": "模型文本不能把明确失败的必需标准改成 successful。",
+            "state": {
+              "controller": "就绪",
+              "A": "已评估 · 失败",
+              "B": "尚未启动",
+              "C": "尚未启动",
+              "w": 1,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "A",
+              "provisional": "H0",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "无",
+              "journal": "—",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "失败代码仍暂定发布",
+            "agent": "选定策略仍发布真实 P1、待处置失败报告和可归属的风险提示，而不是把代码隐藏在私有分支中。",
+            "os": "提交和证据对象先于 P1、报告和回执的原子发布存在；A 核实回执期间继续持有核验许可。",
+            "rule": "provisional_all 适用于 successful、fail、uncertain 三种正常已评估结果。",
+            "state": {
+              "controller": "就绪",
+              "A": "P1 已发布 · 失败 · 附风险提示",
+              "B": "尚未启动",
+              "C": "尚未启动",
+              "w": 1,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "A",
+              "provisional": "P1",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "A 失败 · 待处置",
+              "journal": "—",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "工作结束后资深角色再审查",
+            "agent": "A 释放后，审查屏障固定 P1。资深角色检查失败贡献、后续工作与依赖，以及回退影响范围，再提出回退。",
+            "os": "工作进程名额和核验许可均空闲；一个云端查询正在执行。",
+            "rule": "保留、回退、重试和暂缓，均独立于原工作智能体判定。",
+            "state": {
+              "controller": "资深角色审查失败的 P1",
+              "A": "已结束 · 失败报告保留",
+              "B": "尚未启动",
+              "C": "尚未启动",
+              "w": 0,
+              "l": 0,
+              "cloud": 1,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "P1",
+              "reviewed": "H0",
+              "starts": "Closed",
+              "reports": "A 失败 · 待处置",
+              "journal": "—",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "回退使用独立的受保护意图",
+            "agent": "资深回退是一项已授权的通用版本头更新能力。逆向修改针对捕获的当前版本头检查，不伪造工作智能体 TaskReport。",
+            "os": "处置操作取得核验门控，并为逆向修改或检查命令取得 shell。稳定意图与预期版本头已记入日志。",
+            "rule": "执行下一项处置或激活新计划前，逐项核实回退回执。",
+            "state": {
+              "controller": "执行已授权回退",
+              "A": "已结束 · 失败报告保留",
+              "B": "尚未启动",
+              "C": "尚未启动",
+              "w": 0,
+              "l": 0,
+              "cloud": 0,
+              "shell": "资深回退",
+              "verifier": "资深回退",
+              "provisional": "P1",
+              "reviewed": "H0",
+              "starts": "Closed",
+              "reports": "A 失败 · 待处置",
+              "journal": "active",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "发布逆向提交与处置",
+            "agent": "真实逆向提交 R1 以 P1 为父提交，连同处置、证据和回执成为暂定版本头。原失败报告与提交仍保留在历史中。",
+            "os": "命令已结束；在当前持有者约束下，元数据版本头与处置发布仅结算一次。",
+            "rule": "Git 回退不会撤销无关远端效应，依赖检查仍不可省略。",
+            "state": {
+              "controller": "执行已授权回退",
+              "A": "已结束 · 失败报告保留",
+              "B": "尚未启动",
+              "C": "尚未启动",
+              "w": 0,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "资深回退",
+              "provisional": "R1",
+              "reviewed": "H0",
+              "starts": "Closed",
+              "reports": "A 已回退 · 原报告保留",
+              "journal": "settled",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "结果已认可，项目仍未验收",
+            "agent": "完成处置与检查后，已认可结果版本为 R1。核验门控已释放；项目完成仍需要匹配的资深提案和独立项目检查。",
+            "os": "该快照没有工作进程、shell 或核验占用；原报告与已认可版本头分别保留。",
+            "rule": "仅重试或暂缓会保留已发布代码；只有显式逆向提交才移除了它。",
+            "state": {
+              "controller": "可继续规划或开展完成审查",
+              "A": "已结束 · 失败报告保留",
+              "B": "尚未启动",
+              "C": "尚未启动",
+              "w": 0,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "R1",
+              "reviewed": "R1",
+              "starts": "Closed",
+              "reports": "A 已回退 · 原报告保留",
+              "journal": "settled",
+              "received": 0,
+              "applied": 0
+            }
+          }
+        ]
+      },
+      "crash": {
+        "title": "版本头发布边界的崩溃",
+        "source": "../simplified-os/README.md#failure-and-abort",
+        "frames": [
+          {
+            "title": "A 持有已评估候选结果",
+            "agent": "A 已完成协调、检查和评估，仍持有核验许可，但尚未发布候选结果。",
+            "os": "原始私有差异、最终代码树、持有者和阶段状态已持久保存；没有活动命令。",
+            "rule": "只有完成最终评估，才可进入正常提交与报告发布流程。",
+            "state": {
+              "controller": "就绪",
+              "A": "候选已评估 · 等待发布",
+              "B": "尚未启动",
+              "C": "尚未启动",
+              "w": 1,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "A",
+              "provisional": "H0",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "无",
+              "journal": "prepared",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "私有 P1 已存在，共享头仍为 H0",
+            "agent": "可信 Git 准备操作创建 P1。仅找到该提交，不能证明工作进程已完成或共享版本头已交接。",
+            "os": "Git 与证据对象是不可变的先决条件；权威元数据版本头尚未推进。",
+            "rule": "私有提交存在，不等于版本头、报告与回执已持久发布。",
+            "state": {
+              "controller": "就绪",
+              "A": "私有 P1 · 尚无已提交回执",
+              "B": "尚未启动",
+              "C": "尚未启动",
+              "w": 1,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "A",
+              "provisional": "H0",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "无",
+              "journal": "prepared",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "崩溃使发布结果不确定",
+            "agent": "元数据提交边界附近的发布响应丢失。工作进程不能确定 P1 是否已共享，也不能换用新意图盲重试。",
+            "os": "保留原发布 ID 和冲突核验排他权；恢复视图尚未读取权威结果。",
+            "rule": "超时或异常不能证明发布失败，也不能证明可安全释放门控。",
+            "state": {
+              "controller": "需要恢复",
+              "A": "发布结果未知",
+              "B": "尚未启动",
+              "C": "尚未启动",
+              "w": 1,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "A",
+              "provisional": "尚未核实",
+              "reviewed": "H0",
+              "starts": "Closed",
+              "reports": "无",
+              "journal": "uncertain",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "重启先隔离旧写入者",
+            "agent": "恢复先确认旧协调器或驱动器不能继续写入，再检查原操作日志与回执。",
+            "os": "只有核实操作结果后，才恢复单个当前驱动器。阻塞项可见期间，状态与输入处理仍可用。",
+            "rule": "保存的检查点不构成与提供方、Git 或元数据日志的共同事务。",
+            "state": {
+              "controller": "检查原始意图与回执",
+              "A": "受监督恢复 · 保留排他权",
+              "B": "尚未启动",
+              "C": "尚未启动",
+              "w": 1,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "A",
+              "provisional": "尚未核实",
+              "reviewed": "H0",
+              "starts": "Closed",
+              "reports": "无",
+              "journal": "uncertain",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "原回执证明 P1 已发布",
+            "agent": "恢复找到已提交的 P1、原报告和原回执，因此返回原结果，不再创建提交。",
+            "os": "权威版本头为 P1。日志结算去重；实际已经产生的提供方用量仍须记账。",
+            "rule": "即使旧工作区或许可代次已改变，重放查询也应返回已保留的成功结果。",
+            "state": {
+              "controller": "原发布结果已恢复",
+              "A": "P1 回执已核实 · 待处置",
+              "B": "尚未启动",
+              "C": "尚未启动",
+              "w": 1,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "A",
+              "provisional": "P1",
+              "reviewed": "H0",
+              "starts": "Closed",
+              "reports": "A 待处置",
+              "journal": "settled",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "结束原执行尝试",
+            "agent": "工作进程完成可确认的清理并释放。资深审查仍独立进行；没有生成重复撤销单元。",
+            "os": "核验许可和工作进程名额此时可复用；报告、回执和恢复工件继续保留。",
+            "rule": "若没有回执，恢复须先查明实际结果，再继续执行或记录已核实的中止。",
+            "state": {
+              "controller": "可进入审查",
+              "A": "原执行尝试已结束",
+              "B": "尚未启动",
+              "C": "尚未启动",
+              "w": 0,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "P1",
+              "reviewed": "H0",
+              "starts": "Closed",
+              "reports": "A 待处置",
+              "journal": "settled",
+              "received": 0,
+              "applied": 0
+            }
+          }
+        ]
+      },
+      "abort": {
+        "title": "中止集成 → 捕获新 H 后重建",
+        "source": "../simplified-os/README.md#failure-and-abort",
+        "frames": [
+          {
+            "title": "B 已集成前序 P1",
+            "agent": "B 的原始私有差异基于 H0。取得核验后，它构建了完整 P1 集成视图，其中包含前序 A 的修改。",
+            "os": "原始 B 相对差异与集成视图代次分别保留归属。",
+            "rule": "完整集成代码树不是相对原始基准的私有差异。",
+            "state": {
+              "controller": "就绪",
+              "A": "尚未启动",
+              "B": "在 P1 上集成 · 原始基准 H0",
+              "C": "尚未启动",
+              "w": 1,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "B",
+              "provisional": "P1",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "A 待处置",
+              "journal": "—",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "确认操作结束后显式中止",
+            "agent": "B 无法完成此次最终阶段。它保留部分工作，不生成正常报告，并废弃该集成代次及检查权限。",
+            "os": "释放前已确认相关命令和发布操作结束。除非在安全条件下显式休眠，暂停的 B 仍占用 W。",
+            "rule": "没有完成评估，就不能编造 fail 或 uncertain 正常报告。",
+            "state": {
+              "controller": "就绪",
+              "A": "尚未启动",
+              "B": "已暂停 · 废弃集成作为证据保留",
+              "C": "尚未启动",
+              "w": 1,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "P1",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "A 待处置",
+              "journal": "settled",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "另一个工作进程发布 P2",
+            "agent": "B 暂停且不持有核验许可时，C 完成自己的受保护流程并发布 P2；共享版本头已经移动。",
+            "os": "该快照位于 C 的发布和清理结束后。B 仍常驻，其原始私有差异固定保留。",
+            "rule": "恢复 B 时，不能针对已废弃代次捕获的旧版本头发布。",
+            "state": {
+              "controller": "就绪",
+              "A": "尚未启动",
+              "B": "已暂停 · 废弃集成作为证据保留",
+              "C": "已结束 · P2 待处置",
+              "w": 1,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "P2",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "A 与 C 待处置",
+              "journal": "settled",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "重新取得许可，在 P2 上重建",
+            "agent": "B 重新取得核验许可、物化 P2，并仅重应用原始 H0 到开发状态的私有差异。废弃协调中的修复仍可显式重新应用。",
+            "os": "新的集成代次阻止过期工具或评估请求作用于已切换视图。",
+            "rule": "不得把废弃的完整代码树与 H0 比较后当成私有差异，否则会错误归属前序传入修改。",
+            "state": {
+              "controller": "就绪",
+              "A": "尚未启动",
+              "B": "新集成代次 · 已捕获 P2",
+              "C": "已结束 · P2 待处置",
+              "w": 1,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "B",
+              "provisional": "P2",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "A 与 C 待处置",
+              "journal": "prepared",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "重做协调和最终阶段",
+            "agent": "B 开始新的强制协调轮次；任何正常发布前，都须重跑相关检查和最终评估。",
+            "os": "新逻辑步骤和有界本地请求经过准入；废弃证据不再授予发布权限。",
+            "rule": "干净合并或旧评估，都不能免除新最终阶段要求。",
+            "state": {
+              "controller": "就绪",
+              "A": "尚未启动",
+              "B": "新协调轮次执行中 · 尚须检查与评估",
+              "C": "已结束 · P2 待处置",
+              "w": 1,
+              "l": 1,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "B",
+              "provisional": "P2",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "A 与 C 待处置",
+              "journal": "active",
+              "received": 0,
+              "applied": 0
+            }
+          },
+          {
+            "title": "仅发布重新评估后的结果",
+            "agent": "重新检查、评估和范围校验后，B 发布 P3，其唯一父提交为 P2；核实回执并清理后释放。",
+            "os": "原操作均已确定；新的 P3、报告和回执已持久化，没有把前序贡献重新标成 B 的私有差异。",
+            "rule": "若恢复找到原发布的既有回执，应结束原尝试，而不是重建并再次发布。",
+            "state": {
+              "controller": "就绪",
+              "A": "尚未启动",
+              "B": "已结束 · P3 待处置",
+              "C": "已结束 · P2 待处置",
+              "w": 0,
+              "l": 0,
+              "cloud": 0,
+              "shell": "—",
+              "verifier": "—",
+              "provisional": "P3",
+              "reviewed": "H0",
+              "starts": "Open",
+              "reports": "A、C 与 B 待处置",
+              "journal": "settled",
+              "received": 0,
+              "applied": 0
+            }
+          }
+        ]
+      }
+    },
+    "sources": [
+      {
+        "title": "已审计的智能体设计",
+        "category": "当前设计",
+        "href": "../langgraph-agent/README.md",
+        "description": "图结构、可移植端口、任务与判定及审查语义，以及应用层状态。"
+      },
+      {
+        "title": "简化 OS 规格",
+        "category": "当前设计",
+        "href": "../simplified-os/README.md",
+        "description": "四个实现模块、独立资源限制、私有副本、双门控和恢复。"
+      },
+      {
+        "title": "合并版智能体图",
+        "category": "行为基准",
+        "href": "../polyinference-design/polyinference-agent-design-merged.html",
+        "description": "原始可编辑图：23 个执行节点，以及原样保留的 19 节点记忆视图。"
+      },
+      {
+        "title": "联合集成审计",
+        "category": "修正与待验证事项",
+        "href": "../INTEGRATION_AUDIT.md",
+        "description": "两份设计间的九项发现、修正，以及实现阶段的验收调度场景。"
+      },
+      {
+        "title": "智能体线协议",
+        "category": "结构与部分语义校验",
+        "href": "../langgraph-agent/contracts.py",
+        "description": "线协议 2.0 记录。模型校验结构与部分不变量，并不实现运行时。"
+      },
+      {
+        "title": "核心工作区与配置协议",
+        "category": "结构与部分语义校验",
+        "href": "../simplified-os/contracts.py",
+        "description": "静态角色配置、局部清单、显式差异和集成代次关联。"
+      },
+      {
+        "title": "来源整合",
+        "category": "研究与优先级",
+        "href": "../simplified-os/SOURCES.md",
+        "description": "五份课程推导和早期智能体研究，如何支持当前实现边界。"
+      },
+      {
+        "title": "阅读器构建说明",
+        "category": "本可视化投影",
+        "href": "README.md",
+        "description": "离线文件、重新生成命令、图示约定和审查笔记行为。"
+      }
+    ],
+    "boundary": [
+      [
+        "ProcessSpec / TaskSpec",
+        "智能体声明角色、不可变任务与基准、限制、范围和依赖。",
+        "运行时负责认证、能力协商，并在初始化前认领有界常驻容量。"
+      ],
+      [
+        "ModelQuery / AgentJob",
+        "智能体提供上下文、阶段、输出语法和必需执行保证。",
+        "运行时约束静态执行资格、上下文与数据策略、准入和实际端点协议。"
+      ],
+      [
+        "CapabilityCall",
+        "智能体仅提出限定范围的动作，不能自行扩大授权。",
+        "运行时校验参数、当前视图和内容，记录操作日志，并在所需许可下执行。"
+      ],
+      [
+        "TaskReport + PublicationReceipt",
+        "智能体提出已评估判定，并保留证据与来源归属。",
+        "运行时在元数据中原子发布实际 H→P、待处置报告、回执和事件意图。"
+      ],
+      [
+        "审查处置／版本头更新",
+        "资深角色提出保留、回退、重试或暂缓；控制器校验应用语义。",
+        "回退使用独立记日志的能力调用和受保护版本头更新，不伪造工作报告。"
+      ],
+      [
+        "续执行状态与事件游标",
+        "智能体保留固定版本的图、阶段、上下文和工作区引用。",
+        "运行时核实操作和排他权，并只推进一个兼容的当前驱动器。"
+      ]
+    ],
+    "capacity": [
+      [
+        "W",
+        "常驻编码工作进程",
+        "从初始化、执行到必要清理，包括模型和门控等待。"
+      ],
+      [
+        "L",
+        "已提交本地请求",
+        "已经在引擎排队的请求也计入，直到确认结束。"
+      ],
+      [
+        "E",
+        "后端序列上限",
+        "推理引擎配置；此核心设计保持 L≤E。"
+      ],
+      [
+        "T",
+        "本地上下文预留",
+        "准入请求的输入与预留输出总量；除非后端强制执行，否则是保守估算。"
+      ],
+      [
+        "C",
+        "云端操作",
+        "独立账户和端点容量；可变会话还须串行使用。"
+      ],
+      [
+        "shell／核验",
+        "各为 1",
+        "安装范围逐命令互斥，与项目完整最终阶段排他权相互独立。"
+      ]
+    ]
+  },
+  "ui": {
+    "design atlas": "设计图谱",
+    "Skip to design": "跳到设计正文",
+    "Design navigation": "设计导航",
+    "DESIGN ATLAS": "设计图谱",
+    "Choose design": "选择设计",
+    "Agent": "智能体",
+    "OS": "OS",
+    "EXAMINE THE DESIGN": "阅读与评审设计",
+    "Sections": "阅读分区",
+    "Architecture": "架构",
+    "Execution stories": "执行场景",
+    "Shared contracts": "共享协议",
+    "Assess the design": "评审设计",
+    "Source trail": "来源追溯",
+    "Design specification": "设计规格",
+    "Audited 17 Oct 2026": "审计日期：2026 年 10 月 17 日",
+    "Program revision 4": "程序修订版 4",
+    "Runtime not yet implemented": "运行时尚未实现",
+    "Read the joint audit": "阅读联合审计",
+    "Switch color theme": "切换明暗主题",
+    "Light theme": "浅色主题",
+    "Dark theme": "深色主题",
+    "Switch to light theme": "切换为浅色主题",
+    "Switch to dark theme": "切换为深色主题",
+    "Print this view": "打印当前视图",
+    "AUDITED DESIGN": "已审计设计",
+    "Architecture at a glance": "架构总览",
+    "Select a component to inspect its purpose, contracts and failure boundaries.": "选择组件，查看职责、接口约束和异常边界。",
+    "Architecture focus": "架构视角",
+    "A curated map, not one process per box": "图示经过归纳；每个方框不代表独立进程",
+    "Cloud reasoning": "云端模型推理",
+    "Local reasoning": "本地模型推理",
+    "Protected phase": "受保护阶段",
+    "Principal handoff": "主要交接",
+    "Context / evidence": "上下文／证据",
+    "Keep in mind": "请注意",
+    "SELECTED COMPONENT": "所选组件",
+    "RECEIVES": "输入",
+    "PRODUCES": "输出",
+    "NON-NEGOTIABLE RULES": "必须遵守的规则",
+    "QUESTION TO ASSESS": "评审问题",
+    "Inspect the source contract ↗": "查看源协议 ↗",
+    ". Select a component for its contract.": "。选择组件可查看其协议约束。",
+    "Follow a real design situation": "沿具体设计场景逐步查看",
+    "Illustrative event snapshots. These stories explain the protocol; they are not execution logs or benchmarks.": "这里是示例事件快照，用于解释协议，不是实际执行日志或性能测试。",
+    "Situation": "场景",
+    "See this through the OS lens ↗": "切换至同一事件的 OS 视角 ↗",
+    "See this through the agent lens ↗": "切换至同一事件的智能体视角 ↗",
+    "Choose an event": "选择事件",
+    "EVENT": "事件",
+    "Previous event": "上一个事件",
+    "Next event →": "下一个事件 →",
+    "Story complete": "场景已结束",
+    "APPLICATION PERSPECTIVE": "应用层视角",
+    "RUNTIME PERSPECTIVE": "运行时视角",
+    "Provisional": "暂定版本头",
+    "Reviewed": "已认可版本",
+    "Controller": "控制器",
+    "Worker": "工作进程",
+    "Verification owner": "核验持有者",
+    "Shell owner": "shell 持有者",
+    "New coding starts": "新编码任务启动",
+    "Open": "开放",
+    "Closed": "关闭",
+    "SHARED HISTORY & REVIEW": "共享历史与审查",
+    "Steering received / applied:": "指令已接收／已应用：",
+    "W · resident workers": "W · 常驻工作进程",
+    "L · local in flight": "L · 本地在途请求",
+    "C · cloud in flight": "C · 云端在途操作",
+    "FOCUSED EFFECT JOURNAL": "当前操作日志",
+    "NO SINGLE EFFECT SELECTED": "未聚焦单一操作",
+    "Focused effect state": "当前操作状态",
+    "prepared": "已准备（prepared）",
+    "submitting": "提交中（submitting）",
+    "active": "执行中（active）",
+    "uncertain": "不确定（uncertain）",
+    "settled": "已确认并结算（settled）",
+    ". Other effects may have separate journal states.": "。其他操作可能处于各自不同的日志状态。",
+    "THE RULE THAT MATTERS": "本步骤的关键规则",
+    "Read the source rule ↗": "阅读源规则 ↗",
+    "Illustrative capacities · W = 4 · L = 2 · C = 1": "示例容量 · W＝4 · L＝2 · C＝1",
+    "Where the two designs meet": "两份设计的交接边界",
+    "The agent chooses the work and its meaning. The runtime controls effects, authority and resources.": "智能体决定工作及其语义；运行时约束外部操作、权限和资源。",
+    "AGENT OWNS MEANING": "智能体负责应用语义",
+    "What should be done?": "应该做什么？",
+    "Objective, task criteria and dependency meaning": "目标、任务标准和依赖语义",
+    "Sprint plans, prompt modes and repair decisions": "迭代计划、提示词模式和修复决策",
+    "Verdict proposals, review decisions and doc batching": "判定提案、审查决策和文档批量更新",
+    "Logical context, provenance and required evidence": "逻辑上下文、来源归属和所需证据",
+    "OS OWNS MECHANISMS": "OS 负责执行机制",
+    "May this effect happen safely?": "该外部操作能否安全执行？",
+    "Authentication, grants, quotas and atomic admission": "认证、授权、配额和原子准入",
+    "Actual model/tool execution and workspace enforcement": "实际模型与工具执行，以及工作区权限约束",
+    "Fenced ownership, journaled intent and reconciliation": "带代际隔离的所有权、意图日志和结果核实",
+    "Durable records, artifacts, publication and events": "持久化记录、工件、发布和事件",
+    "Agent to OS boundary": "智能体与 OS 的协议边界",
+    "Contract": "协议",
+    "Application responsibility": "应用层职责",
+    "Runtime guarantee": "运行时保证",
+    "ONE PROJECT VERIFIER, ONE SHELL COMMAND": "项目核验者最多一个，shell 命令同时最多一条",
+    "Verification holds through the entire final phase": "整个最终阶段持续持有核验门控",
+    "Capture H": "捕获 H",
+    "Merge delta": "合并私有差异",
+    "Reconcile turn": "协调开发轮次",
+    "Checks": "运行检查",
+    "Assessment": "模型评估",
+    "Real commit": "真实提交",
+    "Atomic publication": "原子发布",
+    "Release": "释放",
+    "Acquire verification before shell. Shell is taken separately per command; it is free during model reasoning. Other private work and eligible inference can progress. Unknown effects retain conflicting ownership.": "先取得核验许可，再取得 shell。shell 逐条命令申请，模型推理期间不持有。其他私有工作和符合条件的推理可继续推进；操作结果未知时保留冲突排他权。",
+    "NORMAL ASSESSED OUTCOMES ALL ENTER PROVISIONAL HISTORY": "正常完成评估的所有结果都进入暂定历史",
+    "successful": "成功（successful）",
+    "fail": "失败（fail）",
+    "Current sufficient passing evidence.": "当前证据充分，且必需检查通过。",
+    "A definite required criterion failed.": "至少一项必需标准明确失败。",
+    "Required evidence is missing or inconclusive.": "所需证据缺失或无法定论。",
+    "Real commit → provisional + unresolved": "真实提交 → 暂定发布＋待审查处置",
+    "Interrupted or assessment-pending work has no invented verdict or normal TaskReport. Senior review remains separate from every normal worker verdict.": "中断或等待评估的工作不虚构判定，也不生成正常 TaskReport。每种正常工作判定都独立于资深审查。",
+    "INDEPENDENT ADMISSION CONSTRAINTS": "相互独立的准入约束",
+    "Limit": "限制",
+    "Bounds": "约束对象",
+    "Lifetime / interpretation": "生命周期／解释",
+    "IMPLEMENTATION BOUNDARY": "实现边界",
+    "Build in this core": "此核心版本实现",
+    "Future negotiated extensions": "未来按能力协商的扩展",
+    "One project, one shared local model, one cloud protocol": "一个项目、一个共享本地模型、一种云端协议",
+    "Bounded workers, direct tools and scoped code copies": "有界工作进程、直接工具和限定范围的代码副本",
+    "Complete private integration and exact-tree evidence": "完整私有集成与精确代码树证据",
+    "Two permits, durable journal, versioned notes and records": "两个排他许可、持久日志、带版本的笔记和记录",
+    "Weighted distribution and running-process model migration": "加权执行分配与运行中进程的模型迁移",
+    "MCP discovery/lifecycle and rich tiered memory": "MCP 发现与生命周期，以及丰富的分层记忆",
+    "Autonomous consolidation or general subagent APIs": "自主整合或通用子智能体 API",
+    "Distributed coordinators, broad snapshots or custom GPU scheduling": "分布式协调器、全系统快照或自定义 GPU 调度",
+    "Make your judgment explicit": "明确记录你的判断",
+    "Questions to assess the design. Your judgments are review notes, not claims that an implementation passed.": "这些问题用于评审设计。你的判断是审查笔记，不表示某个实现已经通过验证。",
+    "Export review notes ↓": "导出审查笔记 ↓",
+    "Notes save in this browser. Export a copy to keep or share.": "笔记保存在此浏览器中；可导出副本以保存或分享。",
+    "Browser storage is unavailable. Export notes before closing.": "浏览器存储不可用；关闭前请导出笔记。",
+    "Why it matters.": "为何重要：",
+    "What to inspect.": "检查重点：",
+    "Inspect supporting design ↗": "查看支持该项的设计 ↗",
+    "YOUR NOTES": "你的笔记",
+    "Record your reasoning, questions or required changes.": "记录你的理由、问题或要求修改的内容。",
+    "Unreviewed": "尚未判断",
+    "Satisfied": "认为可行",
+    "Concern": "存在疑虑",
+    "Open question": "尚待确认",
+    "Follow the evidence": "追溯设计依据",
+    "This is a readable projection of the audited designs. The source documents remain authoritative.": "这是已审计设计的可读投影；源文档仍是权威依据。",
+    "A dated, inspectable design snapshot": "带日期、可核查的设计快照",
+    "The audited READMEs and joint integration audit supply the current contracts. The merged graph supplies the behavioral baseline; its preserved memory view yields where its old prose conflicts with expanded execution contracts. The reader adds illustrative schedules and assessment questions, not new runtime guarantees.": "已审计的 README 与联合集成审计给出当前协议。合并图提供行为基准；保留的记忆视图若与扩展执行协议冲突，以扩展执行协议为准。此阅读器增加的是示例调度与评审问题，不增加新的运行时保证。",
+    "Wire 2.0 · state 2.1 · program proposal-4-audited-core. This reader runs offline; source links resolve when these files remain in the repository. No performance or implementation result is implied.": "线协议 2.0 · 状态结构 2.1 · 程序 proposal-4-audited-core。阅读器可离线运行；文件保留在仓库中时可使用来源链接。中文为阅读器译文，原始设计文档仍保留英文；这里不声称已有性能或实现结果。",
+    "Source fingerprints at build time": "构建时的源文件指纹",
+    "PolyInference · Agent + OS · Audited 17 Oct 2026": "PolyInference · 智能体＋OS · 审计日期：2026 年 10 月 17 日",
+    "Offline reader · No external services": "离线阅读器 · 不使用外部服务"
+  }
+}

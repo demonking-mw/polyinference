@@ -1,0 +1,752 @@
+{
+  "$defs": {
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Digest",
+          "type": "string"
+        },
+        "media_type": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "classification": {
+          "enum": [
+            "public",
+            "project",
+            "restricted"
+          ],
+          "title": "Classification",
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "digest",
+        "media_type",
+        "size_bytes",
+        "classification",
+        "scope"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "CodeRevision": {
+      "additionalProperties": false,
+      "properties": {
+        "repository_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Repository Id",
+          "type": "string"
+        },
+        "commit_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Commit Id"
+        },
+        "effective_tree_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Effective Tree Digest",
+          "type": "string"
+        },
+        "environment_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Environment Digest",
+          "type": "string"
+        },
+        "includes_uncommitted_inputs": {
+          "title": "Includes Uncommitted Inputs",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "repository_id",
+        "commit_id",
+        "effective_tree_digest",
+        "environment_digest",
+        "includes_uncommitted_inputs"
+      ],
+      "title": "CodeRevision",
+      "type": "object"
+    },
+    "CopiedFile": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "copied_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Copied Digest",
+          "type": "string"
+        },
+        "writable": {
+          "title": "Writable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "path",
+        "copied_digest",
+        "writable"
+      ],
+      "title": "CopiedFile",
+      "type": "object"
+    },
+    "CoreProfile": {
+      "additionalProperties": false,
+      "properties": {
+        "profile_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Profile Id",
+          "type": "string"
+        },
+        "profile_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Profile Version",
+          "type": "string"
+        },
+        "wire_major": {
+          "const": "2",
+          "default": "2",
+          "enum": [
+            "2"
+          ],
+          "title": "Wire Major",
+          "type": "string"
+        },
+        "project_capacity": {
+          "const": 1,
+          "default": 1,
+          "enum": [
+            1
+          ],
+          "title": "Project Capacity",
+          "type": "integer"
+        },
+        "local_model_services": {
+          "const": 1,
+          "default": 1,
+          "enum": [
+            1
+          ],
+          "title": "Local Model Services",
+          "type": "integer"
+        },
+        "cloud_endpoints": {
+          "const": 1,
+          "default": 1,
+          "enum": [
+            1
+          ],
+          "title": "Cloud Endpoints",
+          "type": "integer"
+        },
+        "max_workers": {
+          "exclusiveMinimum": 0,
+          "title": "Max Workers",
+          "type": "integer"
+        },
+        "local_inflight_limit": {
+          "exclusiveMinimum": 0,
+          "title": "Local Inflight Limit",
+          "type": "integer"
+        },
+        "local_engine_sequence_limit": {
+          "exclusiveMinimum": 0,
+          "title": "Local Engine Sequence Limit",
+          "type": "integer"
+        },
+        "max_sequence_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Max Sequence Tokens",
+          "type": "integer"
+        },
+        "local_reserved_context_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Local Reserved Context Tokens",
+          "type": "integer"
+        },
+        "cloud_inflight_limit": {
+          "exclusiveMinimum": 0,
+          "title": "Cloud Inflight Limit",
+          "type": "integer"
+        },
+        "max_pending_operations": {
+          "exclusiveMinimum": 0,
+          "title": "Max Pending Operations",
+          "type": "integer"
+        },
+        "max_tool_output_bytes": {
+          "exclusiveMinimum": 0,
+          "title": "Max Tool Output Bytes",
+          "type": "integer"
+        },
+        "workspace_budget_bytes": {
+          "exclusiveMinimum": 0,
+          "title": "Workspace Budget Bytes",
+          "type": "integer"
+        },
+        "host_agent_budget_bytes": {
+          "exclusiveMinimum": 0,
+          "title": "Host Agent Budget Bytes",
+          "type": "integer"
+        },
+        "shell_capacity": {
+          "const": 1,
+          "default": 1,
+          "enum": [
+            1
+          ],
+          "title": "Shell Capacity",
+          "type": "integer"
+        },
+        "verification_capacity": {
+          "const": 1,
+          "default": 1,
+          "enum": [
+            1
+          ],
+          "title": "Verification Capacity",
+          "type": "integer"
+        },
+        "routing": {
+          "const": "static_roles",
+          "default": "static_roles",
+          "enum": [
+            "static_roles"
+          ],
+          "title": "Routing",
+          "type": "string"
+        },
+        "local_admission": {
+          "const": "fifo_alternating_verifier_lane",
+          "default": "fifo_alternating_verifier_lane",
+          "enum": [
+            "fifo_alternating_verifier_lane"
+          ],
+          "title": "Local Admission",
+          "type": "string"
+        },
+        "publication": {
+          "const": "provisional_all",
+          "default": "provisional_all",
+          "enum": [
+            "provisional_all"
+          ],
+          "title": "Publication",
+          "type": "string"
+        },
+        "workspace_strategy": {
+          "const": "scoped_development_full_integration",
+          "default": "scoped_development_full_integration",
+          "enum": [
+            "scoped_development_full_integration"
+          ],
+          "title": "Workspace Strategy",
+          "type": "string"
+        },
+        "langgraph_integration": {
+          "const": "public_api_adapter",
+          "default": "public_api_adapter",
+          "enum": [
+            "public_api_adapter"
+          ],
+          "title": "Langgraph Integration",
+          "type": "string"
+        },
+        "local_backend_descriptor_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Local Backend Descriptor Ref",
+          "type": "string"
+        },
+        "cloud_backend_descriptor_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Cloud Backend Descriptor Ref",
+          "type": "string"
+        },
+        "role_backend_refs": {
+          "additionalProperties": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Role Backend Refs",
+          "type": "object"
+        },
+        "capacity_basis_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Capacity Basis Ref",
+          "type": "string"
+        },
+        "supported_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Supported Features",
+          "type": "array"
+        }
+      },
+      "required": [
+        "profile_id",
+        "max_workers",
+        "local_inflight_limit",
+        "local_engine_sequence_limit",
+        "max_sequence_tokens",
+        "local_reserved_context_tokens",
+        "cloud_inflight_limit",
+        "max_pending_operations",
+        "max_tool_output_bytes",
+        "workspace_budget_bytes",
+        "host_agent_budget_bytes",
+        "local_backend_descriptor_ref",
+        "cloud_backend_descriptor_ref",
+        "role_backend_refs",
+        "capacity_basis_ref",
+        "supported_features"
+      ],
+      "title": "CoreProfile",
+      "type": "object"
+    },
+    "DeltaChange": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "enum": [
+            "add",
+            "modify",
+            "delete",
+            "rename"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "source_path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Source Path"
+        },
+        "expected_base_digest": {
+          "anyOf": [
+            {
+              "pattern": "^sha256:[0-9a-f]{64}$",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Expected Base Digest"
+        },
+        "content": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ArtifactRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "action",
+        "path",
+        "expected_base_digest",
+        "content"
+      ],
+      "title": "DeltaChange",
+      "type": "object"
+    },
+    "Feature": {
+      "additionalProperties": false,
+      "properties": {
+        "feature_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Feature Id",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "feature_id",
+        "version"
+      ],
+      "title": "Feature",
+      "type": "object"
+    },
+    "Scope": {
+      "additionalProperties": false,
+      "properties": {
+        "tenant_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Tenant Id",
+          "type": "string"
+        },
+        "project_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        },
+        "process_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Process Id"
+        }
+      },
+      "required": [
+        "tenant_id",
+        "project_id"
+      ],
+      "title": "Scope",
+      "type": "object"
+    },
+    "ViewRequirement": {
+      "additionalProperties": false,
+      "description": "Required extension on each workspace-bound effect envelope.",
+      "properties": {
+        "workspace_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Workspace Id",
+          "type": "string"
+        },
+        "manifest_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Manifest Ref",
+          "type": "string"
+        },
+        "generation": {
+          "exclusiveMinimum": 0,
+          "title": "Generation",
+          "type": "integer"
+        },
+        "view": {
+          "enum": [
+            "development",
+            "integration"
+          ],
+          "title": "View",
+          "type": "string"
+        }
+      },
+      "required": [
+        "workspace_id",
+        "manifest_ref",
+        "generation",
+        "view"
+      ],
+      "title": "ViewRequirement",
+      "type": "object"
+    },
+    "WorkspaceDelta": {
+      "additionalProperties": false,
+      "properties": {
+        "delta_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Delta Id",
+          "type": "string"
+        },
+        "workspace_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Workspace Id",
+          "type": "string"
+        },
+        "development_manifest_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Development Manifest Ref",
+          "type": "string"
+        },
+        "original_base": {
+          "$ref": "#/$defs/CodeRevision"
+        },
+        "absence_is_deletion": {
+          "const": false,
+          "default": false,
+          "enum": [
+            false
+          ],
+          "title": "Absence Is Deletion",
+          "type": "boolean"
+        },
+        "changes": {
+          "items": {
+            "$ref": "#/$defs/DeltaChange"
+          },
+          "title": "Changes",
+          "type": "array"
+        }
+      },
+      "required": [
+        "delta_id",
+        "workspace_id",
+        "development_manifest_ref",
+        "original_base",
+        "changes"
+      ],
+      "title": "WorkspaceDelta",
+      "type": "object"
+    },
+    "WorkspaceManifest": {
+      "additionalProperties": false,
+      "properties": {
+        "manifest_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Manifest Id",
+          "type": "string"
+        },
+        "workspace_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Workspace Id",
+          "type": "string"
+        },
+        "process_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Process Id",
+          "type": "string"
+        },
+        "task_spec_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Task Spec Ref",
+          "type": "string"
+        },
+        "generation": {
+          "exclusiveMinimum": 0,
+          "title": "Generation",
+          "type": "integer"
+        },
+        "view": {
+          "enum": [
+            "development",
+            "integration"
+          ],
+          "title": "View",
+          "type": "string"
+        },
+        "materialization": {
+          "enum": [
+            "scoped",
+            "complete"
+          ],
+          "title": "Materialization",
+          "type": "string"
+        },
+        "private_root_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Private Root Ref",
+          "type": "string"
+        },
+        "original_base": {
+          "$ref": "#/$defs/CodeRevision"
+        },
+        "captured_head": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CodeRevision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effective_code": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CodeRevision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "copied_files": {
+          "items": {
+            "$ref": "#/$defs/CopiedFile"
+          },
+          "minItems": 1,
+          "title": "Copied Files",
+          "type": "array"
+        },
+        "allowed_write_paths": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Allowed Write Paths",
+          "type": "array"
+        },
+        "closure_basis_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Closure Basis Ref",
+          "type": "string"
+        },
+        "preserved_delta_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Preserved Delta Ref"
+        }
+      },
+      "required": [
+        "manifest_id",
+        "workspace_id",
+        "process_id",
+        "task_spec_ref",
+        "generation",
+        "view",
+        "materialization",
+        "private_root_ref",
+        "original_base",
+        "captured_head",
+        "effective_code",
+        "copied_files",
+        "allowed_write_paths",
+        "closure_basis_ref",
+        "preserved_delta_ref"
+      ],
+      "title": "WorkspaceManifest",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "profile": {
+      "$ref": "#/$defs/CoreProfile"
+    },
+    "workspaces": {
+      "items": {
+        "$ref": "#/$defs/WorkspaceManifest"
+      },
+      "title": "Workspaces",
+      "type": "array"
+    },
+    "deltas": {
+      "items": {
+        "$ref": "#/$defs/WorkspaceDelta"
+      },
+      "title": "Deltas",
+      "type": "array"
+    },
+    "view_requirements": {
+      "items": {
+        "$ref": "#/$defs/ViewRequirement"
+      },
+      "title": "View Requirements",
+      "type": "array"
+    },
+    "current_manifest_refs": {
+      "items": {
+        "maxLength": 256,
+        "minLength": 1,
+        "type": "string"
+      },
+      "title": "Current Manifest Refs",
+      "type": "array"
+    }
+  },
+  "required": [
+    "profile",
+    "workspaces",
+    "deltas",
+    "view_requirements",
+    "current_manifest_refs"
+  ],
+  "title": "CoreExamples",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}

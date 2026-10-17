@@ -155,10 +155,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -244,6 +244,12 @@
             }
           ],
           "title": "Migration Registry Ref"
+        },
+        "design_basis": {
+          "$ref": "#/$defs/DesignBasis"
+        },
+        "worker_protocol": {
+          "$ref": "#/$defs/MergedWorkerProtocol"
         }
       },
       "required": [
@@ -255,7 +261,9 @@
         "entry_points",
         "required_runtime_features",
         "optional_runtime_features",
-        "migration_registry_ref"
+        "migration_registry_ref",
+        "design_basis",
+        "worker_protocol"
       ],
       "title": "AgentProgram",
       "type": "object"
@@ -313,10 +321,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -546,10 +554,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -848,10 +856,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -1294,10 +1302,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -1420,6 +1428,109 @@
               "type": "null"
             }
           ]
+        },
+        "original_base": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CodeRevision"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "captured_head": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CodeRevision"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "preserved_private_delta_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Preserved Private Delta Ref"
+        },
+        "shell_permit_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Shell Permit Ref"
+        },
+        "verification_permit_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Verification Permit Ref"
+        },
+        "publication_operation_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publication Operation Id"
+        },
+        "publication_receipt_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Publication Receipt Ref"
+        },
+        "publication_state": {
+          "default": "not_started",
+          "enum": [
+            "not_started",
+            "prepared",
+            "uncertain",
+            "published"
+          ],
+          "title": "Publication State",
+          "type": "string"
         },
         "trajectory_ref": {
           "maxLength": 256,
@@ -1563,6 +1674,68 @@
         "maximum_classification"
       ],
       "title": "DataPolicy",
+      "type": "object"
+    },
+    "DesignBasis": {
+      "additionalProperties": false,
+      "properties": {
+        "source_path": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Source Path",
+          "type": "string"
+        },
+        "html_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Html Digest",
+          "type": "string"
+        },
+        "document_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Document Id",
+          "type": "string"
+        },
+        "execution_node_count": {
+          "exclusiveMinimum": 0,
+          "title": "Execution Node Count",
+          "type": "integer"
+        },
+        "execution_edge_count": {
+          "exclusiveMinimum": 0,
+          "title": "Execution Edge Count",
+          "type": "integer"
+        },
+        "memory_node_count": {
+          "exclusiveMinimum": 0,
+          "title": "Memory Node Count",
+          "type": "integer"
+        },
+        "memory_edge_count": {
+          "exclusiveMinimum": 0,
+          "title": "Memory Edge Count",
+          "type": "integer"
+        },
+        "duplicate_behavior_precedence": {
+          "const": "expanded_execution_contracts",
+          "enum": [
+            "expanded_execution_contracts"
+          ],
+          "title": "Duplicate Behavior Precedence",
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_path",
+        "html_digest",
+        "document_id",
+        "execution_node_count",
+        "execution_edge_count",
+        "memory_node_count",
+        "memory_edge_count",
+        "duplicate_behavior_precedence"
+      ],
+      "title": "DesignBasis",
       "type": "object"
     },
     "DistributionPolicy": {
@@ -1774,10 +1947,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -2079,10 +2252,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -2409,10 +2582,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -2535,6 +2708,96 @@
       "title": "MemorySnapshot",
       "type": "object"
     },
+    "MergedWorkerProtocol": {
+      "additionalProperties": false,
+      "properties": {
+        "protocol_id": {
+          "const": "polyinference/merged-worker/1",
+          "default": "polyinference/merged-worker/1",
+          "enum": [
+            "polyinference/merged-worker/1"
+          ],
+          "title": "Protocol Id",
+          "type": "string"
+        },
+        "publication_policy": {
+          "const": "provisional_all",
+          "default": "provisional_all",
+          "enum": [
+            "provisional_all"
+          ],
+          "title": "Publication Policy",
+          "type": "string"
+        },
+        "post_merge_development_turns_min": {
+          "default": 1,
+          "exclusiveMinimum": 0,
+          "title": "Post Merge Development Turns Min",
+          "type": "integer"
+        },
+        "final_assessment_turns_min": {
+          "default": 1,
+          "exclusiveMinimum": 0,
+          "title": "Final Assessment Turns Min",
+          "type": "integer"
+        },
+        "shell_scope": {
+          "const": "installation",
+          "default": "installation",
+          "enum": [
+            "installation"
+          ],
+          "title": "Shell Scope",
+          "type": "string"
+        },
+        "verification_scope": {
+          "const": "project",
+          "default": "project",
+          "enum": [
+            "project"
+          ],
+          "title": "Verification Scope",
+          "type": "string"
+        },
+        "lock_order": {
+          "default": [
+            "verification",
+            "shell"
+          ],
+          "maxItems": 2,
+          "minItems": 2,
+          "prefixItems": [
+            {
+              "const": "verification",
+              "enum": [
+                "verification"
+              ],
+              "type": "string"
+            },
+            {
+              "const": "shell",
+              "enum": [
+                "shell"
+              ],
+              "type": "string"
+            }
+          ],
+          "title": "Lock Order",
+          "type": "array"
+        },
+        "normal_report_resolution": {
+          "const": "unresolved",
+          "default": "unresolved",
+          "enum": [
+            "unresolved"
+          ],
+          "title": "Normal Report Resolution",
+          "type": "string"
+        }
+      },
+      "title": "MergedWorkerProtocol",
+      "type": "object"
+    },
     "ModelQuery": {
       "additionalProperties": false,
       "properties": {
@@ -2618,10 +2881,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -2852,10 +3115,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -3219,10 +3482,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -3362,10 +3625,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -3555,10 +3818,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -3814,10 +4077,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -3895,8 +4158,9 @@
           "$ref": "#/$defs/Limits"
         },
         "publication_policy": {
+          "const": "provisional_all",
+          "default": "provisional_all",
           "enum": [
-            "reviewed_only",
             "provisional_all"
           ],
           "title": "Publication Policy",
@@ -3906,14 +4170,7 @@
           "$ref": "#/$defs/CodeRevision"
         },
         "provisional_revision": {
-          "anyOf": [
-            {
-              "$ref": "#/$defs/CodeRevision"
-            },
-            {
-              "type": "null"
-            }
-          ]
+          "$ref": "#/$defs/CodeRevision"
         },
         "plan_ref": {
           "anyOf": [
@@ -3963,7 +4220,6 @@
         "budget_account_ref",
         "grant_ref",
         "limits",
-        "publication_policy",
         "reviewed_revision",
         "provisional_revision",
         "plan_ref",
@@ -4003,6 +4259,15 @@
           "title": "Candidate Commit Id",
           "type": "string"
         },
+        "candidate_parent_commit_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Candidate Parent Commit Id",
+          "type": "string"
+        },
+        "final_code": {
+          "$ref": "#/$defs/CodeRevision"
+        },
         "report_ref": {
           "maxLength": 256,
           "minLength": 1,
@@ -4019,8 +4284,9 @@
           "type": "array"
         },
         "policy": {
+          "const": "provisional_all",
+          "default": "provisional_all",
           "enum": [
-            "reviewed_only",
             "provisional_all"
           ],
           "title": "Policy",
@@ -4036,6 +4302,18 @@
           "title": "Permit Refs",
           "type": "array"
         },
+        "verification_permit_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Verification Permit Ref",
+          "type": "string"
+        },
+        "receipt_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Receipt Ref",
+          "type": "string"
+        },
         "event_intent_refs": {
           "items": {
             "maxLength": 256,
@@ -4050,13 +4328,141 @@
         "expected_versions",
         "expected_head",
         "candidate_commit_id",
+        "candidate_parent_commit_id",
+        "final_code",
         "report_ref",
         "evidence_refs",
-        "policy",
         "permit_refs",
+        "verification_permit_ref",
+        "receipt_ref",
         "event_intent_refs"
       ],
       "title": "Publication",
+      "type": "object"
+    },
+    "PublicationReceipt": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "2.0",
+          "default": "2.0",
+          "enum": [
+            "2.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "publication_receipt",
+          "default": "publication_receipt",
+          "enum": [
+            "publication_receipt"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "publication_operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Publication Operation Id",
+          "type": "string"
+        },
+        "report_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Report Ref",
+          "type": "string"
+        },
+        "previous_head": {
+          "$ref": "#/$defs/CodeRevision"
+        },
+        "published_head": {
+          "$ref": "#/$defs/CodeRevision"
+        },
+        "candidate_parent_commit_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Candidate Parent Commit Id",
+          "type": "string"
+        },
+        "verification_permit_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Verification Permit Ref",
+          "type": "string"
+        },
+        "publication_record_revision": {
+          "exclusiveMinimum": 0,
+          "title": "Publication Record Revision",
+          "type": "integer"
+        },
+        "event_intent_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Event Intent Refs",
+          "type": "array"
+        },
+        "publication_policy": {
+          "const": "provisional_all",
+          "default": "provisional_all",
+          "enum": [
+            "provisional_all"
+          ],
+          "title": "Publication Policy",
+          "type": "string"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "publication_operation_id",
+        "report_ref",
+        "previous_head",
+        "published_head",
+        "candidate_parent_commit_id",
+        "verification_permit_ref",
+        "publication_record_revision",
+        "event_intent_refs"
+      ],
+      "title": "PublicationReceipt",
       "type": "object"
     },
     "Requirement": {
@@ -4191,10 +4597,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -4459,10 +4865,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -4594,10 +5000,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -4705,10 +5111,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -4848,10 +5254,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -4962,6 +5368,16 @@
           ],
           "title": "Stop Reason"
         },
+        "reconciliation_turn_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Reconciliation Turn Refs",
+          "type": "array"
+        },
         "assessment_turn_refs": {
           "items": {
             "maxLength": 256,
@@ -4990,23 +5406,43 @@
           "title": "Candidate Commit Id",
           "type": "string"
         },
+        "candidate_parent_commit_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Candidate Parent Commit Id",
+          "type": "string"
+        },
         "preserved_private_delta_ref": {
           "maxLength": 256,
           "minLength": 1,
           "title": "Preserved Private Delta Ref",
           "type": "string"
         },
+        "verification_permit_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Verification Permit Ref",
+          "type": "string"
+        },
+        "publication_receipt_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Publication Receipt Ref",
+          "type": "string"
+        },
         "publication_policy": {
+          "const": "provisional_all",
+          "default": "provisional_all",
           "enum": [
-            "reviewed_only",
             "provisional_all"
           ],
           "title": "Publication Policy",
           "type": "string"
         },
         "code_location": {
+          "const": "provisional",
+          "default": "provisional",
           "enum": [
-            "private",
             "provisional"
           ],
           "title": "Code Location",
@@ -5047,15 +5483,17 @@
         "plan_ref",
         "verdict",
         "stop_reason",
+        "reconciliation_turn_refs",
         "assessment_turn_refs",
         "assessment_summary",
         "original_base",
         "captured_head",
         "final_code",
         "candidate_commit_id",
+        "candidate_parent_commit_id",
         "preserved_private_delta_ref",
-        "publication_policy",
-        "code_location",
+        "verification_permit_ref",
+        "publication_receipt_ref",
         "evidence",
         "hazard_refs",
         "usage"
@@ -5067,10 +5505,10 @@
       "additionalProperties": false,
       "properties": {
         "contract_version": {
-          "const": "1.0",
-          "default": "1.0",
+          "const": "2.0",
+          "default": "2.0",
           "enum": [
-            "1.0"
+            "2.0"
           ],
           "title": "Contract Version",
           "type": "string"
@@ -5347,10 +5785,10 @@
   "additionalProperties": false,
   "properties": {
     "contract_version": {
-      "const": "1.0",
-      "default": "1.0",
+      "const": "2.0",
+      "default": "2.0",
       "enum": [
-        "1.0"
+        "2.0"
       ],
       "title": "Contract Version",
       "type": "string"
@@ -5373,6 +5811,7 @@
             "process_spec": "#/$defs/ProcessSpec",
             "process_status": "#/$defs/ProcessStatus",
             "project_run": "#/$defs/ProjectRun",
+            "publication_receipt": "#/$defs/PublicationReceipt",
             "review_resolution": "#/$defs/ReviewResolution",
             "sprint_plan": "#/$defs/SprintPlan",
             "steering_barrier": "#/$defs/SteeringBarrier",
@@ -5409,6 +5848,9 @@
           },
           {
             "$ref": "#/$defs/TaskReport"
+          },
+          {
+            "$ref": "#/$defs/PublicationReceipt"
           },
           {
             "$ref": "#/$defs/ReviewResolution"

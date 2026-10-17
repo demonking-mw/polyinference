@@ -1,8 +1,8 @@
 {
-  "contract_version": "1.0",
+  "contract_version": "2.0",
   "records": [
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "program-1",
       "revision": 1,
       "scope": {
@@ -13,14 +13,18 @@
       },
       "created_at": "2026-10-17T14:00:00Z",
       "required_features": [],
-      "extensions": {},
+      "extensions": {
+        "polyinference/core-profile": {
+          "profile_ref": "core-local-cloud-1"
+        }
+      },
       "kind": "agent_program",
       "program": {
         "program_id": "polyinference-coding",
-        "program_version": "proposal-1",
-        "graph_digest": "sha256:210e3f5c2b3e2894a67fc9343da2b9a003b089ce54917b5ada725749704e7bac",
-        "state_schema_version": "1.0",
-        "prompt_bundle_digest": "sha256:fc9eb607c91880dc0f55b213fda2a4ce801e8fda2c2239bc2d4020d6e697a87c"
+        "program_version": "proposal-4-audited-core",
+        "graph_digest": "sha256:8debf39e9ed43f044f370fe62427ccc4cd18f2d08b83ff811a7d6d47b97a3c09",
+        "state_schema_version": "2.1",
+        "prompt_bundle_digest": "sha256:f385c1e70fbfb3e684667a6ac86aa8cd4eb3da8a2af8ba4eb87e351b397303a6"
       },
       "entry_points": [
         "sprint_controller",
@@ -37,13 +41,76 @@
           "feature_id": "runtime/effect-journal",
           "version": "1",
           "necessity": "required"
+        },
+        {
+          "feature_id": "runtime/private-workspace",
+          "version": "1",
+          "necessity": "required"
+        },
+        {
+          "feature_id": "runtime/global-shell-exclusion",
+          "version": "1",
+          "necessity": "required"
+        },
+        {
+          "feature_id": "runtime/verification-exclusion",
+          "version": "1",
+          "necessity": "required"
+        },
+        {
+          "feature_id": "runtime/atomic-record-publication",
+          "version": "1",
+          "necessity": "required"
+        },
+        {
+          "feature_id": "runtime/core-os",
+          "version": "1",
+          "necessity": "required"
+        },
+        {
+          "feature_id": "runtime/scoped-workspace-copy",
+          "version": "1",
+          "necessity": "required"
+        },
+        {
+          "feature_id": "runtime/workspace-view",
+          "version": "1",
+          "necessity": "required"
+        },
+        {
+          "feature_id": "runtime/local-cbatch-admission",
+          "version": "1",
+          "necessity": "required"
         }
       ],
       "optional_runtime_features": [],
-      "migration_registry_ref": null
+      "migration_registry_ref": null,
+      "design_basis": {
+        "source_path": "design-docs/polyinference-design/polyinference-agent-design-merged.html",
+        "html_digest": "sha256:9337cfe93b796e7154734fe7a860858eebbdf74ec80528781b79a8295d2d34a6",
+        "document_id": "polyinference-merged-user-layout-20261017",
+        "execution_node_count": 23,
+        "execution_edge_count": 57,
+        "memory_node_count": 19,
+        "memory_edge_count": 21,
+        "duplicate_behavior_precedence": "expanded_execution_contracts"
+      },
+      "worker_protocol": {
+        "protocol_id": "polyinference/merged-worker/1",
+        "publication_policy": "provisional_all",
+        "post_merge_development_turns_min": 1,
+        "final_assessment_turns_min": 1,
+        "shell_scope": "installation",
+        "verification_scope": "project",
+        "lock_order": [
+          "verification",
+          "shell"
+        ],
+        "normal_report_resolution": "unresolved"
+      }
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "run-demo",
       "revision": 1,
       "scope": {
@@ -58,10 +125,10 @@
       "kind": "project_run",
       "program": {
         "program_id": "polyinference-coding",
-        "program_version": "proposal-1",
-        "graph_digest": "sha256:210e3f5c2b3e2894a67fc9343da2b9a003b089ce54917b5ada725749704e7bac",
-        "state_schema_version": "1.0",
-        "prompt_bundle_digest": "sha256:fc9eb607c91880dc0f55b213fda2a4ce801e8fda2c2239bc2d4020d6e697a87c"
+        "program_version": "proposal-4-audited-core",
+        "graph_digest": "sha256:8debf39e9ed43f044f370fe62427ccc4cd18f2d08b83ff811a7d6d47b97a3c09",
+        "state_schema_version": "2.1",
+        "prompt_bundle_digest": "sha256:f385c1e70fbfb3e684667a6ac86aa8cd4eb3da8a2af8ba4eb87e351b397303a6"
       },
       "objective": {
         "artifact_id": "objective-1",
@@ -110,7 +177,7 @@
           "cleanup_steps": 1
         }
       },
-      "publication_policy": "reviewed_only",
+      "publication_policy": "provisional_all",
       "reviewed_revision": {
         "repository_id": "repo-demo",
         "commit_id": "git-base",
@@ -118,14 +185,20 @@
         "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
         "includes_uncommitted_inputs": false
       },
-      "provisional_revision": null,
+      "provisional_revision": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
       "plan_ref": "plan-1",
       "steering_received_through": 0,
       "steering_applied_through": 0,
       "outcome": "active"
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "plan-1",
       "revision": 1,
       "scope": {
@@ -154,7 +227,9 @@
         }
       },
       "task_spec_refs": [
-        "task-spec-1"
+        "task-spec-1",
+        "task-spec-2",
+        "task-spec-3"
       ],
       "resolution_refs": [],
       "input_report_refs": [],
@@ -169,7 +244,7 @@
       }
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "task-spec-1",
       "revision": 1,
       "scope": {
@@ -179,8 +254,18 @@
         "process_id": null
       },
       "created_at": "2026-10-17T14:00:00Z",
-      "required_features": [],
-      "extensions": {},
+      "required_features": [
+        {
+          "feature_id": "runtime/scoped-workspace-copy",
+          "version": "1"
+        }
+      ],
+      "extensions": {
+        "polyinference/workspace-copy": {
+          "workspace_id": "workspace-1",
+          "development_manifest_ref": "workspace-1/development/1"
+        }
+      },
       "kind": "task_spec",
       "task_id": "task-1",
       "plan_ref": "plan-1",
@@ -247,10 +332,10 @@
         "builtin/command"
       ],
       "worker_process_spec_ref": "process-spec-worker-1",
-      "report_schema_ref": "schema/task-report/1"
+      "report_schema_ref": "schema/task-report/2"
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "process-spec-worker-1",
       "revision": 1,
       "scope": {
@@ -260,17 +345,27 @@
         "process_id": "worker-1"
       },
       "created_at": "2026-10-17T14:00:00Z",
-      "required_features": [],
-      "extensions": {},
+      "required_features": [
+        {
+          "feature_id": "runtime/scoped-workspace-copy",
+          "version": "1"
+        }
+      ],
+      "extensions": {
+        "polyinference/workspace-copy": {
+          "workspace_id": "workspace-1",
+          "development_manifest_ref": "workspace-1/development/1"
+        }
+      },
       "kind": "process_spec",
       "process_id": "worker-1",
       "parent_process_id": "controller-1",
       "program": {
         "program_id": "polyinference-coding",
-        "program_version": "proposal-1",
-        "graph_digest": "sha256:210e3f5c2b3e2894a67fc9343da2b9a003b089ce54917b5ada725749704e7bac",
-        "state_schema_version": "1.0",
-        "prompt_bundle_digest": "sha256:fc9eb607c91880dc0f55b213fda2a4ce801e8fda2c2239bc2d4020d6e697a87c"
+        "program_version": "proposal-4-audited-core",
+        "graph_digest": "sha256:8debf39e9ed43f044f370fe62427ccc4cd18f2d08b83ff811a7d6d47b97a3c09",
+        "state_schema_version": "2.1",
+        "prompt_bundle_digest": "sha256:f385c1e70fbfb3e684667a6ac86aa8cd4eb3da8a2af8ba4eb87e351b397303a6"
       },
       "entry_point": "coding_worker",
       "role": "worker",
@@ -388,6 +483,7 @@
           ],
           "maximum_classification": "project"
         },
+        "capability_floor_ref": null,
         "requirements": [
           {
             "feature_id": "runtime/model-query",
@@ -413,11 +509,11 @@
           "repo-demo"
         ]
       },
-      "output_schema_ref": "schema/task-report/1",
+      "output_schema_ref": "schema/task-report/2",
       "resume_strategy": "portable_context"
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "process-spec-flex-example",
       "revision": 1,
       "scope": {
@@ -434,10 +530,10 @@
       "parent_process_id": "controller-1",
       "program": {
         "program_id": "polyinference-coding",
-        "program_version": "proposal-1",
-        "graph_digest": "sha256:210e3f5c2b3e2894a67fc9343da2b9a003b089ce54917b5ada725749704e7bac",
-        "state_schema_version": "1.0",
-        "prompt_bundle_digest": "sha256:fc9eb607c91880dc0f55b213fda2a4ce801e8fda2c2239bc2d4020d6e697a87c"
+        "program_version": "proposal-4-audited-core",
+        "graph_digest": "sha256:8debf39e9ed43f044f370fe62427ccc4cd18f2d08b83ff811a7d6d47b97a3c09",
+        "state_schema_version": "2.1",
+        "prompt_bundle_digest": "sha256:f385c1e70fbfb3e684667a6ac86aa8cd4eb3da8a2af8ba4eb87e351b397303a6"
       },
       "entry_point": "coding_worker",
       "role": "worker",
@@ -538,6 +634,7 @@
           ],
           "maximum_classification": "project"
         },
+        "capability_floor_ref": null,
         "requirements": [
           {
             "feature_id": "runtime/model-query",
@@ -563,11 +660,11 @@
           "repo-demo"
         ]
       },
-      "output_schema_ref": "schema/task-report/1",
+      "output_schema_ref": "schema/task-report/2",
       "resume_strategy": "portable_context"
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "process-spec-bounded-example",
       "revision": 1,
       "scope": {
@@ -584,10 +681,10 @@
       "parent_process_id": "controller-1",
       "program": {
         "program_id": "polyinference-coding",
-        "program_version": "proposal-1",
-        "graph_digest": "sha256:210e3f5c2b3e2894a67fc9343da2b9a003b089ce54917b5ada725749704e7bac",
-        "state_schema_version": "1.0",
-        "prompt_bundle_digest": "sha256:fc9eb607c91880dc0f55b213fda2a4ce801e8fda2c2239bc2d4020d6e697a87c"
+        "program_version": "proposal-4-audited-core",
+        "graph_digest": "sha256:8debf39e9ed43f044f370fe62427ccc4cd18f2d08b83ff811a7d6d47b97a3c09",
+        "state_schema_version": "2.1",
+        "prompt_bundle_digest": "sha256:f385c1e70fbfb3e684667a6ac86aa8cd4eb3da8a2af8ba4eb87e351b397303a6"
       },
       "entry_point": "coding_worker",
       "role": "worker",
@@ -688,6 +785,7 @@
           ],
           "maximum_classification": "project"
         },
+        "capability_floor_ref": null,
         "requirements": [
           {
             "feature_id": "runtime/model-query",
@@ -713,11 +811,11 @@
           "repo-demo"
         ]
       },
-      "output_schema_ref": "schema/task-report/1",
+      "output_schema_ref": "schema/task-report/2",
       "resume_strategy": "portable_context"
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "query-record-1",
       "revision": 1,
       "scope": {
@@ -727,8 +825,20 @@
         "process_id": "worker-1"
       },
       "created_at": "2026-10-17T14:00:00Z",
-      "required_features": [],
-      "extensions": {},
+      "required_features": [
+        {
+          "feature_id": "runtime/workspace-view",
+          "version": "1"
+        }
+      ],
+      "extensions": {
+        "polyinference/workspace-view": {
+          "workspace_id": "workspace-1",
+          "manifest_ref": "workspace-1/development/1",
+          "generation": 1,
+          "view": "development"
+        }
+      },
       "kind": "operation_request",
       "operation_id": "op-model-1",
       "logical_step_id": "worker-1/development/1",
@@ -826,7 +936,7 @@
       }
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "binding-1",
       "revision": 1,
       "scope": {
@@ -870,11 +980,12 @@
         "worker-local": 0.0
       },
       "pressure_snapshot_ref": null,
+      "capability_evaluation_ref": null,
       "safe_point_ref": "worker-1/development/1",
       "rebuild_context": false
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "query-result-1",
       "revision": 1,
       "scope": {
@@ -934,7 +1045,7 @@
       "continuation_ref": null
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "attempt-1",
       "revision": 1,
       "scope": {
@@ -963,7 +1074,7 @@
       "stop_reason": null
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "report-1",
       "revision": 1,
       "scope": {
@@ -972,7 +1083,7 @@
         "run_id": "run-demo",
         "process_id": "worker-1"
       },
-      "created_at": "2026-10-17T14:00:00Z",
+      "created_at": "2026-10-17T14:06:00Z",
       "required_features": [],
       "extensions": {},
       "kind": "task_report",
@@ -984,6 +1095,9 @@
       "resolution": "unresolved",
       "verdict": "successful",
       "stop_reason": null,
+      "reconciliation_turn_refs": [
+        "op-reconciliation-1"
+      ],
       "assessment_turn_refs": [
         "op-assessment-1"
       ],
@@ -1022,9 +1136,12 @@
         "includes_uncommitted_inputs": false
       },
       "candidate_commit_id": "git-candidate",
+      "candidate_parent_commit_id": "git-base",
       "preserved_private_delta_ref": "delta-1",
-      "publication_policy": "reviewed_only",
-      "code_location": "private",
+      "verification_permit_ref": "permit-verification-1",
+      "publication_receipt_ref": "publication-receipt-1",
+      "publication_policy": "provisional_all",
+      "code_location": "provisional",
       "evidence": [
         {
           "evidence_id": "check-1",
@@ -1079,7 +1196,7 @@
       ]
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "memory-item-1",
       "revision": 1,
       "scope": {
@@ -1131,7 +1248,7 @@
       "hazard_code_location": null
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "memory-snapshot-1",
       "revision": 1,
       "scope": {
@@ -1161,7 +1278,7 @@
       "estimated_tokens": 12
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "steering-barrier-1",
       "revision": 1,
       "scope": {
@@ -1185,7 +1302,7 @@
       "planner_input_through": null
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "capability-command-1",
       "revision": 1,
       "scope": {
@@ -1226,7 +1343,7 @@
       "negotiated_features": []
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "backend-local-1",
       "revision": 1,
       "scope": {
@@ -1278,7 +1395,7 @@
       "mutable_session_concurrency": 1
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "pressure-1",
       "revision": 1,
       "scope": {
@@ -1307,7 +1424,7 @@
       "reservation_snapshot_ref": "reservations-1"
     },
     {
-      "contract_version": "1.0",
+      "contract_version": "2.0",
       "record_id": "continuation-1",
       "revision": 1,
       "scope": {
@@ -1323,10 +1440,10 @@
       "process_spec_ref": "process-spec-worker-1",
       "program": {
         "program_id": "polyinference-coding",
-        "program_version": "proposal-1",
-        "graph_digest": "sha256:210e3f5c2b3e2894a67fc9343da2b9a003b089ce54917b5ada725749704e7bac",
-        "state_schema_version": "1.0",
-        "prompt_bundle_digest": "sha256:fc9eb607c91880dc0f55b213fda2a4ce801e8fda2c2239bc2d4020d6e697a87c"
+        "program_version": "proposal-4-audited-core",
+        "graph_digest": "sha256:8debf39e9ed43f044f370fe62427ccc4cd18f2d08b83ff811a7d6d47b97a3c09",
+        "state_schema_version": "2.1",
+        "prompt_bundle_digest": "sha256:f385c1e70fbfb3e684667a6ac86aa8cd4eb3da8a2af8ba4eb87e351b397303a6"
       },
       "thread_id": "worker-1",
       "checkpoint_namespace": "",
@@ -1349,6 +1466,20 @@
         "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
         "includes_uncommitted_inputs": false
       },
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "captured_head": null,
+      "preserved_private_delta_ref": "delta-1",
+      "shell_permit_ref": null,
+      "verification_permit_ref": null,
+      "publication_operation_id": null,
+      "publication_receipt_ref": null,
+      "publication_state": "not_started",
       "trajectory_ref": "trajectory-1",
       "context_view_ref": "context-1",
       "pending_operations": [
@@ -1364,6 +1495,1405 @@
       ],
       "event_cursor": 5,
       "pause_reason": "illustrative-settled-boundary"
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "publication-request-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-1"
+      },
+      "created_at": "2026-10-17T14:06:00Z",
+      "required_features": [
+        {
+          "feature_id": "runtime/workspace-view",
+          "version": "1"
+        }
+      ],
+      "extensions": {
+        "polyinference/workspace-view": {
+          "workspace_id": "workspace-1",
+          "manifest_ref": "workspace-1/integration/2",
+          "generation": 2,
+          "view": "integration"
+        }
+      },
+      "kind": "operation_request",
+      "operation_id": "op-publication-1",
+      "logical_step_id": "worker-1/publication/1",
+      "intent_digest": "sha256:6ad314c92c79382558441e90dfb1d0dcd07bbdd5c7a6cb5131f30e62414384d7",
+      "causal_parent_ref": "attempt-1",
+      "trace_id": "trace-1",
+      "grant_ref": "grant-worker-1",
+      "owner_generation": 1,
+      "expected_process_revision": 1,
+      "expected_binding_generation": 1,
+      "schedule_ref": "process-spec-worker-1",
+      "priority_hint": null,
+      "budget_account_ref": "budget-worker-1",
+      "deadline": "2026-10-17T14:10:00Z",
+      "limits": {
+        "max_steps": 80,
+        "max_model_calls": 20,
+        "max_repairs": 3,
+        "max_input_tokens_per_call": 16000,
+        "max_output_tokens_per_call": 2000,
+        "max_total_tokens": 100000,
+        "max_output_bytes": 2000000,
+        "max_wall_time_ms": 600000,
+        "max_api_spend_microusd": 1000000,
+        "cost_guarantee": "enforced",
+        "final_phase_reserve": {
+          "reconciliation_model_calls": 1,
+          "assessment_model_calls": 1,
+          "publication_steps": 2,
+          "cleanup_steps": 1
+        }
+      },
+      "resources": [
+        {
+          "resource_id": "memory",
+          "domain_id": "host-ram",
+          "unit": "bytes",
+          "amount": 67108864.0,
+          "guarantee": "estimate",
+          "lifetime": "operation"
+        }
+      ],
+      "conflict_keys": [
+        "project-demo/verification"
+      ],
+      "safe_boundary": "protected_phase",
+      "replay_policy": "reconcile_before_retry",
+      "payload": {
+        "kind": "publication",
+        "expected_versions": [
+          {
+            "record_ref": "run-demo",
+            "revision": 1
+          }
+        ],
+        "expected_head": {
+          "repository_id": "repo-demo",
+          "commit_id": "git-base",
+          "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+          "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+          "includes_uncommitted_inputs": false
+        },
+        "candidate_commit_id": "git-candidate",
+        "candidate_parent_commit_id": "git-base",
+        "final_code": {
+          "repository_id": "repo-demo",
+          "commit_id": "git-candidate",
+          "effective_tree_digest": "sha256:4d4b0facd58f3ce7596d35072a7d0b635231628c71228f07d3d08166494f6023",
+          "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+          "includes_uncommitted_inputs": false
+        },
+        "report_ref": "report-1",
+        "evidence_refs": [
+          "check-1"
+        ],
+        "policy": "provisional_all",
+        "permit_refs": [
+          "permit-verification-1"
+        ],
+        "verification_permit_ref": "permit-verification-1",
+        "receipt_ref": "publication-receipt-1",
+        "event_intent_refs": [
+          "event-report-1",
+          "event-doc-change-1"
+        ]
+      }
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "publication-receipt-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-1"
+      },
+      "created_at": "2026-10-17T14:06:01Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "publication_receipt",
+      "publication_operation_id": "op-publication-1",
+      "report_ref": "report-1",
+      "previous_head": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "published_head": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate",
+        "effective_tree_digest": "sha256:4d4b0facd58f3ce7596d35072a7d0b635231628c71228f07d3d08166494f6023",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "candidate_parent_commit_id": "git-base",
+      "verification_permit_ref": "permit-verification-1",
+      "publication_record_revision": 2,
+      "event_intent_refs": [
+        "event-report-1",
+        "event-doc-change-1"
+      ],
+      "publication_policy": "provisional_all"
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "task-spec-2",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": null
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [
+        {
+          "feature_id": "runtime/scoped-workspace-copy",
+          "version": "1"
+        }
+      ],
+      "extensions": {
+        "polyinference/workspace-copy": {
+          "workspace_id": "workspace-2",
+          "development_manifest_ref": "workspace-2/development/1"
+        }
+      },
+      "kind": "task_spec",
+      "task_id": "task-2",
+      "plan_ref": "plan-1",
+      "objective": {
+        "artifact_id": "assignment-1",
+        "digest": "sha256:647a05fbc66fc97bc0192e05e5d8ac3292d46f8d8ce80b36cf5133e2d93b241d",
+        "media_type": "application/json",
+        "size_bytes": 12,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "allowed_change_scope": [
+        "src/**",
+        "tests/**"
+      ],
+      "prerequisites": [],
+      "base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "acceptance_spec": {
+        "artifact_id": "acceptance-1",
+        "digest": "sha256:6df3a76d094133bc4acab5b667ee4ce675f5ed4a072f60c3ba6e71d37fa21e04",
+        "media_type": "application/json",
+        "size_bytes": 12,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "context_refs": [
+        {
+          "artifact_id": "repo-rules-1",
+          "digest": "sha256:7a0779c92b93c2e44d0baa63c4a15116bb985c8ba25db453479076d134b1fad0",
+          "media_type": "application/json",
+          "size_bytes": 12,
+          "classification": "project",
+          "scope": {
+            "tenant_id": "tenant-demo",
+            "project_id": "project-demo",
+            "run_id": "run-demo",
+            "process_id": null
+          }
+        }
+      ],
+      "memory_snapshot_refs": [
+        "memory-snapshot-1"
+      ],
+      "allowed_capabilities": [
+        "builtin/search",
+        "builtin/read",
+        "builtin/patch",
+        "builtin/command"
+      ],
+      "worker_process_spec_ref": "process-spec-worker-2",
+      "report_schema_ref": "schema/task-report/2"
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "process-spec-worker-2",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-2"
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [
+        {
+          "feature_id": "runtime/scoped-workspace-copy",
+          "version": "1"
+        }
+      ],
+      "extensions": {
+        "polyinference/workspace-copy": {
+          "workspace_id": "workspace-2",
+          "development_manifest_ref": "workspace-2/development/1"
+        }
+      },
+      "kind": "process_spec",
+      "process_id": "worker-2",
+      "parent_process_id": "controller-1",
+      "program": {
+        "program_id": "polyinference-coding",
+        "program_version": "proposal-4-audited-core",
+        "graph_digest": "sha256:8debf39e9ed43f044f370fe62427ccc4cd18f2d08b83ff811a7d6d47b97a3c09",
+        "state_schema_version": "2.1",
+        "prompt_bundle_digest": "sha256:f385c1e70fbfb3e684667a6ac86aa8cd4eb3da8a2af8ba4eb87e351b397303a6"
+      },
+      "entry_point": "coding_worker",
+      "role": "worker",
+      "input_refs": [
+        {
+          "artifact_id": "assignment-1",
+          "digest": "sha256:647a05fbc66fc97bc0192e05e5d8ac3292d46f8d8ce80b36cf5133e2d93b241d",
+          "media_type": "application/json",
+          "size_bytes": 12,
+          "classification": "project",
+          "scope": {
+            "tenant_id": "tenant-demo",
+            "project_id": "project-demo",
+            "run_id": "run-demo",
+            "process_id": null
+          }
+        }
+      ],
+      "task_spec_ref": "task-spec-2",
+      "attempt_id": "attempt-2",
+      "workspace_id": "workspace-2",
+      "grant_ref": "grant-worker-1",
+      "budget_account_ref": "budget-worker-2",
+      "limits": {
+        "max_steps": 80,
+        "max_model_calls": 20,
+        "max_repairs": 3,
+        "max_input_tokens_per_call": 16000,
+        "max_output_tokens_per_call": 2000,
+        "max_total_tokens": 100000,
+        "max_output_bytes": 2000000,
+        "max_wall_time_ms": 600000,
+        "max_api_spend_microusd": 1000000,
+        "cost_guarantee": "enforced",
+        "final_phase_reserve": {
+          "reconciliation_model_calls": 1,
+          "assessment_model_calls": 1,
+          "publication_steps": 2,
+          "cleanup_steps": 1
+        }
+      },
+      "schedule": {
+        "priority": {
+          "priority_class": "normal",
+          "relative_value": 50,
+          "aging_allowed": true,
+          "deadline": "2026-10-17T14:10:00Z"
+        },
+        "distribution": {
+          "policy_id": "allocation-strict",
+          "version": 1,
+          "fidelity": "strict",
+          "rules": [
+            {
+              "rule_id": "senior-cloud",
+              "roles": [
+                "senior"
+              ],
+              "phases": [
+                "*"
+              ],
+              "axis": "inference_location",
+              "eligible_classes": [
+                "cloud"
+              ],
+              "target_weights": {},
+              "enforcement": "hard",
+              "unit": "model_decisions",
+              "accounting_scope": "run",
+              "accounting_group_id": "run-demo/senior-cloud",
+              "window_slots": 20,
+              "max_total_variation": 0.05,
+              "rounding_slack_slots": 1,
+              "infeasible_action": "wait_until_deadline"
+            },
+            {
+              "rule_id": "worker-local",
+              "roles": [
+                "worker"
+              ],
+              "phases": [
+                "*"
+              ],
+              "axis": "inference_location",
+              "eligible_classes": [
+                "local"
+              ],
+              "target_weights": {},
+              "enforcement": "hard",
+              "unit": "model_decisions",
+              "accounting_scope": "run",
+              "accounting_group_id": "run-demo/worker-local",
+              "window_slots": 20,
+              "max_total_variation": 0.05,
+              "rounding_slack_slots": 1,
+              "infeasible_action": "wait_until_deadline"
+            }
+          ],
+          "on_unmatched": "reject",
+          "max_rebindings": 0,
+          "minimum_residence_ms": 0,
+          "migration_boundaries": [
+            "before_start",
+            "new_attempt"
+          ]
+        },
+        "data_policy": {
+          "policy_ref": "data-policy-1",
+          "allowed_inference_locations": [
+            "local",
+            "cloud"
+          ],
+          "allowed_destination_classes": [
+            "approved-endpoints"
+          ],
+          "maximum_classification": "project"
+        },
+        "capability_floor_ref": null,
+        "requirements": [
+          {
+            "feature_id": "runtime/model-query",
+            "version": "1",
+            "necessity": "required"
+          }
+        ],
+        "prerequisites": [],
+        "resource_hints": [
+          {
+            "resource_id": "memory",
+            "domain_id": "host-ram",
+            "unit": "bytes",
+            "amount": 67108864.0,
+            "guarantee": "estimate",
+            "lifetime": "operation"
+          }
+        ],
+        "conflict_keys": [
+          "workspace/worker-2"
+        ],
+        "locality_refs": [
+          "repo-demo"
+        ]
+      },
+      "output_schema_ref": "schema/task-report/2",
+      "resume_strategy": "portable_context"
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "attempt-2",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-2"
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "task_attempt",
+      "task_spec_ref": "task-spec-2",
+      "process_spec_ref": "process-spec-worker-2",
+      "workspace_id": "workspace-2",
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "previous_attempt_ref": null,
+      "execution": "completed",
+      "report_ref": "report-2",
+      "stop_reason": null
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "report-2",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-2"
+      },
+      "created_at": "2026-10-17T14:07:30Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "task_report",
+      "task_spec_ref": "task-spec-2",
+      "attempt_id": "attempt-2",
+      "process_id": "worker-2",
+      "plan_ref": "plan-1",
+      "execution": "completed",
+      "resolution": "unresolved",
+      "verdict": "fail",
+      "stop_reason": null,
+      "reconciliation_turn_refs": [
+        "op-reconciliation-2"
+      ],
+      "assessment_turn_refs": [
+        "op-assessment-2"
+      ],
+      "assessment_summary": {
+        "artifact_id": "assessment-summary-2",
+        "digest": "sha256:2c98fc4621014fb5fbcdd178090489a54491f03faa53676c4351086b61b7a1cd",
+        "media_type": "application/json",
+        "size_bytes": 20,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "captured_head": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate",
+        "effective_tree_digest": "sha256:4d4b0facd58f3ce7596d35072a7d0b635231628c71228f07d3d08166494f6023",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "final_code": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate-2",
+        "effective_tree_digest": "sha256:68f378dc3b0f465b01e274295b06a063586a3f807b2e4f7b57a112cb06e36b88",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "candidate_commit_id": "git-candidate-2",
+      "candidate_parent_commit_id": "git-candidate",
+      "preserved_private_delta_ref": "delta-2",
+      "verification_permit_ref": "permit-verification-2",
+      "publication_receipt_ref": "publication-receipt-2",
+      "publication_policy": "provisional_all",
+      "code_location": "provisional",
+      "evidence": [
+        {
+          "evidence_id": "check-2",
+          "criterion_ref": "acceptance-1/check-1",
+          "checked_code": {
+            "repository_id": "repo-demo",
+            "commit_id": null,
+            "effective_tree_digest": "sha256:68f378dc3b0f465b01e274295b06a063586a3f807b2e4f7b57a112cb06e36b88",
+            "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+            "includes_uncommitted_inputs": true
+          },
+          "status": "failed",
+          "exit_code": 1,
+          "invocation": {
+            "artifact_id": "check-command-1",
+            "digest": "sha256:2245d8566138ea45ff3c906f11de1a33415728471a123304f6c13e06f5ed710a",
+            "media_type": "application/json",
+            "size_bytes": 15,
+            "classification": "project",
+            "scope": {
+              "tenant_id": "tenant-demo",
+              "project_id": "project-demo",
+              "run_id": "run-demo",
+              "process_id": null
+            }
+          },
+          "output": {
+            "artifact_id": "check-output-2",
+            "digest": "sha256:83852b93c82f47b2e909dd4b8888ed308235e32cbbdebc32dc1a483608b39c58",
+            "media_type": "application/json",
+            "size_bytes": 14,
+            "classification": "project",
+            "scope": {
+              "tenant_id": "tenant-demo",
+              "project_id": "project-demo",
+              "run_id": "run-demo",
+              "process_id": null
+            }
+          },
+          "completed_at": "2026-10-17T14:07:00Z"
+        }
+      ],
+      "hazard_refs": [
+        "hazard-2"
+      ],
+      "usage": [
+        {
+          "metric": "input_tokens",
+          "unit": "tokens",
+          "value": 1200.0,
+          "provenance": "provider_reported",
+          "account_scope_ref": "account-local"
+        }
+      ]
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "hazard-2",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": null
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "memory_item",
+      "memory_id": "hazard-2",
+      "semantic_kind": "hazard",
+      "content": {
+        "artifact_id": "hazard-content-2",
+        "digest": "sha256:ba57bab612b38509e80fc0c3036d7862f84e200301d61cc323fedab8cc1bb948",
+        "media_type": "application/json",
+        "size_bytes": 16,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "author_ref": "worker-2",
+      "trust": "model",
+      "provenance_refs": [
+        "report-2",
+        "git-candidate-2"
+      ],
+      "applicable_code": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate-2",
+        "effective_tree_digest": "sha256:68f378dc3b0f465b01e274295b06a063586a3f807b2e4f7b57a112cb06e36b88",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "valid_until": null,
+      "supersedes_ref": null,
+      "tombstone": false,
+      "access_policy_ref": "project-read-policy",
+      "retention_policy_ref": "retain-run",
+      "tier_preference": "warm",
+      "pinned_by_refs": [],
+      "hazard_code_location": "provisional"
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "publication-request-2",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-2"
+      },
+      "created_at": "2026-10-17T14:07:30Z",
+      "required_features": [
+        {
+          "feature_id": "runtime/workspace-view",
+          "version": "1"
+        }
+      ],
+      "extensions": {
+        "polyinference/workspace-view": {
+          "workspace_id": "workspace-2",
+          "manifest_ref": "workspace-2/integration/2",
+          "generation": 2,
+          "view": "integration"
+        }
+      },
+      "kind": "operation_request",
+      "operation_id": "op-publication-2",
+      "logical_step_id": "worker-2/publication/1",
+      "intent_digest": "sha256:f1cd863095dda07e946b01641500a05c03f90650e05460d275e3abed35aa65d0",
+      "causal_parent_ref": "attempt-2",
+      "trace_id": "trace-1",
+      "grant_ref": "grant-worker-1",
+      "owner_generation": 1,
+      "expected_process_revision": 1,
+      "expected_binding_generation": 1,
+      "schedule_ref": "process-spec-worker-2",
+      "priority_hint": null,
+      "budget_account_ref": "budget-worker-2",
+      "deadline": "2026-10-17T14:10:00Z",
+      "limits": {
+        "max_steps": 80,
+        "max_model_calls": 20,
+        "max_repairs": 3,
+        "max_input_tokens_per_call": 16000,
+        "max_output_tokens_per_call": 2000,
+        "max_total_tokens": 100000,
+        "max_output_bytes": 2000000,
+        "max_wall_time_ms": 600000,
+        "max_api_spend_microusd": 1000000,
+        "cost_guarantee": "enforced",
+        "final_phase_reserve": {
+          "reconciliation_model_calls": 1,
+          "assessment_model_calls": 1,
+          "publication_steps": 2,
+          "cleanup_steps": 1
+        }
+      },
+      "resources": [
+        {
+          "resource_id": "memory",
+          "domain_id": "host-ram",
+          "unit": "bytes",
+          "amount": 67108864.0,
+          "guarantee": "estimate",
+          "lifetime": "operation"
+        }
+      ],
+      "conflict_keys": [
+        "project-demo/verification"
+      ],
+      "safe_boundary": "protected_phase",
+      "replay_policy": "reconcile_before_retry",
+      "payload": {
+        "kind": "publication",
+        "expected_versions": [
+          {
+            "record_ref": "run-demo",
+            "revision": 2
+          }
+        ],
+        "expected_head": {
+          "repository_id": "repo-demo",
+          "commit_id": "git-candidate",
+          "effective_tree_digest": "sha256:4d4b0facd58f3ce7596d35072a7d0b635231628c71228f07d3d08166494f6023",
+          "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+          "includes_uncommitted_inputs": false
+        },
+        "candidate_commit_id": "git-candidate-2",
+        "candidate_parent_commit_id": "git-candidate",
+        "final_code": {
+          "repository_id": "repo-demo",
+          "commit_id": "git-candidate-2",
+          "effective_tree_digest": "sha256:68f378dc3b0f465b01e274295b06a063586a3f807b2e4f7b57a112cb06e36b88",
+          "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+          "includes_uncommitted_inputs": false
+        },
+        "report_ref": "report-2",
+        "evidence_refs": [
+          "check-2"
+        ],
+        "policy": "provisional_all",
+        "permit_refs": [
+          "permit-verification-2"
+        ],
+        "verification_permit_ref": "permit-verification-2",
+        "receipt_ref": "publication-receipt-2",
+        "event_intent_refs": [
+          "event-report-2",
+          "event-doc-change-2"
+        ]
+      }
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "publication-receipt-2",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-2"
+      },
+      "created_at": "2026-10-17T14:07:31Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "publication_receipt",
+      "publication_operation_id": "op-publication-2",
+      "report_ref": "report-2",
+      "previous_head": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate",
+        "effective_tree_digest": "sha256:4d4b0facd58f3ce7596d35072a7d0b635231628c71228f07d3d08166494f6023",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "published_head": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate-2",
+        "effective_tree_digest": "sha256:68f378dc3b0f465b01e274295b06a063586a3f807b2e4f7b57a112cb06e36b88",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "candidate_parent_commit_id": "git-candidate",
+      "verification_permit_ref": "permit-verification-2",
+      "publication_record_revision": 3,
+      "event_intent_refs": [
+        "event-report-2",
+        "event-doc-change-2"
+      ],
+      "publication_policy": "provisional_all"
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "task-spec-3",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": null
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [
+        {
+          "feature_id": "runtime/scoped-workspace-copy",
+          "version": "1"
+        }
+      ],
+      "extensions": {
+        "polyinference/workspace-copy": {
+          "workspace_id": "workspace-3",
+          "development_manifest_ref": "workspace-3/development/1"
+        }
+      },
+      "kind": "task_spec",
+      "task_id": "task-3",
+      "plan_ref": "plan-1",
+      "objective": {
+        "artifact_id": "assignment-1",
+        "digest": "sha256:647a05fbc66fc97bc0192e05e5d8ac3292d46f8d8ce80b36cf5133e2d93b241d",
+        "media_type": "application/json",
+        "size_bytes": 12,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "allowed_change_scope": [
+        "src/**",
+        "tests/**"
+      ],
+      "prerequisites": [],
+      "base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "acceptance_spec": {
+        "artifact_id": "acceptance-1",
+        "digest": "sha256:6df3a76d094133bc4acab5b667ee4ce675f5ed4a072f60c3ba6e71d37fa21e04",
+        "media_type": "application/json",
+        "size_bytes": 12,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "context_refs": [
+        {
+          "artifact_id": "repo-rules-1",
+          "digest": "sha256:7a0779c92b93c2e44d0baa63c4a15116bb985c8ba25db453479076d134b1fad0",
+          "media_type": "application/json",
+          "size_bytes": 12,
+          "classification": "project",
+          "scope": {
+            "tenant_id": "tenant-demo",
+            "project_id": "project-demo",
+            "run_id": "run-demo",
+            "process_id": null
+          }
+        }
+      ],
+      "memory_snapshot_refs": [
+        "memory-snapshot-1"
+      ],
+      "allowed_capabilities": [
+        "builtin/search",
+        "builtin/read",
+        "builtin/patch",
+        "builtin/command"
+      ],
+      "worker_process_spec_ref": "process-spec-worker-3",
+      "report_schema_ref": "schema/task-report/2"
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "process-spec-worker-3",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-3"
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [
+        {
+          "feature_id": "runtime/scoped-workspace-copy",
+          "version": "1"
+        }
+      ],
+      "extensions": {
+        "polyinference/workspace-copy": {
+          "workspace_id": "workspace-3",
+          "development_manifest_ref": "workspace-3/development/1"
+        }
+      },
+      "kind": "process_spec",
+      "process_id": "worker-3",
+      "parent_process_id": "controller-1",
+      "program": {
+        "program_id": "polyinference-coding",
+        "program_version": "proposal-4-audited-core",
+        "graph_digest": "sha256:8debf39e9ed43f044f370fe62427ccc4cd18f2d08b83ff811a7d6d47b97a3c09",
+        "state_schema_version": "2.1",
+        "prompt_bundle_digest": "sha256:f385c1e70fbfb3e684667a6ac86aa8cd4eb3da8a2af8ba4eb87e351b397303a6"
+      },
+      "entry_point": "coding_worker",
+      "role": "worker",
+      "input_refs": [
+        {
+          "artifact_id": "assignment-1",
+          "digest": "sha256:647a05fbc66fc97bc0192e05e5d8ac3292d46f8d8ce80b36cf5133e2d93b241d",
+          "media_type": "application/json",
+          "size_bytes": 12,
+          "classification": "project",
+          "scope": {
+            "tenant_id": "tenant-demo",
+            "project_id": "project-demo",
+            "run_id": "run-demo",
+            "process_id": null
+          }
+        }
+      ],
+      "task_spec_ref": "task-spec-3",
+      "attempt_id": "attempt-3",
+      "workspace_id": "workspace-3",
+      "grant_ref": "grant-worker-1",
+      "budget_account_ref": "budget-worker-3",
+      "limits": {
+        "max_steps": 80,
+        "max_model_calls": 20,
+        "max_repairs": 3,
+        "max_input_tokens_per_call": 16000,
+        "max_output_tokens_per_call": 2000,
+        "max_total_tokens": 100000,
+        "max_output_bytes": 2000000,
+        "max_wall_time_ms": 600000,
+        "max_api_spend_microusd": 1000000,
+        "cost_guarantee": "enforced",
+        "final_phase_reserve": {
+          "reconciliation_model_calls": 1,
+          "assessment_model_calls": 1,
+          "publication_steps": 2,
+          "cleanup_steps": 1
+        }
+      },
+      "schedule": {
+        "priority": {
+          "priority_class": "normal",
+          "relative_value": 50,
+          "aging_allowed": true,
+          "deadline": "2026-10-17T14:10:00Z"
+        },
+        "distribution": {
+          "policy_id": "allocation-strict",
+          "version": 1,
+          "fidelity": "strict",
+          "rules": [
+            {
+              "rule_id": "senior-cloud",
+              "roles": [
+                "senior"
+              ],
+              "phases": [
+                "*"
+              ],
+              "axis": "inference_location",
+              "eligible_classes": [
+                "cloud"
+              ],
+              "target_weights": {},
+              "enforcement": "hard",
+              "unit": "model_decisions",
+              "accounting_scope": "run",
+              "accounting_group_id": "run-demo/senior-cloud",
+              "window_slots": 20,
+              "max_total_variation": 0.05,
+              "rounding_slack_slots": 1,
+              "infeasible_action": "wait_until_deadline"
+            },
+            {
+              "rule_id": "worker-local",
+              "roles": [
+                "worker"
+              ],
+              "phases": [
+                "*"
+              ],
+              "axis": "inference_location",
+              "eligible_classes": [
+                "local"
+              ],
+              "target_weights": {},
+              "enforcement": "hard",
+              "unit": "model_decisions",
+              "accounting_scope": "run",
+              "accounting_group_id": "run-demo/worker-local",
+              "window_slots": 20,
+              "max_total_variation": 0.05,
+              "rounding_slack_slots": 1,
+              "infeasible_action": "wait_until_deadline"
+            }
+          ],
+          "on_unmatched": "reject",
+          "max_rebindings": 0,
+          "minimum_residence_ms": 0,
+          "migration_boundaries": [
+            "before_start",
+            "new_attempt"
+          ]
+        },
+        "data_policy": {
+          "policy_ref": "data-policy-1",
+          "allowed_inference_locations": [
+            "local",
+            "cloud"
+          ],
+          "allowed_destination_classes": [
+            "approved-endpoints"
+          ],
+          "maximum_classification": "project"
+        },
+        "capability_floor_ref": null,
+        "requirements": [
+          {
+            "feature_id": "runtime/model-query",
+            "version": "1",
+            "necessity": "required"
+          }
+        ],
+        "prerequisites": [],
+        "resource_hints": [
+          {
+            "resource_id": "memory",
+            "domain_id": "host-ram",
+            "unit": "bytes",
+            "amount": 67108864.0,
+            "guarantee": "estimate",
+            "lifetime": "operation"
+          }
+        ],
+        "conflict_keys": [
+          "workspace/worker-3"
+        ],
+        "locality_refs": [
+          "repo-demo"
+        ]
+      },
+      "output_schema_ref": "schema/task-report/2",
+      "resume_strategy": "portable_context"
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "attempt-3",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-3"
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "task_attempt",
+      "task_spec_ref": "task-spec-3",
+      "process_spec_ref": "process-spec-worker-3",
+      "workspace_id": "workspace-3",
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "previous_attempt_ref": null,
+      "execution": "completed",
+      "report_ref": "report-3",
+      "stop_reason": null
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "report-3",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-3"
+      },
+      "created_at": "2026-10-17T14:09:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "task_report",
+      "task_spec_ref": "task-spec-3",
+      "attempt_id": "attempt-3",
+      "process_id": "worker-3",
+      "plan_ref": "plan-1",
+      "execution": "completed",
+      "resolution": "unresolved",
+      "verdict": "uncertain",
+      "stop_reason": null,
+      "reconciliation_turn_refs": [
+        "op-reconciliation-3"
+      ],
+      "assessment_turn_refs": [
+        "op-assessment-3"
+      ],
+      "assessment_summary": {
+        "artifact_id": "assessment-summary-3",
+        "digest": "sha256:3970e203c01cb66b381c509bbf7ffa723a8376a0664c1772113cb7f7e48f9d9e",
+        "media_type": "application/json",
+        "size_bytes": 20,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "captured_head": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate-2",
+        "effective_tree_digest": "sha256:68f378dc3b0f465b01e274295b06a063586a3f807b2e4f7b57a112cb06e36b88",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "final_code": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate-3",
+        "effective_tree_digest": "sha256:ea976d93b075b85c4ac9c92adebb5347f267814e2ef46e7879fd3905c6a452c8",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "candidate_commit_id": "git-candidate-3",
+      "candidate_parent_commit_id": "git-candidate-2",
+      "preserved_private_delta_ref": "delta-3",
+      "verification_permit_ref": "permit-verification-3",
+      "publication_receipt_ref": "publication-receipt-3",
+      "publication_policy": "provisional_all",
+      "code_location": "provisional",
+      "evidence": [
+        {
+          "evidence_id": "check-3",
+          "criterion_ref": "acceptance-1/check-1",
+          "checked_code": {
+            "repository_id": "repo-demo",
+            "commit_id": null,
+            "effective_tree_digest": "sha256:ea976d93b075b85c4ac9c92adebb5347f267814e2ef46e7879fd3905c6a452c8",
+            "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+            "includes_uncommitted_inputs": true
+          },
+          "status": "unavailable",
+          "exit_code": null,
+          "invocation": {
+            "artifact_id": "check-command-1",
+            "digest": "sha256:2245d8566138ea45ff3c906f11de1a33415728471a123304f6c13e06f5ed710a",
+            "media_type": "application/json",
+            "size_bytes": 15,
+            "classification": "project",
+            "scope": {
+              "tenant_id": "tenant-demo",
+              "project_id": "project-demo",
+              "run_id": "run-demo",
+              "process_id": null
+            }
+          },
+          "output": {
+            "artifact_id": "check-output-3",
+            "digest": "sha256:2ddf4d6c520bd4208da5a0d07ad29e79a0cd113f26530310e27c577b3311d64c",
+            "media_type": "application/json",
+            "size_bytes": 14,
+            "classification": "project",
+            "scope": {
+              "tenant_id": "tenant-demo",
+              "project_id": "project-demo",
+              "run_id": "run-demo",
+              "process_id": null
+            }
+          },
+          "completed_at": "2026-10-17T14:08:45Z"
+        }
+      ],
+      "hazard_refs": [
+        "hazard-3"
+      ],
+      "usage": [
+        {
+          "metric": "input_tokens",
+          "unit": "tokens",
+          "value": 1200.0,
+          "provenance": "provider_reported",
+          "account_scope_ref": "account-local"
+        }
+      ]
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "hazard-3",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": null
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "memory_item",
+      "memory_id": "hazard-3",
+      "semantic_kind": "hazard",
+      "content": {
+        "artifact_id": "hazard-content-3",
+        "digest": "sha256:3028f6c4aaa237353a7a28e07da84e24fd80a3f8fd456077f73f1f2ce3aa01e2",
+        "media_type": "application/json",
+        "size_bytes": 16,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "author_ref": "worker-3",
+      "trust": "model",
+      "provenance_refs": [
+        "report-3",
+        "git-candidate-3"
+      ],
+      "applicable_code": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate-3",
+        "effective_tree_digest": "sha256:ea976d93b075b85c4ac9c92adebb5347f267814e2ef46e7879fd3905c6a452c8",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "valid_until": null,
+      "supersedes_ref": null,
+      "tombstone": false,
+      "access_policy_ref": "project-read-policy",
+      "retention_policy_ref": "retain-run",
+      "tier_preference": "warm",
+      "pinned_by_refs": [],
+      "hazard_code_location": "provisional"
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "publication-request-3",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-3"
+      },
+      "created_at": "2026-10-17T14:09:00Z",
+      "required_features": [
+        {
+          "feature_id": "runtime/workspace-view",
+          "version": "1"
+        }
+      ],
+      "extensions": {
+        "polyinference/workspace-view": {
+          "workspace_id": "workspace-3",
+          "manifest_ref": "workspace-3/integration/2",
+          "generation": 2,
+          "view": "integration"
+        }
+      },
+      "kind": "operation_request",
+      "operation_id": "op-publication-3",
+      "logical_step_id": "worker-3/publication/1",
+      "intent_digest": "sha256:861db052eba159fbf38adab98131c1406dff590fe27556bae221a1b2a474a765",
+      "causal_parent_ref": "attempt-3",
+      "trace_id": "trace-1",
+      "grant_ref": "grant-worker-1",
+      "owner_generation": 1,
+      "expected_process_revision": 1,
+      "expected_binding_generation": 1,
+      "schedule_ref": "process-spec-worker-3",
+      "priority_hint": null,
+      "budget_account_ref": "budget-worker-3",
+      "deadline": "2026-10-17T14:10:00Z",
+      "limits": {
+        "max_steps": 80,
+        "max_model_calls": 20,
+        "max_repairs": 3,
+        "max_input_tokens_per_call": 16000,
+        "max_output_tokens_per_call": 2000,
+        "max_total_tokens": 100000,
+        "max_output_bytes": 2000000,
+        "max_wall_time_ms": 600000,
+        "max_api_spend_microusd": 1000000,
+        "cost_guarantee": "enforced",
+        "final_phase_reserve": {
+          "reconciliation_model_calls": 1,
+          "assessment_model_calls": 1,
+          "publication_steps": 2,
+          "cleanup_steps": 1
+        }
+      },
+      "resources": [
+        {
+          "resource_id": "memory",
+          "domain_id": "host-ram",
+          "unit": "bytes",
+          "amount": 67108864.0,
+          "guarantee": "estimate",
+          "lifetime": "operation"
+        }
+      ],
+      "conflict_keys": [
+        "project-demo/verification"
+      ],
+      "safe_boundary": "protected_phase",
+      "replay_policy": "reconcile_before_retry",
+      "payload": {
+        "kind": "publication",
+        "expected_versions": [
+          {
+            "record_ref": "run-demo",
+            "revision": 3
+          }
+        ],
+        "expected_head": {
+          "repository_id": "repo-demo",
+          "commit_id": "git-candidate-2",
+          "effective_tree_digest": "sha256:68f378dc3b0f465b01e274295b06a063586a3f807b2e4f7b57a112cb06e36b88",
+          "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+          "includes_uncommitted_inputs": false
+        },
+        "candidate_commit_id": "git-candidate-3",
+        "candidate_parent_commit_id": "git-candidate-2",
+        "final_code": {
+          "repository_id": "repo-demo",
+          "commit_id": "git-candidate-3",
+          "effective_tree_digest": "sha256:ea976d93b075b85c4ac9c92adebb5347f267814e2ef46e7879fd3905c6a452c8",
+          "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+          "includes_uncommitted_inputs": false
+        },
+        "report_ref": "report-3",
+        "evidence_refs": [
+          "check-3"
+        ],
+        "policy": "provisional_all",
+        "permit_refs": [
+          "permit-verification-3"
+        ],
+        "verification_permit_ref": "permit-verification-3",
+        "receipt_ref": "publication-receipt-3",
+        "event_intent_refs": [
+          "event-report-3",
+          "event-doc-change-3"
+        ]
+      }
+    },
+    {
+      "contract_version": "2.0",
+      "record_id": "publication-receipt-3",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-3"
+      },
+      "created_at": "2026-10-17T14:09:01Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "publication_receipt",
+      "publication_operation_id": "op-publication-3",
+      "report_ref": "report-3",
+      "previous_head": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate-2",
+        "effective_tree_digest": "sha256:68f378dc3b0f465b01e274295b06a063586a3f807b2e4f7b57a112cb06e36b88",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "published_head": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate-3",
+        "effective_tree_digest": "sha256:ea976d93b075b85c4ac9c92adebb5347f267814e2ef46e7879fd3905c6a452c8",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "candidate_parent_commit_id": "git-candidate-2",
+      "verification_permit_ref": "permit-verification-3",
+      "publication_record_revision": 4,
+      "event_intent_refs": [
+        "event-report-3",
+        "event-doc-change-3"
+      ],
+      "publication_policy": "provisional_all"
     }
   ]
 }

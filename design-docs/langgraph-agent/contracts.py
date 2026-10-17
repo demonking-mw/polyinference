@@ -1,4 +1,4 @@
-"""Proposed PolyInference wire contracts, not an agent/runtime implementation.
+"""Merged-design PolyInference wire contract 2.0, not a runtime implementation.
 
 Requires Pydantic 2 to validate examples or export JSON Schema. Cross-record,
 authorization, resource-accounting and effect guarantees remain runtime duties.
@@ -52,7 +52,7 @@ class Feature(Wire):
 
 
 class Record(Wire):
-    contract_version: Literal["1.0"] = "1.0"
+    contract_version: Literal["2.0"] = "2.0"
     record_id: Identifier
     revision: PositiveCount
     scope: Scope
@@ -221,6 +221,28 @@ class ProgramRef(Wire):
     prompt_bundle_digest: Digest
 
 
+class DesignBasis(Wire):
+    source_path: Identifier
+    html_digest: Digest
+    document_id: Identifier
+    execution_node_count: PositiveCount
+    execution_edge_count: PositiveCount
+    memory_node_count: PositiveCount
+    memory_edge_count: PositiveCount
+    duplicate_behavior_precedence: Literal["expanded_execution_contracts"]
+
+
+class MergedWorkerProtocol(Wire):
+    protocol_id: Literal["polyinference/merged-worker/1"] = "polyinference/merged-worker/1"
+    publication_policy: Literal["provisional_all"] = "provisional_all"
+    post_merge_development_turns_min: PositiveCount = 1
+    final_assessment_turns_min: PositiveCount = 1
+    shell_scope: Literal["installation"] = "installation"
+    verification_scope: Literal["project"] = "project"
+    lock_order: tuple[Literal["verification"], Literal["shell"]] = ("verification", "shell")
+    normal_report_resolution: Literal["unresolved"] = "unresolved"
+
+
 class AgentProgram(Record):
     kind: Literal["agent_program"] = "agent_program"
     program: ProgramRef
@@ -228,6 +250,8 @@ class AgentProgram(Record):
     required_runtime_features: list[Requirement]
     optional_runtime_features: list[Requirement]
     migration_registry_ref: Identifier | None
+    design_basis: DesignBasis
+    worker_protocol: MergedWorkerProtocol
 
 
 class ProjectRun(Record):
@@ -239,13 +263,26 @@ class ProjectRun(Record):
     budget_account_ref: Identifier
     grant_ref: Identifier
     limits: Limits
-    publication_policy: Literal["reviewed_only", "provisional_all"]
+    publication_policy: Literal["provisional_all"] = "provisional_all"
     reviewed_revision: CodeRevision
-    provisional_revision: CodeRevision | None
+    provisional_revision: CodeRevision
     plan_ref: Identifier | None
     steering_received_through: Count
     steering_applied_through: Count
     outcome: Literal["active", "paused", "completed", "failed", "cancelled", "budget_stopped"]
+
+    @model_validator(mode="after")
+    def input_and_completion_boundary(self) -> ProjectRun:
+        if self.steering_applied_through > self.steering_received_through:
+            raise ValueError("Cannot apply steering that was not received")
+        if self.reviewed_revision.repository_id != self.provisional_revision.repository_id:
+            raise ValueError("Run heads must identify the same repository")
+        if self.outcome == "completed":
+            if self.steering_applied_through != self.steering_received_through:
+                raise ValueError("Completed run cannot leave pending steering")
+            if self.reviewed_revision != self.provisional_revision:
+                raise ValueError("Completed run must accept the current provisional revision")
+        return self
 
 
 class ProcessSpec(Record):
@@ -335,10 +372,15 @@ class ContextView(Wire):
     def complete_tool_pairs(self) -> ContextView:
         calls: list[str] = []
         results: list[str] = []
+        part_ids = [part.part_id for part in self.parts]
+        if len(part_ids) != len(set(part_ids)):
+            raise ValueError("Context part identities must be unique")
         for part in self.parts:
             if part.part_kind in {"tool_call", "tool_result"}:
                 if part.call_id is None:
                     raise ValueError("Tool context parts need a call ID")
+                if part.part_kind == "tool_result" and part.call_id not in calls:
+                    raise ValueError("A tool result cannot precede its call")
                 (calls if part.part_kind == "tool_call" else results).append(part.call_id)
         if sorted(calls) != sorted(results) or len(calls) != len(set(calls)):
             raise ValueError("Context requires one complete pair per tool call")
@@ -407,11 +449,27 @@ class Publication(Wire):
     expected_versions: Annotated[list[ExpectedVersion], Field(min_length=1)]
     expected_head: CodeRevision
     candidate_commit_id: Identifier
+    candidate_parent_commit_id: Identifier
+    final_code: CodeRevision
     report_ref: Identifier
     evidence_refs: list[Identifier]
-    policy: Literal["reviewed_only", "provisional_all"]
+    policy: Literal["provisional_all"] = "provisional_all"
     permit_refs: Annotated[list[Identifier], Field(min_length=1)]
+    verification_permit_ref: Identifier
+    receipt_ref: Identifier
     event_intent_refs: list[Identifier]
+
+    @model_validator(mode="after")
+    def attributable_publication(self) -> Publication:
+        if self.expected_head.commit_id != self.candidate_parent_commit_id:
+            raise ValueError("Published undo unit must have captured head as its sole parent")
+        if self.final_code.commit_id != self.candidate_commit_id:
+            raise ValueError("Published final code must identify the actual candidate commit")
+        if self.final_code.repository_id != self.expected_head.repository_id:
+            raise ValueError("Publication cannot switch repositories")
+        if self.verification_permit_ref not in self.permit_refs:
+            raise ValueError("Publication must retain its verification permit")
+        return self
 
 
 Payload = Annotated[
@@ -553,25 +611,34 @@ class TaskReport(Record):
     resolution: Literal["unresolved"] = "unresolved"
     verdict: Literal["fail", "uncertain", "successful"]
     stop_reason: Identifier | None
+    reconciliation_turn_refs: Annotated[list[Identifier], Field(min_length=1)]
     assessment_turn_refs: Annotated[list[Identifier], Field(min_length=1)]
     assessment_summary: ArtifactRef
     original_base: CodeRevision
     captured_head: CodeRevision
     final_code: CodeRevision
     candidate_commit_id: Identifier
+    candidate_parent_commit_id: Identifier
     preserved_private_delta_ref: Identifier
-    publication_policy: Literal["reviewed_only", "provisional_all"]
-    code_location: Literal["private", "provisional"]
+    verification_permit_ref: Identifier
+    publication_receipt_ref: Identifier
+    publication_policy: Literal["provisional_all"] = "provisional_all"
+    code_location: Literal["provisional"] = "provisional"
     evidence: list[CheckEvidence]
     hazard_refs: list[Identifier]
     usage: list[UsageMeasure]
 
     @model_validator(mode="after")
     def evidence_and_policy(self) -> TaskReport:
-        if self.publication_policy == "reviewed_only" and self.code_location != "private":
-            raise ValueError("Reviewed-only completion retains a private candidate")
-        if self.publication_policy == "provisional_all" and self.code_location != "provisional":
-            raise ValueError("Provisional-all completion must publish provisional code")
+        if self.captured_head.commit_id != self.candidate_parent_commit_id:
+            raise ValueError("Report commit must be parented on captured provisional head")
+        if self.final_code.commit_id != self.candidate_commit_id:
+            raise ValueError("Report final code must identify the actual candidate commit")
+        if len({self.original_base.repository_id, self.captured_head.repository_id,
+                self.final_code.repository_id}) != 1:
+            raise ValueError("Report revisions must belong to the same repository")
+        if self.verdict in {"fail", "uncertain"} and not self.hazard_refs:
+            raise ValueError("Published fail/uncertain code needs an attributable hazard notice")
         if self.verdict == "successful":
             if not self.evidence or any(e.status != "passed" for e in self.evidence):
                 raise ValueError("Success needs passed evidence")
@@ -580,6 +647,29 @@ class TaskReport(Record):
             if any(content_identity(e.checked_code) != content_identity(self.final_code)
                    for e in self.evidence):
                 raise ValueError("Success evidence must describe the final code/environment")
+        return self
+
+
+class PublicationReceipt(Record):
+    kind: Literal["publication_receipt"] = "publication_receipt"
+    publication_operation_id: Identifier
+    report_ref: Identifier
+    previous_head: CodeRevision
+    published_head: CodeRevision
+    candidate_parent_commit_id: Identifier
+    verification_permit_ref: Identifier
+    publication_record_revision: PositiveCount
+    event_intent_refs: list[Identifier]
+    publication_policy: Literal["provisional_all"] = "provisional_all"
+
+    @model_validator(mode="after")
+    def valid_head_handoff(self) -> PublicationReceipt:
+        if self.previous_head.commit_id != self.candidate_parent_commit_id:
+            raise ValueError("Receipt parent must be the captured predecessor")
+        if not self.published_head.commit_id or self.published_head.commit_id == self.previous_head.commit_id:
+            raise ValueError("Normal completion needs a real attributable commit, including no-diff work")
+        if self.previous_head.repository_id != self.published_head.repository_id:
+            raise ValueError("Publication receipt cannot switch repositories")
         return self
 
 
@@ -628,6 +718,14 @@ class Continuation(Record):
     pinned_record_versions: list[ExpectedVersion]
     workspace_id: Identifier | None
     code: CodeRevision | None
+    original_base: CodeRevision | None = None
+    captured_head: CodeRevision | None = None
+    preserved_private_delta_ref: Identifier | None = None
+    shell_permit_ref: Identifier | None = None
+    verification_permit_ref: Identifier | None = None
+    publication_operation_id: Identifier | None = None
+    publication_receipt_ref: Identifier | None = None
+    publication_state: Literal["not_started", "prepared", "uncertain", "published"] = "not_started"
     trajectory_ref: Identifier
     context_view_ref: Identifier
     pending_operations: list[Identifier]
@@ -637,6 +735,19 @@ class Continuation(Record):
     memory_snapshot_refs: list[Identifier]
     event_cursor: Count
     pause_reason: Identifier
+
+    @model_validator(mode="after")
+    def publication_recovery_state(self) -> Continuation:
+        if self.publication_state != "not_started" and self.publication_operation_id is None:
+            raise ValueError("Publication recovery needs its original operation identity")
+        if self.publication_state == "uncertain" and self.verification_permit_ref is None:
+            raise ValueError("Unknown publication retains verification ownership for reconciliation")
+        if self.publication_state == "published" and self.publication_receipt_ref is None:
+            raise ValueError("Published continuation must reference the durable receipt")
+        for permit in (self.shell_permit_ref, self.verification_permit_ref):
+            if permit is not None and permit not in self.permit_refs:
+                raise ValueError("Named ownership must also remain in the retained permit set")
+        return self
 
 
 class SprintPlan(Record):
@@ -662,6 +773,12 @@ class TaskAttempt(Record):
     execution: Literal["pending", "in_progress", "completed", "interrupted", "cancelled"]
     report_ref: Identifier | None
     stop_reason: Identifier | None
+
+    @model_validator(mode="after")
+    def completed_report(self) -> TaskAttempt:
+        if self.execution == "completed" and self.report_ref is None:
+            raise ValueError("Normal completed attempt needs its assessed, published report")
+        return self
 
 
 class CapabilityDescriptor(Record):
@@ -757,6 +874,19 @@ class SteeringBarrier(Record):
     captured_plan_ref: Identifier
     planner_input_through: Count | None
 
+    @model_validator(mode="after")
+    def ordered_input_barrier(self) -> SteeringBarrier:
+        if self.steering_applied_through > self.steering_received_through:
+            raise ValueError("Cannot acknowledge unreceived steering")
+        if self.steering_applied_through < self.steering_received_through and not self.starts_closed:
+            raise ValueError("Pending steering must close new worker starts")
+        if self.planner_input_through is not None and not (
+                self.steering_applied_through <= self.planner_input_through <= self.steering_received_through):
+            raise ValueError("Planner snapshot must lie within the received unapplied range")
+        if len(self.captured_worker_process_ids) != len(set(self.captured_worker_process_ids)):
+            raise ValueError("Captured workers form a set")
+        return self
+
 
 class DocumentationBatch(Record):
     kind: Literal["documentation_batch"] = "documentation_batch"
@@ -772,7 +902,7 @@ class DocumentationBatch(Record):
 
 ContractRecord = Annotated[
     AgentProgram | ProjectRun | ProcessSpec | ProcessStatus | TaskSpec
-    | OperationRequest | OperationResult | BindingDecision | TaskReport
+    | OperationRequest | OperationResult | BindingDecision | TaskReport | PublicationReceipt
     | ReviewResolution | MemoryItem | Continuation | SprintPlan | TaskAttempt
     | CapabilityDescriptor | BackendDescriptor | PressureSnapshot | MemorySnapshot
     | SteeringBarrier | DocumentationBatch,
@@ -782,7 +912,7 @@ ContractRecord = Annotated[
 
 
 class ContractBundle(Wire):
-    contract_version: Literal["1.0"] = "1.0"
+    contract_version: Literal["2.0"] = "2.0"
     records: list[ContractRecord]
 
 

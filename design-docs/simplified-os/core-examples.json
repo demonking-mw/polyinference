@@ -1,0 +1,497 @@
+{
+  "profile": {
+    "profile_id": "core-local-cloud-1",
+    "profile_version": "1.0",
+    "wire_major": "2",
+    "project_capacity": 1,
+    "local_model_services": 1,
+    "cloud_endpoints": 1,
+    "max_workers": 4,
+    "local_inflight_limit": 2,
+    "local_engine_sequence_limit": 2,
+    "max_sequence_tokens": 32000,
+    "local_reserved_context_tokens": 64000,
+    "cloud_inflight_limit": 1,
+    "max_pending_operations": 32,
+    "max_tool_output_bytes": 262144,
+    "workspace_budget_bytes": 1073741824,
+    "host_agent_budget_bytes": 268435456,
+    "shell_capacity": 1,
+    "verification_capacity": 1,
+    "routing": "static_roles",
+    "local_admission": "fifo_alternating_verifier_lane",
+    "publication": "provisional_all",
+    "workspace_strategy": "scoped_development_full_integration",
+    "langgraph_integration": "public_api_adapter",
+    "local_backend_descriptor_ref": "backend-local-1",
+    "cloud_backend_descriptor_ref": "configured-cloud-endpoint",
+    "capacity_basis_ref": "illustrative-capacity-not-a-hardware-measurement",
+    "supported_features": [
+      {
+        "feature_id": "runtime/model-query",
+        "version": "1"
+      },
+      {
+        "feature_id": "runtime/effect-journal",
+        "version": "1"
+      },
+      {
+        "feature_id": "runtime/private-workspace",
+        "version": "1"
+      },
+      {
+        "feature_id": "runtime/global-shell-exclusion",
+        "version": "1"
+      },
+      {
+        "feature_id": "runtime/verification-exclusion",
+        "version": "1"
+      },
+      {
+        "feature_id": "runtime/atomic-record-publication",
+        "version": "1"
+      },
+      {
+        "feature_id": "runtime/core-os",
+        "version": "1"
+      },
+      {
+        "feature_id": "runtime/scoped-workspace-copy",
+        "version": "1"
+      },
+      {
+        "feature_id": "runtime/workspace-view",
+        "version": "1"
+      },
+      {
+        "feature_id": "runtime/local-cbatch-admission",
+        "version": "1"
+      },
+      {
+        "feature_id": "runtime/direct-tools",
+        "version": "1"
+      },
+      {
+        "feature_id": "runtime/artifacts",
+        "version": "1"
+      },
+      {
+        "feature_id": "runtime/persistent-checkpoints",
+        "version": "1"
+      },
+      {
+        "feature_id": "runtime/fixed-role-routing",
+        "version": "1"
+      }
+    ],
+    "role_backend_refs": {
+      "worker": "backend-local-1",
+      "senior": "configured-cloud-endpoint",
+      "specialist": "configured-cloud-endpoint"
+    }
+  },
+  "workspaces": [
+    {
+      "manifest_id": "workspace-1/development/1",
+      "workspace_id": "workspace-1",
+      "process_id": "worker-1",
+      "task_spec_ref": "task-spec-1",
+      "generation": 1,
+      "view": "development",
+      "materialization": "scoped",
+      "private_root_ref": "workspace-1/private-development-root",
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "captured_head": null,
+      "effective_code": null,
+      "copied_files": [
+        {
+          "path": "src/feature.py",
+          "copied_digest": "sha256:30db4ab3f45aa95bc4a4ff3973a9822ae986cf09574a3265baf690b55304cfe3",
+          "writable": true
+        },
+        {
+          "path": "pyproject.toml",
+          "copied_digest": "sha256:e091f1d8b301d61d8b72b910f30e37158978dc4c1db31e06d068f7cc0c4e58ec",
+          "writable": false
+        }
+      ],
+      "allowed_write_paths": [
+        "src/feature.py",
+        "tests/test_feature.py"
+      ],
+      "closure_basis_ref": "task-and-configured-include-rules",
+      "preserved_delta_ref": null
+    },
+    {
+      "manifest_id": "workspace-1/integration/2",
+      "workspace_id": "workspace-1",
+      "process_id": "worker-1",
+      "task_spec_ref": "task-spec-1",
+      "generation": 2,
+      "view": "integration",
+      "materialization": "complete",
+      "private_root_ref": "workspace-1/private-integration-root",
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "captured_head": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "effective_code": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate",
+        "effective_tree_digest": "sha256:4d4b0facd58f3ce7596d35072a7d0b635231628c71228f07d3d08166494f6023",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "copied_files": [
+        {
+          "path": "src/feature.py",
+          "copied_digest": "sha256:4fec31bbf8011d0801c2af69beaea67f6db72b82f365f1a2e1e4cb44b66b073f",
+          "writable": true
+        },
+        {
+          "path": "pyproject.toml",
+          "copied_digest": "sha256:e091f1d8b301d61d8b72b910f30e37158978dc4c1db31e06d068f7cc0c4e58ec",
+          "writable": false
+        },
+        {
+          "path": "src/untouched.py",
+          "copied_digest": "sha256:b2f5513e773b44847c324116b83c40c2ad3e3dae51cb52e8407ecb60278113ad",
+          "writable": false
+        }
+      ],
+      "allowed_write_paths": [
+        "src/feature.py",
+        "tests/test_feature.py"
+      ],
+      "closure_basis_ref": "task-and-configured-include-rules",
+      "preserved_delta_ref": "delta-1"
+    },
+    {
+      "manifest_id": "workspace-2/development/1",
+      "workspace_id": "workspace-2",
+      "process_id": "worker-2",
+      "task_spec_ref": "task-spec-2",
+      "generation": 1,
+      "view": "development",
+      "materialization": "scoped",
+      "private_root_ref": "workspace-2/private-development-root",
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "captured_head": null,
+      "effective_code": null,
+      "copied_files": [
+        {
+          "path": "src/feature.py",
+          "copied_digest": "sha256:30db4ab3f45aa95bc4a4ff3973a9822ae986cf09574a3265baf690b55304cfe3",
+          "writable": true
+        },
+        {
+          "path": "pyproject.toml",
+          "copied_digest": "sha256:e091f1d8b301d61d8b72b910f30e37158978dc4c1db31e06d068f7cc0c4e58ec",
+          "writable": false
+        }
+      ],
+      "allowed_write_paths": [
+        "src/feature.py",
+        "tests/test_feature.py"
+      ],
+      "closure_basis_ref": "task-and-configured-include-rules",
+      "preserved_delta_ref": null
+    },
+    {
+      "manifest_id": "workspace-2/integration/2",
+      "workspace_id": "workspace-2",
+      "process_id": "worker-2",
+      "task_spec_ref": "task-spec-2",
+      "generation": 2,
+      "view": "integration",
+      "materialization": "complete",
+      "private_root_ref": "workspace-2/private-integration-root",
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "captured_head": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate",
+        "effective_tree_digest": "sha256:4d4b0facd58f3ce7596d35072a7d0b635231628c71228f07d3d08166494f6023",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "effective_code": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate-2",
+        "effective_tree_digest": "sha256:68f378dc3b0f465b01e274295b06a063586a3f807b2e4f7b57a112cb06e36b88",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "copied_files": [
+        {
+          "path": "src/feature.py",
+          "copied_digest": "sha256:b9a237a147d7eba06643af55dd1aff51ec4a6601b853483c000d5ea2d93d5e36",
+          "writable": true
+        },
+        {
+          "path": "pyproject.toml",
+          "copied_digest": "sha256:e091f1d8b301d61d8b72b910f30e37158978dc4c1db31e06d068f7cc0c4e58ec",
+          "writable": false
+        },
+        {
+          "path": "src/untouched.py",
+          "copied_digest": "sha256:b2f5513e773b44847c324116b83c40c2ad3e3dae51cb52e8407ecb60278113ad",
+          "writable": false
+        }
+      ],
+      "allowed_write_paths": [
+        "src/feature.py",
+        "tests/test_feature.py"
+      ],
+      "closure_basis_ref": "task-and-configured-include-rules",
+      "preserved_delta_ref": "delta-2"
+    },
+    {
+      "manifest_id": "workspace-3/development/1",
+      "workspace_id": "workspace-3",
+      "process_id": "worker-3",
+      "task_spec_ref": "task-spec-3",
+      "generation": 1,
+      "view": "development",
+      "materialization": "scoped",
+      "private_root_ref": "workspace-3/private-development-root",
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "captured_head": null,
+      "effective_code": null,
+      "copied_files": [
+        {
+          "path": "src/feature.py",
+          "copied_digest": "sha256:30db4ab3f45aa95bc4a4ff3973a9822ae986cf09574a3265baf690b55304cfe3",
+          "writable": true
+        },
+        {
+          "path": "pyproject.toml",
+          "copied_digest": "sha256:e091f1d8b301d61d8b72b910f30e37158978dc4c1db31e06d068f7cc0c4e58ec",
+          "writable": false
+        }
+      ],
+      "allowed_write_paths": [
+        "src/feature.py",
+        "tests/test_feature.py"
+      ],
+      "closure_basis_ref": "task-and-configured-include-rules",
+      "preserved_delta_ref": null
+    },
+    {
+      "manifest_id": "workspace-3/integration/2",
+      "workspace_id": "workspace-3",
+      "process_id": "worker-3",
+      "task_spec_ref": "task-spec-3",
+      "generation": 2,
+      "view": "integration",
+      "materialization": "complete",
+      "private_root_ref": "workspace-3/private-integration-root",
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "captured_head": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate-2",
+        "effective_tree_digest": "sha256:68f378dc3b0f465b01e274295b06a063586a3f807b2e4f7b57a112cb06e36b88",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "effective_code": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate-3",
+        "effective_tree_digest": "sha256:ea976d93b075b85c4ac9c92adebb5347f267814e2ef46e7879fd3905c6a452c8",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "copied_files": [
+        {
+          "path": "src/feature.py",
+          "copied_digest": "sha256:ee70bada7ef6a02305e705c784e3452ef4e92646e0561989b0d8db7e8848a45c",
+          "writable": true
+        },
+        {
+          "path": "pyproject.toml",
+          "copied_digest": "sha256:e091f1d8b301d61d8b72b910f30e37158978dc4c1db31e06d068f7cc0c4e58ec",
+          "writable": false
+        },
+        {
+          "path": "src/untouched.py",
+          "copied_digest": "sha256:b2f5513e773b44847c324116b83c40c2ad3e3dae51cb52e8407ecb60278113ad",
+          "writable": false
+        }
+      ],
+      "allowed_write_paths": [
+        "src/feature.py",
+        "tests/test_feature.py"
+      ],
+      "closure_basis_ref": "task-and-configured-include-rules",
+      "preserved_delta_ref": "delta-3"
+    }
+  ],
+  "deltas": [
+    {
+      "delta_id": "delta-1",
+      "workspace_id": "workspace-1",
+      "development_manifest_ref": "workspace-1/development/1",
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "absence_is_deletion": false,
+      "changes": [
+        {
+          "action": "modify",
+          "path": "src/feature.py",
+          "source_path": null,
+          "expected_base_digest": "sha256:30db4ab3f45aa95bc4a4ff3973a9822ae986cf09574a3265baf690b55304cfe3",
+          "content": {
+            "artifact_id": "delta-content-1",
+            "digest": "sha256:4fec31bbf8011d0801c2af69beaea67f6db72b82f365f1a2e1e4cb44b66b073f",
+            "media_type": "text/plain",
+            "size_bytes": 24,
+            "classification": "project",
+            "scope": {
+              "tenant_id": "tenant-demo",
+              "project_id": "project-demo",
+              "run_id": "run-demo",
+              "process_id": "worker-1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "delta_id": "delta-2",
+      "workspace_id": "workspace-2",
+      "development_manifest_ref": "workspace-2/development/1",
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "absence_is_deletion": false,
+      "changes": [
+        {
+          "action": "modify",
+          "path": "src/feature.py",
+          "source_path": null,
+          "expected_base_digest": "sha256:30db4ab3f45aa95bc4a4ff3973a9822ae986cf09574a3265baf690b55304cfe3",
+          "content": {
+            "artifact_id": "delta-content-2",
+            "digest": "sha256:b9a237a147d7eba06643af55dd1aff51ec4a6601b853483c000d5ea2d93d5e36",
+            "media_type": "text/plain",
+            "size_bytes": 24,
+            "classification": "project",
+            "scope": {
+              "tenant_id": "tenant-demo",
+              "project_id": "project-demo",
+              "run_id": "run-demo",
+              "process_id": "worker-2"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "delta_id": "delta-3",
+      "workspace_id": "workspace-3",
+      "development_manifest_ref": "workspace-3/development/1",
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "absence_is_deletion": false,
+      "changes": [
+        {
+          "action": "modify",
+          "path": "src/feature.py",
+          "source_path": null,
+          "expected_base_digest": "sha256:30db4ab3f45aa95bc4a4ff3973a9822ae986cf09574a3265baf690b55304cfe3",
+          "content": {
+            "artifact_id": "delta-content-3",
+            "digest": "sha256:ee70bada7ef6a02305e705c784e3452ef4e92646e0561989b0d8db7e8848a45c",
+            "media_type": "text/plain",
+            "size_bytes": 24,
+            "classification": "project",
+            "scope": {
+              "tenant_id": "tenant-demo",
+              "project_id": "project-demo",
+              "run_id": "run-demo",
+              "process_id": "worker-3"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "view_requirements": [
+    {
+      "workspace_id": "workspace-1",
+      "manifest_ref": "workspace-1/integration/2",
+      "generation": 2,
+      "view": "integration"
+    },
+    {
+      "workspace_id": "workspace-2",
+      "manifest_ref": "workspace-2/integration/2",
+      "generation": 2,
+      "view": "integration"
+    },
+    {
+      "workspace_id": "workspace-3",
+      "manifest_ref": "workspace-3/integration/2",
+      "generation": 2,
+      "view": "integration"
+    }
+  ],
+  "current_manifest_refs": [
+    "workspace-1/integration/2",
+    "workspace-2/integration/2",
+    "workspace-3/integration/2"
+  ]
+}

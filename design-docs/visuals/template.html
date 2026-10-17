@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light dark">
+  <title>__TITLE__ · PolyInference design atlas</title>
+  <style>__CSS__</style>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to design</a>
+  <div class="app">
+    <aside class="rail" aria-label="Design navigation">
+      <a class="brand" href="agent-design.html"><span class="brand-mark" aria-hidden="true">p<span>i</span></span><span>PolyInference<small>DESIGN ATLAS</small></span></a>
+      <div class="design-switch" aria-label="Choose design"><a href="agent-design.html" data-design="agent">Agent</a><a href="os-design.html" data-design="os">OS</a></div>
+      <p class="rail-label">EXAMINE THE DESIGN</p>
+      <nav class="nav" aria-label="Sections">
+        <a href="#architecture" data-view="architecture"><span class="nav-number">01</span> Architecture</a>
+        <a href="#walkthrough" data-view="walkthrough"><span class="nav-number">02</span> Execution stories</a>
+        <a href="#contracts" data-view="contracts"><span class="nav-number">03</span> Shared contracts</a>
+        <a href="#review" data-view="review"><span class="nav-number">04</span> Assess the design<span id="review-dot" class="review-dot" hidden></span></a>
+        <a href="#sources" data-view="sources"><span class="nav-number">05</span> Source trail</a>
+      </nav>
+      <div class="rail-bottom"><span class="status-dot"></span> Design specification<p>Audited 17 Oct 2026<br>Program revision 4<br>Runtime not yet implemented</p><a href="../INTEGRATION_AUDIT.md">Read the joint audit <span aria-hidden="true">↗</span></a></div>
+    </aside>
+    <div class="workspace">
+      <header class="topbar"><span id="breadcrumb">Design atlas / Agent</span><div class="top-actions"><select id="language-select" class="language-select" aria-label="Language / 语言"><option value="en" lang="en">English</option><option value="zh-CN" lang="zh-CN">简体中文</option></select><button id="theme-toggle" class="quiet-button" type="button" aria-label="Switch color theme">Dark theme</button><button id="print" class="quiet-button" type="button">Print this view <span aria-hidden="true">↗</span></button></div></header>
+      <main id="main">
+        <div class="hero"><div><p class="eyebrow" id="eyebrow"></p><h1 id="page-title"></h1><p id="page-description" class="lead"></p></div><span class="revision">AUDITED DESIGN <span>04</span></span></div>
+        <section id="architecture" class="view" aria-labelledby="architecture-title">
+          <div class="section-heading"><div><h2 id="architecture-title">Architecture at a glance</h2><p>Select a component to inspect its purpose, contracts and failure boundaries.</p></div></div>
+          <div class="map-toolbar"><div id="map-tabs" class="segmented" role="group" aria-label="Architecture focus"></div><span class="small muted">A curated map, not one process per box</span></div>
+          <div class="architecture-layout">
+            <div class="map-panel"><div class="map-caption"><h3 id="map-title"></h3><p id="map-description"></p></div><div id="diagram" class="diagram"><svg id="connections" class="connections" aria-hidden="true"></svg><div id="nodes" class="nodes"></div></div><div class="map-legend"><span><i class="legend-swatch cloud"></i>Cloud reasoning</span><span><i class="legend-swatch local"></i>Local reasoning</span><span><i class="legend-swatch gate"></i>Protected phase</span><span><i class="legend-line"></i>Principal handoff</span><span><i class="legend-line data"></i>Context / evidence</span></div><p class="map-footnote" id="map-footnote"></p></div>
+            <aside id="inspector" class="inspector" aria-labelledby="inspector-title" aria-live="polite"></aside>
+          </div>
+          <div id="design-takeaway" class="takeaway"></div>
+        </section>
+        <section id="walkthrough" class="view" aria-labelledby="walkthrough-title" hidden>
+          <div class="section-heading"><div><h2 id="walkthrough-title">Follow a real design situation</h2><p>Illustrative event snapshots. These stories explain the protocol; they are not execution logs or benchmarks.</p></div></div>
+          <div class="story-picker"><label for="scenario">Situation</label><select id="scenario"></select><a id="other-lens" href="os-design.html#walkthrough">See this through the OS lens ↗</a></div>
+          <div class="story-layout"><ol id="story-steps" class="story-steps" aria-label="Choose an event"></ol><div class="story-main"><div class="story-controls"><span id="step-counter" class="mono muted"></span><div><button type="button" id="previous" class="square-button" aria-label="Previous event">←</button><button type="button" id="next" class="primary-button">Next event →</button></div></div><div id="story-event" aria-live="polite"></div><div id="story-state"></div><div class="story-rule"><p class="eyebrow">THE RULE THAT MATTERS</p><p id="story-rule"></p></div><div class="story-footer"><a id="story-source" href="../INTEGRATION_AUDIT.md">Read the source rule ↗</a><span>Illustrative capacities · W = 4 · L = 2 · C = 1</span></div></div></div>
+        </section>
+        <section id="contracts" class="view" aria-labelledby="contracts-title" hidden>
+          <div class="section-heading"><div><h2 id="contracts-title">Where the two designs meet</h2><p>The agent chooses the work and its meaning. The runtime controls effects, authority and resources.</p></div></div>
+          <div id="contract-content"></div>
+        </section>
+        <section id="review" class="view" aria-labelledby="review-title" hidden>
+          <div class="section-heading"><div><h2 id="review-title">Make your judgment explicit</h2><p>Questions to assess the design. Your judgments are review notes, not claims that an implementation passed.</p></div><button id="export-notes" type="button" class="primary-button">Export review notes ↓</button></div>
+          <div class="review-summary"><span id="review-count"></span><span id="storage-note">Notes save in this browser. Export a copy to keep or share.</span></div><div id="review-list" class="review-list"></div>
+        </section>
+        <section id="sources" class="view" aria-labelledby="sources-title" hidden>
+          <div class="section-heading"><div><h2 id="sources-title">Follow the evidence</h2><p>This is a readable projection of the audited designs. The source documents remain authoritative.</p></div></div><div id="source-content"></div>
+        </section>
+        <noscript><p class="takeaway">Enable JavaScript for the interactive maps and execution stories. The complete source designs are in the sibling langgraph-agent and simplified-os folders.</p></noscript>
+      </main>
+      <footer class="page-footer"><span>PolyInference · Agent + OS · Audited 17 Oct 2026</span><span>Offline reader · No external services</span></footer>
+    </div>
+  </div>
+  <script id="atlas-data" type="application/json">__DATA__</script>
+  <script>__SCRIPT__</script>
+</body>
+</html>

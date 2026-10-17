@@ -1,5 +1,7 @@
 # Polyinference OS: project design
 
+Current implementation scope: [simplified OS](../simplified-os/README.md), paired with the [LangGraph agent](../langgraph-agent/README.md). This document is retained as the broader research proposal. The latest design supersedes its one-worker/one-decode and full-development-copy defaults; use the [source consolidation](../simplified-os/SOURCES.md) for precedence and the five-lecture mapping.
+
 Research/design specification · revised 2026-10-16 using your clarifications and private-copy/two-mutex concurrency model · no OS implementation or benchmark results.
 
 Build the OS as a small, persistent runtime between your LangGraph agent and the local/cloud inference and tool backends. Preserve the agent's cloud-led sprint planning, bounded local coding, programmatic orchestration, evidence checks, and commit/report cycle. The OS supplies process control, backend adaptation, resource admission, shared-state services, and recovery. Its first useful version runs one instance of this application with one coding attempt at a time; increasing process count must not require duplicating model weights or redesigning its request contract.
