@@ -1,0 +1,1369 @@
+{
+  "contract_version": "1.0",
+  "records": [
+    {
+      "contract_version": "1.0",
+      "record_id": "program-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": null
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "agent_program",
+      "program": {
+        "program_id": "polyinference-coding",
+        "program_version": "proposal-1",
+        "graph_digest": "sha256:210e3f5c2b3e2894a67fc9343da2b9a003b089ce54917b5ada725749704e7bac",
+        "state_schema_version": "1.0",
+        "prompt_bundle_digest": "sha256:fc9eb607c91880dc0f55b213fda2a4ce801e8fda2c2239bc2d4020d6e697a87c"
+      },
+      "entry_points": [
+        "sprint_controller",
+        "senior_query",
+        "coding_worker"
+      ],
+      "required_runtime_features": [
+        {
+          "feature_id": "runtime/model-query",
+          "version": "1",
+          "necessity": "required"
+        },
+        {
+          "feature_id": "runtime/effect-journal",
+          "version": "1",
+          "necessity": "required"
+        }
+      ],
+      "optional_runtime_features": [],
+      "migration_registry_ref": null
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "run-demo",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": null
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "project_run",
+      "program": {
+        "program_id": "polyinference-coding",
+        "program_version": "proposal-1",
+        "graph_digest": "sha256:210e3f5c2b3e2894a67fc9343da2b9a003b089ce54917b5ada725749704e7bac",
+        "state_schema_version": "1.0",
+        "prompt_bundle_digest": "sha256:fc9eb607c91880dc0f55b213fda2a4ce801e8fda2c2239bc2d4020d6e697a87c"
+      },
+      "objective": {
+        "artifact_id": "objective-1",
+        "digest": "sha256:5e21520e4b25a75d9e5b7b4702ee5b189bedb3039bfeaab6e81e456fc83f52fc",
+        "media_type": "application/json",
+        "size_bytes": 11,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "acceptance_spec": {
+        "artifact_id": "acceptance-1",
+        "digest": "sha256:6df3a76d094133bc4acab5b667ee4ce675f5ed4a072f60c3ba6e71d37fa21e04",
+        "media_type": "application/json",
+        "size_bytes": 12,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "catalog_ref": "catalog-1",
+      "budget_account_ref": "budget-run-1",
+      "grant_ref": "grant-run-1",
+      "limits": {
+        "max_steps": 80,
+        "max_model_calls": 20,
+        "max_repairs": 3,
+        "max_input_tokens_per_call": 16000,
+        "max_output_tokens_per_call": 2000,
+        "max_total_tokens": 100000,
+        "max_output_bytes": 2000000,
+        "max_wall_time_ms": 600000,
+        "max_api_spend_microusd": 1000000,
+        "cost_guarantee": "enforced",
+        "final_phase_reserve": {
+          "reconciliation_model_calls": 1,
+          "assessment_model_calls": 1,
+          "publication_steps": 2,
+          "cleanup_steps": 1
+        }
+      },
+      "publication_policy": "reviewed_only",
+      "reviewed_revision": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "provisional_revision": null,
+      "plan_ref": "plan-1",
+      "steering_received_through": 0,
+      "steering_applied_through": 0,
+      "outcome": "active"
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "plan-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": null
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "sprint_plan",
+      "parent_plan_ref": null,
+      "senior_query_ref": "senior-initial-1",
+      "goal": {
+        "artifact_id": "sprint-goal-1",
+        "digest": "sha256:cee57f6c1a2ae6f69a3626aedd70feffb00a3edf7160ae3cceac3e4cbf17900b",
+        "media_type": "application/json",
+        "size_bytes": 13,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "task_spec_refs": [
+        "task-spec-1"
+      ],
+      "resolution_refs": [],
+      "input_report_refs": [],
+      "steering_from": 0,
+      "steering_through": 0,
+      "expected_head": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      }
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "task-spec-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": null
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "task_spec",
+      "task_id": "task-1",
+      "plan_ref": "plan-1",
+      "objective": {
+        "artifact_id": "assignment-1",
+        "digest": "sha256:647a05fbc66fc97bc0192e05e5d8ac3292d46f8d8ce80b36cf5133e2d93b241d",
+        "media_type": "application/json",
+        "size_bytes": 12,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "allowed_change_scope": [
+        "src/**",
+        "tests/**"
+      ],
+      "prerequisites": [],
+      "base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "acceptance_spec": {
+        "artifact_id": "acceptance-1",
+        "digest": "sha256:6df3a76d094133bc4acab5b667ee4ce675f5ed4a072f60c3ba6e71d37fa21e04",
+        "media_type": "application/json",
+        "size_bytes": 12,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "context_refs": [
+        {
+          "artifact_id": "repo-rules-1",
+          "digest": "sha256:7a0779c92b93c2e44d0baa63c4a15116bb985c8ba25db453479076d134b1fad0",
+          "media_type": "application/json",
+          "size_bytes": 12,
+          "classification": "project",
+          "scope": {
+            "tenant_id": "tenant-demo",
+            "project_id": "project-demo",
+            "run_id": "run-demo",
+            "process_id": null
+          }
+        }
+      ],
+      "memory_snapshot_refs": [
+        "memory-snapshot-1"
+      ],
+      "allowed_capabilities": [
+        "builtin/search",
+        "builtin/read",
+        "builtin/patch",
+        "builtin/command"
+      ],
+      "worker_process_spec_ref": "process-spec-worker-1",
+      "report_schema_ref": "schema/task-report/1"
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "process-spec-worker-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-1"
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "process_spec",
+      "process_id": "worker-1",
+      "parent_process_id": "controller-1",
+      "program": {
+        "program_id": "polyinference-coding",
+        "program_version": "proposal-1",
+        "graph_digest": "sha256:210e3f5c2b3e2894a67fc9343da2b9a003b089ce54917b5ada725749704e7bac",
+        "state_schema_version": "1.0",
+        "prompt_bundle_digest": "sha256:fc9eb607c91880dc0f55b213fda2a4ce801e8fda2c2239bc2d4020d6e697a87c"
+      },
+      "entry_point": "coding_worker",
+      "role": "worker",
+      "input_refs": [
+        {
+          "artifact_id": "assignment-1",
+          "digest": "sha256:647a05fbc66fc97bc0192e05e5d8ac3292d46f8d8ce80b36cf5133e2d93b241d",
+          "media_type": "application/json",
+          "size_bytes": 12,
+          "classification": "project",
+          "scope": {
+            "tenant_id": "tenant-demo",
+            "project_id": "project-demo",
+            "run_id": "run-demo",
+            "process_id": null
+          }
+        }
+      ],
+      "task_spec_ref": "task-spec-1",
+      "attempt_id": "attempt-1",
+      "workspace_id": "workspace-1",
+      "grant_ref": "grant-worker-1",
+      "budget_account_ref": "budget-worker-1",
+      "limits": {
+        "max_steps": 80,
+        "max_model_calls": 20,
+        "max_repairs": 3,
+        "max_input_tokens_per_call": 16000,
+        "max_output_tokens_per_call": 2000,
+        "max_total_tokens": 100000,
+        "max_output_bytes": 2000000,
+        "max_wall_time_ms": 600000,
+        "max_api_spend_microusd": 1000000,
+        "cost_guarantee": "enforced",
+        "final_phase_reserve": {
+          "reconciliation_model_calls": 1,
+          "assessment_model_calls": 1,
+          "publication_steps": 2,
+          "cleanup_steps": 1
+        }
+      },
+      "schedule": {
+        "priority": {
+          "priority_class": "normal",
+          "relative_value": 50,
+          "aging_allowed": true,
+          "deadline": "2026-10-17T14:10:00Z"
+        },
+        "distribution": {
+          "policy_id": "allocation-strict",
+          "version": 1,
+          "fidelity": "strict",
+          "rules": [
+            {
+              "rule_id": "senior-cloud",
+              "roles": [
+                "senior"
+              ],
+              "phases": [
+                "*"
+              ],
+              "axis": "inference_location",
+              "eligible_classes": [
+                "cloud"
+              ],
+              "target_weights": {},
+              "enforcement": "hard",
+              "unit": "model_decisions",
+              "accounting_scope": "run",
+              "accounting_group_id": "run-demo/senior-cloud",
+              "window_slots": 20,
+              "max_total_variation": 0.05,
+              "rounding_slack_slots": 1,
+              "infeasible_action": "wait_until_deadline"
+            },
+            {
+              "rule_id": "worker-local",
+              "roles": [
+                "worker"
+              ],
+              "phases": [
+                "*"
+              ],
+              "axis": "inference_location",
+              "eligible_classes": [
+                "local"
+              ],
+              "target_weights": {},
+              "enforcement": "hard",
+              "unit": "model_decisions",
+              "accounting_scope": "run",
+              "accounting_group_id": "run-demo/worker-local",
+              "window_slots": 20,
+              "max_total_variation": 0.05,
+              "rounding_slack_slots": 1,
+              "infeasible_action": "wait_until_deadline"
+            }
+          ],
+          "on_unmatched": "reject",
+          "max_rebindings": 0,
+          "minimum_residence_ms": 0,
+          "migration_boundaries": [
+            "before_start",
+            "new_attempt"
+          ]
+        },
+        "data_policy": {
+          "policy_ref": "data-policy-1",
+          "allowed_inference_locations": [
+            "local",
+            "cloud"
+          ],
+          "allowed_destination_classes": [
+            "approved-endpoints"
+          ],
+          "maximum_classification": "project"
+        },
+        "requirements": [
+          {
+            "feature_id": "runtime/model-query",
+            "version": "1",
+            "necessity": "required"
+          }
+        ],
+        "prerequisites": [],
+        "resource_hints": [
+          {
+            "resource_id": "memory",
+            "domain_id": "host-ram",
+            "unit": "bytes",
+            "amount": 67108864.0,
+            "guarantee": "estimate",
+            "lifetime": "operation"
+          }
+        ],
+        "conflict_keys": [
+          "workspace/worker-1"
+        ],
+        "locality_refs": [
+          "repo-demo"
+        ]
+      },
+      "output_schema_ref": "schema/task-report/1",
+      "resume_strategy": "portable_context"
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "process-spec-flex-example",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-flex"
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "process_spec",
+      "process_id": "worker-flex",
+      "parent_process_id": "controller-1",
+      "program": {
+        "program_id": "polyinference-coding",
+        "program_version": "proposal-1",
+        "graph_digest": "sha256:210e3f5c2b3e2894a67fc9343da2b9a003b089ce54917b5ada725749704e7bac",
+        "state_schema_version": "1.0",
+        "prompt_bundle_digest": "sha256:fc9eb607c91880dc0f55b213fda2a4ce801e8fda2c2239bc2d4020d6e697a87c"
+      },
+      "entry_point": "coding_worker",
+      "role": "worker",
+      "input_refs": [
+        {
+          "artifact_id": "assignment-1",
+          "digest": "sha256:647a05fbc66fc97bc0192e05e5d8ac3292d46f8d8ce80b36cf5133e2d93b241d",
+          "media_type": "application/json",
+          "size_bytes": 12,
+          "classification": "project",
+          "scope": {
+            "tenant_id": "tenant-demo",
+            "project_id": "project-demo",
+            "run_id": "run-demo",
+            "process_id": null
+          }
+        }
+      ],
+      "task_spec_ref": null,
+      "attempt_id": "attempt-flex",
+      "workspace_id": "workspace-flex",
+      "grant_ref": "grant-worker-1",
+      "budget_account_ref": "budget-worker-1",
+      "limits": {
+        "max_steps": 80,
+        "max_model_calls": 20,
+        "max_repairs": 3,
+        "max_input_tokens_per_call": 16000,
+        "max_output_tokens_per_call": 2000,
+        "max_total_tokens": 100000,
+        "max_output_bytes": 2000000,
+        "max_wall_time_ms": 600000,
+        "max_api_spend_microusd": 1000000,
+        "cost_guarantee": "enforced",
+        "final_phase_reserve": {
+          "reconciliation_model_calls": 1,
+          "assessment_model_calls": 1,
+          "publication_steps": 2,
+          "cleanup_steps": 1
+        }
+      },
+      "schedule": {
+        "priority": {
+          "priority_class": "normal",
+          "relative_value": 50,
+          "aging_allowed": true,
+          "deadline": "2026-10-17T14:10:00Z"
+        },
+        "distribution": {
+          "policy_id": "allocation-flexible",
+          "version": 1,
+          "fidelity": "flexible",
+          "rules": [
+            {
+              "rule_id": "worker-flex",
+              "roles": [
+                "worker"
+              ],
+              "phases": [
+                "*"
+              ],
+              "axis": "inference_location",
+              "eligible_classes": [
+                "local",
+                "cloud"
+              ],
+              "target_weights": {
+                "local": 0.8,
+                "cloud": 0.2
+              },
+              "enforcement": "soft",
+              "unit": "model_decisions",
+              "accounting_scope": "run",
+              "accounting_group_id": "run-demo/worker-flex",
+              "window_slots": 20,
+              "max_total_variation": 0.05,
+              "rounding_slack_slots": 1,
+              "infeasible_action": "wait_until_deadline"
+            }
+          ],
+          "on_unmatched": "reject",
+          "max_rebindings": 2,
+          "minimum_residence_ms": 30000,
+          "migration_boundaries": [
+            "before_start",
+            "settled_operation",
+            "new_attempt"
+          ]
+        },
+        "data_policy": {
+          "policy_ref": "data-policy-1",
+          "allowed_inference_locations": [
+            "local",
+            "cloud"
+          ],
+          "allowed_destination_classes": [
+            "approved-endpoints"
+          ],
+          "maximum_classification": "project"
+        },
+        "requirements": [
+          {
+            "feature_id": "runtime/model-query",
+            "version": "1",
+            "necessity": "required"
+          }
+        ],
+        "prerequisites": [],
+        "resource_hints": [
+          {
+            "resource_id": "memory",
+            "domain_id": "host-ram",
+            "unit": "bytes",
+            "amount": 67108864.0,
+            "guarantee": "estimate",
+            "lifetime": "operation"
+          }
+        ],
+        "conflict_keys": [
+          "workspace/worker-1"
+        ],
+        "locality_refs": [
+          "repo-demo"
+        ]
+      },
+      "output_schema_ref": "schema/task-report/1",
+      "resume_strategy": "portable_context"
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "process-spec-bounded-example",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-bounded"
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "process_spec",
+      "process_id": "worker-bounded",
+      "parent_process_id": "controller-1",
+      "program": {
+        "program_id": "polyinference-coding",
+        "program_version": "proposal-1",
+        "graph_digest": "sha256:210e3f5c2b3e2894a67fc9343da2b9a003b089ce54917b5ada725749704e7bac",
+        "state_schema_version": "1.0",
+        "prompt_bundle_digest": "sha256:fc9eb607c91880dc0f55b213fda2a4ce801e8fda2c2239bc2d4020d6e697a87c"
+      },
+      "entry_point": "coding_worker",
+      "role": "worker",
+      "input_refs": [
+        {
+          "artifact_id": "assignment-1",
+          "digest": "sha256:647a05fbc66fc97bc0192e05e5d8ac3292d46f8d8ce80b36cf5133e2d93b241d",
+          "media_type": "application/json",
+          "size_bytes": 12,
+          "classification": "project",
+          "scope": {
+            "tenant_id": "tenant-demo",
+            "project_id": "project-demo",
+            "run_id": "run-demo",
+            "process_id": null
+          }
+        }
+      ],
+      "task_spec_ref": null,
+      "attempt_id": "attempt-bounded",
+      "workspace_id": "workspace-bounded",
+      "grant_ref": "grant-worker-1",
+      "budget_account_ref": "budget-worker-1",
+      "limits": {
+        "max_steps": 80,
+        "max_model_calls": 20,
+        "max_repairs": 3,
+        "max_input_tokens_per_call": 16000,
+        "max_output_tokens_per_call": 2000,
+        "max_total_tokens": 100000,
+        "max_output_bytes": 2000000,
+        "max_wall_time_ms": 600000,
+        "max_api_spend_microusd": 1000000,
+        "cost_guarantee": "enforced",
+        "final_phase_reserve": {
+          "reconciliation_model_calls": 1,
+          "assessment_model_calls": 1,
+          "publication_steps": 2,
+          "cleanup_steps": 1
+        }
+      },
+      "schedule": {
+        "priority": {
+          "priority_class": "normal",
+          "relative_value": 50,
+          "aging_allowed": true,
+          "deadline": "2026-10-17T14:10:00Z"
+        },
+        "distribution": {
+          "policy_id": "allocation-bounded",
+          "version": 1,
+          "fidelity": "bounded",
+          "rules": [
+            {
+              "rule_id": "worker-bounded",
+              "roles": [
+                "worker"
+              ],
+              "phases": [
+                "*"
+              ],
+              "axis": "inference_location",
+              "eligible_classes": [
+                "local",
+                "cloud"
+              ],
+              "target_weights": {
+                "local": 0.8,
+                "cloud": 0.2
+              },
+              "enforcement": "hard",
+              "unit": "model_decisions",
+              "accounting_scope": "run",
+              "accounting_group_id": "run-demo/worker-bounded",
+              "window_slots": 20,
+              "max_total_variation": 0.05,
+              "rounding_slack_slots": 1,
+              "infeasible_action": "wait_until_deadline"
+            }
+          ],
+          "on_unmatched": "reject",
+          "max_rebindings": 2,
+          "minimum_residence_ms": 30000,
+          "migration_boundaries": [
+            "before_start",
+            "settled_operation",
+            "new_attempt"
+          ]
+        },
+        "data_policy": {
+          "policy_ref": "data-policy-1",
+          "allowed_inference_locations": [
+            "local",
+            "cloud"
+          ],
+          "allowed_destination_classes": [
+            "approved-endpoints"
+          ],
+          "maximum_classification": "project"
+        },
+        "requirements": [
+          {
+            "feature_id": "runtime/model-query",
+            "version": "1",
+            "necessity": "required"
+          }
+        ],
+        "prerequisites": [],
+        "resource_hints": [
+          {
+            "resource_id": "memory",
+            "domain_id": "host-ram",
+            "unit": "bytes",
+            "amount": 67108864.0,
+            "guarantee": "estimate",
+            "lifetime": "operation"
+          }
+        ],
+        "conflict_keys": [
+          "workspace/worker-1"
+        ],
+        "locality_refs": [
+          "repo-demo"
+        ]
+      },
+      "output_schema_ref": "schema/task-report/1",
+      "resume_strategy": "portable_context"
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "query-record-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-1"
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "operation_request",
+      "operation_id": "op-model-1",
+      "logical_step_id": "worker-1/development/1",
+      "intent_digest": "sha256:fe6ddf210508a23d87acf682cb9e0558cffdbdc9e525b7c5996f69c3c3e689f4",
+      "causal_parent_ref": "attempt-1",
+      "trace_id": "trace-1",
+      "grant_ref": "grant-worker-1",
+      "owner_generation": 1,
+      "expected_process_revision": 1,
+      "expected_binding_generation": 1,
+      "schedule_ref": "process-spec-worker-1",
+      "priority_hint": null,
+      "budget_account_ref": "budget-worker-1",
+      "deadline": "2026-10-17T14:01:00Z",
+      "limits": {
+        "max_steps": 80,
+        "max_model_calls": 20,
+        "max_repairs": 3,
+        "max_input_tokens_per_call": 16000,
+        "max_output_tokens_per_call": 2000,
+        "max_total_tokens": 100000,
+        "max_output_bytes": 2000000,
+        "max_wall_time_ms": 600000,
+        "max_api_spend_microusd": 1000000,
+        "cost_guarantee": "enforced",
+        "final_phase_reserve": {
+          "reconciliation_model_calls": 1,
+          "assessment_model_calls": 1,
+          "publication_steps": 2,
+          "cleanup_steps": 1
+        }
+      },
+      "resources": [
+        {
+          "resource_id": "memory",
+          "domain_id": "host-ram",
+          "unit": "bytes",
+          "amount": 67108864.0,
+          "guarantee": "estimate",
+          "lifetime": "operation"
+        }
+      ],
+      "conflict_keys": [],
+      "safe_boundary": "settled_operation",
+      "replay_policy": "reconcile_before_retry",
+      "payload": {
+        "kind": "model_query",
+        "role": "worker",
+        "phase": "development",
+        "prompt_template_ref": "prompt/worker/develop/1",
+        "context": {
+          "view_id": "context-1",
+          "digest": "sha256:9bf558cf47fd57b0ad02a89e8b135c1ef619ddf5b842ac1746bc8a8a271cd460",
+          "parts": [
+            {
+              "part_id": "instructions-1",
+              "content": {
+                "artifact_id": "assignment-1",
+                "digest": "sha256:647a05fbc66fc97bc0192e05e5d8ac3292d46f8d8ce80b36cf5133e2d93b241d",
+                "media_type": "application/json",
+                "size_bytes": 12,
+                "classification": "project",
+                "scope": {
+                  "tenant_id": "tenant-demo",
+                  "project_id": "project-demo",
+                  "run_id": "run-demo",
+                  "process_id": null
+                }
+              },
+              "part_kind": "instruction",
+              "trust": "application",
+              "source_ref": "task-spec-1",
+              "required": true,
+              "call_id": null,
+              "derived_from": []
+            }
+          ],
+          "memory_snapshot_refs": [
+            "memory-snapshot-1"
+          ],
+          "tool_catalog_digest": "sha256:76bf9316f766fc3b1d6655c6410163e3a2fad4369b9516ae7079be2411a87d1b",
+          "maximum_input_tokens": 16000,
+          "omitted_refs": []
+        },
+        "response_schema_ref": "schema/worker-output/1",
+        "capability_requirements": [
+          {
+            "feature_id": "runtime/model-query",
+            "version": "1",
+            "necessity": "required"
+          }
+        ],
+        "temperature": 0.0,
+        "session_ref": null
+      }
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "binding-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-1"
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "binding_decision",
+      "process_id": "worker-1",
+      "operation_id": "op-model-1",
+      "generation": 1,
+      "policy_id": "allocation-strict",
+      "policy_version": 1,
+      "rule_ids": [
+        "worker-local"
+      ],
+      "selected_backend_classes": {
+        "inference_location": "local"
+      },
+      "actual_backend": {
+        "catalog_ref": "catalog-1",
+        "backend_id": "local-example",
+        "model_version": "configured-local-version",
+        "harness_version": "polyinference-worker/proposal-1",
+        "inference_location": "local",
+        "harness_location": "local",
+        "provider_session_ref": null
+      },
+      "reason": "default",
+      "distribution_before": {
+        "local": 0
+      },
+      "distribution_after": {
+        "local": 1
+      },
+      "total_variation_by_rule": {
+        "worker-local": 0.0
+      },
+      "pressure_snapshot_ref": null,
+      "safe_point_ref": "worker-1/development/1",
+      "rebuild_context": false
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "query-result-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-1"
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "operation_result",
+      "operation_id": "op-model-1",
+      "logical_step_id": "worker-1/development/1",
+      "state": "succeeded",
+      "output_refs": [
+        {
+          "artifact_id": "worker-action-1",
+          "digest": "sha256:7ba1887cdc78557af0a80b84eee88b639197205fd869694689a63550c4eee730",
+          "media_type": "application/json",
+          "size_bytes": 15,
+          "classification": "project",
+          "scope": {
+            "tenant_id": "tenant-demo",
+            "project_id": "project-demo",
+            "run_id": "run-demo",
+            "process_id": null
+          }
+        }
+      ],
+      "paired_call_id": null,
+      "binding_ref": "binding-1",
+      "binding_generation": 1,
+      "actual_backend": {
+        "catalog_ref": "catalog-1",
+        "backend_id": "local-example",
+        "model_version": "configured-local-version",
+        "harness_version": "polyinference-worker/proposal-1",
+        "inference_location": "local",
+        "harness_location": "local",
+        "provider_session_ref": null
+      },
+      "usage": [
+        {
+          "metric": "input_tokens",
+          "unit": "tokens",
+          "value": 1200.0,
+          "provenance": "provider_reported",
+          "account_scope_ref": "account-local"
+        }
+      ],
+      "execution_termination": "confirmed_stopped",
+      "effects": "known",
+      "started_at": "2026-10-17T14:00:00Z",
+      "finished_at": "2026-10-17T14:00:03Z",
+      "error": null,
+      "continuation_ref": null
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "attempt-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-1"
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "task_attempt",
+      "task_spec_ref": "task-spec-1",
+      "process_spec_ref": "process-spec-worker-1",
+      "workspace_id": "workspace-1",
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "previous_attempt_ref": null,
+      "execution": "completed",
+      "report_ref": "report-1",
+      "stop_reason": null
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "report-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-1"
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "task_report",
+      "task_spec_ref": "task-spec-1",
+      "attempt_id": "attempt-1",
+      "process_id": "worker-1",
+      "plan_ref": "plan-1",
+      "execution": "completed",
+      "resolution": "unresolved",
+      "verdict": "successful",
+      "stop_reason": null,
+      "assessment_turn_refs": [
+        "op-assessment-1"
+      ],
+      "assessment_summary": {
+        "artifact_id": "assessment-summary-1",
+        "digest": "sha256:b269b4deab132b2bc9372a472b8cb9537268f158f7cce669ea3e891f7e14ecef",
+        "media_type": "application/json",
+        "size_bytes": 20,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "original_base": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "captured_head": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "final_code": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-candidate",
+        "effective_tree_digest": "sha256:4d4b0facd58f3ce7596d35072a7d0b635231628c71228f07d3d08166494f6023",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "candidate_commit_id": "git-candidate",
+      "preserved_private_delta_ref": "delta-1",
+      "publication_policy": "reviewed_only",
+      "code_location": "private",
+      "evidence": [
+        {
+          "evidence_id": "check-1",
+          "criterion_ref": "acceptance-1/check-1",
+          "checked_code": {
+            "repository_id": "repo-demo",
+            "commit_id": null,
+            "effective_tree_digest": "sha256:4d4b0facd58f3ce7596d35072a7d0b635231628c71228f07d3d08166494f6023",
+            "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+            "includes_uncommitted_inputs": true
+          },
+          "status": "passed",
+          "exit_code": 0,
+          "invocation": {
+            "artifact_id": "check-command-1",
+            "digest": "sha256:2245d8566138ea45ff3c906f11de1a33415728471a123304f6c13e06f5ed710a",
+            "media_type": "application/json",
+            "size_bytes": 15,
+            "classification": "project",
+            "scope": {
+              "tenant_id": "tenant-demo",
+              "project_id": "project-demo",
+              "run_id": "run-demo",
+              "process_id": null
+            }
+          },
+          "output": {
+            "artifact_id": "check-output-1",
+            "digest": "sha256:5fbd54d72ebbff4b467463ba8eecb881f6646bc46685234943d6c33d655087c9",
+            "media_type": "application/json",
+            "size_bytes": 14,
+            "classification": "project",
+            "scope": {
+              "tenant_id": "tenant-demo",
+              "project_id": "project-demo",
+              "run_id": "run-demo",
+              "process_id": null
+            }
+          },
+          "completed_at": "2026-10-17T14:05:00Z"
+        }
+      ],
+      "hazard_refs": [],
+      "usage": [
+        {
+          "metric": "input_tokens",
+          "unit": "tokens",
+          "value": 1200.0,
+          "provenance": "provider_reported",
+          "account_scope_ref": "account-local"
+        }
+      ]
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "memory-item-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": null
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "memory_item",
+      "memory_id": "memory-project-notes",
+      "semantic_kind": "project_fact",
+      "content": {
+        "artifact_id": "project-note-1",
+        "digest": "sha256:4a8b56c0df495c1a3457600a55569495bdc55a864a5cbd80c2708c5c947545a5",
+        "media_type": "application/json",
+        "size_bytes": 14,
+        "classification": "project",
+        "scope": {
+          "tenant_id": "tenant-demo",
+          "project_id": "project-demo",
+          "run_id": "run-demo",
+          "process_id": null
+        }
+      },
+      "author_ref": "senior-initial-1",
+      "trust": "model",
+      "provenance_refs": [
+        "repo-observation-1"
+      ],
+      "applicable_code": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "valid_until": null,
+      "supersedes_ref": null,
+      "tombstone": false,
+      "access_policy_ref": "project-read-policy",
+      "retention_policy_ref": "retain-run",
+      "tier_preference": "warm",
+      "pinned_by_refs": [
+        "memory-snapshot-1"
+      ],
+      "hazard_code_location": null
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "memory-snapshot-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": null
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "memory_snapshot",
+      "query_operation_ref": "op-memory-1",
+      "index_version_ref": null,
+      "items": [
+        {
+          "item_ref": "memory-item-1",
+          "item_revision": 1,
+          "score": null,
+          "reason": "Pinned sprint notes"
+        }
+      ],
+      "omitted_refs": [],
+      "missing_required_refs": [],
+      "truncated": false,
+      "content_bytes": 14,
+      "estimated_tokens": 12
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "steering-barrier-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": null
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "steering_barrier",
+      "starts_closed": true,
+      "steering_received_through": 1,
+      "steering_applied_through": 0,
+      "captured_worker_process_ids": [
+        "worker-1",
+        "worker-flex"
+      ],
+      "captured_plan_ref": "plan-1",
+      "planner_input_through": null
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "capability-command-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": null
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "capability_descriptor",
+      "capability_id": "builtin/command",
+      "capability_version": "1",
+      "transport_class": "direct",
+      "input_schema_digest": "sha256:a2f0db916fca146ba047711e8e91c24ba81b916f0150e3ab2ad3b632ae57f114",
+      "output_schema_digest": "sha256:9ee734a4fa5585cf6dcec46a91cb014efec07fcf147bc042baf27d3a95b31382",
+      "effect_class": "external_write",
+      "conflict_key_template_refs": [
+        "installation/global-shell",
+        "workspace/{workspace_id}"
+      ],
+      "resource_hints": [
+        {
+          "resource_id": "memory",
+          "domain_id": "host-ram",
+          "unit": "bytes",
+          "amount": 67108864.0,
+          "guarantee": "estimate",
+          "lifetime": "operation"
+        }
+      ],
+      "access_policy_ref": "command-policy",
+      "replay_guarantee": "reconcile",
+      "cancellation_guarantee": "request_only",
+      "server_class_ref": null,
+      "negotiated_protocol_version": null,
+      "negotiated_features": []
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "backend-local-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": null
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "backend_descriptor",
+      "backend_id": "local-example",
+      "backend_classes": [
+        "local",
+        "host-worker"
+      ],
+      "execution_kind": "model_query",
+      "inference_location": "local",
+      "harness_location": "local",
+      "model_version": "configured-local-version",
+      "harness_version": "polyinference-worker/proposal-1",
+      "max_context_tokens": 32000,
+      "max_output_tokens": 4000,
+      "requirements_satisfied": [
+        {
+          "feature_id": "runtime/model-query",
+          "version": "1",
+          "necessity": "required"
+        }
+      ],
+      "account_scope_ref": "account-local",
+      "tool_brokerage": "host_brokered",
+      "enforced_limit_names": [
+        "output_tokens",
+        "wall_time"
+      ],
+      "observed_usage_metrics": [
+        "input_tokens",
+        "output_tokens"
+      ],
+      "cancellation_guarantee": "request_only",
+      "reconciliation_strategy_ref": "local-server/status",
+      "resume_modes": [
+        "portable_context",
+        "new_attempt"
+      ],
+      "migration_compatibility_ref": null,
+      "mutable_session_concurrency": 1
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "pressure-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": null
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "pressure_snapshot",
+      "source_ref": "provider-adapter-demo",
+      "observed_at": "2026-10-17T14:00:00Z",
+      "stale_after_ms": 30000,
+      "signals": [
+        {
+          "metric": "subscription_remaining",
+          "domain_ref": "account-cloud-demo",
+          "value": null,
+          "unit": "provider_units",
+          "observation": "unknown",
+          "retry_at": null
+        }
+      ],
+      "reservation_snapshot_ref": "reservations-1"
+    },
+    {
+      "contract_version": "1.0",
+      "record_id": "continuation-1",
+      "revision": 1,
+      "scope": {
+        "tenant_id": "tenant-demo",
+        "project_id": "project-demo",
+        "run_id": "run-demo",
+        "process_id": "worker-1"
+      },
+      "created_at": "2026-10-17T14:00:00Z",
+      "required_features": [],
+      "extensions": {},
+      "kind": "continuation",
+      "process_spec_ref": "process-spec-worker-1",
+      "program": {
+        "program_id": "polyinference-coding",
+        "program_version": "proposal-1",
+        "graph_digest": "sha256:210e3f5c2b3e2894a67fc9343da2b9a003b089ce54917b5ada725749704e7bac",
+        "state_schema_version": "1.0",
+        "prompt_bundle_digest": "sha256:fc9eb607c91880dc0f55b213fda2a4ce801e8fda2c2239bc2d4020d6e697a87c"
+      },
+      "thread_id": "worker-1",
+      "checkpoint_namespace": "",
+      "checkpoint_id": "checkpoint-demo",
+      "owner_generation": 1,
+      "binding_generation": 1,
+      "logical_step_id": "worker-1/development/1",
+      "phase": "development",
+      "pinned_record_versions": [
+        {
+          "record_ref": "task-spec-1",
+          "revision": 1
+        }
+      ],
+      "workspace_id": "workspace-1",
+      "code": {
+        "repository_id": "repo-demo",
+        "commit_id": "git-base",
+        "effective_tree_digest": "sha256:79077d693594a44d6ca95d7c40226529ab7a8cda7daa3946257bf505de164b84",
+        "environment_digest": "sha256:61ddabbff1eb14c794985b3ff77ff0b7ab6df45dd053690b32ab4a07d36801e2",
+        "includes_uncommitted_inputs": false
+      },
+      "trajectory_ref": "trajectory-1",
+      "context_view_ref": "context-1",
+      "pending_operations": [
+        "op-model-1"
+      ],
+      "permit_refs": [],
+      "reservation_refs": [
+        "reservation-1"
+      ],
+      "budget_ledger_ref": "budget-worker-1",
+      "memory_snapshot_refs": [
+        "memory-snapshot-1"
+      ],
+      "event_cursor": 5,
+      "pause_reason": "illustrative-settled-boundary"
+    }
+  ]
+}

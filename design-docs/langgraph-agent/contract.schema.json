@@ -1,0 +1,5458 @@
+{
+  "$defs": {
+    "ActualBackend": {
+      "additionalProperties": false,
+      "properties": {
+        "catalog_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Catalog Ref",
+          "type": "string"
+        },
+        "backend_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Backend Id",
+          "type": "string"
+        },
+        "model_version": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "harness_version": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Harness Version",
+          "type": "string"
+        },
+        "inference_location": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Inference Location",
+          "type": "string"
+        },
+        "harness_location": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Harness Location",
+          "type": "string"
+        },
+        "provider_session_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Provider Session Ref"
+        }
+      },
+      "required": [
+        "catalog_ref",
+        "backend_id",
+        "model_version",
+        "harness_version",
+        "inference_location",
+        "harness_location",
+        "provider_session_ref"
+      ],
+      "title": "ActualBackend",
+      "type": "object"
+    },
+    "AgentJob": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "agent_job",
+          "default": "agent_job",
+          "enum": [
+            "agent_job"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "role": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Role",
+          "type": "string"
+        },
+        "objective": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "context": {
+          "$ref": "#/$defs/ContextView"
+        },
+        "workspace_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Workspace Id",
+          "type": "string"
+        },
+        "allowed_capabilities": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Allowed Capabilities",
+          "type": "array"
+        },
+        "required_phase_protocol": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Required Phase Protocol",
+          "type": "string"
+        },
+        "required_guarantees": {
+          "items": {
+            "$ref": "#/$defs/Requirement"
+          },
+          "title": "Required Guarantees",
+          "type": "array"
+        },
+        "response_schema_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Response Schema Ref",
+          "type": "string"
+        },
+        "session_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Session Ref"
+        }
+      },
+      "required": [
+        "role",
+        "objective",
+        "context",
+        "workspace_id",
+        "allowed_capabilities",
+        "required_phase_protocol",
+        "required_guarantees",
+        "response_schema_ref",
+        "session_ref"
+      ],
+      "title": "AgentJob",
+      "type": "object"
+    },
+    "AgentProgram": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "agent_program",
+          "default": "agent_program",
+          "enum": [
+            "agent_program"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "program": {
+          "$ref": "#/$defs/ProgramRef"
+        },
+        "entry_points": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Entry Points",
+          "type": "array"
+        },
+        "required_runtime_features": {
+          "items": {
+            "$ref": "#/$defs/Requirement"
+          },
+          "title": "Required Runtime Features",
+          "type": "array"
+        },
+        "optional_runtime_features": {
+          "items": {
+            "$ref": "#/$defs/Requirement"
+          },
+          "title": "Optional Runtime Features",
+          "type": "array"
+        },
+        "migration_registry_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Migration Registry Ref"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "program",
+        "entry_points",
+        "required_runtime_features",
+        "optional_runtime_features",
+        "migration_registry_ref"
+      ],
+      "title": "AgentProgram",
+      "type": "object"
+    },
+    "ArtifactRef": {
+      "additionalProperties": false,
+      "properties": {
+        "artifact_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Artifact Id",
+          "type": "string"
+        },
+        "digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Digest",
+          "type": "string"
+        },
+        "media_type": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Media Type",
+          "type": "string"
+        },
+        "size_bytes": {
+          "minimum": 0,
+          "title": "Size Bytes",
+          "type": "integer"
+        },
+        "classification": {
+          "enum": [
+            "public",
+            "project",
+            "restricted"
+          ],
+          "title": "Classification",
+          "type": "string"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        }
+      },
+      "required": [
+        "artifact_id",
+        "digest",
+        "media_type",
+        "size_bytes",
+        "classification",
+        "scope"
+      ],
+      "title": "ArtifactRef",
+      "type": "object"
+    },
+    "BackendDescriptor": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "backend_descriptor",
+          "default": "backend_descriptor",
+          "enum": [
+            "backend_descriptor"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "backend_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Backend Id",
+          "type": "string"
+        },
+        "backend_classes": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Backend Classes",
+          "type": "array"
+        },
+        "execution_kind": {
+          "enum": [
+            "model_query",
+            "agent_job"
+          ],
+          "title": "Execution Kind",
+          "type": "string"
+        },
+        "inference_location": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Inference Location",
+          "type": "string"
+        },
+        "harness_location": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Harness Location",
+          "type": "string"
+        },
+        "model_version": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Model Version",
+          "type": "string"
+        },
+        "harness_version": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Harness Version",
+          "type": "string"
+        },
+        "max_context_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Max Context Tokens",
+          "type": "integer"
+        },
+        "max_output_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Max Output Tokens",
+          "type": "integer"
+        },
+        "requirements_satisfied": {
+          "items": {
+            "$ref": "#/$defs/Requirement"
+          },
+          "title": "Requirements Satisfied",
+          "type": "array"
+        },
+        "account_scope_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Account Scope Ref",
+          "type": "string"
+        },
+        "tool_brokerage": {
+          "enum": [
+            "host_brokered",
+            "equivalent_verified",
+            "opaque",
+            "none"
+          ],
+          "title": "Tool Brokerage",
+          "type": "string"
+        },
+        "enforced_limit_names": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Enforced Limit Names",
+          "type": "array"
+        },
+        "observed_usage_metrics": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Observed Usage Metrics",
+          "type": "array"
+        },
+        "cancellation_guarantee": {
+          "enum": [
+            "confirmed",
+            "request_only",
+            "unsupported"
+          ],
+          "title": "Cancellation Guarantee",
+          "type": "string"
+        },
+        "reconciliation_strategy_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reconciliation Strategy Ref"
+        },
+        "resume_modes": {
+          "items": {
+            "enum": [
+              "portable_context",
+              "native_session",
+              "new_attempt"
+            ],
+            "type": "string"
+          },
+          "title": "Resume Modes",
+          "type": "array"
+        },
+        "migration_compatibility_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Migration Compatibility Ref"
+        },
+        "mutable_session_concurrency": {
+          "exclusiveMinimum": 0,
+          "title": "Mutable Session Concurrency",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "backend_id",
+        "backend_classes",
+        "execution_kind",
+        "inference_location",
+        "harness_location",
+        "model_version",
+        "harness_version",
+        "max_context_tokens",
+        "max_output_tokens",
+        "requirements_satisfied",
+        "account_scope_ref",
+        "tool_brokerage",
+        "enforced_limit_names",
+        "observed_usage_metrics",
+        "cancellation_guarantee",
+        "reconciliation_strategy_ref",
+        "resume_modes",
+        "migration_compatibility_ref",
+        "mutable_session_concurrency"
+      ],
+      "title": "BackendDescriptor",
+      "type": "object"
+    },
+    "BindingDecision": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "binding_decision",
+          "default": "binding_decision",
+          "enum": [
+            "binding_decision"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "process_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Process Id",
+          "type": "string"
+        },
+        "operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "generation": {
+          "exclusiveMinimum": 0,
+          "title": "Generation",
+          "type": "integer"
+        },
+        "policy_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Policy Id",
+          "type": "string"
+        },
+        "policy_version": {
+          "exclusiveMinimum": 0,
+          "title": "Policy Version",
+          "type": "integer"
+        },
+        "rule_ids": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Rule Ids",
+          "type": "array"
+        },
+        "selected_backend_classes": {
+          "additionalProperties": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Selected Backend Classes",
+          "type": "object"
+        },
+        "actual_backend": {
+          "$ref": "#/$defs/ActualBackend"
+        },
+        "reason": {
+          "enum": [
+            "default",
+            "pressure",
+            "deadline",
+            "availability",
+            "manual",
+            "capability_fit"
+          ],
+          "title": "Reason",
+          "type": "string"
+        },
+        "distribution_before": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "title": "Distribution Before",
+          "type": "object"
+        },
+        "distribution_after": {
+          "additionalProperties": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "title": "Distribution After",
+          "type": "object"
+        },
+        "total_variation_by_rule": {
+          "additionalProperties": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "type": "number"
+          },
+          "title": "Total Variation By Rule",
+          "type": "object"
+        },
+        "pressure_snapshot_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Pressure Snapshot Ref"
+        },
+        "capability_evaluation_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Capability Evaluation Ref"
+        },
+        "safe_point_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Safe Point Ref",
+          "type": "string"
+        },
+        "rebuild_context": {
+          "title": "Rebuild Context",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "process_id",
+        "operation_id",
+        "generation",
+        "policy_id",
+        "policy_version",
+        "rule_ids",
+        "selected_backend_classes",
+        "actual_backend",
+        "reason",
+        "distribution_before",
+        "distribution_after",
+        "total_variation_by_rule",
+        "pressure_snapshot_ref",
+        "safe_point_ref",
+        "rebuild_context"
+      ],
+      "title": "BindingDecision",
+      "type": "object"
+    },
+    "CapabilityCall": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "capability_call",
+          "default": "capability_call",
+          "enum": [
+            "capability_call"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "capability_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Capability Id",
+          "type": "string"
+        },
+        "schema_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Schema Digest",
+          "type": "string"
+        },
+        "arguments": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "model_call_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Model Call Id"
+        },
+        "workspace_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Workspace Id"
+        },
+        "expected_code": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CodeRevision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effect_class": {
+          "enum": [
+            "read",
+            "private_write",
+            "shared_write",
+            "external_write"
+          ],
+          "title": "Effect Class",
+          "type": "string"
+        },
+        "reconciliation_strategy_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Reconciliation Strategy Ref"
+        }
+      },
+      "required": [
+        "capability_id",
+        "schema_digest",
+        "arguments",
+        "model_call_id",
+        "workspace_id",
+        "expected_code",
+        "effect_class",
+        "reconciliation_strategy_ref"
+      ],
+      "title": "CapabilityCall",
+      "type": "object"
+    },
+    "CapabilityDescriptor": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "capability_descriptor",
+          "default": "capability_descriptor",
+          "enum": [
+            "capability_descriptor"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "capability_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Capability Id",
+          "type": "string"
+        },
+        "capability_version": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Capability Version",
+          "type": "string"
+        },
+        "transport_class": {
+          "enum": [
+            "direct",
+            "mcp",
+            "other"
+          ],
+          "title": "Transport Class",
+          "type": "string"
+        },
+        "input_schema_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Input Schema Digest",
+          "type": "string"
+        },
+        "output_schema_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Output Schema Digest",
+          "type": "string"
+        },
+        "effect_class": {
+          "enum": [
+            "read",
+            "private_write",
+            "shared_write",
+            "external_write"
+          ],
+          "title": "Effect Class",
+          "type": "string"
+        },
+        "conflict_key_template_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Conflict Key Template Refs",
+          "type": "array"
+        },
+        "resource_hints": {
+          "items": {
+            "$ref": "#/$defs/ResourceQuantity"
+          },
+          "title": "Resource Hints",
+          "type": "array"
+        },
+        "access_policy_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Access Policy Ref",
+          "type": "string"
+        },
+        "replay_guarantee": {
+          "enum": [
+            "deduplicated",
+            "read_repeatable",
+            "reconcile",
+            "none"
+          ],
+          "title": "Replay Guarantee",
+          "type": "string"
+        },
+        "cancellation_guarantee": {
+          "enum": [
+            "confirmed",
+            "request_only",
+            "unsupported"
+          ],
+          "title": "Cancellation Guarantee",
+          "type": "string"
+        },
+        "server_class_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Server Class Ref"
+        },
+        "negotiated_protocol_version": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Negotiated Protocol Version"
+        },
+        "negotiated_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Negotiated Features",
+          "type": "array"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "capability_id",
+        "capability_version",
+        "transport_class",
+        "input_schema_digest",
+        "output_schema_digest",
+        "effect_class",
+        "conflict_key_template_refs",
+        "resource_hints",
+        "access_policy_ref",
+        "replay_guarantee",
+        "cancellation_guarantee",
+        "server_class_ref",
+        "negotiated_protocol_version",
+        "negotiated_features"
+      ],
+      "title": "CapabilityDescriptor",
+      "type": "object"
+    },
+    "CheckEvidence": {
+      "additionalProperties": false,
+      "properties": {
+        "evidence_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Evidence Id",
+          "type": "string"
+        },
+        "criterion_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Criterion Ref",
+          "type": "string"
+        },
+        "checked_code": {
+          "$ref": "#/$defs/CodeRevision"
+        },
+        "status": {
+          "enum": [
+            "passed",
+            "failed",
+            "unavailable",
+            "inconclusive"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "exit_code": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Exit Code"
+        },
+        "invocation": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "output": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "completed_at": {
+          "format": "date-time",
+          "title": "Completed At",
+          "type": "string"
+        }
+      },
+      "required": [
+        "evidence_id",
+        "criterion_ref",
+        "checked_code",
+        "status",
+        "exit_code",
+        "invocation",
+        "output",
+        "completed_at"
+      ],
+      "title": "CheckEvidence",
+      "type": "object"
+    },
+    "CodeRevision": {
+      "additionalProperties": false,
+      "properties": {
+        "repository_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Repository Id",
+          "type": "string"
+        },
+        "commit_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Commit Id"
+        },
+        "effective_tree_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Effective Tree Digest",
+          "type": "string"
+        },
+        "environment_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Environment Digest",
+          "type": "string"
+        },
+        "includes_uncommitted_inputs": {
+          "title": "Includes Uncommitted Inputs",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "repository_id",
+        "commit_id",
+        "effective_tree_digest",
+        "environment_digest",
+        "includes_uncommitted_inputs"
+      ],
+      "title": "CodeRevision",
+      "type": "object"
+    },
+    "ContextPart": {
+      "additionalProperties": false,
+      "properties": {
+        "part_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Part Id",
+          "type": "string"
+        },
+        "content": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "part_kind": {
+          "enum": [
+            "instruction",
+            "data",
+            "message",
+            "tool_call",
+            "tool_result",
+            "summary"
+          ],
+          "title": "Part Kind",
+          "type": "string"
+        },
+        "trust": {
+          "enum": [
+            "user",
+            "application",
+            "model",
+            "external_tool",
+            "retrieved"
+          ],
+          "title": "Trust",
+          "type": "string"
+        },
+        "source_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "required": {
+          "title": "Required",
+          "type": "boolean"
+        },
+        "call_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Call Id"
+        },
+        "derived_from": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Derived From",
+          "type": "array"
+        }
+      },
+      "required": [
+        "part_id",
+        "content",
+        "part_kind",
+        "trust",
+        "source_ref",
+        "required"
+      ],
+      "title": "ContextPart",
+      "type": "object"
+    },
+    "ContextView": {
+      "additionalProperties": false,
+      "properties": {
+        "view_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "View Id",
+          "type": "string"
+        },
+        "digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Digest",
+          "type": "string"
+        },
+        "parts": {
+          "items": {
+            "$ref": "#/$defs/ContextPart"
+          },
+          "title": "Parts",
+          "type": "array"
+        },
+        "memory_snapshot_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Memory Snapshot Refs",
+          "type": "array"
+        },
+        "tool_catalog_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Tool Catalog Digest",
+          "type": "string"
+        },
+        "maximum_input_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Maximum Input Tokens",
+          "type": "integer"
+        },
+        "omitted_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Omitted Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "view_id",
+        "digest",
+        "parts",
+        "memory_snapshot_refs",
+        "tool_catalog_digest",
+        "maximum_input_tokens",
+        "omitted_refs"
+      ],
+      "title": "ContextView",
+      "type": "object"
+    },
+    "Continuation": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "continuation",
+          "default": "continuation",
+          "enum": [
+            "continuation"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "process_spec_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Process Spec Ref",
+          "type": "string"
+        },
+        "program": {
+          "$ref": "#/$defs/ProgramRef"
+        },
+        "thread_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Thread Id",
+          "type": "string"
+        },
+        "checkpoint_namespace": {
+          "title": "Checkpoint Namespace",
+          "type": "string"
+        },
+        "checkpoint_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Checkpoint Id",
+          "type": "string"
+        },
+        "owner_generation": {
+          "exclusiveMinimum": 0,
+          "title": "Owner Generation",
+          "type": "integer"
+        },
+        "binding_generation": {
+          "minimum": 0,
+          "title": "Binding Generation",
+          "type": "integer"
+        },
+        "logical_step_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Logical Step Id",
+          "type": "string"
+        },
+        "phase": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Phase",
+          "type": "string"
+        },
+        "pinned_record_versions": {
+          "items": {
+            "$ref": "#/$defs/ExpectedVersion"
+          },
+          "title": "Pinned Record Versions",
+          "type": "array"
+        },
+        "workspace_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Workspace Id"
+        },
+        "code": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CodeRevision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "trajectory_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Trajectory Ref",
+          "type": "string"
+        },
+        "context_view_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Context View Ref",
+          "type": "string"
+        },
+        "pending_operations": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Pending Operations",
+          "type": "array"
+        },
+        "permit_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Permit Refs",
+          "type": "array"
+        },
+        "reservation_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Reservation Refs",
+          "type": "array"
+        },
+        "budget_ledger_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Budget Ledger Ref",
+          "type": "string"
+        },
+        "memory_snapshot_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Memory Snapshot Refs",
+          "type": "array"
+        },
+        "event_cursor": {
+          "minimum": 0,
+          "title": "Event Cursor",
+          "type": "integer"
+        },
+        "pause_reason": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Pause Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "process_spec_ref",
+        "program",
+        "thread_id",
+        "checkpoint_namespace",
+        "checkpoint_id",
+        "owner_generation",
+        "binding_generation",
+        "logical_step_id",
+        "phase",
+        "pinned_record_versions",
+        "workspace_id",
+        "code",
+        "trajectory_ref",
+        "context_view_ref",
+        "pending_operations",
+        "permit_refs",
+        "reservation_refs",
+        "budget_ledger_ref",
+        "memory_snapshot_refs",
+        "event_cursor",
+        "pause_reason"
+      ],
+      "title": "Continuation",
+      "type": "object"
+    },
+    "DataPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "policy_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Policy Ref",
+          "type": "string"
+        },
+        "allowed_inference_locations": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Allowed Inference Locations",
+          "type": "array"
+        },
+        "allowed_destination_classes": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Allowed Destination Classes",
+          "type": "array"
+        },
+        "maximum_classification": {
+          "enum": [
+            "public",
+            "project",
+            "restricted"
+          ],
+          "title": "Maximum Classification",
+          "type": "string"
+        }
+      },
+      "required": [
+        "policy_ref",
+        "allowed_inference_locations",
+        "allowed_destination_classes",
+        "maximum_classification"
+      ],
+      "title": "DataPolicy",
+      "type": "object"
+    },
+    "DistributionPolicy": {
+      "additionalProperties": false,
+      "properties": {
+        "policy_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Policy Id",
+          "type": "string"
+        },
+        "version": {
+          "exclusiveMinimum": 0,
+          "title": "Version",
+          "type": "integer"
+        },
+        "fidelity": {
+          "enum": [
+            "strict",
+            "bounded",
+            "flexible"
+          ],
+          "title": "Fidelity",
+          "type": "string"
+        },
+        "rules": {
+          "items": {
+            "$ref": "#/$defs/DistributionRule"
+          },
+          "minItems": 1,
+          "title": "Rules",
+          "type": "array"
+        },
+        "on_unmatched": {
+          "const": "reject",
+          "default": "reject",
+          "enum": [
+            "reject"
+          ],
+          "title": "On Unmatched",
+          "type": "string"
+        },
+        "max_rebindings": {
+          "minimum": 0,
+          "title": "Max Rebindings",
+          "type": "integer"
+        },
+        "minimum_residence_ms": {
+          "minimum": 0,
+          "title": "Minimum Residence Ms",
+          "type": "integer"
+        },
+        "migration_boundaries": {
+          "items": {
+            "enum": [
+              "before_start",
+              "settled_operation",
+              "new_attempt"
+            ],
+            "type": "string"
+          },
+          "title": "Migration Boundaries",
+          "type": "array"
+        }
+      },
+      "required": [
+        "policy_id",
+        "version",
+        "fidelity",
+        "rules",
+        "max_rebindings",
+        "minimum_residence_ms",
+        "migration_boundaries"
+      ],
+      "title": "DistributionPolicy",
+      "type": "object"
+    },
+    "DistributionRule": {
+      "additionalProperties": false,
+      "properties": {
+        "rule_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Rule Id",
+          "type": "string"
+        },
+        "roles": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Roles",
+          "type": "array"
+        },
+        "phases": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Phases",
+          "type": "array"
+        },
+        "axis": {
+          "enum": [
+            "inference_location",
+            "harness_class"
+          ],
+          "title": "Axis",
+          "type": "string"
+        },
+        "eligible_classes": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Eligible Classes",
+          "type": "array"
+        },
+        "target_weights": {
+          "additionalProperties": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "type": "number"
+          },
+          "title": "Target Weights",
+          "type": "object"
+        },
+        "enforcement": {
+          "enum": [
+            "hard",
+            "soft"
+          ],
+          "title": "Enforcement",
+          "type": "string"
+        },
+        "unit": {
+          "enum": [
+            "model_decisions",
+            "agent_jobs"
+          ],
+          "title": "Unit",
+          "type": "string"
+        },
+        "accounting_scope": {
+          "enum": [
+            "process",
+            "run",
+            "group"
+          ],
+          "title": "Accounting Scope",
+          "type": "string"
+        },
+        "accounting_group_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Accounting Group Id",
+          "type": "string"
+        },
+        "window_slots": {
+          "exclusiveMinimum": 0,
+          "title": "Window Slots",
+          "type": "integer"
+        },
+        "max_total_variation": {
+          "maximum": 1.0,
+          "minimum": 0.0,
+          "title": "Max Total Variation",
+          "type": "number"
+        },
+        "rounding_slack_slots": {
+          "minimum": 0,
+          "title": "Rounding Slack Slots",
+          "type": "integer"
+        },
+        "infeasible_action": {
+          "enum": [
+            "wait_until_deadline",
+            "reject"
+          ],
+          "title": "Infeasible Action",
+          "type": "string"
+        }
+      },
+      "required": [
+        "rule_id",
+        "roles",
+        "phases",
+        "axis",
+        "eligible_classes",
+        "enforcement",
+        "unit",
+        "accounting_scope",
+        "accounting_group_id",
+        "window_slots",
+        "max_total_variation",
+        "rounding_slack_slots",
+        "infeasible_action"
+      ],
+      "title": "DistributionRule",
+      "type": "object"
+    },
+    "DocumentationBatch": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "documentation_batch",
+          "default": "documentation_batch",
+          "enum": [
+            "documentation_batch"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "from_cursor_exclusive": {
+          "minimum": 0,
+          "title": "From Cursor Exclusive",
+          "type": "integer"
+        },
+        "through_cursor_inclusive": {
+          "minimum": 0,
+          "title": "Through Cursor Inclusive",
+          "type": "integer"
+        },
+        "input_event_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Input Event Refs",
+          "type": "array"
+        },
+        "captured_code": {
+          "$ref": "#/$defs/CodeRevision"
+        },
+        "previous_doc_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Previous Doc Ref",
+          "type": "string"
+        },
+        "update_task_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Update Task Ref"
+        },
+        "state": {
+          "enum": [
+            "pending",
+            "active",
+            "published",
+            "failed"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "published_doc_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Published Doc Ref"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "from_cursor_exclusive",
+        "through_cursor_inclusive",
+        "input_event_refs",
+        "captured_code",
+        "previous_doc_ref",
+        "update_task_ref",
+        "state",
+        "published_doc_ref"
+      ],
+      "title": "DocumentationBatch",
+      "type": "object"
+    },
+    "ErrorDetail": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "maxLength": 4000,
+          "title": "Message",
+          "type": "string"
+        },
+        "retryable_after_reconciliation": {
+          "title": "Retryable After Reconciliation",
+          "type": "boolean"
+        },
+        "retry_after_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Retry After Ms"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "retryable_after_reconciliation",
+        "retry_after_ms"
+      ],
+      "title": "ErrorDetail",
+      "type": "object"
+    },
+    "ExpectedVersion": {
+      "additionalProperties": false,
+      "properties": {
+        "record_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Ref",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "record_ref",
+        "revision"
+      ],
+      "title": "ExpectedVersion",
+      "type": "object"
+    },
+    "Feature": {
+      "additionalProperties": false,
+      "properties": {
+        "feature_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Feature Id",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "feature_id",
+        "version"
+      ],
+      "title": "Feature",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "Limits": {
+      "additionalProperties": false,
+      "properties": {
+        "max_steps": {
+          "exclusiveMinimum": 0,
+          "title": "Max Steps",
+          "type": "integer"
+        },
+        "max_model_calls": {
+          "exclusiveMinimum": 0,
+          "title": "Max Model Calls",
+          "type": "integer"
+        },
+        "max_repairs": {
+          "minimum": 0,
+          "title": "Max Repairs",
+          "type": "integer"
+        },
+        "max_input_tokens_per_call": {
+          "exclusiveMinimum": 0,
+          "title": "Max Input Tokens Per Call",
+          "type": "integer"
+        },
+        "max_output_tokens_per_call": {
+          "exclusiveMinimum": 0,
+          "title": "Max Output Tokens Per Call",
+          "type": "integer"
+        },
+        "max_total_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Max Total Tokens",
+          "type": "integer"
+        },
+        "max_output_bytes": {
+          "exclusiveMinimum": 0,
+          "title": "Max Output Bytes",
+          "type": "integer"
+        },
+        "max_wall_time_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Max Wall Time Ms",
+          "type": "integer"
+        },
+        "max_api_spend_microusd": {
+          "minimum": 0,
+          "title": "Max Api Spend Microusd",
+          "type": "integer"
+        },
+        "cost_guarantee": {
+          "enum": [
+            "enforced",
+            "estimate"
+          ],
+          "title": "Cost Guarantee",
+          "type": "string"
+        },
+        "final_phase_reserve": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/PhaseReserve"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        }
+      },
+      "required": [
+        "max_steps",
+        "max_model_calls",
+        "max_repairs",
+        "max_input_tokens_per_call",
+        "max_output_tokens_per_call",
+        "max_total_tokens",
+        "max_output_bytes",
+        "max_wall_time_ms",
+        "max_api_spend_microusd",
+        "cost_guarantee"
+      ],
+      "title": "Limits",
+      "type": "object"
+    },
+    "MemoryItem": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "memory_item",
+          "default": "memory_item",
+          "enum": [
+            "memory_item"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "memory_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Memory Id",
+          "type": "string"
+        },
+        "semantic_kind": {
+          "enum": [
+            "objective",
+            "user_instruction",
+            "steering",
+            "working_summary",
+            "episode",
+            "project_fact",
+            "hazard",
+            "procedure",
+            "documentation"
+          ],
+          "title": "Semantic Kind",
+          "type": "string"
+        },
+        "content": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "author_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Author Ref",
+          "type": "string"
+        },
+        "trust": {
+          "enum": [
+            "user",
+            "application",
+            "model",
+            "external_tool",
+            "retrieved"
+          ],
+          "title": "Trust",
+          "type": "string"
+        },
+        "provenance_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Provenance Refs",
+          "type": "array"
+        },
+        "applicable_code": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CodeRevision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "valid_until": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Valid Until"
+        },
+        "supersedes_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Supersedes Ref"
+        },
+        "tombstone": {
+          "title": "Tombstone",
+          "type": "boolean"
+        },
+        "access_policy_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Access Policy Ref",
+          "type": "string"
+        },
+        "retention_policy_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Retention Policy Ref",
+          "type": "string"
+        },
+        "tier_preference": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Tier Preference",
+          "type": "string"
+        },
+        "pinned_by_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Pinned By Refs",
+          "type": "array"
+        },
+        "hazard_code_location": {
+          "anyOf": [
+            {
+              "enum": [
+                "private",
+                "provisional",
+                "reviewed",
+                "reverted"
+              ],
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Hazard Code Location"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "memory_id",
+        "semantic_kind",
+        "content",
+        "author_ref",
+        "trust",
+        "provenance_refs",
+        "applicable_code",
+        "valid_until",
+        "supersedes_ref",
+        "tombstone",
+        "access_policy_ref",
+        "retention_policy_ref",
+        "tier_preference",
+        "pinned_by_refs"
+      ],
+      "title": "MemoryItem",
+      "type": "object"
+    },
+    "MemoryQuery": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "memory_query",
+          "default": "memory_query",
+          "enum": [
+            "memory_query"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "query": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "namespace_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Namespace Refs",
+          "type": "array"
+        },
+        "semantic_kinds": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Semantic Kinds",
+          "type": "array"
+        },
+        "snapshot_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Snapshot Ref"
+        },
+        "maximum_age_ms": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Maximum Age Ms"
+        },
+        "applicable_code": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CodeRevision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "required_item_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Required Item Refs",
+          "type": "array"
+        },
+        "permitted_tiers": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Permitted Tiers",
+          "type": "array"
+        },
+        "max_items": {
+          "exclusiveMinimum": 0,
+          "title": "Max Items",
+          "type": "integer"
+        },
+        "max_bytes": {
+          "exclusiveMinimum": 0,
+          "title": "Max Bytes",
+          "type": "integer"
+        },
+        "max_tokens": {
+          "exclusiveMinimum": 0,
+          "title": "Max Tokens",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "query",
+        "namespace_refs",
+        "semantic_kinds",
+        "snapshot_ref",
+        "maximum_age_ms",
+        "applicable_code",
+        "required_item_refs",
+        "permitted_tiers",
+        "max_items",
+        "max_bytes",
+        "max_tokens"
+      ],
+      "title": "MemoryQuery",
+      "type": "object"
+    },
+    "MemorySnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "memory_snapshot",
+          "default": "memory_snapshot",
+          "enum": [
+            "memory_snapshot"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "query_operation_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Query Operation Ref",
+          "type": "string"
+        },
+        "index_version_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Index Version Ref"
+        },
+        "items": {
+          "items": {
+            "$ref": "#/$defs/RetrievedItem"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "omitted_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Omitted Refs",
+          "type": "array"
+        },
+        "missing_required_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Missing Required Refs",
+          "type": "array"
+        },
+        "truncated": {
+          "title": "Truncated",
+          "type": "boolean"
+        },
+        "content_bytes": {
+          "minimum": 0,
+          "title": "Content Bytes",
+          "type": "integer"
+        },
+        "estimated_tokens": {
+          "minimum": 0,
+          "title": "Estimated Tokens",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "query_operation_ref",
+        "index_version_ref",
+        "items",
+        "omitted_refs",
+        "missing_required_refs",
+        "truncated",
+        "content_bytes",
+        "estimated_tokens"
+      ],
+      "title": "MemorySnapshot",
+      "type": "object"
+    },
+    "ModelQuery": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "model_query",
+          "default": "model_query",
+          "enum": [
+            "model_query"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "role": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Role",
+          "type": "string"
+        },
+        "phase": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Phase",
+          "type": "string"
+        },
+        "prompt_template_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Prompt Template Ref",
+          "type": "string"
+        },
+        "context": {
+          "$ref": "#/$defs/ContextView"
+        },
+        "response_schema_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Response Schema Ref",
+          "type": "string"
+        },
+        "capability_requirements": {
+          "items": {
+            "$ref": "#/$defs/Requirement"
+          },
+          "title": "Capability Requirements",
+          "type": "array"
+        },
+        "temperature": {
+          "maximum": 2.0,
+          "minimum": 0.0,
+          "title": "Temperature",
+          "type": "number"
+        },
+        "session_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Session Ref"
+        }
+      },
+      "required": [
+        "role",
+        "phase",
+        "prompt_template_ref",
+        "context",
+        "response_schema_ref",
+        "capability_requirements",
+        "temperature",
+        "session_ref"
+      ],
+      "title": "ModelQuery",
+      "type": "object"
+    },
+    "OperationRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "operation_request",
+          "default": "operation_request",
+          "enum": [
+            "operation_request"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "logical_step_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Logical Step Id",
+          "type": "string"
+        },
+        "intent_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Intent Digest",
+          "type": "string"
+        },
+        "causal_parent_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Causal Parent Ref"
+        },
+        "trace_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Trace Id",
+          "type": "string"
+        },
+        "grant_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Grant Ref",
+          "type": "string"
+        },
+        "owner_generation": {
+          "exclusiveMinimum": 0,
+          "title": "Owner Generation",
+          "type": "integer"
+        },
+        "expected_process_revision": {
+          "exclusiveMinimum": 0,
+          "title": "Expected Process Revision",
+          "type": "integer"
+        },
+        "expected_binding_generation": {
+          "minimum": 0,
+          "title": "Expected Binding Generation",
+          "type": "integer"
+        },
+        "schedule_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Schedule Ref",
+          "type": "string"
+        },
+        "priority_hint": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/Priority"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "budget_account_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Budget Account Ref",
+          "type": "string"
+        },
+        "deadline": {
+          "format": "date-time",
+          "title": "Deadline",
+          "type": "string"
+        },
+        "limits": {
+          "$ref": "#/$defs/Limits"
+        },
+        "resources": {
+          "items": {
+            "$ref": "#/$defs/ResourceQuantity"
+          },
+          "title": "Resources",
+          "type": "array"
+        },
+        "conflict_keys": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Conflict Keys",
+          "type": "array"
+        },
+        "safe_boundary": {
+          "enum": [
+            "before_start",
+            "settled_operation",
+            "protected_phase"
+          ],
+          "title": "Safe Boundary",
+          "type": "string"
+        },
+        "replay_policy": {
+          "enum": [
+            "deduplicated",
+            "reconcile_before_retry",
+            "never_automatic"
+          ],
+          "title": "Replay Policy",
+          "type": "string"
+        },
+        "payload": {
+          "discriminator": {
+            "mapping": {
+              "agent_job": "#/$defs/AgentJob",
+              "capability_call": "#/$defs/CapabilityCall",
+              "memory_query": "#/$defs/MemoryQuery",
+              "model_query": "#/$defs/ModelQuery",
+              "publication": "#/$defs/Publication"
+            },
+            "propertyName": "kind"
+          },
+          "oneOf": [
+            {
+              "$ref": "#/$defs/ModelQuery"
+            },
+            {
+              "$ref": "#/$defs/AgentJob"
+            },
+            {
+              "$ref": "#/$defs/CapabilityCall"
+            },
+            {
+              "$ref": "#/$defs/MemoryQuery"
+            },
+            {
+              "$ref": "#/$defs/Publication"
+            }
+          ],
+          "title": "Payload"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "operation_id",
+        "logical_step_id",
+        "intent_digest",
+        "causal_parent_ref",
+        "trace_id",
+        "grant_ref",
+        "owner_generation",
+        "expected_process_revision",
+        "expected_binding_generation",
+        "schedule_ref",
+        "budget_account_ref",
+        "deadline",
+        "limits",
+        "resources",
+        "conflict_keys",
+        "safe_boundary",
+        "replay_policy",
+        "payload"
+      ],
+      "title": "OperationRequest",
+      "type": "object"
+    },
+    "OperationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "operation_result",
+          "default": "operation_result",
+          "enum": [
+            "operation_result"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "operation_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Operation Id",
+          "type": "string"
+        },
+        "logical_step_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Logical Step Id",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "prepared",
+            "submitting",
+            "active",
+            "uncertain",
+            "succeeded",
+            "failed",
+            "cancelled",
+            "denied"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "output_refs": {
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "title": "Output Refs",
+          "type": "array"
+        },
+        "paired_call_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Paired Call Id"
+        },
+        "binding_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Binding Ref"
+        },
+        "binding_generation": {
+          "minimum": 0,
+          "title": "Binding Generation",
+          "type": "integer"
+        },
+        "actual_backend": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ActualBackend"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "usage": {
+          "items": {
+            "$ref": "#/$defs/UsageMeasure"
+          },
+          "title": "Usage",
+          "type": "array"
+        },
+        "execution_termination": {
+          "enum": [
+            "not_started",
+            "active",
+            "confirmed_stopped",
+            "unknown"
+          ],
+          "title": "Execution Termination",
+          "type": "string"
+        },
+        "effects": {
+          "enum": [
+            "none",
+            "known",
+            "unknown"
+          ],
+          "title": "Effects",
+          "type": "string"
+        },
+        "started_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Started At"
+        },
+        "finished_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Finished At"
+        },
+        "error": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ErrorDetail"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "continuation_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Continuation Ref"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "operation_id",
+        "logical_step_id",
+        "state",
+        "output_refs",
+        "paired_call_id",
+        "binding_ref",
+        "binding_generation",
+        "actual_backend",
+        "usage",
+        "execution_termination",
+        "effects",
+        "started_at",
+        "finished_at",
+        "error",
+        "continuation_ref"
+      ],
+      "title": "OperationResult",
+      "type": "object"
+    },
+    "PhaseReserve": {
+      "additionalProperties": false,
+      "properties": {
+        "reconciliation_model_calls": {
+          "exclusiveMinimum": 0,
+          "title": "Reconciliation Model Calls",
+          "type": "integer"
+        },
+        "assessment_model_calls": {
+          "exclusiveMinimum": 0,
+          "title": "Assessment Model Calls",
+          "type": "integer"
+        },
+        "publication_steps": {
+          "exclusiveMinimum": 0,
+          "title": "Publication Steps",
+          "type": "integer"
+        },
+        "cleanup_steps": {
+          "exclusiveMinimum": 0,
+          "title": "Cleanup Steps",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "reconciliation_model_calls",
+        "assessment_model_calls",
+        "publication_steps",
+        "cleanup_steps"
+      ],
+      "title": "PhaseReserve",
+      "type": "object"
+    },
+    "Prerequisite": {
+      "additionalProperties": false,
+      "properties": {
+        "record_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Ref",
+          "type": "string"
+        },
+        "required_state": {
+          "enum": [
+            "settled",
+            "completed",
+            "kept",
+            "reviewed",
+            "available"
+          ],
+          "title": "Required State",
+          "type": "string"
+        },
+        "expected_revision": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Expected Revision"
+        }
+      },
+      "required": [
+        "record_ref",
+        "required_state"
+      ],
+      "title": "Prerequisite",
+      "type": "object"
+    },
+    "PressureSignal": {
+      "additionalProperties": false,
+      "properties": {
+        "metric": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Metric",
+          "type": "string"
+        },
+        "domain_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Domain Ref",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "observation": {
+          "enum": [
+            "measured",
+            "provider_reported",
+            "estimated",
+            "unknown"
+          ],
+          "title": "Observation",
+          "type": "string"
+        },
+        "retry_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Retry At"
+        }
+      },
+      "required": [
+        "metric",
+        "domain_ref",
+        "value",
+        "unit",
+        "observation",
+        "retry_at"
+      ],
+      "title": "PressureSignal",
+      "type": "object"
+    },
+    "PressureSnapshot": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "pressure_snapshot",
+          "default": "pressure_snapshot",
+          "enum": [
+            "pressure_snapshot"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "source_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Source Ref",
+          "type": "string"
+        },
+        "observed_at": {
+          "format": "date-time",
+          "title": "Observed At",
+          "type": "string"
+        },
+        "stale_after_ms": {
+          "exclusiveMinimum": 0,
+          "title": "Stale After Ms",
+          "type": "integer"
+        },
+        "signals": {
+          "items": {
+            "$ref": "#/$defs/PressureSignal"
+          },
+          "title": "Signals",
+          "type": "array"
+        },
+        "reservation_snapshot_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Reservation Snapshot Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "source_ref",
+        "observed_at",
+        "stale_after_ms",
+        "signals",
+        "reservation_snapshot_ref"
+      ],
+      "title": "PressureSnapshot",
+      "type": "object"
+    },
+    "Priority": {
+      "additionalProperties": false,
+      "properties": {
+        "priority_class": {
+          "enum": [
+            "interactive",
+            "critical",
+            "normal",
+            "background"
+          ],
+          "title": "Priority Class",
+          "type": "string"
+        },
+        "relative_value": {
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Relative Value",
+          "type": "integer"
+        },
+        "aging_allowed": {
+          "title": "Aging Allowed",
+          "type": "boolean"
+        },
+        "deadline": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Deadline"
+        }
+      },
+      "required": [
+        "priority_class",
+        "relative_value",
+        "aging_allowed",
+        "deadline"
+      ],
+      "title": "Priority",
+      "type": "object"
+    },
+    "ProcessSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "process_spec",
+          "default": "process_spec",
+          "enum": [
+            "process_spec"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "process_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Process Id",
+          "type": "string"
+        },
+        "parent_process_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parent Process Id"
+        },
+        "program": {
+          "$ref": "#/$defs/ProgramRef"
+        },
+        "entry_point": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Entry Point",
+          "type": "string"
+        },
+        "role": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Role",
+          "type": "string"
+        },
+        "input_refs": {
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "minItems": 1,
+          "title": "Input Refs",
+          "type": "array"
+        },
+        "task_spec_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Task Spec Ref"
+        },
+        "attempt_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Attempt Id"
+        },
+        "workspace_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Workspace Id"
+        },
+        "grant_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Grant Ref",
+          "type": "string"
+        },
+        "budget_account_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Budget Account Ref",
+          "type": "string"
+        },
+        "limits": {
+          "$ref": "#/$defs/Limits"
+        },
+        "schedule": {
+          "$ref": "#/$defs/ScheduleContract"
+        },
+        "output_schema_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Output Schema Ref",
+          "type": "string"
+        },
+        "resume_strategy": {
+          "enum": [
+            "portable_context",
+            "native_session",
+            "new_attempt"
+          ],
+          "title": "Resume Strategy",
+          "type": "string"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "process_id",
+        "parent_process_id",
+        "program",
+        "entry_point",
+        "role",
+        "input_refs",
+        "task_spec_ref",
+        "attempt_id",
+        "workspace_id",
+        "grant_ref",
+        "budget_account_ref",
+        "limits",
+        "schedule",
+        "output_schema_ref",
+        "resume_strategy"
+      ],
+      "title": "ProcessSpec",
+      "type": "object"
+    },
+    "ProcessStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "process_status",
+          "default": "process_status",
+          "enum": [
+            "process_status"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "process_spec_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Process Spec Ref",
+          "type": "string"
+        },
+        "state": {
+          "enum": [
+            "created",
+            "ready",
+            "running",
+            "waiting",
+            "paused",
+            "completed",
+            "failed",
+            "cancelled"
+          ],
+          "title": "State",
+          "type": "string"
+        },
+        "phase": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Phase",
+          "type": "string"
+        },
+        "owner_generation": {
+          "exclusiveMinimum": 0,
+          "title": "Owner Generation",
+          "type": "integer"
+        },
+        "binding_generation": {
+          "minimum": 0,
+          "title": "Binding Generation",
+          "type": "integer"
+        },
+        "binding_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Binding Ref"
+        },
+        "wait": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/WaitReason"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "pending_operations": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Pending Operations",
+          "type": "array"
+        },
+        "reservation_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Reservation Refs",
+          "type": "array"
+        },
+        "permit_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Permit Refs",
+          "type": "array"
+        },
+        "continuation_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Continuation Ref"
+        },
+        "terminal_result_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Terminal Result Ref"
+        },
+        "cancellation_requested": {
+          "title": "Cancellation Requested",
+          "type": "boolean"
+        },
+        "cleanup_state": {
+          "default": "none",
+          "enum": [
+            "none",
+            "pending",
+            "complete",
+            "uncertain"
+          ],
+          "title": "Cleanup State",
+          "type": "string"
+        },
+        "last_progress_at": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Last Progress At"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "process_spec_ref",
+        "state",
+        "phase",
+        "owner_generation",
+        "binding_generation",
+        "binding_ref",
+        "wait",
+        "pending_operations",
+        "reservation_refs",
+        "permit_refs",
+        "continuation_ref",
+        "terminal_result_ref",
+        "cancellation_requested"
+      ],
+      "title": "ProcessStatus",
+      "type": "object"
+    },
+    "ProgramRef": {
+      "additionalProperties": false,
+      "properties": {
+        "program_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Program Id",
+          "type": "string"
+        },
+        "program_version": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Program Version",
+          "type": "string"
+        },
+        "graph_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Graph Digest",
+          "type": "string"
+        },
+        "state_schema_version": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "State Schema Version",
+          "type": "string"
+        },
+        "prompt_bundle_digest": {
+          "pattern": "^sha256:[0-9a-f]{64}$",
+          "title": "Prompt Bundle Digest",
+          "type": "string"
+        }
+      },
+      "required": [
+        "program_id",
+        "program_version",
+        "graph_digest",
+        "state_schema_version",
+        "prompt_bundle_digest"
+      ],
+      "title": "ProgramRef",
+      "type": "object"
+    },
+    "ProjectRun": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "project_run",
+          "default": "project_run",
+          "enum": [
+            "project_run"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "program": {
+          "$ref": "#/$defs/ProgramRef"
+        },
+        "objective": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "acceptance_spec": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "catalog_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Catalog Ref",
+          "type": "string"
+        },
+        "budget_account_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Budget Account Ref",
+          "type": "string"
+        },
+        "grant_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Grant Ref",
+          "type": "string"
+        },
+        "limits": {
+          "$ref": "#/$defs/Limits"
+        },
+        "publication_policy": {
+          "enum": [
+            "reviewed_only",
+            "provisional_all"
+          ],
+          "title": "Publication Policy",
+          "type": "string"
+        },
+        "reviewed_revision": {
+          "$ref": "#/$defs/CodeRevision"
+        },
+        "provisional_revision": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CodeRevision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "plan_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Plan Ref"
+        },
+        "steering_received_through": {
+          "minimum": 0,
+          "title": "Steering Received Through",
+          "type": "integer"
+        },
+        "steering_applied_through": {
+          "minimum": 0,
+          "title": "Steering Applied Through",
+          "type": "integer"
+        },
+        "outcome": {
+          "enum": [
+            "active",
+            "paused",
+            "completed",
+            "failed",
+            "cancelled",
+            "budget_stopped"
+          ],
+          "title": "Outcome",
+          "type": "string"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "program",
+        "objective",
+        "acceptance_spec",
+        "catalog_ref",
+        "budget_account_ref",
+        "grant_ref",
+        "limits",
+        "publication_policy",
+        "reviewed_revision",
+        "provisional_revision",
+        "plan_ref",
+        "steering_received_through",
+        "steering_applied_through",
+        "outcome"
+      ],
+      "title": "ProjectRun",
+      "type": "object"
+    },
+    "Publication": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "publication",
+          "default": "publication",
+          "enum": [
+            "publication"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "expected_versions": {
+          "items": {
+            "$ref": "#/$defs/ExpectedVersion"
+          },
+          "minItems": 1,
+          "title": "Expected Versions",
+          "type": "array"
+        },
+        "expected_head": {
+          "$ref": "#/$defs/CodeRevision"
+        },
+        "candidate_commit_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Candidate Commit Id",
+          "type": "string"
+        },
+        "report_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Report Ref",
+          "type": "string"
+        },
+        "evidence_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        },
+        "policy": {
+          "enum": [
+            "reviewed_only",
+            "provisional_all"
+          ],
+          "title": "Policy",
+          "type": "string"
+        },
+        "permit_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Permit Refs",
+          "type": "array"
+        },
+        "event_intent_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Event Intent Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "expected_versions",
+        "expected_head",
+        "candidate_commit_id",
+        "report_ref",
+        "evidence_refs",
+        "policy",
+        "permit_refs",
+        "event_intent_refs"
+      ],
+      "title": "Publication",
+      "type": "object"
+    },
+    "Requirement": {
+      "additionalProperties": false,
+      "properties": {
+        "feature_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Feature Id",
+          "type": "string"
+        },
+        "version": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Version",
+          "type": "string"
+        },
+        "necessity": {
+          "enum": [
+            "required",
+            "preferred"
+          ],
+          "title": "Necessity",
+          "type": "string"
+        }
+      },
+      "required": [
+        "feature_id",
+        "version",
+        "necessity"
+      ],
+      "title": "Requirement",
+      "type": "object"
+    },
+    "ResourceQuantity": {
+      "additionalProperties": false,
+      "properties": {
+        "resource_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Resource Id",
+          "type": "string"
+        },
+        "domain_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Domain Id",
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "amount": {
+          "minimum": 0.0,
+          "title": "Amount",
+          "type": "number"
+        },
+        "guarantee": {
+          "enum": [
+            "estimate",
+            "enforced"
+          ],
+          "title": "Guarantee",
+          "type": "string"
+        },
+        "lifetime": {
+          "enum": [
+            "operation",
+            "session",
+            "process",
+            "service"
+          ],
+          "title": "Lifetime",
+          "type": "string"
+        }
+      },
+      "required": [
+        "resource_id",
+        "domain_id",
+        "unit",
+        "amount",
+        "guarantee",
+        "lifetime"
+      ],
+      "title": "ResourceQuantity",
+      "type": "object"
+    },
+    "RetrievedItem": {
+      "additionalProperties": false,
+      "properties": {
+        "item_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Item Ref",
+          "type": "string"
+        },
+        "item_revision": {
+          "exclusiveMinimum": 0,
+          "title": "Item Revision",
+          "type": "integer"
+        },
+        "score": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Score"
+        },
+        "reason": {
+          "maxLength": 1000,
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "item_ref",
+        "item_revision",
+        "score",
+        "reason"
+      ],
+      "title": "RetrievedItem",
+      "type": "object"
+    },
+    "ReviewResolution": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "review_resolution",
+          "default": "review_resolution",
+          "enum": [
+            "review_resolution"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "report_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Report Ref",
+          "type": "string"
+        },
+        "senior_query_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Senior Query Ref",
+          "type": "string"
+        },
+        "action": {
+          "enum": [
+            "keep",
+            "revert",
+            "retry",
+            "defer"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "reason": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "reviewed_resulting_code": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/CodeRevision"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "revert_commit_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Revert Commit Id"
+        },
+        "followup_task_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Followup Task Refs",
+          "type": "array"
+        },
+        "evidence_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Evidence Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "report_ref",
+        "senior_query_ref",
+        "action",
+        "reason",
+        "reviewed_resulting_code",
+        "revert_commit_id",
+        "followup_task_refs",
+        "evidence_refs"
+      ],
+      "title": "ReviewResolution",
+      "type": "object"
+    },
+    "ScheduleContract": {
+      "additionalProperties": false,
+      "properties": {
+        "priority": {
+          "$ref": "#/$defs/Priority"
+        },
+        "distribution": {
+          "$ref": "#/$defs/DistributionPolicy"
+        },
+        "data_policy": {
+          "$ref": "#/$defs/DataPolicy"
+        },
+        "capability_floor_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Capability Floor Ref"
+        },
+        "requirements": {
+          "items": {
+            "$ref": "#/$defs/Requirement"
+          },
+          "title": "Requirements",
+          "type": "array"
+        },
+        "prerequisites": {
+          "items": {
+            "$ref": "#/$defs/Prerequisite"
+          },
+          "title": "Prerequisites",
+          "type": "array"
+        },
+        "resource_hints": {
+          "items": {
+            "$ref": "#/$defs/ResourceQuantity"
+          },
+          "title": "Resource Hints",
+          "type": "array"
+        },
+        "conflict_keys": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Conflict Keys",
+          "type": "array"
+        },
+        "locality_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Locality Refs",
+          "type": "array"
+        }
+      },
+      "required": [
+        "priority",
+        "distribution",
+        "data_policy",
+        "requirements",
+        "prerequisites",
+        "resource_hints",
+        "conflict_keys",
+        "locality_refs"
+      ],
+      "title": "ScheduleContract",
+      "type": "object"
+    },
+    "Scope": {
+      "additionalProperties": false,
+      "properties": {
+        "tenant_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Tenant Id",
+          "type": "string"
+        },
+        "project_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Project Id",
+          "type": "string"
+        },
+        "run_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Run Id"
+        },
+        "process_id": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Process Id"
+        }
+      },
+      "required": [
+        "tenant_id",
+        "project_id"
+      ],
+      "title": "Scope",
+      "type": "object"
+    },
+    "SprintPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "sprint_plan",
+          "default": "sprint_plan",
+          "enum": [
+            "sprint_plan"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "parent_plan_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Parent Plan Ref"
+        },
+        "senior_query_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Senior Query Ref",
+          "type": "string"
+        },
+        "goal": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "task_spec_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Task Spec Refs",
+          "type": "array"
+        },
+        "resolution_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Resolution Refs",
+          "type": "array"
+        },
+        "input_report_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Input Report Refs",
+          "type": "array"
+        },
+        "steering_from": {
+          "minimum": 0,
+          "title": "Steering From",
+          "type": "integer"
+        },
+        "steering_through": {
+          "minimum": 0,
+          "title": "Steering Through",
+          "type": "integer"
+        },
+        "expected_head": {
+          "$ref": "#/$defs/CodeRevision"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "parent_plan_ref",
+        "senior_query_ref",
+        "goal",
+        "task_spec_refs",
+        "resolution_refs",
+        "input_report_refs",
+        "steering_from",
+        "steering_through",
+        "expected_head"
+      ],
+      "title": "SprintPlan",
+      "type": "object"
+    },
+    "SteeringBarrier": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "steering_barrier",
+          "default": "steering_barrier",
+          "enum": [
+            "steering_barrier"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "starts_closed": {
+          "title": "Starts Closed",
+          "type": "boolean"
+        },
+        "steering_received_through": {
+          "minimum": 0,
+          "title": "Steering Received Through",
+          "type": "integer"
+        },
+        "steering_applied_through": {
+          "minimum": 0,
+          "title": "Steering Applied Through",
+          "type": "integer"
+        },
+        "captured_worker_process_ids": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Captured Worker Process Ids",
+          "type": "array"
+        },
+        "captured_plan_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Captured Plan Ref",
+          "type": "string"
+        },
+        "planner_input_through": {
+          "anyOf": [
+            {
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Planner Input Through"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "starts_closed",
+        "steering_received_through",
+        "steering_applied_through",
+        "captured_worker_process_ids",
+        "captured_plan_ref",
+        "planner_input_through"
+      ],
+      "title": "SteeringBarrier",
+      "type": "object"
+    },
+    "TaskAttempt": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "task_attempt",
+          "default": "task_attempt",
+          "enum": [
+            "task_attempt"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "task_spec_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Task Spec Ref",
+          "type": "string"
+        },
+        "process_spec_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Process Spec Ref",
+          "type": "string"
+        },
+        "workspace_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Workspace Id",
+          "type": "string"
+        },
+        "original_base": {
+          "$ref": "#/$defs/CodeRevision"
+        },
+        "previous_attempt_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Previous Attempt Ref"
+        },
+        "execution": {
+          "enum": [
+            "pending",
+            "in_progress",
+            "completed",
+            "interrupted",
+            "cancelled"
+          ],
+          "title": "Execution",
+          "type": "string"
+        },
+        "report_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Report Ref"
+        },
+        "stop_reason": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Stop Reason"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "task_spec_ref",
+        "process_spec_ref",
+        "workspace_id",
+        "original_base",
+        "previous_attempt_ref",
+        "execution",
+        "report_ref",
+        "stop_reason"
+      ],
+      "title": "TaskAttempt",
+      "type": "object"
+    },
+    "TaskReport": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "task_report",
+          "default": "task_report",
+          "enum": [
+            "task_report"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "task_spec_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Task Spec Ref",
+          "type": "string"
+        },
+        "attempt_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Attempt Id",
+          "type": "string"
+        },
+        "process_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Process Id",
+          "type": "string"
+        },
+        "plan_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Plan Ref",
+          "type": "string"
+        },
+        "execution": {
+          "const": "completed",
+          "default": "completed",
+          "enum": [
+            "completed"
+          ],
+          "title": "Execution",
+          "type": "string"
+        },
+        "resolution": {
+          "const": "unresolved",
+          "default": "unresolved",
+          "enum": [
+            "unresolved"
+          ],
+          "title": "Resolution",
+          "type": "string"
+        },
+        "verdict": {
+          "enum": [
+            "fail",
+            "uncertain",
+            "successful"
+          ],
+          "title": "Verdict",
+          "type": "string"
+        },
+        "stop_reason": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Stop Reason"
+        },
+        "assessment_turn_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Assessment Turn Refs",
+          "type": "array"
+        },
+        "assessment_summary": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "original_base": {
+          "$ref": "#/$defs/CodeRevision"
+        },
+        "captured_head": {
+          "$ref": "#/$defs/CodeRevision"
+        },
+        "final_code": {
+          "$ref": "#/$defs/CodeRevision"
+        },
+        "candidate_commit_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Candidate Commit Id",
+          "type": "string"
+        },
+        "preserved_private_delta_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Preserved Private Delta Ref",
+          "type": "string"
+        },
+        "publication_policy": {
+          "enum": [
+            "reviewed_only",
+            "provisional_all"
+          ],
+          "title": "Publication Policy",
+          "type": "string"
+        },
+        "code_location": {
+          "enum": [
+            "private",
+            "provisional"
+          ],
+          "title": "Code Location",
+          "type": "string"
+        },
+        "evidence": {
+          "items": {
+            "$ref": "#/$defs/CheckEvidence"
+          },
+          "title": "Evidence",
+          "type": "array"
+        },
+        "hazard_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Hazard Refs",
+          "type": "array"
+        },
+        "usage": {
+          "items": {
+            "$ref": "#/$defs/UsageMeasure"
+          },
+          "title": "Usage",
+          "type": "array"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "task_spec_ref",
+        "attempt_id",
+        "process_id",
+        "plan_ref",
+        "verdict",
+        "stop_reason",
+        "assessment_turn_refs",
+        "assessment_summary",
+        "original_base",
+        "captured_head",
+        "final_code",
+        "candidate_commit_id",
+        "preserved_private_delta_ref",
+        "publication_policy",
+        "code_location",
+        "evidence",
+        "hazard_refs",
+        "usage"
+      ],
+      "title": "TaskReport",
+      "type": "object"
+    },
+    "TaskSpec": {
+      "additionalProperties": false,
+      "properties": {
+        "contract_version": {
+          "const": "1.0",
+          "default": "1.0",
+          "enum": [
+            "1.0"
+          ],
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "record_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Record Id",
+          "type": "string"
+        },
+        "revision": {
+          "exclusiveMinimum": 0,
+          "title": "Revision",
+          "type": "integer"
+        },
+        "scope": {
+          "$ref": "#/$defs/Scope"
+        },
+        "created_at": {
+          "format": "date-time",
+          "title": "Created At",
+          "type": "string"
+        },
+        "required_features": {
+          "items": {
+            "$ref": "#/$defs/Feature"
+          },
+          "title": "Required Features",
+          "type": "array"
+        },
+        "extensions": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Extensions",
+          "type": "object"
+        },
+        "kind": {
+          "const": "task_spec",
+          "default": "task_spec",
+          "enum": [
+            "task_spec"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "task_id": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Task Id",
+          "type": "string"
+        },
+        "plan_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Plan Ref",
+          "type": "string"
+        },
+        "objective": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "allowed_change_scope": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "minItems": 1,
+          "title": "Allowed Change Scope",
+          "type": "array"
+        },
+        "prerequisites": {
+          "items": {
+            "$ref": "#/$defs/Prerequisite"
+          },
+          "title": "Prerequisites",
+          "type": "array"
+        },
+        "base": {
+          "$ref": "#/$defs/CodeRevision"
+        },
+        "acceptance_spec": {
+          "$ref": "#/$defs/ArtifactRef"
+        },
+        "context_refs": {
+          "items": {
+            "$ref": "#/$defs/ArtifactRef"
+          },
+          "title": "Context Refs",
+          "type": "array"
+        },
+        "memory_snapshot_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Memory Snapshot Refs",
+          "type": "array"
+        },
+        "allowed_capabilities": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Allowed Capabilities",
+          "type": "array"
+        },
+        "worker_process_spec_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Worker Process Spec Ref",
+          "type": "string"
+        },
+        "report_schema_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Report Schema Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "record_id",
+        "revision",
+        "scope",
+        "created_at",
+        "task_id",
+        "plan_ref",
+        "objective",
+        "allowed_change_scope",
+        "prerequisites",
+        "base",
+        "acceptance_spec",
+        "context_refs",
+        "memory_snapshot_refs",
+        "allowed_capabilities",
+        "worker_process_spec_ref",
+        "report_schema_ref"
+      ],
+      "title": "TaskSpec",
+      "type": "object"
+    },
+    "UsageMeasure": {
+      "additionalProperties": false,
+      "properties": {
+        "metric": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Metric",
+          "type": "string"
+        },
+        "unit": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Unit",
+          "type": "string"
+        },
+        "value": {
+          "anyOf": [
+            {
+              "minimum": 0.0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "provenance": {
+          "enum": [
+            "measured",
+            "provider_reported",
+            "estimated",
+            "unknown"
+          ],
+          "title": "Provenance",
+          "type": "string"
+        },
+        "account_scope_ref": {
+          "maxLength": 256,
+          "minLength": 1,
+          "title": "Account Scope Ref",
+          "type": "string"
+        }
+      },
+      "required": [
+        "metric",
+        "unit",
+        "value",
+        "provenance",
+        "account_scope_ref"
+      ],
+      "title": "UsageMeasure",
+      "type": "object"
+    },
+    "WaitReason": {
+      "additionalProperties": false,
+      "properties": {
+        "wait_kind": {
+          "enum": [
+            "operation",
+            "dependency",
+            "resource",
+            "steering_drain",
+            "human",
+            "reconciliation"
+          ],
+          "title": "Wait Kind",
+          "type": "string"
+        },
+        "target_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Target Refs",
+          "type": "array"
+        },
+        "holder_refs": {
+          "items": {
+            "maxLength": 256,
+            "minLength": 1,
+            "type": "string"
+          },
+          "title": "Holder Refs",
+          "type": "array"
+        },
+        "since": {
+          "format": "date-time",
+          "title": "Since",
+          "type": "string"
+        },
+        "deadline": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Deadline"
+        },
+        "diagnostic_ref": {
+          "anyOf": [
+            {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Diagnostic Ref"
+        }
+      },
+      "required": [
+        "wait_kind",
+        "target_refs",
+        "holder_refs",
+        "since",
+        "deadline",
+        "diagnostic_ref"
+      ],
+      "title": "WaitReason",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "contract_version": {
+      "const": "1.0",
+      "default": "1.0",
+      "enum": [
+        "1.0"
+      ],
+      "title": "Contract Version",
+      "type": "string"
+    },
+    "records": {
+      "items": {
+        "discriminator": {
+          "mapping": {
+            "agent_program": "#/$defs/AgentProgram",
+            "backend_descriptor": "#/$defs/BackendDescriptor",
+            "binding_decision": "#/$defs/BindingDecision",
+            "capability_descriptor": "#/$defs/CapabilityDescriptor",
+            "continuation": "#/$defs/Continuation",
+            "documentation_batch": "#/$defs/DocumentationBatch",
+            "memory_item": "#/$defs/MemoryItem",
+            "memory_snapshot": "#/$defs/MemorySnapshot",
+            "operation_request": "#/$defs/OperationRequest",
+            "operation_result": "#/$defs/OperationResult",
+            "pressure_snapshot": "#/$defs/PressureSnapshot",
+            "process_spec": "#/$defs/ProcessSpec",
+            "process_status": "#/$defs/ProcessStatus",
+            "project_run": "#/$defs/ProjectRun",
+            "review_resolution": "#/$defs/ReviewResolution",
+            "sprint_plan": "#/$defs/SprintPlan",
+            "steering_barrier": "#/$defs/SteeringBarrier",
+            "task_attempt": "#/$defs/TaskAttempt",
+            "task_report": "#/$defs/TaskReport",
+            "task_spec": "#/$defs/TaskSpec"
+          },
+          "propertyName": "kind"
+        },
+        "oneOf": [
+          {
+            "$ref": "#/$defs/AgentProgram"
+          },
+          {
+            "$ref": "#/$defs/ProjectRun"
+          },
+          {
+            "$ref": "#/$defs/ProcessSpec"
+          },
+          {
+            "$ref": "#/$defs/ProcessStatus"
+          },
+          {
+            "$ref": "#/$defs/TaskSpec"
+          },
+          {
+            "$ref": "#/$defs/OperationRequest"
+          },
+          {
+            "$ref": "#/$defs/OperationResult"
+          },
+          {
+            "$ref": "#/$defs/BindingDecision"
+          },
+          {
+            "$ref": "#/$defs/TaskReport"
+          },
+          {
+            "$ref": "#/$defs/ReviewResolution"
+          },
+          {
+            "$ref": "#/$defs/MemoryItem"
+          },
+          {
+            "$ref": "#/$defs/Continuation"
+          },
+          {
+            "$ref": "#/$defs/SprintPlan"
+          },
+          {
+            "$ref": "#/$defs/TaskAttempt"
+          },
+          {
+            "$ref": "#/$defs/CapabilityDescriptor"
+          },
+          {
+            "$ref": "#/$defs/BackendDescriptor"
+          },
+          {
+            "$ref": "#/$defs/PressureSnapshot"
+          },
+          {
+            "$ref": "#/$defs/MemorySnapshot"
+          },
+          {
+            "$ref": "#/$defs/SteeringBarrier"
+          },
+          {
+            "$ref": "#/$defs/DocumentationBatch"
+          }
+        ]
+      },
+      "title": "Records",
+      "type": "array"
+    }
+  },
+  "required": [
+    "records"
+  ],
+  "title": "ContractBundle",
+  "type": "object",
+  "$schema": "https://json-schema.org/draft/2020-12/schema"
+}
