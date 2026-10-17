@@ -76,7 +76,11 @@ async def model(state, runtime: Runtime[AppContext]):
     if calls >= limits.max_model_calls or state["logical_step"] >= limits.max_steps:
         return {"reply": {"kind": "needs_review", "reason": "Mandatory phase allowance exhausted"}}
     reply = await app.model(state)
-    return {"reply": reply, "calls": calls + 1}
+    return {
+        "reply": reply,
+        "calls": calls + 1,
+        "task_spec_ref": app.ports.workspaces.current(state["workspace_id"]).task_spec_ref,
+    }
 
 
 async def consume(state, runtime: Runtime[AppContext]):
@@ -125,7 +129,7 @@ async def tool(state, runtime: Runtime[AppContext]):
     reply = Action.model_validate(state["reply"])
     manifest = app.ports.workspaces.current(state["workspace_id"])
     arguments = {**reply.arguments, "generation": manifest.generation}
-    if state["phase"] == "assessment" and reply.tool in {"files.write", "files.delete"}:
+    if state["phase"] == "assessment" and reply.tool in {"files.write", "files.delete", "shell.run"}:
         # An edit is a repair, not assessment evidence.
         if state.get("repairs", 0) >= app.config.limits.max_repairs:
             observation = {"error": "Repair allowance exhausted; assess the current tree"}
@@ -140,8 +144,12 @@ async def tool(state, runtime: Runtime[AppContext]):
             f"tool-{state['logical_step']}",
             reply.tool,
             arguments,
-            "private_write" if reply.tool in {"files.write", "files.delete", "checks.run"} else "read",
+            "private_write"
+            if reply.tool
+            in {"files.write", "files.delete", "checks.run", "shell.run", "repository.select_branch"}
+            else "read",
         )
+    app.sync_setup(state)
     history = app.append_history(
         state.get("trajectory_ref"),
         f"turn-{state['logical_step']}",
@@ -152,12 +160,14 @@ async def tool(state, runtime: Runtime[AppContext]):
         "trajectory_ref": history,
         "logical_step": state["logical_step"] + 1,
         "workspace_generation": app.ports.workspaces.current(state["workspace_id"]).generation,
+        "task_spec_ref": app.ports.workspaces.current(state["workspace_id"]).task_spec_ref,
     }
     if (
         state["phase"] == "assessment"
-        and reply.tool in {"files.write", "files.delete"}
+        and reply.tool in {"files.write", "files.delete", "shell.run"}
         and result
         and result.state == "succeeded"
+        and (reply.tool != "shell.run" or observation.get("changed"))
     ):
         update.update(phase="reconciliation", evidence=[], repairs=state.get("repairs", 0) + 1)
     return update

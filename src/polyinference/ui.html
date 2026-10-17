@@ -40,8 +40,8 @@ footer{padding-top:15px;font-size:11px;color:#86919c;overflow-wrap:anywhere}
 <div class="controls">
 <label for="repository">Root repository</label>
 <div class="fieldrow"><input id="repository" placeholder="/home/mawa/projects/my-repository" spellcheck="false"><button id="browse" type="button">Browse…</button></div>
-<p class="hint" id="repoInfo" style="margin:7px 0 0">Development uses a private copy of committed HEAD.</p>
-<details class="check-settings" id="checkSettings"><summary>Check command</summary><input id="checkCommand" aria-label="Check command" spellcheck="false"></details>
+<p class="hint" id="repoInfo" style="margin:7px 0 0">Development uses a private Git copy; new folders are initialized automatically.</p>
+<details class="check-settings" id="checkSettings"><summary>Check command</summary><input id="checkCommand" aria-label="Check command" spellcheck="false"><label for="baseBranch" style="margin-top:12px">Base branch (optional)</label><input id="baseBranch" placeholder="Current branch, or name the branch in your objective" spellcheck="false"></details>
 <div class="launch">
 <div class="objective"><label for="objective">Test objective</label><textarea id="objective" rows="2"></textarea></div>
 <button id="start" type="button">Run test</button>
@@ -77,7 +77,7 @@ async function applyRepository(path){
  if(path===selectedRepository)return;
  const data=await api("/api/repository?"+new URLSearchParams({path}));
  selectedRepository=data.repository;$("repository").value=data.repository;$("checkCommand").value=data.check_command;
- $("repoInfo").textContent=data.scope+" · "+data.file_count+" committed files. Development uses a private copy.";
+ $("repoInfo").textContent=data.scope+" · "+data.file_count+" files. Development uses a private copy.";
  if(data.clear_objective&&$("objective").value===initialObjective)$("objective").value="";
  if(!data.check_command)$("checkSettings").open=true;
  error("");
@@ -156,7 +156,7 @@ async function refresh(){
   const data=await api("/api/runs");
   if(!$("objective").dataset.loaded){
    initialObjective=data.objective;$("objective").value=data.objective;$("objective").dataset.loaded="true";
-   selectedRepository=data.repository;$("repository").value=data.repository;$("checkCommand").value=data.check_command;browseRoot=data.browse_root;
+   selectedRepository=data.repository;$("repository").value=data.repository;$("checkCommand").value=data.check_command;$("baseBranch").value=data.base_branch||"";browseRoot=data.browse_root;
   }
   $("allCost").textContent="All saved runs ≈ $"+dollars(data.total_cost.estimated_usd)+(data.total_cost.partial?"+":"");
   $("configuration").textContent="Configuration: "+data.configuration;
@@ -174,7 +174,7 @@ $("start").onclick=async()=>{
  $("start").disabled=true;error("");
  try{
   await applyRepository($("repository").value);
-  const data=await api("/api/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({objective:$("objective").value,repository:$("repository").value,check_command:$("checkCommand").value})});
+  const data=await api("/api/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({objective:$("objective").value,repository:$("repository").value,check_command:$("checkCommand").value,base_branch:$("baseBranch").value})});
   current=data.id;selectedNode=null;$("inspector").replaceChildren(element("div","Select a node when it appears.","empty"));await refresh();
  }catch(exc){error(exc.message);$("start").disabled=false}
 };

@@ -1,0 +1,82 @@
+{
+  "design": "os",
+  "language": "en",
+  "program_version": "proposal-4-audited-core",
+  "source_provenance": [
+    {
+      "path": "design-docs/langgraph-agent/README.md",
+      "digest": "c8c33197d4d36b4c739f6d01ddf0219dc5282224beb8c9141028161d7e629ee2"
+    },
+    {
+      "path": "design-docs/simplified-os/README.md",
+      "digest": "28d583bd29e675e62676d11c8c8e5600b25ce5d1cedafccd2449bd6c1cc44d2a"
+    },
+    {
+      "path": "design-docs/INTEGRATION_AUDIT.md",
+      "digest": "f58e63e41a25b92e964bbab7f2302b335a8fecbf150d63455db29b0fbfe386b8"
+    },
+    {
+      "path": "design-docs/polyinference-design/polyinference-agent-design-merged.json",
+      "digest": "55f9db3f1191943fd1d100424bf658c0b5fb0561809e230c1bff7dfbbd02fae9"
+    }
+  ],
+  "exported_at": "2026-10-17T21:45:57.364Z",
+  "judgments": [
+    {
+      "id": "O01",
+      "question": "Is runtime authority impossible to bypass?",
+      "status": "Satisfied",
+      "note": "refer to the os design principle of existing oses. Make sure to consider the fact that the \"cpu\" for our OS is infact llm. Think about the best way to deal with it.",
+      "source": "../simplified-os/README.md#6-each-agents-private-part-of-the-code"
+    },
+    {
+      "id": "O02",
+      "question": "Do separate resource limits match actual lifetimes?",
+      "status": "Satisfied",
+      "note": "Mostly. For the very first stage, no need to deal with computer resource management. This will be a major topic for the next iteration",
+      "source": "../simplified-os/README.md#51-independent-limits"
+    },
+    {
+      "id": "O03",
+      "question": "Does concurrency actually reach one shared model?",
+      "status": "Concern",
+      "note": "Concurrency reaches one model inference time with x c-batching. THe x should be configurable in a env var. There should also be support for using a cloud llm api as a model inference time with one c-batching for the sake of testing.",
+      "source": "../simplified-os/README.md#52-dispatch-policy"
+    },
+    {
+      "id": "O04",
+      "question": "Can the two gates deadlock or release early?",
+      "status": "Concern",
+      "note": "Yes if it makes sense to do so. Examples are errors that cant be reconciled, stuff like that.",
+      "source": "../simplified-os/README.md#7-mergetestcommit-is-one-critical-section"
+    },
+    {
+      "id": "O05",
+      "question": "Are partial workspaces faithfully attributed?",
+      "status": "Unreviewed",
+      "note": "refer to the os design principle of existing oses. Make sure to consider the fact that the \"cpu\" for our OS is infact llm. Think about the best way to deal with it. This is basically a file system or memory paging issue (with some differences).",
+      "source": "../simplified-os/README.md#62-delta-and-complete-integration-view"
+    },
+    {
+      "id": "O06",
+      "question": "Is recovery safe at every dispatch/publication boundary?",
+      "status": "Unreviewed",
+      "note": "Currently the key frame is the recovery mechanism. It's not necessarily safe at every single point, but your os implementation should make it safe in as many points as possible. The next version will focus on making better recovery mechanisms.",
+      "source": "../simplified-os/README.md#failure-and-abort"
+    },
+    {
+      "id": "O07",
+      "question": "Does the cloud adapter implement the real protocol?",
+      "status": "Unreviewed",
+      "note": "Assume it doesn't, even if its an agentic loop. The point is that it wont matter too much. Since we are trying to reduce the cloud agent use, we will try to have it use less and less stuff like mcp and what not.",
+      "source": "../simplified-os/README.md#53-cloud-execution"
+    },
+    {
+      "id": "O08",
+      "question": "Will the first build remain small and measurable?",
+      "status": "Unreviewed",
+      "note": "the agent design will be what you see in the repo right now. there won't be need to support more complicated agents till much, much later.",
+      "source": "../simplified-os/README.md#1-scope-and-authority"
+    }
+  ]
+}

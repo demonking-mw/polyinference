@@ -1,4 +1,4 @@
-"""Direct capabilities. Models cannot supply executable shell commands."""
+"""Scoped files, configured checks and explicitly enabled foreground scripts."""
 
 from __future__ import annotations
 
@@ -29,6 +29,18 @@ class Tools:
             raise ValueError("Stale workspace content")
         root = self.workspaces.root_for(manifest)
         tool = payload.capability_id
+        if tool == "repository.select_branch":
+            name = arguments.get("name")
+            if not isinstance(name, str) or not name or name.startswith("-"):
+                raise ValueError("Supply a valid branch name")
+            create = arguments.get("create") or False
+            if not isinstance(create, bool):
+                raise ValueError("create must be a boolean")
+            return await self.workspaces.select_branch(manifest.workspace_id, name, create)
+        if tool == "shell.run":
+            from .shell import run
+
+            return await run(self, manifest, arguments)
         if tool == "checks.run":
             return await self.check(manifest.workspace_id, arguments["name"])
         if tool == "files.list":
@@ -84,7 +96,9 @@ class Tools:
                 "generation": self.workspaces.current(manifest.workspace_id).generation,
             }
         if path not in manifest.allowed_write_paths:
-            raise ValueError("Write outside assigned scope")
+            manifest = self.workspaces.extend_setup_scope(manifest.workspace_id, [path])
+            root = self.workspaces.root_for(manifest)
+            target = root / path
         existing = target.read_bytes() if target.exists() else None
         if arguments.get("expected_digest") != (digest(existing) if existing is not None else None):
             raise ValueError("Write requires the current file digest (null only for new files)")

@@ -14,7 +14,15 @@ from ..contracts import CodeRevision
 from ..domain import canonical, digest
 from ..workspace_contracts import CopiedFile, DeltaChange, WorkspaceDelta, WorkspaceManifest, relative_path
 
-IGNORED = {"__pycache__", ".pytest_cache", ".ruff_cache", ".mypy_cache"}
+IGNORED = {
+    "__pycache__",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".mypy_cache",
+    "node_modules",
+    ".venv",
+    ".venv-linux",
+}
 ENVIRONMENT = digest(canonical({"adapter": "standalone-1", "tools": "configured-argv-1"}))
 
 
@@ -28,6 +36,7 @@ class Workspaces:
                     "adapter": "standalone-1",
                     "checks": [c.model_dump(mode="json") for c in config.checks],
                     "execution": config.check_execution,
+                    "shell_execution": config.shell_execution,
                     "python": sys.version,
                     "platform": platform.platform(),
                     "environment_policy": "fixed-during-run",
@@ -130,27 +139,268 @@ class Workspaces:
 
     async def initialize(self):
         if not self.gitdir.exists():
-            dirty = await self.command(
-                ["git", "-C", str(self.config.repo_path), "status", "--porcelain", "--untracked-files=all"]
-            )
-            if dirty.strip():
-                raise ValueError("Commit or remove dirty/untracked source inputs before starting a run")
-            await self.command(
-                [
-                    "git",
-                    "clone",
-                    "--bare",
-                    "--no-local",
-                    "--depth",
-                    "1",
-                    "--no-hardlinks",
+            has_head = False
+            if (self.config.repo_path / ".git").exists():
+                try:
+                    await self.command(
+                        ["git", "-C", str(self.config.repo_path), "rev-parse", "--verify", "HEAD"]
+                    )
+                    has_head = True
+                except RuntimeError:
+                    pass
+            if has_head:
+                dirty = await self.command(
+                    [
+                        "git",
+                        "-C",
+                        str(self.config.repo_path),
+                        "status",
+                        "--porcelain",
+                        "--untracked-files=all",
+                    ]
+                )
+                if dirty.strip():
+                    raise ValueError("Commit or remove dirty/untracked source inputs before starting a run")
+                await self.command(
+                    [
+                        "git",
+                        "clone",
+                        "--bare",
+                        "--no-local",
+                        "--no-hardlinks",
+                        str(self.config.repo_path),
+                        str(self.gitdir),
+                    ]
+                )
+            elif self.config.prepare_repository:
+                await self.command(["git", "init", "--bare", "--initial-branch=main", str(self.gitdir)])
+                exclusions = [".git", ".polyinference", "node_modules", ".venv", ".venv-linux", "__pycache__"]
+                await self.git(
+                    "--work-tree",
                     str(self.config.repo_path),
-                    str(self.gitdir),
-                ]
-            )
+                    "-C",
+                    str(self.config.repo_path),
+                    "add",
+                    "--all",
+                    "--",
+                    ".",
+                    *[":(glob,exclude)**/" + name + "/**" for name in exclusions],
+                    ":(glob,exclude)**/.env*",
+                    ":(glob,exclude)**/*.pem",
+                    ":(glob,exclude)**/*.key",
+                )
+                tree = (await self.git("write-tree")).decode().strip()
+                commit = (
+                    (
+                        await self.git(
+                            "commit-tree",
+                            tree,
+                            input_data=b"PolyInference initial project baseline\n",
+                            env=self.identity(),
+                        )
+                    )
+                    .decode()
+                    .strip()
+                )
+                await self.git("update-ref", "refs/heads/main", commit)
+            else:
+                raise ValueError(
+                    "Repository needs a committed HEAD; enable prepare_repository for initial setup"
+                )
+        if self.config.base_branch and not self.records.get("repository/setup"):
+            await self.git("check-ref-format", "--branch", self.config.base_branch)
+            await self.git("rev-parse", "--verify", "refs/heads/" + self.config.base_branch)
+            await self.git("symbolic-ref", "HEAD", "refs/heads/" + self.config.base_branch)
         commit = (await self.git("rev-parse", "HEAD")).decode().strip()
+        if self.config.prepare_repository and not await self.tree(commit):
+            commit = await self.seed_empty_baseline(commit)
+        branches = (
+            (await self.git("for-each-ref", "--format=%(refname:short)", "refs/heads")).decode().splitlines()
+        )
+        branch = (await self.git("symbolic-ref", "--short", "HEAD")).decode().strip()
+        if not self.records.get("repository/setup"):
+            self.records.compare_and_publish(
+                {"repository/setup": 0},
+                {
+                    "repository/setup": {
+                        "base_branch": branch,
+                        "base_commit": commit,
+                        "branches": branches,
+                        "git_initialized": not (self.config.repo_path / ".git").exists(),
+                        "source_repository": str(self.config.repo_path),
+                        "isolated": True,
+                    }
+                },
+            )
         tree = await self.tree(commit)
         return self.code(tree, commit)
+
+    async def seed_empty_baseline(self, commit, process_id="runtime"):
+        # The unchanged workspace SDK requires a nonempty dependency closure.
+        # A useful ignore file supplies that seed without writing into the source checkout.
+        env = {**self.identity(), "GIT_INDEX_FILE": str(self.config.state_path / "baseline.index")}
+        content = b".polyinference/\n.env\n.venv/\nnode_modules/\n__pycache__/\n"
+        oid = (
+            (await self.git("hash-object", "-w", "--stdin", input_data=content, process_id=process_id))
+            .decode()
+            .strip()
+        )
+        await self.git("read-tree", "--empty", env=env, process_id=process_id)
+        await self.git(
+            "update-index",
+            "--add",
+            "--cacheinfo",
+            "100644",
+            oid,
+            ".gitignore",
+            env=env,
+            process_id=process_id,
+        )
+        tree = (await self.git("write-tree", env=env, process_id=process_id)).decode().strip()
+        result = (
+            (
+                await self.git(
+                    "commit-tree",
+                    tree,
+                    "-p",
+                    commit,
+                    env=env,
+                    process_id=process_id,
+                    input_data=b"Prepare empty project Git baseline\n",
+                )
+            )
+            .decode()
+            .strip()
+        )
+        await self.git("update-ref", "HEAD", result, process_id=process_id)
+        return result
+
+    @staticmethod
+    def identity():
+        return {
+            "GIT_AUTHOR_NAME": "PolyInference",
+            "GIT_AUTHOR_EMAIL": "agent@localhost",
+            "GIT_COMMITTER_NAME": "PolyInference",
+            "GIT_COMMITTER_EMAIL": "agent@localhost",
+        }
+
+    async def select_branch(self, workspace_id, name, create=False):
+        manifest = self.current(workspace_id)
+        spec = self.records.get(manifest.task_spec_ref)
+        if not spec or "repository.select_branch" not in spec[1]["allowed_capabilities"]:
+            raise ValueError("Branch selection is available only to the initial setup task")
+        if manifest.view != "development":
+            raise ValueError("Select the base branch before integration")
+        retained = self.records.get("branch-selection/" + workspace_id)
+        if retained:
+            if retained[1]["branch"] != name:
+                raise ValueError("The initial branch was already selected")
+            return retained[1]
+        before = self.scan(self.root_for(manifest))
+        if any(
+            digest(before[file.path][1]) != file.copied_digest
+            for file in manifest.copied_files
+            if file.path in before
+        ) or set(before) != {file.path for file in manifest.copied_files}:
+            raise ValueError("Select the branch before editing files")
+        await self.git("check-ref-format", "--branch", name, process_id=manifest.process_id)
+        try:
+            commit = (
+                (
+                    await self.git(
+                        "rev-parse", "--verify", "refs/heads/" + name, process_id=manifest.process_id
+                    )
+                )
+                .decode()
+                .strip()
+            )
+        except RuntimeError:
+            if not create:
+                raise ValueError("Requested base branch does not exist: " + name) from None
+            commit = manifest.original_base.commit_id
+            await self.git("update-ref", "refs/heads/" + name, commit, process_id=manifest.process_id)
+        await self.git("symbolic-ref", "HEAD", "refs/heads/" + name, process_id=manifest.process_id)
+        tree = await self.tree(commit, manifest.process_id)
+        if not tree:
+            commit = await self.seed_empty_baseline(commit, manifest.process_id)
+            tree = await self.tree(commit, manifest.process_id)
+        code = self.code(tree, commit)
+        generation = manifest.generation + 1
+        allowed = (
+            sorted(set(tree) | set(manifest.allowed_write_paths))
+            if self.config.write_scope == "project"
+            else manifest.allowed_write_paths
+        )
+        new = manifest.model_copy(
+            update={
+                "generation": generation,
+                "manifest_id": workspace_id + ":" + str(generation),
+                "private_root_ref": workspace_id + ":" + str(generation),
+                "original_base": code,
+                "allowed_write_paths": allowed,
+                "copied_files": [
+                    CopiedFile(path=p, copied_digest=digest(v[1]), writable=p in allowed)
+                    for p, v in sorted(tree.items())
+                ],
+            }
+        )
+        self.materialize(self.root_for(new), tree)
+        key = "workspace/" + workspace_id
+        result = {"branch": name, "code": code.model_dump(mode="json"), "workspace_id": workspace_id}
+        self.records.compare_and_publish(
+            {key: self.records.get(key)[0]},
+            {key: new.model_dump(mode="json")},
+            {
+                "manifest/" + new.manifest_id: new.model_dump(mode="json"),
+                "branch-selection/" + workspace_id: result,
+            },
+        )
+        return result
+
+    def retag_task_spec(self, workspace_id, spec_id, updates, immutable):
+        manifest = self.current(workspace_id)
+        generation = manifest.generation + 1
+        new = manifest.model_copy(
+            update={
+                "task_spec_ref": spec_id,
+                "generation": generation,
+                "manifest_id": workspace_id + ":" + str(generation),
+                "private_root_ref": workspace_id + ":" + str(generation),
+            }
+        )
+        self.materialize(self.root_for(new), self.scan(self.root_for(manifest)))
+        updates = {**updates, "workspace/" + workspace_id: new.model_dump(mode="json")}
+        self.records.compare_and_publish(
+            {key: self.records.get(key)[0] for key in updates},
+            updates,
+            {**immutable, "manifest/" + new.manifest_id: new.model_dump(mode="json")},
+        )
+
+    def extend_setup_scope(self, workspace_id, paths):
+        manifest = self.current(workspace_id)
+        spec = self.records.get(manifest.task_spec_ref)
+        if not spec or not spec[1].get("extensions", {}).get("polyinference/project-write"):
+            raise ValueError("Write outside assigned scope")
+        added = sorted(set(paths) - set(manifest.allowed_write_paths))
+        if not added:
+            return manifest
+        generation = manifest.generation + 1
+        new = manifest.model_copy(
+            update={
+                "generation": generation,
+                "manifest_id": workspace_id + ":" + str(generation),
+                "private_root_ref": workspace_id + ":" + str(generation),
+                "allowed_write_paths": sorted(set(manifest.allowed_write_paths) | set(added)),
+            }
+        )
+        self.materialize(self.root_for(new), self.scan(self.root_for(manifest)))
+        key = "workspace/" + workspace_id
+        self.records.compare_and_publish(
+            {key: self.records.get(key)[0]},
+            {key: new.model_dump(mode="json")},
+            {"manifest/" + new.manifest_id: new.model_dump(mode="json")},
+        )
+        return new
 
     async def tree(self, commit, process_id="runtime"):
         listing = await self.git("ls-tree", "-rz", commit, process_id=process_id)
@@ -229,8 +479,11 @@ class Workspaces:
         tree = await self.tree(base.commit_id, process_id)
         paths = set(write_paths + read_paths + self.config.closure_paths)
         scoped = {p: data for p, data in tree.items() if p in paths}
+        # An otherwise empty newly initialized project has one host-prepared seed.
+        if not scoped and set(tree) == {".gitignore"}:
+            scoped = dict(tree)
         # A new-file-only task still needs a pinned read/build closure.
-        if not scoped:
+        if not scoped and tree:
             raise ValueError("Assignment must include at least one existing closure file")
         manifest = WorkspaceManifest(
             manifest_id=workspace_id + ":1",

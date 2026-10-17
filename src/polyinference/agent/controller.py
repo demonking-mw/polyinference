@@ -19,7 +19,9 @@ from ..contracts import (
 )
 from ..domain import SeniorProposal, canonical, digest, now
 from .design_basis import DESIGN_BASIS
+from .routing import allocate
 from .senior import build_senior
+from .tasks import make_task
 from .worker import AppContext, build_worker
 
 
@@ -69,6 +71,15 @@ class ProjectAgent:
                 "fixed-role-routing",
             )
         ]
+        for feature, enabled in (
+            ("repository-baseline", app.config.prepare_repository),
+            ("shell-run", app.config.shell_execution != "disabled"),
+            ("project-scope", app.config.write_scope == "project"),
+        ):
+            if enabled:
+                requirements.append(
+                    Requirement(feature_id="runtime/" + feature, version="1", necessity="required")
+                )
         app.ports.negotiate(requirements)
         manifest = AgentProgram(
             **app.base("program/manifest"),
@@ -116,6 +127,12 @@ class ProjectAgent:
         await self.initialize()
         if self.app.ports.operations.uncertain():
             raise RuntimeError("Uncertain effects require reconciliation; no replacement is dispatched")
+        if self.app.config.prepare_repository and not self.app.ports.records.get("setup/completed"):
+            from .setup import prepare
+
+            await prepare(self)
+            if self.app.get("app/run")["status"] != "active":
+                return {"outcome": self.app.get("app/run")["status"]}
         saved = await self.controller.aget_state({"configurable": {"thread_id": "controller"}})
         initial = None if saved.next else {"process_id": "controller", "logical_step": 0}
         return await self.controller.ainvoke(
@@ -343,6 +360,16 @@ class ProjectAgent:
         pending = [v for _, _, v in app.ports.records.scan("task/") if v["execution"] == "pending"]
         snapshot = {
             "objective": run["objective"],
+            "repository_setup": (app.ports.records.get("repository/setup") or (0, {}))[1],
+            "development_allocation": {
+                "senior_fraction": app.config.senior_development_fraction,
+                "tasks": [
+                    {"task_id": body["assignment"]["task_id"], "role": body["assignment"]["role"]}
+                    for _, _, body in app.ports.records.scan("task/")
+                    if body.get("category", "development") == "development"
+                    and body["execution"] != "cancelled"
+                ],
+            },
             "repository_context": await app.repository_context(head),
             "head": head,
             "reports": [app.review_report(report) for report in reports],
@@ -429,6 +456,14 @@ class ProjectAgent:
             app.update("review-batch/active", {**batch, "state": "done"})
             return
         proposal = SeniorProposal.model_validate(batch["proposal"])
+        retained = [
+            body
+            for _, _, body in app.ports.records.scan("task/")
+            if body["assignment"]["task_id"] not in proposal.cancel_pending_task_ids
+        ]
+        proposal = proposal.model_copy(
+            update={"tasks": allocate(proposal.tasks, retained, app.config.senior_development_fraction)}
+        )
         plan_ref = f"plan/{run['sprint'] + 1}"
         for assignment in proposal.tasks:
             if app.ports.records.get("task/" + assignment.task_id):
@@ -454,59 +489,16 @@ class ProjectAgent:
         expected = {"app/run": current_version}
         for assignment in proposal.tasks:
             key = "task/" + assignment.task_id
-            attempt = f"{run['sprint'] + 1}-{assignment.task_id}"
-            task = {
-                "assignment": assignment.model_dump(mode="json"),
-                "plan_ref": plan_ref,
-                "execution": "pending",
-                "base": final_head,
-                "spec_ref": "task-spec/" + assignment.task_id,
-                "process_id": "worker-" + attempt,
-                "attempt_id": attempt,
-                "workspace_id": "workspace-" + attempt,
-                "report_ref": None,
-            }
+            task, specs = make_task(
+                app,
+                assignment,
+                plan_ref,
+                final_head,
+                f"{run['sprint'] + 1}-{assignment.task_id}",
+            )
             expected[key] = 0
             updates[key] = task
-            spec = TaskSpec(
-                **app.base(task["spec_ref"]),
-                task_id=assignment.task_id,
-                plan_ref=plan_ref,
-                objective=app.artifact(assignment.objective),
-                allowed_change_scope=assignment.write_paths,
-                prerequisites=[
-                    __import__("polyinference.contracts", fromlist=["Prerequisite"]).Prerequisite(
-                        record_ref="task/" + dep, required_state="kept"
-                    )
-                    for dep in assignment.dependencies
-                ],
-                base=CodeRevision.model_validate(final_head),
-                acceptance_spec=app.artifact(assignment.checks),
-                context_refs=[],
-                memory_snapshot_refs=[],
-                allowed_capabilities=[
-                    "files.list",
-                    "files.read",
-                    "files.write",
-                    "files.delete",
-                    "checks.run",
-                ],
-                worker_process_spec_ref="process-spec/" + task["process_id"],
-                report_schema_ref="task-report/2",
-            )
-            immutable_specs[task["spec_ref"]] = spec.model_dump(mode="json")
-            task_attempt = TaskAttempt(
-                **app.base("attempt/" + attempt),
-                task_spec_ref=task["spec_ref"],
-                process_spec_ref=spec.worker_process_spec_ref,
-                workspace_id=task["workspace_id"],
-                original_base=spec.base,
-                previous_attempt_ref=None,
-                execution="pending",
-                report_ref=None,
-                stop_reason=None,
-            )
-            immutable_specs[task_attempt.record_id] = task_attempt.model_dump(mode="json")
+            immutable_specs.update(specs)
         for task_id in proposal.cancel_pending_task_ids:
             key = "task/" + task_id
             retained = app.ports.records.get(key)
@@ -581,7 +573,12 @@ class ProjectAgent:
             tree = await app.ports.workspaces.tree(code.commit_id, pid)
             wid = f"review-checks-{query_index}"
             await app.ports.workspaces.create(
-                wid, pid, "review/" + pid, code, list(app.config.allowed_write_paths), list(tree)
+                wid,
+                pid,
+                "review/" + pid,
+                code,
+                (list(tree) if app.config.write_scope == "project" else list(app.config.allowed_write_paths)),
+                list(tree),
             )
             await app.ports.workspaces.integrate(wid, code, permit)
             state = {
@@ -661,7 +658,9 @@ class ProjectAgent:
                 pid,
                 disposition.report_ref,
                 head,
-                list(app.config.allowed_write_paths),
+                sorted(set(current) | touched)
+                if app.config.write_scope == "project"
+                else list(app.config.allowed_write_paths),
                 list(current),
             )
             manifest = await app.ports.workspaces.integrate(workspace_id, head, permit)
@@ -768,7 +767,7 @@ class ProjectAgent:
                 "controller",
                 run["plan_ref"] or "initial",
                 code,
-                list(app.config.allowed_write_paths),
+                list(tree) if app.config.write_scope == "project" else list(app.config.allowed_write_paths),
                 list(tree),
             )
             await app.ports.workspaces.integrate(wid, code, permit)

@@ -174,7 +174,7 @@ class CodexAppServer:
                     {
                         "type": "function",
                         "name": "polyinference_tool",
-                        "description": "Execute one scoped host tool. Use for all code reads/writes/checks.",
+                        "description": "Execute a scoped host file, shell, branch or check tool. Use for all effects.",
                         "inputSchema": {
                             "type": "object",
                             "properties": {
@@ -186,15 +186,37 @@ class CodexAppServer:
                                         "files.write",
                                         "files.delete",
                                         "checks.run",
+                                        "shell.run",
+                                        "repository.select_branch",
                                     ],
                                 },
                                 "arguments": {
                                     "type": "object",
                                     "properties": {
-                                        name: {"type": ["string", "null"]}
-                                        for name in ("path", "content", "expected_digest", "name")
+                                        **{
+                                            name: {"type": ["string", "null"]}
+                                            for name in (
+                                                "path",
+                                                "content",
+                                                "expected_digest",
+                                                "name",
+                                                "script",
+                                                "cwd",
+                                            )
+                                        },
+                                        "timeout_seconds": {"type": ["integer", "null"]},
+                                        "create": {"type": ["boolean", "null"]},
                                     },
-                                    "required": ["path", "content", "expected_digest", "name"],
+                                    "required": [
+                                        "path",
+                                        "content",
+                                        "expected_digest",
+                                        "name",
+                                        "script",
+                                        "cwd",
+                                        "timeout_seconds",
+                                        "create",
+                                    ],
                                     "additionalProperties": False,
                                     "description": "Supply fields for the chosen tool; use null for unused fields.",
                                 },

@@ -17,6 +17,9 @@ from polyinference.ui import TestUI, make_server, read_artifact, read_records
 
 
 async def fixture_runner(config):
+    # Setup has its own broker/branch tests; this fixture covers the UI development history.
+    config = config.model_copy(update={"prepare_repository": False})
+
     class ConfiguredScript(ScriptedAgent):
         async def generate(self, *args, **kwargs):
             result = await super().generate(*args, **kwargs)
@@ -329,3 +332,149 @@ def test_repository_picker_rejects_subdirectories_and_non_repositories(config, t
     subdir.mkdir()
     with pytest.raises(ValueError, match="repository root"):
         repository(str(subdir))
+
+
+async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_sprint_cap(
+    config, tmp_path, monkeypatch
+):
+    import shlex
+    from pathlib import Path
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "fixture-key")
+    worker_requests, senior_requests, setup_requests = [], [], []
+    worker = ScriptedAgent(two=True)
+
+    class CodexSenior:
+        async def generate_job(self, messages, snapshot, schema, callback=None):
+            assert Path(snapshot).is_dir()
+            data = json.loads(
+                next(m["content"] for m in messages if "Pinned application inputs:" in m["content"]).split(
+                    "Pinned application inputs:\n", 1
+                )[1]
+            )
+            if "assignment" in data:
+                assert callback is not None
+                assert data["assignment"]["task_id"] == "project_setup"
+                setup_requests.append(data)
+                reply = (
+                    {"kind": "assessment", "verdict": "successful", "summary": "Setup inspected"}
+                    if data["phase"] == "assessment"
+                    else {"kind": "candidate", "summary": "Setup complete"}
+                )
+                return {
+                    "model": "gpt-6.1-sol",
+                    "text": json.dumps(reply),
+                    "usage": {"inputTokens": 100, "outputTokens": 20, "total_tokens": 120},
+                    "events": [],
+                }
+            assert "tasks" in schema["properties"]
+            senior_requests.append(data)
+            reply = {
+                "goal": "Update both files, then conduct a final review",
+                "dispositions": [
+                    {"report_ref": report["record_id"], "action": "keep", "reason": "Reviewed"}
+                    for report in data["reports"]
+                ],
+                "memory_update": "Review " + str(len(senior_requests)),
+            }
+            if "a" not in data["all_task_ids"]:
+                reply["tasks"] = [
+                    {
+                        "task_id": name,
+                        "objective": "Update " + name + ".py",
+                        "write_paths": [name + ".py"],
+                        "read_paths": [name + ".py"],
+                        "dependencies": [] if name == "a" else ["a"],
+                        "checks": ["tests"],
+                    }
+                    for name in ["a", "b"]
+                ]
+            else:
+                reply["complete"] = not data["reports"] and not data["pending_tasks"]
+            return {
+                "model": "gpt-6.1-sol",
+                "text": json.dumps(reply),
+                "usage": {"inputTokens": 100, "outputTokens": 20, "total_tokens": 120},
+                "events": [],
+            }
+
+        async def close(self):
+            pass
+
+    async def haiku(request):
+        assert str(request.url) == "https://api.anthropic.com/v1/messages"
+        assert request.headers["x-api-key"] == "fixture-key"
+        assert request.headers["anthropic-version"] == "2023-06-01"
+        body = json.loads(request.content)
+        assert body["model"] == "claude-haiku-5-5"
+        messages = [{"role": "system", "content": body["system"]}, *body["messages"]]
+        assert '"assignment"' in messages[1]["content"]
+        worker_requests.append(body)
+        result = await worker.generate(messages, body["max_tokens"])
+        return httpx.Response(
+            200,
+            json={
+                "id": "fixture-" + str(len(worker_requests)),
+                "model": "claude-haiku-5-5",
+                "stop_reason": "end_turn",
+                "content": [{"type": "text", "text": result["text"]}],
+                "usage": {"input_tokens": 100, "output_tokens": 20},
+            },
+        )
+
+    async def mixed_run(selected):
+        runtime = await StandaloneRuntime(selected).open()
+        try:
+            # Keep the real Anthropic adapter and constructed authentication headers.
+            client = runtime.clients["local"]
+            headers = client.client.headers
+            await client.client.aclose()
+            client.client = httpx.AsyncClient(headers=headers, transport=httpx.MockTransport(haiku))
+            await runtime.clients["cloud"].close()
+            runtime.clients["cloud"] = CodexSenior()
+            return await ProjectAgent(AgentServices(runtime, selected)).run()
+        finally:
+            await runtime.close()
+
+    manager = TestUI(tmp_path / "ui", runner=mixed_run)
+    server = make_server(manager, 0)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    origin = f"http://127.0.0.1:{server.server_port}"
+    try:
+        async with httpx.AsyncClient(base_url=origin, headers={"Origin": origin}) as client:
+            settings = (await client.get("/api/runs")).json()
+            assert "Haiku juniors + Codex setup/senior" in settings["configuration"]
+            reply = await client.post(
+                "/api/run",
+                json={
+                    "repository": config.repository,
+                    "objective": "Update both values",
+                    "check_command": shlex.join(config.checks[0].argv),
+                },
+            )
+            assert reply.status_code == 202, reply.text
+            run_id = reply.json()["id"]
+            view = await finished(client, run_id)
+            assert view["status"] == "completed", view
+            document = (await client.get("/api/export", params={"id": run_id})).json()
+            assert document["configuration"]["max_sprints"] == 9
+            assert document["run_record"]["sprint"] == len(senior_requests) == 4
+            assert worker_requests
+            effects = document["effects"]
+            models = [e for e in effects if e["request"]["payload"]["kind"] == "model_query"]
+            assert len(models) == len(worker_requests)
+            assert all(e["result"]["actual_backend"]["model_version"] == "claude-haiku-5-5" for e in models)
+            assert all(e["request"]["payload"]["role"] == "worker" for e in models)
+            jobs = [e for e in effects if e["request"]["payload"]["kind"] == "agent_job"]
+            assert len(jobs) == len(senior_requests) + len(setup_requests)
+            assert {e["request"]["payload"]["role"] for e in jobs} == {"senior", "specialist"}
+            assert all(e["result"]["actual_backend"]["model_version"] == "gpt-6.1-sol" for e in jobs)
+            assert view["cost"]["by_provider"]["haiku"]["estimated_usd"] > 0
+            assert view["cost"]["by_provider"]["haiku"]["calls"] == len(worker_requests)
+            assert view["cost"]["by_provider"]["codex"]["calls"] == len(senior_requests) + len(setup_requests)
+            assert (Path(config.repository) / "a.py").read_text() == "VALUE = 1\n"
+    finally:
+        await asyncio.to_thread(server.shutdown)
+        server.server_close()
+        thread.join(timeout=2)

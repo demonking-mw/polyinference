@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -43,6 +44,40 @@ def repository(path, clean=False):
     return root, files
 
 
+def project(path, clean=False):
+    """Allow a new project folder as well as a committed Git checkout."""
+    if not isinstance(path, str) or not path.strip():
+        raise ValueError("Choose a project directory")
+    selected = Path(path).expanduser().resolve()
+    if not selected.is_dir():
+        raise ValueError("Repository directory does not exist")
+    if (selected / ".git").exists():
+        head = subprocess.run(
+            ["git", "-C", str(selected), "rev-parse", "--verify", "HEAD"], capture_output=True, timeout=15
+        )
+        if head.returncode == 0:
+            try:
+                return repository(str(selected), clean)
+            except ValueError as exc:
+                if "no committed regular files" not in str(exc):
+                    raise
+                return selected, []
+    files = []
+    ignored = {".git", ".polyinference", "node_modules", "__pycache__", ".venv", ".venv-linux"}
+    for directory, names, filenames in os.walk(selected, followlinks=False):
+        names[:] = [
+            name for name in names if name not in ignored and not (Path(directory) / name).is_symlink()
+        ]
+        for name in filenames:
+            target = Path(directory) / name
+            if target.is_symlink() or name.startswith(".env") or target.suffix in {".pem", ".key"}:
+                continue
+            files.append(target.relative_to(selected).as_posix())
+            if len(files) > 10000:
+                raise ValueError("Choose a smaller project directory")
+    return selected, sorted(files)
+
+
 def suggested_check(root, files):
     if "package.json" in files:
         try:
@@ -70,7 +105,7 @@ def directories(path):
         except OSError:
             continue
     try:
-        root, _ = repository(str(selected))
+        root, _ = project(str(selected))
         is_repository = root == selected
     except ValueError:
         is_repository = False

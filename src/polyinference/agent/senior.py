@@ -30,7 +30,9 @@ async def validate(state, runtime: Runtime[AppContext]):
     try:
         proposal = SeniorProposal.model_validate(state["reply"])
         for assignment in proposal.tasks:
-            if not set(assignment.write_paths) <= set(app.config.allowed_write_paths):
+            if app.config.write_scope == "explicit" and not set(assignment.write_paths) <= set(
+                app.config.allowed_write_paths
+            ):
                 raise ValueError("Proposed write scope exceeds user grant")
             if not set(assignment.checks) <= {c.name for c in app.config.checks}:
                 raise ValueError("Unknown configured check")

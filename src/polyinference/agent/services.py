@@ -13,6 +13,7 @@ from ..contracts import (
     ArtifactRef,
     CapabilityCall,
     CheckEvidence,
+    CodeRevision,
     ContextPart,
     ContextView,
     DataPolicy,
@@ -39,7 +40,8 @@ from ..domain import (
     operation_fingerprint,
 )
 from ..ports import RuntimePorts
-from .prompts import SENIOR, WORKER
+from .prompts import BOOTSTRAP, SENIOR, WORKER
+from .tasks import coding_tools
 
 
 class AgentServices:
@@ -51,7 +53,7 @@ class AgentServices:
             program_version=PROGRAM_VERSION,
             graph_digest=digest(b"".join(p.read_bytes() for p in sorted(Path(__file__).parent.glob("*.py")))),
             state_schema_version=STATE_VERSION,
-            prompt_bundle_digest=digest((WORKER + SENIOR).encode()),
+            prompt_bundle_digest=digest((WORKER + SENIOR + BOOTSTRAP).encode()),
         )
 
     def get(self, key):
@@ -392,10 +394,64 @@ class AgentServices:
             digest=digest(canonical([p.content.digest for p in parts])),
             parts=parts,
             memory_snapshot_refs=[],
-            tool_catalog_digest=digest(b"files-and-configured-checks/1"),
+            tool_catalog_digest=digest(
+                canonical({"tools": coding_tools(self.config), "setup_tool": "repository.select_branch"})
+            ),
             maximum_input_tokens=self.config.limits.max_input_tokens_per_call,
             omitted_refs=omitted,
         )
+
+    def sync_setup(self, state):
+        task_key = state["task_ledger_ref"]
+        task = self.get(task_key)
+        if task.get("category") != "setup":
+            return
+        from ..contracts import TaskAttempt, TaskSpec
+
+        manifest = self.ports.workspaces.current(state["workspace_id"])
+        selection = self.ports.records.get("branch-selection/" + manifest.workspace_id)
+        selected = selection and not self.ports.records.get("setup/base-adopted")
+        old_spec = TaskSpec.model_validate(self.get(task["spec_ref"]))
+        if not selected and old_spec.allowed_change_scope == manifest.allowed_write_paths:
+            return
+        base = selection[1]["code"] if selected else task["base"]
+        spec_id = old_spec.record_id + ":prepared-" + str(manifest.generation)
+        spec = old_spec.model_copy(
+            update={
+                "record_id": spec_id,
+                "base": CodeRevision.model_validate(base),
+                "allowed_change_scope": manifest.allowed_write_paths,
+            }
+        )
+        attempt_key = "attempt/" + task["attempt_id"]
+        attempt = TaskAttempt.model_validate(self.get(attempt_key))
+        attempt = attempt.model_copy(
+            update={"revision": attempt.revision + 1, "task_spec_ref": spec_id, "original_base": spec.base}
+        )
+        updates = {
+            task_key: {
+                **task,
+                "base": base,
+                "spec_ref": spec_id,
+                "assignment": {**task["assignment"], "write_paths": manifest.allowed_write_paths},
+            },
+            attempt_key: attempt.model_dump(mode="json"),
+        }
+        immutable = {spec_id: spec.model_dump(mode="json")}
+        if selected:
+            run = self.get("app/run")
+            if set(run["active_workers"]) - {state["process_id"]} or self.ports.records.scan("plan/"):
+                raise ValueError("Base selection must precede development planning")
+            for head in ("head/initial", "head/provisional", "head/reviewed"):
+                updates[head] = {"code": base}
+            info = self.get("repository/setup")
+            updates["repository/setup"] = {
+                **info,
+                "base_branch": selection[1]["branch"],
+                "base_commit": base["commit_id"],
+            }
+            immutable["setup/base-adopted"] = selection[1]
+        self.ports.workspaces.retag_task_spec(manifest.workspace_id, spec_id, updates, immutable)
 
     async def model(self, state, senior=False):
         pid = state["process_id"]
@@ -405,8 +461,24 @@ class AgentServices:
             output = self.read(result.output_refs[0])
             if result.state != "succeeded":
                 raise RuntimeError(str(output))
+            if not senior:
+                self.sync_setup(state)
             try:
-                return json.loads(output["text"])
+                reply = json.loads(output["text"])
+                if not senior and state["phase"] == "assessment" and reply.get("kind") == "assessment":
+                    pinned_part = next(
+                        part
+                        for part in retained[1]["payload"]["context"]["parts"]
+                        if part["part_id"] == "pinned-data"
+                    )
+                    pinned_text = self.ports.artifacts.read(
+                        ArtifactRef.model_validate(pinned_part["content"])
+                    ).decode()
+                    expected = json.loads(pinned_text.split("Pinned application inputs:\n", 1)[1])["code"]
+                    actual = await self.ports.workspaces.revision(state["workspace_id"])
+                    if actual.effective_tree_digest != expected["effective_tree_digest"]:
+                        reply["repair"] = True
+                return reply
             except json.JSONDecodeError:
                 return {"invalid_output": output["text"][:2000]}
         process = self.get("process/" + pid)
@@ -430,6 +502,11 @@ class AgentServices:
                 "memory": self.memory_view(),
             }
             schema, instruction, phase = TypeAdapter(WorkerReply).json_schema(), WORKER, state["phase"]
+            if task.get("category") == "setup":
+                instruction += BOOTSTRAP
+                data["repository_setup"] = self.get("repository/setup")
+                data["user_objective"] = self.config.objective
+            data["available_tools"] = coding_tools(self.config, task.get("category") == "setup")
         context = self.context(instruction, data, self.history(state.get("trajectory_ref")), pid, schema)
         endpoint = getattr(self.config, self.config.role_bindings[role])
         if endpoint.protocol in {"codex_app_server", "codex_proxy"}:
@@ -440,7 +517,7 @@ class AgentServices:
                 workspace_id=state.get("workspace_id", "senior-snapshot"),
                 allowed_capabilities=[]
                 if senior
-                else ["files.list", "files.read", "files.write", "files.delete", "checks.run"],
+                else coding_tools(self.config, task.get("category") == "setup"),
                 required_phase_protocol="polyinference/senior-readonly/1"
                 if senior
                 else "polyinference/worker-phase/1",
@@ -478,8 +555,14 @@ class AgentServices:
             raise RuntimeError(output.get("error", "Model effect failed"))
         if len(output["text"].encode()) > self.config.limits.max_output_bytes:
             raise ValueError("Model output exceeds cap")
+        if not senior:
+            self.sync_setup(state)
         try:
             reply = json.loads(output["text"])
+            if not senior and state["phase"] == "assessment" and reply.get("kind") == "assessment":
+                after = await self.ports.workspaces.revision(state["workspace_id"])
+                if after.effective_tree_digest != current.effective_tree_digest:
+                    reply["repair"] = True
         except json.JSONDecodeError:
             reply = {"invalid_output": output["text"][:2000]}
         return reply

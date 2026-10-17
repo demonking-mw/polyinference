@@ -244,4 +244,8 @@ async def test_native_terminal_failure_releases_resources_but_unknown_retains_th
             assert effect["result"]["execution_termination"] == "confirmed_stopped"
             assert "fixture terminal failure" in effect["result"]["error"]["message"]
     finally:
+        # This fake provider has no live remote execution. Retention was asserted
+        # above; explicitly reconcile its fixture lease so later tests can run.
+        for permit, (owner, _) in list(runtime.exclusive.shell_handles.items()):
+            await runtime.exclusive.release(permit, owner)
         await runtime.close()

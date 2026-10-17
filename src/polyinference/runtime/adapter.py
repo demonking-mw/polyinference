@@ -74,6 +74,9 @@ class StandaloneRuntime:
                 "artifacts",
                 "persistent-checkpoints",
                 "fixed-role-routing",
+                "repository-baseline",
+                "shell-run",
+                "project-scope",
                 "agent-job",
                 "native-broker-callbacks",
             )
@@ -219,8 +222,14 @@ class StandaloneRuntime:
                 "files.write",
                 "files.delete",
                 "checks.run",
+                "shell.run",
+                "repository.select_branch",
             }:
                 raise ValueError("Only actual broker tool callbacks may be subordinate")
+            if request.payload.capability_id not in parent[1]["request"]["payload"].get(
+                "allowed_capabilities", []
+            ):
+                raise ValueError("Subordinate tool exceeds its parent capability grant")
         if isinstance(request.payload, (ModelQuery, AgentJob)) and request.payload.role != process[1]["role"]:
             raise ValueError("Model role differs from authenticated process binding")
         for _, _, body in self.records.scan("effect/"):

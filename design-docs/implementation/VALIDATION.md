@@ -3,10 +3,30 @@
 Environment: Ubuntu 22.04 / WSL, Python 3.10.12. Runtime versions are pinned in
 `pyproject.toml` and the tested environment is recorded in `requirements.lock`.
 
-* Full behavioral suite, including the test UI: **77 passed**, 74.53 seconds.
-* Seven UI tests exercise actual HTTP launches, fresh run state, persisted node
+* Full behavioral suite, including the test UI: **86 passed**, 100.77 seconds.
+* Eight UI tests exercise actual HTTP launches, fresh run state, persisted node
   history, prompt/response artifacts, failure handling, local-origin checks,
   repository switching, full JSON exports and shared CLI/UI steering writes.
+* The default UI uses Haiku juniors and Codex setup/senior engineers with a
+  nine-sprint limit and approximately 10% of development assignments on the senior.
+  A mixed-provider regression exercises the real Anthropic Messages adapter with
+  a fixture transport and a simulated Codex senior. It completes after four
+  senior reviews, beyond the former three-sprint cap, and verifies nonzero costs
+  for both providers. No new live Anthropic authentication test was performed.
+* Eight setup/tool tests cover cloud-first preparation, existing/new/empty Git
+  baselines, requested-branch selection, source isolation, callback replay,
+  shell timeout/output/cwd/scope handling, and cumulative development allocation.
+* A complete ten-task run routes one nominated development task to the cloud
+  senior and nine to juniors. A strengthened replay check also passed separately
+  (15.50 seconds): a shell edit during native assessment forces reconciliation,
+  fresh checks and a second assessment, including settled model-result replay.
+* A new live Codex setup check passed with the installed CLI and subscription:
+  three native phase jobs selected a new private branch, ran a brokered shell
+  script, checked the resulting file and published a successful setup report.
+  Seven subordinate callbacks included branch selection, shell, reads and checks.
+  This was a setup-only check, not full project acceptance or a live Haiku run.
+* Browser verification found the optional Base branch control, preserved saved
+  runs and no JavaScript errors after restarting the UI with the new defaults.
 * Six cost tests cover mixed Codex/Haiku totals, cached and cache-write usage,
   long prompts, native usage recovery, deduplication and missing usage/prices.
 * Browser checks verified the repository picker, expanded steering panel, saved
@@ -21,7 +41,8 @@ Environment: Ubuntu 22.04 / WSL, Python 3.10.12. Runtime versions are pinned in
   7.69 seconds, including early host callbacks with colliding RPC IDs.
 * Ruff lint and formatting checks passed; Python compilation and Git whitespace
   checks passed.
-* All four OpenAI, Gemini, Claude and Codex example configurations pass validation.
+* All five OpenAI, Gemini, Claude, Codex and mixed-provider example configurations
+  pass validation.
 * Package wheel builds successfully and includes the UI HTML asset and server.
   UI JavaScript syntax and browser rendering checks passed.
 * Original agent validator: 35 illustrative records, 41 invalid combinations.
@@ -48,6 +69,7 @@ brokered callbacks produced a successful report, required reconciliation and
 assessment turns, a real publication, senior keep and independent acceptance.
 The source checkout remained unchanged. The native profile, dynamic tool schema,
 strict output grammar and token usage events were verified against this CLI.
+The new shell/branch callback schema was also exercised by the live setup check.
 See [setup and live evidence](PROVIDER_SETUP.md).
 
 Anthropic's real Messages endpoint returned HTTP 401 for the user-supplied

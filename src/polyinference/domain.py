@@ -12,7 +12,7 @@ from pydantic import Field, model_validator
 from .contracts import Limits, PhaseReserve, Wire
 from .workspace_contracts import RelativePath
 
-PROGRAM_VERSION = "agent-1-audited-core"
+PROGRAM_VERSION = "agent-2-setup-shell-routing"
 STATE_VERSION = "2.1"
 
 
@@ -142,7 +142,15 @@ class SeniorProposal(Wire):
 
 class Action(Wire):
     kind: Literal["action"]
-    tool: Literal["files.list", "files.read", "files.write", "files.delete", "checks.run"]
+    tool: Literal[
+        "files.list",
+        "files.read",
+        "files.write",
+        "files.delete",
+        "checks.run",
+        "shell.run",
+        "repository.select_branch",
+    ]
     arguments: dict
 
 

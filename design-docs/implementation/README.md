@@ -74,7 +74,8 @@ closure. New steering invalidates an in-flight acceptance attempt.
 ## Codex integration
 
 The direct adapter follows the official app-server initialize/thread/start/
-turn/start/turn-completed protocol. Senior jobs use immutable read-only snapshots.
+turn/start/turn-completed protocol. Planning/review jobs use immutable read-only snapshots. Initial setup and senior coding
+assignments use the same brokered worker entry point as junior coding assignments.
 Coding roles require `brokered_tools=true`: each bounded development,
 reconciliation or assessment phase is one native job. Codex owns its internal
 loop and calls an experimental dynamic host tool. Actual callbacks become
@@ -82,7 +83,7 @@ subordinate CapabilityCall operations with inherited scope/budget/parent identit
 The parent cloud occupancy is retained. Native item notifications are observations.
 
 The native sandbox is read-only with restricted snapshot reads. File mutation and
-configured checks use the host broker. The adapter denies native approval and
+configured checks, enabled foreground scripts and setup branch selection use the host broker. The adapter denies native approval and
 unknown callback requests. As a conservative additional bound, a native job owns
 the installation shell gate for its whole lifetime; reentrant broker checks share
 that ownership. Raw-inference workers retain the narrower per-command shell
@@ -117,3 +118,43 @@ The supported Python/framework versions are pinned in pyproject and the tested
 lockfile. Contract tests compare the SDK types to the design Python models under
 the same Pydantic release, and validate the original fixtures. Older frozen JSON
 schema exports differ cosmetically under newer Pydantic's const/enum generation.
+
+## Initial setup, branch baselines and development allocation
+
+The default UI starts one `category=setup`, `role=specialist` task before sprint
+planning. It reads the full user objective with the `BOOTSTRAP` instructions and
+uses the ordinary worker graph, mandatory final phases and publication receipts.
+It is not a planning query and does not increment the sprint or development-task
+allocation counters. New folders/unborn repositories get a private Git baseline;
+existing checkouts must be clean. An empty project receives a minimal private
+`.gitignore` seed to satisfy the unchanged nonempty workspace-closure contract.
+The source checkout is not switched or committed.
+
+`repository.select_branch` is available only through an initial setup TaskSpec's
+capability grant and only before edits/integration. It resolves a local branch in
+the isolated store (or creates a requested new branch). The selected CodeRevision
+becomes initial/provisional/reviewed head before ordinary assignments exist. A new
+versioned manifest, linked TaskSpec and TaskAttempt preserve base provenance. Git
+initialization and identity are local to the run; no global Git configuration changes.
+
+Senior development is represented by `role=specialist`, using the same worker
+entry point with the cloud binding. The coordinator rounds the configured senior
+share cumulatively over development assignments, preferring planner nominations.
+Setup and cancelled tasks are excluded. Export accounting reports started coding
+tasks independently of planner/model-call totals.
+
+The new optional runtime feature requirements are `repository-baseline/1`,
+`shell-run/1` and `project-scope/1` (each prefixed `runtime/`). The OS implements
+WorkspacePorts.select_branch and atomic retag_task_spec; the agent never touches
+workspace files directly. `TaskSpec.extensions["polyinference/project-write"]`
+expresses a project-root setup grant; ordinary tasks still receive exact file
+write sets. Shell execution uses CapabilityCall, bounded output/deadline/process
+cleanup and the same installation gate. Shell output is an observation, not
+configured acceptance evidence. Mutations during assessment trigger reconciliation
+and fresh checks, including when a settled model result is replayed.
+
+Wire 2.0 SDK records and the original workspace schemas are unchanged. The new
+program version prevents silently resuming an older graph/prompt implementation.
+A future OS must implement the advertised optional features or reject negotiation.
+Trusted shell execution is a host execution mode, not filesystem isolation; the
+bubblewrap mode enforces a restricted workspace environment when available.

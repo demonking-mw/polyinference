@@ -50,6 +50,11 @@ class AgentConfig(Wire):
     role_bindings: dict[str, Literal["local", "cloud"]] = Field(
         default_factory=lambda: {"senior": "cloud", "worker": "local", "specialist": "cloud"}
     )
+    prepare_repository: bool = False
+    base_branch: str | None = None
+    write_scope: Literal["explicit", "project"] = "explicit"
+    shell_execution: Literal["disabled", "trusted", "bubblewrap"] = "disabled"
+    senior_development_fraction: Annotated[float, Field(ge=0, le=1)] = 0.1
     max_workers: Annotated[int, Field(gt=0, le=16)] = 2
     max_sprints: Annotated[int, Field(gt=0, le=100)] = 8
     max_senior_corrections: Annotated[int, Field(ge=0, le=3)] = 1

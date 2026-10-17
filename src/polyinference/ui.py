@@ -21,11 +21,12 @@ from urllib.parse import parse_qs, urlsplit
 import aiosqlite
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
+from .agent.routing import accounting
 from .cli import execute, load_config, record_steering
 from .config import AgentConfig, Endpoint
 from .costs import combine_costs, run_cost
-from .domain import Check
-from .ui_repository import directories, repository, suggested_check
+from .domain import Check, default_limits
+from .ui_repository import directories, project, suggested_check
 
 
 def read_records(state):
@@ -214,11 +215,15 @@ def greeting_config(root):
     endpoint = Endpoint(
         protocol="codex_app_server",
         model="gpt-6.1-sol",
+        max_context_tokens=128000,
+        reserved_context_tokens=256000,
         max_inflight=1,
         timeout_seconds=180,
         inference_location="cloud",
     )
     return AgentConfig(
+        prepare_repository=True,
+        shell_execution="trusted",
         repository=str(source),
         objective=(
             "Fix greeting(name) to return exactly Hello, {name}! with the comma and exclamation mark. "
@@ -229,11 +234,24 @@ def greeting_config(root):
         closure_paths=["greeting.py", "test_greeting.py"],
         checks=[Check(name="greeting", argv=[sys.executable, "-m", "unittest", "-q"])],
         check_execution="trusted",
-        local=endpoint.model_copy(update={"brokered_tools": True}),
-        cloud=endpoint,
-        role_bindings={"worker": "local", "senior": "cloud", "specialist": "local"},
+        local=Endpoint(
+            protocol="anthropic",
+            base_url="https://api.anthropic.com/v1",
+            model="claude-haiku-5-5",
+            api_key_env="ANTHROPIC_API_KEY",
+            max_context_tokens=128000,
+            reserved_context_tokens=256000,
+            max_inflight=1,
+            timeout_seconds=180,
+            inference_location="cloud",
+        ),
+        cloud=endpoint.model_copy(update={"brokered_tools": True}),
+        role_bindings={"worker": "local", "senior": "cloud", "specialist": "cloud"},
         max_workers=1,
-        max_sprints=3,
+        max_sprints=9,
+        limits=default_limits().model_copy(
+            update={"max_input_tokens_per_call": 96000, "max_output_tokens_per_call": 8000}
+        ),
     )
 
 
@@ -271,7 +289,7 @@ class TestUI:
 
     def repository_options(self, path):
         base = self.configuration()
-        root, files = repository(path)
+        root, files = project(path)
         original = root == base.repo_path or self.config_path is not None
         argv = base.checks[0].argv if original else suggested_check(root, files)
         return {
@@ -279,17 +297,19 @@ class TestUI:
             "check_command": shlex.join(argv),
             "file_count": len(files),
             "clear_objective": not original,
-            "scope": "Configured file scope" if self.config_path else "All committed regular files",
+            "scope": "Configured file scope" if self.config_path else "Selected project directory",
         }
 
     def configure_run(self, path=None, check_command=None):
         config = self.configuration()
         updates = {}
         if path is not None:
-            root, files = repository(path, clean=True)
+            root, files = project(path, clean=True)
             updates["repository"] = str(root)
             if root != config.repo_path and self.config_path is None:
-                updates.update(allowed_write_paths=files, closure_paths=files)
+                updates.update(
+                    allowed_write_paths=files or ["README.md"], closure_paths=files, write_scope="project"
+                )
                 argv = (
                     shlex.split(check_command) if check_command is not None else suggested_check(root, files)
                 )
@@ -363,6 +383,7 @@ class TestUI:
             "reports": [value for key, value in records.items() if key.startswith("report/")],
             "steering": [value for key, value in sorted(records.items()) if key.startswith("steering/")],
             "run_record": records.get("app/run"),
+            "repository_setup": records.get("repository/setup"),
         }
 
     def steer(self, run_id, text):
@@ -376,11 +397,15 @@ class TestUI:
         temporary.write_text(json.dumps(metadata, indent=2))
         temporary.replace(target)
 
-    def start(self, objective=None, repository_path=None, check_command=None):
+    def start(self, objective=None, repository_path=None, check_command=None, base_branch=None):
         with self.lock:
             if self.active:
                 raise ValueError("A test is already running")
             config = self.configure_run(repository_path, check_command)
+            if base_branch is not None:
+                if not isinstance(base_branch, str) or len(base_branch) > 256:
+                    raise ValueError("Enter a valid base branch")
+                config = config.model_copy(update={"base_branch": base_branch.strip() or None})
             if objective is not None:
                 if not isinstance(objective, str) or not objective.strip() or len(objective) > 16000:
                     raise ValueError("Enter a test objective of 1–16000 characters")
@@ -428,8 +453,9 @@ class TestUI:
             status = "interrupted"
         source = metadata.get("repository")
         config_path = Path(metadata["state"]).parent / "config.json"
-        if not source and config_path.is_file():
-            source = json.loads(config_path.read_text()).get("repository")
+        configuration = json.loads(config_path.read_text()) if config_path.is_file() else {}
+        if not source:
+            source = configuration.get("repository")
         return {
             **metadata,
             "status": status,
@@ -437,6 +463,9 @@ class TestUI:
             "error": metadata.get("error"),
             "repository": source,
             "cost": self.cost(metadata["state"], records),
+            "development_allocation": accounting(
+                records, configuration.get("senior_development_fraction", 0.1)
+            ),
             "steering_received": run.get("steering_received", 0),
             "steering_applied": run.get("steering_applied", 0),
         }
@@ -526,11 +555,12 @@ def make_server(manager, port=8765):
                             "objective": config.objective,
                             "repository": config.repository,
                             "check_command": shlex.join(config.checks[0].argv),
+                            "base_branch": config.base_branch,
                             "browse_root": str(Path.cwd().parent),
                             "total_cost": combine_costs(unique.values()),
                             "configuration": str(manager.config_path)
                             if manager.config_path
-                            else "Codex greeting test",
+                            else "Haiku juniors + Codex setup/senior · 90/10 development · 9 sprints",
                         },
                     )
                 if url.path == "/api/directories":
@@ -573,7 +603,10 @@ def make_server(manager, port=8765):
                     sequence = manager.steer(data.get("id"), data.get("text"))
                     return self.respond(202, {"sequence": sequence})
                 run_id = manager.start(
-                    data.get("objective"), data.get("repository"), data.get("check_command")
+                    data.get("objective"),
+                    data.get("repository"),
+                    data.get("check_command"),
+                    data.get("base_branch"),
                 )
                 self.respond(202, {"id": run_id})
             except KeyError:
