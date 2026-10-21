@@ -16,6 +16,10 @@ AgentServices assembles coding state and requests without making the OS interpre
 Trusted bootstrap installs application protocols, capabilities, cancellation and
 publication handlers. Processes receive explicit grants. Canonical memory and
 history selection belong here; optional OS preparation produces derived views.
+CheckSelection adds agent-only prerequisite/task/acceptance purposes to the generic
+Check schema. Initial setup pins discovered criteria per purpose; explicit user
+criteria cannot be replaced. setup_check_definitions, task_check_definitions and
+acceptance_check_definitions select phase policy without changing OS check execution.
 
 ## Principles to preserve
 

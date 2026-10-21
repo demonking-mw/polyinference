@@ -30,8 +30,25 @@ objective and file names are placeholders. At minimum, update these fields:
 | `objective` | The full development request and acceptance criteria. |
 | `allowed_write_paths` | Exact project-relative writable file names, including intended new files, when using the default `write_scope: "explicit"`. |
 | `closure_paths` | Additional project-relative source, manifests, scripts and test files needed in the initial worker view. |
-| `checks` | Named executable/argument lists that verify the project, with suitable timeouts. |
+| `checks` | Named task checks. Explicitly supplied legacy checks also serve final acceptance when acceptance_checks is omitted. |
+| `prerequisite_checks` | Agent workflow field at top level: environment/setup checks, excluded from product acceptance. Default []. |
+| `acceptance_checks` | Agent workflow field at top level: final product checks. Omitted/null retains explicitly configured legacy checks; [] requires setup discovery of final criteria. |
 | `local`, `cloud` | Provider protocols, URLs, accessible model IDs, credential variable names and concurrency/context settings. |
+
+Setup runs prerequisite checks when present, otherwise available task/product
+checks for compatibility. Development assignments may select task/product checks,
+not prerequisite-only checks. Final completion requires nonempty final criteria
+and passing evidence against the exact reviewed tree and current user objective.
+
+Initial setup can discover a combined command for each unconfigured purpose with
+`checks.configure {name, argv, purpose, timeout_seconds?, output_paths?}`.
+The purpose is `prerequisite`, `task` (default) or `acceptance`. A discovered task
+check is never automatically promoted to final acceptance. Selections are pinned
+per purpose; workers cannot replace configured criteria or change them after
+setup/planning. Reused check names must have identical command definitions.
+Use fresh state after this capability-schema change; old runs are not migrated.
+The agent must choose checks that exercise the objective: a purpose label alone
+cannot turn a weak command into evidence of product behavior.
 
 For example, replace the check with this object inside the `checks` list, using
 an interpreter that has your project's dependencies installed:

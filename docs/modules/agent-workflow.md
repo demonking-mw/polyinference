@@ -20,6 +20,9 @@ Dispatch records started_at atomically with task admission. Historical developme
 counts retain cancelled/superseded starts; legacy :started specs remain evidence.
 Role allocation uses those same starts plus pending quota reservations, which are
 labelled separately in senior inputs and never counted as executed work.
+Setup checks prerequisites when present. Assignments use task/product checks;
+final completion requires its separate acceptance selection. Explicit legacy
+checks remain combined task/final criteria when no acceptance override is supplied.
 
 ## Principles to preserve
 

@@ -33,7 +33,6 @@ from ..contracts import (
 from ..domain import (
     PROGRAM_VERSION,
     STATE_VERSION,
-    Check,
     GitPolicy,
     SeniorProposal,
     WorkerReply,
@@ -44,7 +43,7 @@ from ..domain import (
 )
 from ..ports import RuntimePorts
 from .prompts import BOOTSTRAP, SENIOR, WORKER
-from .runtime_policy import CodingRuntimePolicy, configured_checks
+from .runtime_policy import CheckSelection, CodingRuntimePolicy, configured_checks, purpose_checks
 from .tasks import coding_tools
 
 
@@ -82,6 +81,19 @@ class AgentServices:
     def check_definitions(self):
         return configured_checks(self.config, self.ports.records)
 
+    @property
+    def acceptance_check_definitions(self):
+        return purpose_checks(self.config, self.ports.records, "acceptance")
+
+    @property
+    def task_check_definitions(self):
+        checks = [*purpose_checks(self.config, self.ports.records, "task"), *self.acceptance_check_definitions]
+        return list({check.name: check for check in checks}.values())
+
+    @property
+    def setup_check_definitions(self):
+        return purpose_checks(self.config, self.ports.records, "prerequisite") or self.task_check_definitions
+
     def __init__(self, ports: RuntimePorts, config, run_id="run"):
         self.ports, self.config, self.run_id = ports, config, run_id
         self.worker_tasks = {}
@@ -112,7 +124,9 @@ class AgentServices:
             prompt_bundle_digest=digest((WORKER + SENIOR + BOOTSTRAP).encode()),
         )
         self.runtime_policy = CodingRuntimePolicy(self)
-        ports.register_capability("checks.configure", self.runtime_policy.configure_checks, input_type=Check,
+        for check in self.check_definitions:
+            ports.tools.register_check(check)
+        ports.register_capability("checks.configure", self.runtime_policy.configure_checks, input_type=CheckSelection,
                                   effect_class="private_write", workspace=True)
         ports.register_publication_policy(self.program.program_id, self.runtime_policy.publication)
         if config.repository_mode == "in_place":
@@ -559,7 +573,7 @@ class AgentServices:
         selection = self.ports.records.get("branch-selection/" + manifest.workspace_id)
         selected = selection and not self.ports.records.get("setup/base-adopted")
         old_spec = TaskSpec.model_validate(self.get(task["spec_ref"]))
-        names = [check.name for check in self.check_definitions]
+        names = [check.name for check in self.setup_check_definitions]
         if (
             not selected and old_spec.allowed_change_scope == manifest.allowed_write_paths
             and task["assignment"]["checks"] == names
@@ -655,6 +669,8 @@ class AgentServices:
                 "hazards": [v for _, _, v in self.ports.records.scan("hazard/")],
                 "memory": self.memory_view(),
                 "configured_checks": [check.model_dump(mode="json") for check in self.check_definitions],
+                "check_purposes": {purpose: [c.name for c in purpose_checks(self.config, self.ports.records, purpose)]
+                                   for purpose in ("prerequisite", "task", "acceptance")},
             }
             schema, instruction, phase = TypeAdapter(WorkerReply).json_schema(), WORKER, state["phase"]
             if task.get("category") == "setup":

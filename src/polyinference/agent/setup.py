@@ -29,7 +29,7 @@ async def prepare(engine):
             + app.config.objective,
             write_paths=paths or app.config.allowed_write_paths,
             read_paths=sorted(tree),
-            checks=[check.name for check in app.check_definitions],
+            checks=[check.name for check in app.setup_check_definitions],
         )
         task, specs = make_task(app, assignment, "setup/plan", base, "setup-project", "setup")
         plan = SprintPlan(

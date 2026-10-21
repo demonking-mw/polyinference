@@ -69,7 +69,7 @@ async def test_cloud_setup_selects_requested_branch_runs_shell_and_publishes_bef
                     )
                     assert selected["state"] == "succeeded", selected
                     if automatic_checks:
-                        check = original_checks[0].model_dump(mode="json")
+                        check = {**original_checks[0].model_dump(mode="json"), "purpose": "acceptance"}
                         observation = await callback("choose-check", {"tool": "checks.configure", "arguments": check})
                         assert observation["state"] == "succeeded", observation
                         replay = await callback("choose-check", {"tool": "checks.configure", "arguments": check})
@@ -309,6 +309,81 @@ async def test_retiring_started_development_preserves_count_and_replacement_allo
         await runtime.close()
 
 
+async def test_setup_discovered_task_check_is_not_implicitly_final_acceptance(config):
+    config = config.model_copy(update={"checks": [], "prepare_repository": True})
+    runtime = await StandaloneRuntime(config).open()
+    app = AgentServices(runtime, config)
+    engine = ProjectAgent(app)
+    try:
+        await engine.initialize()
+        from polyinference.domain import Check
+        check = Check(name="environment", argv=["true"])
+        runtime.tools.register_check(check)
+        app.update("setup/checks", {"checks": [check.model_dump(mode="json")]})
+        assert not await engine.accept()
+        assert not runtime.records.scan("acceptance-receipt/")
+        assert not runtime.records.scan("output-delivery/")
+    finally:
+        await runtime.close()
+
+
+async def test_initial_check_discovery_pins_purposes_without_promoting_prerequisites(config):
+    config = config.model_copy(update={"checks": [], "prepare_repository": True})
+    runtime = await StandaloneRuntime(config).open()
+    app = AgentServices(runtime, config)
+    try:
+        await ProjectAgent(app).initialize()
+        app.process("selector", "specialist", task_data={
+            "category": "setup", "attempt_id": "selector", "workspace_id": "selection"})
+        base = CodeRevision.model_validate(app.get("head/provisional")["code"])
+        await runtime.workspaces.create("selection", "selector", "opaque", base, ["a.py"], ["a.py"],
+                                        capabilities=["checks.configure"], check_names=[])
+        app.update("task/project_setup", {"workspace_id": "selection"})
+        state = {"process_id": "selector", "workspace_id": "selection", "logical_step": 0}
+        for purpose in ("prerequisite", "task", "acceptance"):
+            result, _ = await app.capability(state, "select-" + purpose, "checks.configure", {
+                "name": purpose, "argv": ["true"], "purpose": purpose}, "private_write")
+            assert result.state == "succeeded"
+            if purpose == "prerequisite":
+                assert not app.task_check_definitions and not app.acceptance_check_definitions
+        assert [c.name for c in app.setup_check_definitions] == ["prerequisite"]
+        assert {c.name for c in app.task_check_definitions} == {"task", "acceptance"}
+        assert [c.name for c in app.acceptance_check_definitions] == ["acceptance"]
+        result, _ = await app.capability(state, "weaken", "checks.configure", {
+            "name": "weaker", "argv": ["true"], "purpose": "acceptance"}, "private_write")
+        assert result.state == "failed"
+        app.update("setup/completed", {"process_id": "selector"})
+        result, _ = await app.capability(state, "late", "checks.configure", {
+            "name": "late", "argv": ["true"], "purpose": "task"}, "private_write")
+        assert result.state == "failed"
+    finally:
+        await runtime.close()
+
+
+async def test_explicit_product_acceptance_is_distinct_from_prerequisite_and_task_checks(config):
+    prerequisite = config.checks[0].model_copy(update={"name": "environment", "argv": ["true"]})
+    product = config.checks[0].model_copy(update={"name": "product", "argv": [
+        "python3", "-c", "import pathlib; assert pathlib.Path('a.py').read_text() == 'VALUE = 2\\n'"]})
+    config = config.model_copy(update={"prerequisite_checks": [prerequisite], "acceptance_checks": [product]})
+    runtime = await StandaloneRuntime(config).open()
+    client = ScriptedAgent(two=False)
+    for old in runtime.clients.values():
+        await old.close()
+    runtime.clients = {name: client for name in runtime.clients}
+    app = AgentServices(runtime, config)
+    engine = ProjectAgent(app)
+    try:
+        await engine.initialize()
+        assert not await engine.accept()  # Environment and syntax pass, requested behavior does not.
+        assert not runtime.records.scan("acceptance-receipt/")
+        await engine.run()
+        assert app.get("app/run")["status"] == "completed"
+        receipt = app.get(app.get("app/run")["acceptance_ref"])
+        assert [e["criterion_ref"] for e in receipt["evidence"]] == ["product"]
+    finally:
+        await runtime.close()
+
+
 @pytest.mark.parametrize("exists", [False, True])
 async def test_ui_accepts_plain_project_folder_and_preserves_explicit_branch(config, tmp_path, exists):
     source = tmp_path / "plain" / "nested"
@@ -368,7 +443,7 @@ async def test_default_setup_creates_missing_project_and_follows_objective_befor
                     assert shlex.join(command) in data["user_objective"]
                     assert "checks.configure" in data["available_tools"]
                     reply = {"kind": "action", "tool": "checks.configure", "arguments": {
-                        "name": "ready", "argv": command,
+                        "name": "ready", "argv": command, "purpose": "acceptance",
                     }}
                 elif data["phase"] == "assessment":
                     if automatic_checks:

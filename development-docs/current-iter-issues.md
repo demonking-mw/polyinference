@@ -21,7 +21,8 @@ implementation of the fixes; record actual start and completion evidence later.
 Actual wakeup clock check: **2026-10-21 09:14:29 EDT (13:14:29 UTC)**, after the
 requested 01:55 start. Baseline cb02d02 was verified on codex/simple-os-v1 with a
 clean working tree before editing. Completion records: item 1, [FIX-0083](FIXES.md#fix-0083);
-item 2, [FIX-0084](FIXES.md#fix-0084); item 3, [FIX-0085](FIXES.md#fix-0085).
+item 2, [FIX-0084](FIXES.md#fix-0084); item 3, [FIX-0085](FIXES.md#fix-0085);
+item 4, [FIX-0086](FIXES.md#fix-0086).
 
 | Order | Item | Owning layer and bounded scope |
 | --- | --- | --- |
@@ -1432,7 +1433,8 @@ existing reconciliation requirements and retained-capacity safeguards remain int
 Status: report items 1, 2, 4, 5, 6 and 7 implemented, together with OS output
 delivery and verified support for non-coding agents. Report items 3 and 8 remain
 open in the historical report below; item 8 is now corrected by
-[FIX-0084](FIXES.md#fix-0084). Item 3 remains open. This file tracks current-version fixes.
+[FIX-0084](FIXES.md#fix-0084), and item 3 by [FIX-0086](FIXES.md#fix-0086).
+This file tracks current-version fixes; historical evidence remains below.
 
 ### Deferred work recorded before implementation
 
@@ -1442,7 +1444,7 @@ OSAG-06), write authority (OSAG-05), loop termination (OSAG-03), requirement
 handoffs, provider diagnostics (OSAG-02), and explicit recovery (OSAG-04).
 
 - **Report item 3 — P1: separate setup checks from final product acceptance.**
-  Still open and outside this implementation. The setup-selected
+  Implemented by [FIX-0086](FIXES.md#fix-0086). Historical problem: the setup-selected
   `development-prerequisites` command checks Node, npm and ignore rules, and the
   same immutable selection is reused for tasks and final acceptance. Introduce
   distinct prerequisite, task and final acceptance policies so a setup-only tree
@@ -1508,8 +1510,8 @@ The selected implementation now includes:
   its own `retry-output` path, receipt reconciliation and verification-lease cleanup.
 
 The historical incident is not rewritten or silently migrated. These fixes do not
-create a Minecraft product retroactively. Report item 3 remains open; the later
-FIX-0084 correction covers item 8 without changing historical run evidence.
+create a Minecraft product retroactively. Later FIX-0086 and FIX-0084 corrections
+cover report items 3 and 8 without changing historical run evidence.
 
 Verification: the full Python suite passed with **157 passed, 1 skipped**. The
 skipped frontend wrapper requires Node 18+; the default executable is Node 12.

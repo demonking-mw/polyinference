@@ -2,12 +2,34 @@
 
 from __future__ import annotations
 
+from typing import Literal
+
 from ..domain import Check
 
 
+class CheckSelection(Check):
+    purpose: Literal["prerequisite", "task", "acceptance"] = "task"
+
+
+def purpose_checks(config, records, purpose):
+    declared = {"prerequisite": config.prerequisite_checks, "task": config.checks,
+                "acceptance": config.checks if config.acceptance_checks is None else config.acceptance_checks}[purpose]
+    if declared:
+        return declared
+    selected = records.get("setup/checks/" + purpose)
+    if not selected and purpose == "task":
+        legacy = records.get("setup/checks")
+        if legacy and legacy[1].get("purpose", "task") == "task":
+            selected = legacy  # Legacy discovery never acquires final-acceptance authority.
+    return [Check.model_validate(check) for check in selected[1]["checks"]] if selected else []
+
+
 def configured_checks(config, records):
-    selected = records.get("setup/checks")
-    return [Check.model_validate(check) for check in selected[1]["checks"]] if selected else config.checks
+    checks = {}
+    for purpose in ("prerequisite", "task", "acceptance"):
+        for check in purpose_checks(config, records, purpose):
+            checks[check.name] = check
+    return list(checks.values())
 
 
 class CodingRuntimePolicy:
@@ -18,11 +40,18 @@ class CodingRuntimePolicy:
         app, ports = self.app, self.app.ports
         manifest = ports.workspaces.current(request.payload.workspace_id)
         task = ports.records.get("task/project_setup")
-        if (app.config.checks or manifest.view != "development" or not task
+        if (manifest.view != "development" or not task
                 or task[1]["workspace_id"] != manifest.workspace_id
                 or ports.records.get("setup/completed") or ports.records.scan("plan/")):
             raise ValueError("Check selection requires the initial setup task before planning")
-        check = Check.model_validate({key: value for key, value in arguments.items() if key != "generation"})
+        selected = CheckSelection.model_validate({key: value for key, value in arguments.items() if key != "generation"})
+        purpose = selected.purpose
+        declared = {"prerequisite": app.config.prerequisite_checks, "task": app.config.checks,
+                    "acceptance": app.config.checks if app.config.acceptance_checks is None
+                    else app.config.acceptance_checks}[purpose]
+        if declared:
+            raise ValueError("Cannot replace explicitly configured checks for this purpose")
+        check = Check.model_validate(selected.model_dump(exclude={"purpose"}))
         if not check.name.strip() or not check.argv[0].strip() or any("\x00" in arg for arg in check.argv):
             raise ValueError("Supply a check name and nonempty executable arguments")
         source = set(await ports.workspaces.scan_async(ports.workspaces.root_for(manifest)))
@@ -31,13 +60,18 @@ class CodingRuntimePolicy:
         if any(path == output or path.startswith(output + "/")
                for output in check.output_paths for path in source):
             raise ValueError("Build output paths overlap existing or granted source files")
-        selection = {"workspace_id": manifest.workspace_id, "checks": [check.model_dump(mode="json")]}
-        retained = ports.records.get("setup/checks")
+        selection = {"workspace_id": manifest.workspace_id, "checks": [check.model_dump(mode="json")],
+                     "purpose": purpose}
+        key = "setup/checks/" + purpose
+        retained = ports.records.get(key)
         if retained and retained[1] != selection:
             raise ValueError("Acceptance checks have already been selected for this run")
         ports.tools.register_check(check)
-        ports.records.put_once("setup/checks", selection)
-        ports.workspaces.configure_grant(manifest.workspace_id, check_names=[check.name])
+        ports.records.put_once(key, selection)
+        if not ports.records.get("setup/checks"):
+            ports.records.put_once("setup/checks", selection)  # Diagnostic compatibility alias for the first choice.
+        ports.workspaces.configure_grant(manifest.workspace_id,
+                                        check_names=[c.name for c in app.check_definitions])
         return selection
 
     def publication(self, arguments, process_id, *, require_integration=True):

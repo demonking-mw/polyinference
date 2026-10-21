@@ -19,6 +19,8 @@ One OS settings schema, adjacent coding defaults, and explicit application workf
 
 JSON groups OS preferences under `system`; workflow fields stay at the top level.
 Legacy flat input remains accepted, but duplicate placements are rejected.
+Agent-only prerequisite_checks and acceptance_checks stay at top level; legacy
+checks remain combined task/final criteria unless acceptance_checks overrides them.
 `POLYINFERENCE_LOCAL_BATCH_SIZE` overrides local endpoint admission only.
 
 ## Principles to preserve

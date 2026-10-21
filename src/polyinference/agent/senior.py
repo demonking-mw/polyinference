@@ -41,7 +41,7 @@ async def validate(state, runtime: Runtime[AppContext]):
                 app.config.allowed_write_paths
             ):
                 raise ValueError("Proposed write scope exceeds user grant")
-            if not assignment.checks or not set(assignment.checks) <= {c.name for c in app.check_definitions}:
+            if not assignment.checks or not set(assignment.checks) <= {c.name for c in app.task_check_definitions}:
                 raise ValueError("Unknown configured check")
     except ValueError as exc:
         history = app.append_history(

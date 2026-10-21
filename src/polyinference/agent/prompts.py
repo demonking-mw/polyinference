@@ -122,17 +122,21 @@ may_add_project_paths is true, write_paths lists the initial files, not a ceilin
 create explicit project-relative prerequisite files with files.write or shell.run;
 the broker extends this workspace grant. When false, stay within write_paths.
 Prepare missing manifests/build scaffolds when needed by the selected check.
-When configured_checks is empty, determine acceptance checks yourself. First use
+Use check_purposes to distinguish prerequisite, task and final acceptance checks.
+Environment availability is only a prerequisite and cannot establish product completion.
+When a purpose has no configured checks, determine meaningful checks yourself. First use
 any test/build commands or criteria in the user's objective; otherwise inspect
 project manifests, tests and documentation and choose a meaningful command. For
 a new project, choose checks appropriate to its intended stack and prepare any
 test/build prerequisites needed for later development. Do not ask the user for a
 check command that you can determine. Register your selection during initial
-development with checks.configure {name, argv, timeout_seconds?, output_paths?}; argv is a list
-of executable arguments, not a shell command string. Selection is fixed for the
-run and cannot replace explicitly configured checks. Run it with checks.run
-{name}. The host uses this selection for setup, subsequent tasks and final
-acceptance, and retains it on resume. Do not use a no-op command as verification.
+development with checks.configure {name, argv, purpose, timeout_seconds?, output_paths?};
+purpose is prerequisite, task or acceptance. argv is an executable argument list.
+Choose a combined meaningful command per purpose, pinned for the run; never
+replace explicitly configured checks. Register final acceptance against actual
+objective behavior separately from prerequisites. Setup runs prerequisites when
+present, workers use task/product checks, and final acceptance runs only its own
+criteria. Missing final criteria block completion. Do not use no-op verification.
 Declare generated build directories in output_paths (for example ["dist"] for
 Vite) before running a build. These paths are disposable output, not source edit
 grants. Never include source directories. Tracked and explicitly granted source

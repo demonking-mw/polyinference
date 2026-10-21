@@ -261,16 +261,19 @@ The old wire field `task_spec_ref` and `retag_task_spec` method remain opaque
 provenance references; the runtime does not interpret the referenced task.
 
 `AgentServices` installs `checks.configure` from `agent/runtime_policy.py`.
-That handler owns the initial-setup-only rule and immutable `setup/checks`
-selection. It registers the command through `tools.register_check`, grants the
-selected check to setup, and lets `sync_setup` update the agent ledger/spec.
+That handler owns the initial-setup-only rule and immutable per-purpose
+`setup/checks/<purpose>` selection. Its application-owned CheckSelection schema
+distinguishes prerequisite, task and final acceptance checks. It registers ordinary
+commands through `tools.register_check`, grants selected names to setup, and lets
+`sync_setup` update the agent ledger/spec.
 The OS stores immutable command definitions under `runtime/check/<name>` and
 runs only granted names against the current source revision. It does not read
 `task/project_setup`, `setup/completed` or `plan/`.
 
-The existing selection is still reused for setup/task/final checks. Splitting
-business acceptance policies is a separate recorded issue, not a new function
-introduced by this refactor.
+The agent now separates prerequisite, task and final acceptance policy (FIX-0086).
+Explicit legacy config.checks remains combined task/final policy unless overridden;
+setup-discovered task checks never silently authorize final completion. These
+agent fields and criteria do not add coding-purpose interpretation to the OS.
 
 ## Publication and lifecycle data
 

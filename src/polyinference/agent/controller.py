@@ -697,7 +697,8 @@ class ProjectAgent:
             },
             "memory": app.memory_view(),
             "closure_paths": app.config.closure_paths,
-            "configured_checks": [c.name for c in app.check_definitions],
+            "configured_checks": [c.name for c in app.task_check_definitions],
+            "acceptance_checks": [c.name for c in app.acceptance_check_definitions],
             "previous_acceptance": run.get("acceptance_failure"),
         }
         progress = {k: v for k, v in snapshot.items()
@@ -922,7 +923,7 @@ class ProjectAgent:
                 "logical_step": "review",
                 "verification_permit_ref": permit,
             }
-            return await app.checks(state, [c.name for c in app.check_definitions])
+            return await app.checks(state, [c.name for c in app.task_check_definitions])
         finally:
             if not app.ports.operations.uncertain():
                 await app.ports.exclusive.release(permit, pid)
@@ -1076,6 +1077,10 @@ class ProjectAgent:
         app = self.app
         self.close_starts()
         version, run = app.ports.records.get("app/run")
+        if not app.acceptance_check_definitions:
+            app.update("app/run", {**run, "completion_proposed": False,
+                                   "acceptance_failure": {"reason": "No final product acceptance checks configured"}})
+            return False
         if run["active_workers"] or self.unresolved() or run["steering_received"] != run["steering_applied"]:
             return False
         if any(
@@ -1116,7 +1121,7 @@ class ProjectAgent:
                 "logical_step": attempt,
                 "verification_permit_ref": permit,
             }
-            evidence = await app.checks(state, [c.name for c in app.check_definitions])
+            evidence = await app.checks(state, [c.name for c in app.acceptance_check_definitions])
             current = await app.ports.workspaces.revision(wid)
             passing = bool(evidence) and all(
                 e["status"] == "passed"

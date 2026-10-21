@@ -135,6 +135,7 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0083](#fix-0083) | 2026-10-21 | Wait at the effective coding-worker capacity |
 | [FIX-0084](#fix-0084) | 2026-10-21 | Retain cancelled development starts in accounting and allocation |
 | [FIX-0085](#fix-0085) | 2026-10-21 | Preserve caller grammar in generic output recovery |
+| [FIX-0086](#fix-0086) | 2026-10-21 | Separate setup prerequisites from final product acceptance |
 | [FIX-0085](#fix-0085) | 2026-10-21 | Record future learned routing and quota-aware task scheduling |
 
 
@@ -3828,6 +3829,63 @@ Ruff and patch whitespace checks passed. No API/default/schema/navigation change
 was needed; adjacent provider guides remain accurate. No live inference,
 historical-state mutation, migration or push occurred. An unrelated edit in
 next-iteration.md remains untouched and excluded from this commit.
+
+<a id="fix-0086"></a>
+## FIX-0086 — 2026-10-21 — Separate setup prerequisites from final product acceptance
+
+Status: implemented; focused and full-suite verification passed.
+Related history: [FIX-0019](#fix-0019), [FIX-0032](#fix-0032), [FIX-0041](#fix-0041),
+[FIX-0081](#fix-0081). Queue item 4 / older report item 3.
+
+### Problem
+
+A setup-discovered environment-only command could satisfy final acceptance even
+when the requested product was absent. Distinct product checks were not selected
+or run separately from prerequisite/task checks.
+
+### What was wrong
+
+The agent used one setup/checks selection for every phase. Successful execution
+of a check was conflated with that check having authority to establish product
+completion. The OS correctly retained evidence for the requested commands; the
+missing purpose and acceptance policy belonged to the coding application.
+
+### How it was fixed
+
+AgentConfig adds top-level prerequisite_checks and acceptance_checks. Explicit
+legacy checks stay combined task/final criteria unless overridden. The agent's
+CheckSelection capability adds prerequisite/task/acceptance purpose, pins initial
+discovery per purpose and refuses replacement of explicit criteria. Unlabelled
+discovery defaults to task and never implicitly acquires final authority.
+AgentServices selects setup, task and final criteria independently; senior
+assignments cannot use prerequisite-only checks. Final completion refuses missing
+criteria and runs only final checks against the reviewed tree. Updated prompts,
+module/configuration/boundary guides and tracker. Generic OS Check, registry,
+execution/evidence and publication contracts remain unchanged. Fresh state is
+required for the changed application capability schema; no old runs are migrated.
+
+### Design principle enforced or reconstructed
+
+The agent chooses what checks mean and what proves the objective. The OS enforces
+grants and faithfully binds execution evidence to source/environment identity.
+Labels do not make weak checks meaningful; setup must choose real behavior tests.
+Preserve explicit user configuration while preventing automatic promotion of
+discovered prerequisites into completion authority.
+
+### Verification
+
+Both new regressions failed before correction: an environment-only selection and
+a passing syntax check each allowed premature acceptance. The affected setup,
+transition and real-repository suites passed 53 tests in 111.13 seconds after
+correction, including explicit product failure before implementation and success
+afterward, native check selection/replay and refusal to replace pinned commands.
+Full suite: 359 passed, 2 environment skips in 343.56 seconds. The additional
+brokered purpose-selection/sealing regression was added after collection and
+passed separately (1 passed in 1.11 seconds). Full source/test Ruff, all five
+example validations and documentation generation/check passed. The skips retain
+the baseline Linux Node/npm limitations; frontend coverage was exercised in the
+preceding baseline and will be rerun with the later UI work. No live providers, historical-state
+mutation or push occurred. Existing unrelated next-iteration edits are excluded.
 
 <a id="fix-0085"></a>
 ## FIX-0085 — 2026-10-21 — Record future learned routing and quota-aware task scheduling

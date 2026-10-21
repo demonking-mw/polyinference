@@ -20,8 +20,7 @@ def coding_tools(config, setup=False):
         tools.append("shell.run")
     if setup:
         tools.append("repository.select_branch")
-        if not config.checks:
-            tools.append("checks.configure")
+        tools.append("checks.configure")
     return tools
 
 
