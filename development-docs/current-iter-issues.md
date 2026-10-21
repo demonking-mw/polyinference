@@ -10,13 +10,16 @@ as current behavior.
 <a id="authorized-implementation-queue"></a>
 ## Authorized implementation queue — 2026-10-21
 
-Status: implementation in progress; implementation must start no earlier than
+Status: complete; all nine scoped items implemented sequentially with one commit
+per fix. Integrated verification and commit map: [FIX-0093](FIXES.md#fix-0093).
+The one-time heartbeat is disabled (PAUSED), confirmed 2026-10-21 10:34:18 EDT.
+The original time gate required implementation to start no earlier than
 **2026-10-21 01:55:00 America/Toronto (EDT; 05:55:00 UTC)**. This latest start
 time supersedes the earlier requested times. The user requested
 a commit of the current version first, then one fix at a time with a separate
 commit after each verified fix. Earlier planning-only restrictions are superseded
 for these nine scoped items. Queue preparation and baseline checks are not
-implementation of the fixes; record actual start and completion evidence later.
+implementation of the fixes. Actual start and completion evidence follow.
 
 Actual wakeup clock check: **2026-10-21 09:14:29 EDT (13:14:29 UTC)**, after the
 requested 01:55 start. Baseline cb02d02 was verified on codex/simple-os-v1 with a

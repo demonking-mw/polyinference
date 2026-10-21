@@ -142,6 +142,7 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0090](#fix-0090) | 2026-10-21 | Separate inherited ancestry from accepted task contributions |
 | [FIX-0091](#fix-0091) | 2026-10-21 | Inspect retained original and effective OS context with provenance |
 | [FIX-0092](#fix-0092) | 2026-10-21 | Add an invocation-only remote Haiku simulation preset |
+| [FIX-0093](#fix-0093) | 2026-10-21 | Verify and close the nine-item current-version implementation queue |
 
 
 ## Entry template
@@ -4236,3 +4237,77 @@ An initial test scaffold incorrectly used the default ignored state path. Its
 new creation times and absence of app/effect/report history were verified; only
 those new files/directories were retained under the ignored inspector fixture.
 Tests now use disposable state throughout. No historical run was modified.
+
+<a id="fix-0093"></a>
+## FIX-0093 — 2026-10-21 — Verify and close the nine-item current-version implementation queue
+
+Status: verified and complete; this closing pass changes documentation only.
+Related: [FIX-0082](#fix-0082), [authorized queue](current-iter-issues.md#authorized-implementation-queue)
+and the implementation entries below.
+
+### Problem
+
+The authorized fixes needed integrated regression verification, preservation of
+earlier history, distinct ownership and a closed one-time schedule after completion.
+
+### What was wrong
+
+Per-fix checks alone did not establish that all nine changes worked together.
+The heartbeat was still marked active after its single occurrence. No new runtime
+defect was found in the closing verification pass.
+
+### How it was fixed
+
+Verified the existing baseline cb02d02704136be0293c4f69f4b7b5a28ab6ff97 on
+codex/simple-os-v1, then implemented in the authorized order. Each implementation
+received its own regression, related documentation, history entry and local commit:
+
+| Queue item | Commit | Owning layer / implementation record |
+| --- | --- | --- |
+| Effective worker limit | d2d48aa | Agent control flow, [FIX-0083](#fix-0083) |
+| OSAG-07 historical starts | 0ea4750 | Agent allocation/accounting, [FIX-0084](#fix-0084) |
+| U05 output feedback | ac08fb2 | Generic OS recovery, [FIX-0085](#fix-0085) |
+| Separate check purposes | 82c4e8c | Agent check/acceptance policy, [FIX-0086](#fix-0086) |
+| RUN13-01 prerequisites | 06a21b6 | Agent planning/dependencies, [FIX-0088](#fix-0088) |
+| RUN13-02 source handoff | 9a21e17 | Agent source/grant planning, [FIX-0089](#fix-0089) |
+| RUN13-06 contribution facts | cd9ccd8 | Agent repository/UI projection, [FIX-0090](#fix-0090) |
+| MEM-01 inspector | 1810e5d | Read-only OS inspection, [FIX-0091](#fix-0091) |
+| SIM-01 launch preset | aa7140b | Agent CLI/UI policy; generic resolved validation, [FIX-0092](#fix-0092) |
+
+Actual wakeup/start clock was 09:14:29 EDT (13:14:29 UTC), after the requested
+01:55:00 EDT. No exact-time start is claimed. After verification, the native
+automation tool disabled implement-verified-fixes-at-1-55-a-m with status PAUSED;
+the saved status was confirmed by 10:34:18 EDT (14:34:18 UTC). No repeat run should
+reapply this queue. Updated the durable queue status; no implementation changed
+in this closing pass. Adjacent module/setup/usage/settings/design documents were
+updated per fix and reviewed again; no further interface/navigation edits needed.
+
+### Design principle enforced or reconstructed
+
+Keep Git workflow, dependencies, grammar, canonical memory and acceptance in the
+agent. Keep generic grants, execution certainty, resource bounds, immutable
+evidence, optional context preparation and faithful inspection in the OS.
+Evidence must distinguish prior tests, current checks, live readiness and limits.
+Preserve old fixes and user work instead of hiding regressions or changing scope.
+
+### Verification
+
+Final native WSL .venv-linux suite: 401 passed, 2 skipped in 379.01 seconds.
+The two baseline environment skips remain: native Node/npm housekeeping and the
+Node 18+ frontend wrapper. Windows Node independently passed all 19 frontend
+tests. Full src/tests/scripts Ruff passed. All five example configs validated.
+Documentation generation/check passed for 257 files and 116 leaves. The complete
+baseline-to-implementation diff passed Git whitespace checks. The five pre-existing
+EOF findings recorded in FIX-0082 were preserved, not silently cleaned up.
+
+A direct comparison confirmed all baseline FIX text and entries unchanged after
+removing only new index rows/appended entries; current IDs are unique. FIX-0088
+explicitly documents the concurrent new duplicate-ID correction, preserving that
+entry's findings. The nine commits were inspected in sequence. The unrelated
+development-docs/next-iteration.md working-tree edit remains unstaged and untouched.
+
+MEM-01 also received local live/saved browser inspection; SIM-01 received the
+bounded live Models API/two-request readiness check recorded in FIX-0092. No
+live end-to-end Codex project run or GPU-performance claim is made. No historical
+run migration, new thread, parallel agent work, branch cleanup, push, MEM-02,
+RUN13-04 optimization or wider CONC-01 audit was performed.
