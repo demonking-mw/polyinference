@@ -563,7 +563,16 @@ Senior keep/revert/retry/defer remains separate. Keep accepts already-published 
 
 Worker `Publication`/PublicationReceipt records carry an unresolved TaskReport and apply only to worker publication. A senior revert uses a journaled `capability_call` for the generic record-publication capability: its argument artifact binds expected H, actual inverse commit/sole parent/resulting tree, current verification owner, resolution/check refs and event intents. Atomically advance provisional head with the immutable resolution and its durable receipt; do not invent a worker report to fit the payload union. Each head-changing disposition has its own intent/receipt. After interruption, reconcile completed dispositions and resume the rest before activating the plan/steering acknowledgement; no cross-Git atomic batch is assumed. `reviewed_resulting_code` describes the resolution's resulting code, while advancing ProjectRun.reviewed_revision additionally requires closure of unresolved contributing work.
 
-Project acceptance is a separate guarded publication. With new starts closed and started coding workers settled, acquire verification, confirm the senior completion proposal matches the accepted reviewed/provisional head, and run independent project checks on a complete private view. Keep shell ownership per command. Complete only after an atomic comparison of head/plan/input versions, current permit, no active coding worker, no unresolved contributing work and no relevant uncertain effects. All required criteria must have current passing evidence on that content/environment. Steering received during checks invalidates the snapshot. A failed/stale attempt releases after effects settle and returns to review; it does not await a worker or senior while holding verification.
+Project acceptance is a separate guarded publication. With new starts closed and started coding workers settled, acquire verification, confirm the senior completion proposal matches the accepted reviewed/provisional head, and run independent final acceptance checks on the provider's complete view of that revision. Keep shell ownership per command. Complete only after an atomic comparison of head/plan/input versions, current permit, no active coding worker, no unresolved contributing work and no relevant uncertain effects. All required criteria must have current passing evidence on that content/environment. Steering received during checks invalidates the snapshot. A failed/stale attempt releases after effects settle and returns to review; it does not await a worker or senior while holding verification.
+
+> **Edited 2026-10-21 because** [FIX-0086](../../development-docs/FIXES.md#fix-0086)
+> separates prerequisite, task and final product criteria in the coding agent.
+> Initial discovery is pinned per purpose; discovered task checks never implicitly
+> authorize final completion. Explicit legacy checks retain their task/final
+> fallback unless overridden. The default in-place provider checks its integration
+> checkout; isolated mode retains a private complete view. The OS still interprets
+> only generic commands/evidence, not coding purposes. See
+> [configuration](../../docs/guides/configuration.md).
 
 Write immutable Git/evidence objects before short record publication. In-place
 Git is the user's actual repository, not merely a repaired metadata projection.

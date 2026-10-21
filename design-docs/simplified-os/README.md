@@ -219,8 +219,12 @@ Optional `auto_deal_context` packs eligible whole groups; separately optional
 `auto_compaction` summarizes only explicitly compactable blocks. Originals,
 trust/classification, complete tool pairs and required verbatim inputs are
 preserved. Receipts expose original/derived views and interventions. Agents own
-canonical memory, grammar, output units and semantic recovery. U05 records the
-remaining JSON-specific wording in otherwise generic output recovery.
+canonical memory, grammar, output units and semantic recovery. Generic smaller-
+output feedback preserves the caller's declared protocol, including plain text.
+U05 was resolved by [FIX-0085](../../development-docs/FIXES.md#fix-0085).
+
+> **Edited 2026-10-21 because** FIX-0085 removed the JSON-specific recovery
+> wording; the earlier open-gap description no longer reflects implementation.
 
 Native agent work that edits code must use the workspace/tool broker and required phases, or a verified equivalent enforcing the same exclusion/evidence guarantees. An opaque endpoint cannot write code while the OS claims global shell and merge/test/commit exclusion. It may still be usable for a scoped non-mutating senior query if its declared data/limit contract fits.
 
@@ -362,7 +366,13 @@ Ordinary review is an application barrier: close new coding starts atomically, l
 
 Senior reverts use a journaled, authorized `capability_call` to a record-publication capability, with an immutable argument artifact naming expected H, the actual new commit/sole parent/tree, verification owner, resolution/evidence refs and event intents. The same atomic compare-and-publish primitive advances provisional head and records the resolution/receipt. The worker-specific `publication` payload and TaskReport are not fabricated for a senior revert. Reconcile each revert receipt before the next disposition; interrupted multi-disposition review resumes its remaining intents and does not pretend the entire Git batch was atomic. Advance reviewed head only to a resulting revision whose contributing work has explicit accepted/reverted dispositions; defer/retry alone leaves it unresolved.
 
-For project acceptance, close starts and settle the captured workers before acquiring verification. Require reviewed and provisional heads to identify the same accepted commit/content, no unresolved contributing work, a matching senior completion proposal and no pending steering or uncertain effects. Run independent project checks on a complete private view of that revision, taking shell per command. Atomically publish completion only if heads, plan, input watermarks, owner and no-active-worker predicate still match. New steering invalidates acceptance even while the gate prevents code publication. On failure/staleness release after settled effects and return to review; never wait for a worker while holding verification. This uses the generic record-publication port, not a fake worker report.
+For project acceptance, close starts and settle the captured workers before acquiring verification. Require reviewed and provisional heads to identify the same accepted commit/content, no unresolved contributing work, a matching senior completion proposal and no pending steering or uncertain effects. Run independent final acceptance checks on the repository provider's complete view of that revision, taking shell per command. Atomically publish completion only if heads, plan, input watermarks, owner and no-active-worker predicate still match. New steering invalidates acceptance even while the gate prevents code publication. On failure/staleness release after settled effects and return to review; never wait for a worker while holding verification. This uses the generic record-publication port, not a fake worker report.
+
+> **Edited 2026-10-21 because** FIX-0086 separates the coding agent's prerequisite,
+> task and final acceptance criteria. Setup/environment checks cannot by themselves
+> establish product completion; the OS still executes ordinary granted commands.
+> The default in-place provider checks the integration checkout; explicit isolated
+> mode uses its private complete view. See [check-purpose configuration](../../docs/guides/configuration.md).
 
 ### Failure and abort
 

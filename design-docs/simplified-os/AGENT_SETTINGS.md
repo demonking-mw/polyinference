@@ -311,9 +311,28 @@ The Anthropic adapter sends the OS output allowance as the Messages API's
 Examples override these choices in their single system block.
 
 Coding-only fields remain outside system: objective, repository_mode, git_policy,
-dependency_prepare, senior_development_fraction, max_sprints,
-max_senior_corrections and max_protocol_corrections. The last defaults to 3
+dependency_prepare, prerequisite_checks, acceptance_checks,
+senior_development_fraction, max_sprints, max_senior_corrections and
+max_protocol_corrections. The last defaults to 3
 consecutive malformed-reply corrections (0–16); valid replies reset the count.
 The agent owns full evidence inspection, canonical memory and repository-aware
 reuse of interrupted work through preserved_source_ref / resume_from.
 Preservation never makes unfinished source an accepted commit.
+
+> **Edited 2026-10-21 because** FIX-0086 added check-purpose selection in the
+> coding agent, not the generic OS command schema.
+
+| Coding check selection | Default | Meaning |
+| --- | --- | --- |
+| prerequisite_checks | [] | Setup/environment criteria. When present, setup runs these; they do not authorize final product acceptance. |
+| checks | [] | Task criteria. Explicit legacy entries also serve final acceptance when acceptance_checks is omitted/null. |
+| acceptance_checks | null | Separate final product criteria. Explicit [] disables the legacy fallback and requires initial setup to discover meaningful final criteria. Missing final criteria block completion. |
+
+Setup can pin one discovered combined command per unconfigured purpose with
+`checks.configure {name, argv, purpose, timeout_seconds?, output_paths?}`; purpose
+is prerequisite, task (default), or acceptance. Discovered task criteria never
+silently acquire final authority. Workers may use task/product checks, not
+prerequisite-only criteria. All purposes use the generic Check fields above;
+shared names must retain identical definitions. Explicit criteria cannot be
+replaced and discovery closes after setup/planning. See the
+[configuration guide](../../docs/guides/configuration.md) for selection and fresh-state rules.

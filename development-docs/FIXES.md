@@ -143,6 +143,7 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0091](#fix-0091) | 2026-10-21 | Inspect retained original and effective OS context with provenance |
 | [FIX-0092](#fix-0092) | 2026-10-21 | Add an invocation-only remote Haiku simulation preset |
 | [FIX-0093](#fix-0093) | 2026-10-21 | Verify and close the nine-item current-version implementation queue |
+| [FIX-0094](#fix-0094) | 2026-10-21 | Recheck queue documentation and correct missed overview/settings references |
 
 
 ## Entry template
@@ -4311,3 +4312,60 @@ bounded live Models API/two-request readiness check recorded in FIX-0092. No
 live end-to-end Codex project run or GPU-performance claim is made. No historical
 run migration, new thread, parallel agent work, branch cleanup, push, MEM-02,
 RUN13-04 optimization or wider CONC-01 audit was performed.
+
+<a id="fix-0094"></a>
+## FIX-0094 — 2026-10-21 — Recheck queue documentation and correct missed overview/settings references
+
+Status: documentation corrected; no implementation changed.
+Related: [FIX-0085](#fix-0085), [FIX-0086](#fix-0086), [FIX-0093](#fix-0093).
+
+### Problem
+
+The user requested a fresh check that all related documentation, including the
+fix history, was updated properly after the nine-item implementation queue.
+
+### What was wrong
+
+All nine implementation entries had the required explanation, ownership and
+verification sections, and the primary guides/navigation were updated. However,
+the simplified OS overview still described U05's JSON-specific wording as open,
+and the central settings reference omitted prerequisite_checks/acceptance_checks
+from its coding-field inventory. The design overviews also needed the explicit
+check-purpose distinction and provider-correct acceptance-view wording. Link/
+inventory checks cannot detect these semantic omissions. This corrects the
+overbroad documentation-completeness conclusion in FIX-0093; its historical
+verification record and every earlier fix entry remain unchanged.
+
+### How it was fixed
+
+Updated simplified-os/README.md to mark U05 resolved by FIX-0085. Completed the
+agent-owned check selection inventory/defaults in simplified-os/AGENT_SETTINGS.md,
+including explicit legacy fallback, purpose discovery/sealing and no implicit
+promotion of discovered task checks. Aligned the current acceptance descriptions
+in simplified-os/README.md and langgraph-agent/README.md with FIX-0086 and the
+actual provider views. Dated notes explain these corrections. No frozen diagram,
+wire schema, implementation, configuration or historical run changed.
+
+Rechecked all nine changed implementation features through file-tree.json and
+their primary module guides. Setup/usage, runtime boundary, current tracker and
+other affected module guides already cover the new behavior and need no further
+edits. Historical investigation/design proposals remain labelled as historical;
+they are not silently rewritten into new implementation claims. Existing files
+remain at the same navigation paths; regenerated/checkable HTML stays current.
+
+### Design principle enforced or reconstructed
+
+Documentation correctness includes semantic consistency, not only valid links.
+Generic OS commands/evidence do not acquire coding check-purpose or acceptance
+policy. Correct current references explicitly while preserving prior fix history
+and distinguishing this documentation audit from implementation verification.
+
+### Verification
+
+Fresh documentation generation and --check passed for 257 files and 116 leaves;
+all 20 documentation-tool tests passed in 0.26 seconds. Scoped Git whitespace
+checks passed. Direct comparison confirmed every earlier FIX entry/text remains
+unchanged and all 94 IDs are unique. No runtime tests or live providers were run
+for these prose-only corrections; FIX-0093 retains the earlier 401-pass
+implementation verification rather than claiming it as new work. The unrelated
+next-iteration.md edit remains outside this commit.
