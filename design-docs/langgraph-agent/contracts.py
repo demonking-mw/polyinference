@@ -11,10 +11,14 @@ from pathlib import Path
 from typing import Annotated, Literal
 
 from pydantic import (
-    AfterValidator, AwareDatetime, BaseModel, ConfigDict, Field, JsonValue,
+    AfterValidator,
+    AwareDatetime,
+    BaseModel,
+    ConfigDict,
+    Field,
+    JsonValue,
     model_validator,
 )
-
 
 Identifier = Annotated[str, Field(min_length=1, max_length=256)]
 Digest = Annotated[str, Field(pattern=r"^sha256:[0-9a-f]{64}$")]
@@ -357,6 +361,7 @@ class ContextPart(Wire):
     required: bool
     call_id: Identifier | None = None
     derived_from: list[Identifier] = Field(default_factory=list)
+    compactable: bool = False
 
 
 class ContextView(Wire):

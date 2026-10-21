@@ -1,5 +1,13 @@
 # Agent implementation notes
 
+> **Edited 2026-10-20 because** these notes describe the initial isolated-copy
+> implementation. The current [revision ledger](../simplified-os/DESIGN_REVISIONS.md)
+> and [boundary guide](../simplified-os/RUNTIME_BOUNDARY.md) supersede old private
+> Git/setup/copy-back details, all-verdict publication and caller-only recovery.
+> Default coding uses the actual repository, full task worktrees, private
+> failed/uncertain candidates and OS optional context/output services. The older
+> details below retain their historical provider/setup evidence.
+
 The bundled runtime is now simple OS v1. The current OS audit decisions and
 failure policy are recorded in [the OS implementation plan](../simplified-os/IMPLEMENTATION.md);
 see its [runbook](../simplified-os/RUNBOOK.md) and [validation](../simplified-os/VALIDATION.md).
@@ -126,6 +134,12 @@ the same Pydantic release, and validate the original fixtures. Older frozen JSON
 schema exports differ cosmetically under newer Pydantic's const/enum generation.
 
 ## Initial setup, branch baselines and development allocation
+
+The private-baseline/source-unchanged description in this historical section
+applies to the original isolated provider. Default in-place setup now initializes
+or selects the actual project/branch and preserves user edits; bounded setup and
+dependency failures return to the coding agent for repair (FIX-0001–0003/FIX-0040).
+General OS processes need no Git or setup task. See the linked current guide.
 
 The default UI starts one `category=setup`, `role=specialist` task before sprint
 planning. It reads the full user objective with the `BOOTSTRAP` instructions and

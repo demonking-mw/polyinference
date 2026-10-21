@@ -1,51 +1,57 @@
 {
-  "repository": "../../your-target-repository",
-  "state_directory": "../.polyinference/codex-run",
-  "objective": "Describe the bounded coding objective here.",
-  "allowed_write_paths": [
-    "src/example.py"
-  ],
-  "closure_paths": [
-    "src/example.py",
-    "pyproject.toml"
-  ],
-  "checks": [
-    {
-      "name": "tests",
-      "argv": [
-        "python3",
-        "-m",
-        "pytest",
-        "-q"
+  "system": {
+    "repository": "../../your-target-repository",
+    "state_directory": "../.polyinference/codex-run",
+    "allowed_write_paths": [
+      "src/example.py"
+    ],
+    "closure_paths": [
+      "src/example.py",
+      "pyproject.toml"
+    ],
+    "checks": [
+      {
+        "name": "tests",
+        "argv": [
+          "python3",
+          "-m",
+          "pytest",
+          "-q"
+        ],
+        "timeout_seconds": 120
+      }
+    ],
+    "local": {
+      "protocol": "codex_app_server",
+      "model": "gpt-6.1-sol",
+      "command": [
+        "codex",
+        "app-server"
       ],
-      "timeout_seconds": 120
+      "brokered_tools": true,
+      "max_inflight": 2,
+      "timeout_seconds": 600
+    },
+    "cloud": {
+      "protocol": "codex_app_server",
+      "model": "gpt-6.1-sol",
+      "command": [
+        "codex",
+        "app-server"
+      ],
+      "max_inflight": 1,
+      "timeout_seconds": 600
+    },
+    "role_bindings": {
+      "worker": "local",
+      "senior": "cloud",
+      "specialist": "local"
+    },
+    "check_execution": "trusted",
+    "context_policy": {
+      "auto_deal_context": true,
+      "auto_compaction": false
     }
-  ],
-  "check_execution": "trusted",
-  "local": {
-    "protocol": "codex_app_server",
-    "model": "gpt-6.1-sol",
-    "command": [
-      "codex",
-      "app-server"
-    ],
-    "brokered_tools": true,
-    "max_inflight": 2,
-    "timeout_seconds": 600
   },
-  "cloud": {
-    "protocol": "codex_app_server",
-    "model": "gpt-6.1-sol",
-    "command": [
-      "codex",
-      "app-server"
-    ],
-    "max_inflight": 1,
-    "timeout_seconds": 600
-  },
-  "role_bindings": {
-    "worker": "local",
-    "senior": "cloud",
-    "specialist": "local"
-  }
+  "objective": "Describe the bounded coding objective here."
 }

@@ -1,10 +1,80 @@
 # Simple OS v1: deployment and recovery
 
+> **Edited 2026-10-20 because** later repository and I/O fixes supersede the
+> original publication, private-copy and caller-recovery defaults. The
+> [revision ledger](DESIGN_REVISIONS.md) records the reasons and unresolved
+> contract gaps; this guide describes the current default and explicit legacy mode.
+
 The CLI and existing test UI now use `KernelRuntime`. `StandaloneRuntime` remains
 an import alias for agent integrations. The OS branch is `codex/simple-os-v1`;
-main is reserved for the separate agent testing effort. Source design schemas and
-graphs remain frozen. [Implementation decisions](IMPLEMENTATION.md) record the
+main is reserved for the separate agent testing effort. Historical source graphs
+and proposal fixtures remain preserved; later optional contract fields and their
+synchronized schemas are recorded explicitly in the fix history. [Implementation decisions](IMPLEMENTATION.md) record the
 audit answers and the newer private-failure policy.
+
+## OS boundary and non-coding agents
+
+`RuntimeConfig` configures the OS independently of the bundled coding agent's
+`AgentConfig`. It accepts arbitrary role names bound to the available endpoint
+lanes, and does not require an objective, acceptance checks, writable files or Git
+initialization. `repository` supplies project identity and an optional file-capability
+root; opening the OS does not import or initialize it.
+
+An agent registers its own `ProcessSpec` with `runtime.processes.register(spec,
+binding_ref, management=False)`, submits `ModelQuery` operations, and can finish
+with artifact references using `runtime.processes.finish(process_id,
+output_refs=[...])`. An empty result is also valid. It can use `start`/`wait` for
+bounded drivers and terminal status. Neither file delivery nor the coding agent's
+candidate/reconciliation/assessment protocol is required by the OS.
+
+Native agents register their own output schema and workspace mode with
+`runtime.register_agent_protocol(name, schema, workspace="snapshot", brokered=False)`.
+The coding application's schemas are registered by `AgentServices`; the kernel
+does not import or impose them. Optional file/Git/check capabilities remain available
+to agents that need them. Cancellation and resource termination are OS operations;
+closing a coding sprint's starts is policy installed by the coding application.
+Use `runtime.workspaces.prepare_artifact_snapshot(snapshot_id, files)` to create
+an immutable native input directory from file artifact references without a Git
+revision. Native snapshot roots are issued by the host.
+
+`Outputs` is an optional artifact-file delivery service. It records a destination
+and baseline before work, validates every affected path before writing, preserves
+binary data and executable modes, detects external changes, and records a durable
+intent and receipt. Legacy isolated coding invokes it only after final acceptance. Default in-place
+coding records its integrated output directly and does not need copy-back.
+Other agents may return artifacts without invoking this service at all.
+
+Known model failures can be recovered with `runtime.recover_model(failed_id,
+new_request, reason)`. The OS requires a new identity, the same process scope,
+confirmed termination, explicit provenance and remaining recovery allowance. It
+rejects new operations after process termination, and cancellation while queued
+prevents provider submission. Program-specific recovery after reconciliation is
+an installed callback; the kernel does not interpret other agents' `app/run` data.
+
+Regression coverage: `tests/test_runtime_general.py` executes HTTP and native
+research agents through the OS and terminates them without coding tasks, checks,
+file workspaces or a Git store. `tests/test_outputs.py` covers optional delivery,
+conflicts and interrupted-write recovery.
+
+### Automatic inference retry
+
+The OS now makes one extra safe attempt by default for transient/unusable model
+responses on either binding. Each attempt is journaled separately; replay of the
+original invocation returns its effective retained result. Inspect
+`model-retry/` and `model-retry-outcome/` alongside the immutable effect records.
+`model_call_retries` permits 1–3 extra attempts, `model_retry_delay_ms` defaults
+to 100, and `model_retry_max_delay_ms` defaults to 60000. Retry-After, deadlines,
+budgets, finishing reserves, cancellation and authority checks remain binding.
+
+Unknown execution, deterministic input/auth/grant failures, and native jobs that
+already ran brokered tools do not get a blind retry. Confirmed cutoff/completed-
+overage adaptation now belongs to the OS; context feedback is remeasured and
+charged with new durable identities. Agents own grammar and semantic decomposition.
+See [the settings reference](AGENT_SETTINGS.md),
+[boundary guide](RUNTIME_BOUNDARY.md#context-preparation-and-output-recovery) and
+[I/O completion report](../../development-docs/io-safety-verification-2026-10-20.md)
+for policy, exact historical verification and remaining limits. The new configuration pin requires fresh state; do not migrate/resume an
+old run using this implementation.
 
 ## Deployment
 
@@ -30,8 +100,10 @@ remain deployment responsibilities.
 Choose an existing provider example under `examples/`, then set the repository,
 fresh state directory, objective, write grants, closure and check command. Paths
 in configuration resolve relative to that JSON file. Existing source repositories
-must be clean. The OS imports their baseline into an isolated Git store; it does
-not change source files, branches or refs.
+must be clean. New coding runs use the actual repository by default: the coding
+agent resolves Git instructions and creates/selects the integration branch and
+linked task worktrees. The OS attaches authorized directories and enforces grants;
+it does not choose branches. See the [current boundary guide](RUNTIME_BOUNDARY.md#in-place-coding-repositories).
 
 ```bash
 polyinference validate-config /absolute/path/to/agent.json
@@ -57,6 +129,12 @@ inspection. The model name must be available to the signed-in account.
 
 ## Concurrency and limits
 
+Configured limits and capability grants do not implement every rich wire-contract
+promise. Current conflicting process data policies/hard allocations, narrower
+process limits, paused-worker residency and JSON-specific recovery feedback remain
+[open implementation gaps](DESIGN_REVISIONS.md#open-implementation-gaps).
+Documentation alignment does not approve ignoring those constraints.
+
 `local` and `cloud` are routing lanes; either can represent a cloud endpoint.
 They are independent only when they represent independently provisioned capacity.
 If all roles share one limited endpoint/account, bind them to one lane so they
@@ -74,12 +152,12 @@ OS never waits to fill a batch. The model server owns actual continuous batching
 
 | Setting | Bound and lifetime |
 | --- | --- |
-| `max_workers` | Started coding drivers, including setup and waiters; senior control remains independent. |
+| `max_workers` | Resident ordinary agent drivers; explicitly marked management processes remain independent. |
 | `max_inflight` per endpoint | Submitted requests/native jobs until known termination; unknown work retains occupancy across restart. |
 | `max_context_tokens` / `reserved_context_tokens` | Per-call input+output and aggregate active reservations; UTF-8 bytes conservatively bound input tokens. |
 | `max_queued_operations` | Endpoint waiters (default 128), bounded also by each operation deadline. |
 | `limits` | Per-process model calls, steps, wall time, output and mandatory final-phase allowances. |
-| `run_token_budget` / `review_token_reserve` | Parent admission allowance and protected planning/review portion (default 32,000 tokens). |
+| `run_token_budget` / `control_token_reserve` | Parent admission allowance and protected control-process portion (coding default 32,000 tokens; bare runtime default zero). `AgentConfig` also accepts the former `review_token_reserve` input spelling. |
 | `run_spend_budget_microusd` | Optional estimated spend; requires explicit `estimated_microusd_per_token` for cloud bindings. |
 | `max_model_response_bytes` | Transport/native-event output cap (default 4 MiB). |
 | `max_artifact_bytes` | Retained content-addressed artifacts (default 128 MiB). |
@@ -106,9 +184,15 @@ The same transaction closes new starts and captures every started worker.
 Verification is released; the other workers finish their original assignments and
 publish normally. Sprint review starts only after that drain. The senior can
 reject the private candidate or schedule repair; it cannot accept it with `keep`.
-An uncertain assessed verdict still publishes provisionally, closes starts and
-requires review. Uncertain *execution* is a different condition: termination is
-unknown and recovery is required.
+> **Edited 2026-10-20 because** FIX-0040's real-repository integration must not
+> fast-forward failed or unverifiable work into the user's checkout. The previous
+> unconditional uncertain-publication statement applied to the older isolated path.
+
+Default in-place mode also retains **uncertain assessments privately** and closes
+starts for review. With task branches forbidden, non-successful edits remain
+uncommitted in the current checkout. Legacy isolated mode still publishes an
+uncertain assessment provisionally. An uncertain *execution* is different:
+termination/effects are unknown, so reconciliation is required.
 
 ```bash
 polyinference status /absolute/path/to/state
@@ -128,6 +212,12 @@ and events is read-only; neither starts a model request.
 
 ## Recovery
 
+The [runtime/agent wiring guide](RUNTIME_BOUNDARY.md) documents the current
+capability and publication-policy registration order. New runs use kernel ABI
+`simple-os/2`; existing run directories are not automatically migrated. Reinstall
+the owning application's handlers and policy before issuing new effects after a
+supported restart. Generic processes do not require the coding application.
+
 One coordinator holds each state directory. The effective configuration and
 agent/program version are pinned; older placeholder runs require their original
 implementation. There is no state migration in v1.
@@ -135,7 +225,10 @@ implementation. There is no state migration in v1.
 On restart, settled effects replay before checking transient workspace/permit
 state. Durable publication and commit receipts settle recognized host outcomes.
 Other submitted effects become `uncertain`; they retain reservations and logical
-ownership. A disconnect or elapsed deadline alone never proves termination.
+ownership. Any uncertain effect conservatively blocks new runtime dispatch until
+reconciled, even for another process; status and inspection remain usable. This
+single-project safety boundary does not promise isolation between arbitrary hosted
+programs or automatic remote cancellation. A disconnect or elapsed deadline alone never proves termination.
 
 1. Stop the coordinator and preserve the whole state directory.
 2. Inspect `status` and `operation`. Native journals include observed thread/turn
@@ -166,8 +259,10 @@ groups; cancellation of an admitted filesystem mutation joins the I/O first.
 
 ## Retention and export
 
-Keep complete state (records, checkpoints, artifacts, workspaces, snapshots and
-private Git) for active, unresolved or recoverable runs. No automatic pruning can
+Keep complete state (records, checkpoints, artifacts and snapshots) together with
+the actual project and its retained task worktrees. In-place Git history lives in
+that project; legacy isolated state additionally owns private Git/copies.
+No automatic pruning can
 discard live/recovery evidence. After completion and reviewed export, archive or
 remove the whole stopped run directory explicitly. Git objects and SQLite history
 are retained for the finite run; workspace/artifact quotas do not bound Git's
@@ -177,5 +272,8 @@ required.
 `polyinference export STATE result.patch` exports initial-to-provisional changes.
 Check completion/review status before applying it. Failed private candidates are
 excluded; their report's `final_code.commit_id` can be inspected with
-`git --git-dir=STATE/repository.git show COMMIT`. Retain the state if you need
-private commits or recovery evidence.
+`git -C PROJECT show COMMIT` in an in-place run. Failed candidates have real
+task branches/worktrees; inspect `coding/repository-summary` or CLI status for
+their paths. Historical isolated runs instead use
+`git --git-dir=STATE/repository.git show COMMIT`. Retain state for execution
+evidence and worker worktrees for their uncommitted edits.

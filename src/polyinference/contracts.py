@@ -362,6 +362,7 @@ class ContextPart(Wire):
     required: bool
     call_id: Identifier | None = None
     derived_from: list[Identifier] = Field(default_factory=list)
+    compactable: bool = False
 
 
 class ContextView(Wire):

@@ -200,11 +200,14 @@ async def test_native_terminal_failure_releases_resources_but_unknown_retains_th
 
         async def generate_job(self, *args):
             self.calls += 1
-            raise (
+            failure = (
                 NativeJobStopped("fixture terminal failure")
                 if known_end
                 else UnknownExecution("fixture disconnected")
             )
+            failure.native_diagnostics = {"received_events": 2200, "received_bytes": 100000,
+                                          "recent_events": [{"method": "item/agentMessage/delta"}]}
+            raise failure
 
         async def close(self):
             pass
@@ -234,7 +237,9 @@ async def test_native_terminal_failure_releases_resources_but_unknown_retains_th
         for _ in range(2):
             with pytest.raises(RuntimeError if known_end else UncertainEffect):
                 await app.model(state)
-        assert client.calls == 1
+        # Known stopped, effect-free native failures get one OS retry. Replaying
+        # the invocation does not submit again; unknown execution never retries.
+        assert client.calls == (2 if known_end else 1)
         assert runtime.admission["local"].active == (0 if known_end else 1)
         permit = runtime.records.get("permit/shell/installation")[1]
         # Direct Codex reasoning never owns shell; actual broker callbacks acquire it.
@@ -244,6 +249,12 @@ async def test_native_terminal_failure_releases_resources_but_unknown_retains_th
         if known_end:
             assert effect["result"]["execution_termination"] == "confirmed_stopped"
             assert "fixture terminal failure" in effect["result"]["error"]["message"]
+            diagnostics = effect["result"]["extensions"]["polyinference/native-diagnostics"]
+        else:
+            diagnostics = effect["native_diagnostics"]
+            assert effect["result"] is None
+        assert diagnostics["received_events"] == 2200
+        assert diagnostics["recent_events"][0]["method"] == "item/agentMessage/delta"
     finally:
         # This fake provider has no live remote execution. Retention was asserted
         # above; explicitly reconcile its fixture lease so later tests can run.

@@ -121,7 +121,7 @@ for line in sys.stdin:
  elif method=="thread/start":
   assert m["params"]["permissions"]=="polyinference_readonly"
   assert m["params"]["approvalPolicy"]=="never"
-  send({"id":m["id"],"result":{"thread":{"id":"thread-fixture"}}})
+  send({"id":m["id"],"result":{"thread":{"id":"thread-fixture"},"sandbox":{"type":"readOnly"},"approvalPolicy":"never"}})
  elif method=="turn/start":
   assert "permissions" not in m["params"]
   send({"method":"thread/tokenUsage/updated","params":{"threadId":"thread-fixture","turnId":"turn-fixture","tokenUsage":{"total":{"totalTokens":17}}}})
@@ -195,7 +195,7 @@ for line in sys.stdin:
  elif method=="thread/start":
   if sys.argv[1]=="dispatch":
    send({"id":m["id"],"error":{"code":-32600,"message":"profile rejected"}})
-  else:send({"id":m["id"],"result":{"thread":{"id":"fixture-thread"}}})
+  else:send({"id":m["id"],"result":{"thread":{"id":"fixture-thread"},"sandbox":{"type":"readOnly"},"approvalPolicy":"never"}})
  elif method=="turn/start":
   send({"id":m["id"],"result":{"turn":{"id":"fixture-turn"}}})
   send({"method":"turn/completed","params":{"turn":{"id":"fixture-turn","status":"failed","error":{"message":"invalid output schema"}}}})

@@ -5,13 +5,15 @@ import json
 import os
 import sqlite3
 from contextlib import contextmanager
+from datetime import datetime, timezone
 from pathlib import Path
 
 from ..contracts import ArtifactRef
-from ..domain import canonical, digest
+from ..ports import RecordConflict
+from ..primitives import canonical, digest
 
 
-class Conflict(RuntimeError):
+class Conflict(RecordConflict):
     pass
 
 
@@ -75,13 +77,18 @@ class Records:
                     (key, expected[key] + 1, canonical(body).decode()),
                 )
             changes = {
-                key: {"revision": expected[key] + 1, "state": body.get("state", body.get("status"))}
+                key: {"revision": expected[key] + 1, "state": body.get("state", body.get("status")), "value": body}
                 for key, body in updates.items()
             }
             if changes or immutable:
                 self.db.execute(
                     "INSERT INTO events(body) VALUES (?)",
-                    (canonical({"changes": changes, "immutable": list(immutable or {})}).decode(),),
+                    (canonical({
+                        "at": datetime.now(timezone.utc).isoformat(),
+                        "changes": changes,
+                        "immutable": list(immutable or {}),
+                        "immutable_values": immutable or {},
+                    }).decode(),),
                 )
                 self.db.execute(
                     "DELETE FROM events WHERE sequence <= (SELECT MAX(sequence)-10000 FROM events)"

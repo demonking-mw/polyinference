@@ -30,6 +30,8 @@ def repository(tmp_path):
 @pytest.fixture
 def config(repository, tmp_path):
     return AgentConfig(
+        repository_mode="isolated",  # Legacy protocol fixtures; real-repository behavior has its own suite.
+        prepare_repository=False,  # These fixtures exercise development; setup has dedicated tests.
         repository=str(repository),
         state_directory=str(tmp_path / "state"),
         objective="Set VALUE to 2 in a.py and b.py",
@@ -76,6 +78,10 @@ class ScriptedAgent:
             )
             if self.hook:
                 await self.hook(data)
+            if "repository_observation" in data:
+                return {"text": json.dumps({"mode": "new", "task_branches": True,
+                                            "reason": "No explicit Git override in fixture"}),
+                        "usage": {"total_tokens": 20}, "model": "fixture", "events": []}
             if "assignment" not in data:
                 if not data["all_task_ids"]:
                     self.initial_calls += 1

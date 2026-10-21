@@ -1,5 +1,11 @@
 # Simple OS v1 implementation
 
+> **Edited 2026-10-20 because** this plan originally described the first OS
+> implementation, while later fixes changed repository layout, publication and
+> I/O ownership. [Accepted revisions](DESIGN_REVISIONS.md) govern the current
+> profile; original test counts and platform observations below retain their
+> historical scope. They are not a fresh test result for today's working tree.
+
 Work branch: `codex/simple-os-v1`. The source checkout on `main` remains available
 for independent agent testing. This file records the implementation plan and the
 latest requirements that supersede historical design defaults.
@@ -27,8 +33,10 @@ implemented fallback and must retain real tool brokerage and terminal evidence.
 * O04/latest failure example: an assessed **fail** creates an attributable private
   commit and unresolved report without advancing the shared provisional head.
   Close starts atomically, release verification, allow all already-started workers
-  to finish and publish, then review/replan. `uncertain` retains the specified
-  provisional publication behavior, but also triggers review. Senior cannot accept
+  to finish and publish, then review/replan. Later FIX-0040 additionally keeps
+  uncertain assessments private in default in-place coding; only legacy isolated
+  mode retains uncertain provisional publication. This prevents unverifiable work
+  from advancing the user's real integration checkout. Senior cannot accept
   a failed private commit merely by marking it kept; retry/reject is explicit.
 * O06: journaled effects and durable checkpoints are the recovery boundary. Never
   infer remote termination from disconnect. Retain unknown reservations/permits,
@@ -54,8 +62,13 @@ implemented fallback and must retain real tool brokerage and terminal evidence.
 
 ## Validation
 
-Implemented and validated; see [the validation record](VALIDATION.md) and
-[deployment/recovery guide](RUNBOOK.md). The full suite passes 97 tests, followed
+The initial OS revision was implemented and validated; see its historical
+[validation record](VALIDATION.md) and the current [deployment guide](RUNBOOK.md).
+Later I/O/settings/source-handoff completion is recorded in FIX-0058–0060 and the
+[I/O verification report](../../development-docs/io-safety-verification-2026-10-20.md),
+including a 327-pass full run followed by 73 focused cases after its last two edits.
+Those results retain their recorded timing and limits; this documentation edit
+reruns no full runtime suite. The initial full suite passed 97 tests, followed
 by 22 focused OS/contract tests after the final private-receipt recovery change.
 A real Codex coding run completed with five native jobs and seven broker callbacks.
 
@@ -83,7 +96,8 @@ no graph or contract schema was rewritten.
 
 Explicit v1 boundaries remain physical resource management, model serving,
 distributed recovery, guaranteed provider cancellation, migration and automatic
-retention/GC. macOS is verified in this OS effort; Linux/WSL share the POSIX
-implementation and earlier agent validation, but this final OS revision has not
-been rerun on those hosts. The runbook explains trusted command execution and
-manual recovery after unknown external effects.
+retention/GC. The initial OS effort's macOS/live-provider observations are
+historical. Later Linux/WSL fixture verification is recorded in the fix history
+and linked I/O report; it does not establish live provider, GPU batching or
+bubblewrap correctness. The runbook documents trusted commands, explicit legacy
+workspaces and manual reconciliation after unknown effects.

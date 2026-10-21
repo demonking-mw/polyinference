@@ -1,6 +1,14 @@
 # Joint OS and agent design audit
 
-17 October 2026 · design review and contract checks, not an implemented runtime
+17 October 2026 · historical design review and contract checks
+
+> **Status clarified 2026-10-20 because** later fixes supersede parts of this
+> audit's paired-design baseline. Preserve the findings and verification below as
+> historical evidence. Full tracked worktrees, private non-successful in-place
+> candidates, real task ancestry and optional OS context/recovery follow the
+> [current revisions](simplified-os/DESIGN_REVISIONS.md). This audit does not prove
+> those behaviors or all rich contract guarantees are implemented. No historical
+> graph, fixture or test outcome was rewritten for this alignment.
 
 Reviewed the [simplified OS](simplified-os/README.md) and [LangGraph agent](langgraph-agent/README.md) as one system, using the [merged execution/memory graph](polyinference-design/polyinference-agent-design-merged.json), [merge notes](polyinference-design/merged-agent-design-notes.md), [concurrency protocol](polyinference-design/concurrent_coding_protocol.md), older OS proposal, five lecture derivations and agent handbooks as supporting evidence. The original lecture/planning PDFs are absent. Vendored source is supporting material, not an independently audited product or additional authority.
 

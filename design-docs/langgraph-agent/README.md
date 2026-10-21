@@ -1,12 +1,30 @@
 # PolyInference agent on LangGraph
 
-Design proposal, revision 4 · 17 October 2026 · joint integration audit applied · no agent or OS implementation
+Original proposal: revision 4, 17 October 2026 · current profile aligned 20 October 2026
+
+> **Edited 2026-10-20 because** later repository, generic-agent and I/O fixes
+> supersede the all-verdict publication, partial-copy and service-placement
+> assumptions of revision 4. The [revision ledger](../simplified-os/DESIGN_REVISIONS.md)
+> gives the reasons and separates unresolved implementation gaps. Source graphs,
+> fixtures and historical audit results remain unchanged.
 
 Build the agent as a portable LangGraph application with a deterministic sprint controller, one reusable coding-worker graph, and one senior-query graph. A replaceable runtime interface supplies model/tool execution, resource admission, storage and recovery. The agent declares its intended distribution and permitted flexibility. Graph nodes import no PolyInference scheduler, database, provider client or MCP transport.
 
-The default preserves cloud-first sprint planning and bounded local implementation. Every normally completed worker publishes its attributable commit and unresolved report into provisional shared history before releasing verification ownership, including fail and uncertain verdicts. Senior review remains separate. Explicit allocation policies can also run all-local, all-cloud or mixed distributions; they cannot change this publication protocol.
+The default preserves cloud-first sprint planning and bounded worker development.
+Default in-place coding integrates successful verified candidates into the real
+checkout; failed/uncertain candidates stay on task branches with private reports
+and receipts. Senior review remains separate. Legacy isolated mode retains
+provisional publication for uncertain assessments and private failed candidates.
+Placement uses configured static role bindings; richer allocation models below
+are future interface semantics, not implemented routing guarantees.
 
-The current build target is the [simplified OS profile](../simplified-os/README.md). It supplies bounded concurrent requests to one local continuously batched model, one selected cloud protocol, private scoped development copies and complete private integration views. The richer allocation, multi-stage memory and MCP descriptions below define future interface possibilities; they are not required OS modules for this build. Core routing uses fixed eligible role bindings and plain versioned notes/records plus direct tools.
+The current build target is the [simplified OS profile](../simplified-os/README.md):
+configured endpoint lanes, concurrent admission, default full tracked task
+worktrees and exact-tree integration checks. The UI's serial cloud-backed
+bring-up does not demonstrate physical local batching. General OS agents need
+no coding workflow. Rich allocation, tiered memory and MCP remain future
+interfaces; current memory is ordinary records/artifacts with optional submitted-
+context packing/compaction, not background canonical-memory management.
 
 The [joint integration audit](../INTEGRATION_AUDIT.md) records corrections, supporting sources and remaining implementation checks. It refines the paired executable contracts while preserving the merged diagram's source identity and memory view.
 
@@ -16,8 +34,8 @@ The user-designated current baseline is [polyinference-agent-design-merged.html]
 
 | Material examined | Contribution/status |
 | --- | --- |
-| Merged graph: 23 execution nodes/57 edges; 19 memory nodes/21 edges | Current behavior: private development, two gates, mandatory reconciliation/assessment, provisional publication, unresolved reports and senior resolution. Original names/layout and the original memory view are retained. |
-| [Older user graph](../polyinference-design/polyinference-agent-graph.html) | Historical source: 15 execution nodes/19 edges and 19 memory nodes/21 edges. Its private-candidate publication behavior no longer governs this design. |
+| Merged graph: 23 execution nodes/57 edges; 19 memory nodes/21 edges | Historical source for private development, two gates, required reconciliation/assessment and separate senior review. Later R02–R04 supersede its workspace/publication assumptions; original layout and memory bytes remain retained. |
+| [Older user graph](../polyinference-design/polyinference-agent-graph.html) | Historical source: 15 execution nodes/19 edges and 19 memory nodes/21 edges. Current private-candidate rules come from O04/FIX-0040 and the in-place design, not an implicit restoration of this older graph. |
 | [AI-modified HTML](../polyinference-design/ai-modified_agent_graph.html), [JSON](../polyinference-design/modified_agent_graph.json), [suggestions](../polyinference-design/agent_suggestion.md) | Historical merge input: 23 execution nodes/57 edges and 24 memory nodes/29 edges. The merged file now determines which additions apply. |
 | [OS design](../polyinference-design/project_design.md), [concurrency protocol](../polyinference-design/concurrent_coding_protocol.md), [five ordered OS research notes](../polyinference-design/os-research/README.md) | Process/operation identities, admission, private copies, two gates, recovery, assessment, provisional publication and growth. The research copy of the concurrency protocol is identical. |
 | [Root brief](../../PROJECT_BRIEF.md), [design brief](../polyinference-design/PROJECT_BRIEF.md) | Small LangGraph workload and measured mixed-inference goal. Their local-discovery-first wording predates the cloud-led sprint design. |
@@ -33,14 +51,27 @@ The planning/lecture PDFs cited by older notes are absent. This review uses thei
 | --- | --- | --- |
 | Verdict | `fail/uncertain/successful`; execution/stop state is independent | Required behavior, rather than a proposed normalization. |
 | Assessment | Final model examination plus independent host validation of exact-tree evidence | Required phase; stale/missing/unavailable evidence cannot yield successful. |
-| Publication | All normal assessed outcomes advance provisional head with unresolved reports | Required `provisional_all`; remove the earlier `reviewed_only` branch from this program's contracts/examples. |
+| Publication | Revision 4 required all normal assessed outcomes to advance provisional head | Superseded for current coding by O04/FIX-0040: in-place fail/uncertain remain private; legacy uncertain still publishes. Keep frozen provisional_all examples as historical contract evidence. |
 | Concurrency | Private copies; global shell mutex; verification from head capture through publication | Required protocol behind portable ports, including at least one post-merge development turn. |
 | Allocation | Cloud senior/local worker default; explicit pressure decisions and safe bindings | Keep independent priority/fidelity/capability constraints; no silent scope or publication change. |
 | Raw endpoint | Genuine bounded loop or native agent-job protocol | No pretend agent execution; one loop owner. |
 
-The merge notes deliberately preserve the memory view without reconciling its prose. Where duplicated behavioral text conflicts, use the expanded execution contract: three verdicts rather than four closure labels; provisional publication rather than private-only failed work; real raw-model loops rather than pretending; captured running workers rather than draining unstarted queue work. Preserve memory-only additions when consistent: pressure/fidelity, notes/hazards, documentation batching, trap-frame state and deferred key frames. This is an explicit interpretation of the merge notes, not an edit to the merged source.
+The merge notes preserve the source memory view without reconciling its prose.
+The expanded execution baseline established three verdicts, real raw-model loops
+and captured running workers rather than draining unstarted work. Its original
+all-verdict publication is now superseded by R03; do not infer current policy
+from duplicated source prose. Preserve compatible memory provenance, hazards,
+ordered steering and documentation concepts; broader memory services remain
+future interfaces. This interpretation does not edit the frozen merged source.
 
-The latest user direction further supersedes older full-development-checkout and single-decode defaults: every worker receives a private copy of its assigned files plus needed read/build/test closure; the complete private integration tree is assembled after acquiring verification. Multiple model requests can be admitted concurrently. Merge/test/commit/publication remains one critical section; it never grants exclusive use of all inference capacity.
+The current in-place implementation supersedes the older scoped-copy layout:
+the coding agent selects an integration branch in the supplied real repository,
+workers use full linked worktrees there, and verified candidates fast-forward the
+root checkout. Read visibility and write grants remain separate. The private-copy
+provider is an explicit legacy option. See the
+[current boundary and repository guide](../simplified-os/RUNTIME_BOUNDARY.md#in-place-coding-repositories).
+Multiple model requests may be admitted concurrently; verification remains one
+critical section and never grants exclusive use of all inference capacity.
 
 The OS draft's older memory-edge count is stale: the preserved dataset has 21, not 19. Older notes also mix fixed ExecutionProfiles with later dispatch bindings and have stale `research/…` and `modified_agent_graph.html` links. This proposal uses immutable catalog/policy versions plus versioned actual bindings.
 
@@ -56,9 +87,21 @@ Strengthen three boundaries: application meaning versus runtime mechanisms; allo
 
 ## 3. Agent/runtime boundary
 
+Startup accepts an objective and a project path that may not exist. Initial setup
+runs before sprint planning by default. The coding agent resolves Git instructions,
+creates/selects a real integration branch and initializes the selected directory
+when needed, then runs the specialist setup task with the original objective and
+input path. The task prepares project structure and development prerequisites
+through the ordinary tool and publication protocol. The OS attaches directories
+and enforces grants, without selecting the Git workflow. Setup is retained on resume;
+completed setup is not repeated. Explicit `prepare_repository: false` skips this
+stage and requires an existing committed repository.
+
 ```mermaid
 flowchart TB
-    U[Objective and steering] --> C[LangGraph sprint controller]
+    U[Objective and project path] --> I[Initial project setup]
+    I --> C[LangGraph sprint controller]
+    T[Steering] --> C
     C --> S[Senior-query graph]
     C --> W[Independent coding-worker invocations]
     C --> P[Portable runtime ports]
@@ -77,11 +120,15 @@ flowchart TB
 | Action proposals, phases, repair decisions | Tool authorization, execution, server lifecycle, journal | CapabilityCall, scope, conflict keys, paired results |
 | Reconciliation/assessment/publication sequence | Exclusive permits, Git/workspace mechanics, atomic comparisons | Generic resource claims, content revisions, publication intents |
 | Assessment and senior decisions | Durable storage/events/accounting | Immutable proposals/reports and trusted validation |
-| Memory meaning, retrieval needs, doc batching | Tiers, indexes, caching, movement, retention | Memory items, snapshots, provenance and freshness |
+| Canonical memory, block semantics and doc batching | Immutable storage and optional submitted-context packing/compaction; tier/index services are deferred | Context parts, source/summary lineage and receipts; ordinary agent records |
 
 Authentication comes from the runtime principal, not caller-supplied JSON identities or grant handles. The agent package implements TaskLedger, SteeringBarrier and DocumentationBacklog over generic record/event ports. An OS can optimize these operations without embedding sprint semantics into its kernel.
 
-A standalone adapter implements the same ports with configured providers/tools, a persistent saver, small metadata storage and artifacts. An OS adapter maps them to PolyInference services. Graphs and domain schemas remain identical. Missing required guarantees fail negotiation before effects; standalone mode cannot silently substitute weaker behavior.
+`KernelRuntime` is the implemented ports adapter; `StandaloneRuntime` is its
+compatibility alias. It uses configured providers/tools, persistent checkpoints,
+metadata and artifacts. Unsupported required feature IDs reject before effects.
+Semantic rejection of conflicting data policies and hard allocation is still an
+open gap (U01/U02), not permission to substitute weaker mandatory guarantees.
 
 The graph asks `exclusive.acquire(resource_key)` and `records.compare_and_publish()`, not `OS.shell_mutex` or SQLite transactions. Its manifest declares installation-wide shell exclusion and project-wide verification exclusion. A deployment can use wider exclusion, but cannot narrow global shell scope and still claim this concurrency protocol.
 
@@ -137,7 +184,7 @@ Spawning a senior query returns immediately to event consumption; its result is 
 
 ```mermaid
 flowchart TD
-    L[load assignment and scoped private copy] --> P[prepare current phase context]
+    L[load assignment and authorized workspace] --> P[prepare current phase context]
     P --> M[submit model query]
     M --> N[consume and validate output]
     N -->|action| T[submit scoped tool]
@@ -145,19 +192,29 @@ flowchart TD
     O --> P
     N -->|development candidate| G[acquire verification]
     N -->|needs_review| J[settle effects, safely abort gate and park exception]
-    G --> H[capture H and assemble full private integration view]
+    G --> H[capture H and reconcile the complete candidate]
     H --> K[enter reconciliation phase]
     K --> P
     N -->|reconciliation candidate| X[required checks]
     X --> Y[assessment mode turn]
     Y -->|repair within reserve| P
-    Y -->|assessed final tree| C[commit and publish provisional head and report]
+    Y -->|assessed final tree| C[commit checked candidate and record integrated or private result]
     C --> Z[release verification and finish unresolved]
 ```
 
 Phases are `development`, `reconciliation`, `assessment`. Record at least one completed development turn after capturing/merging the current head, including a clean merge. A reconciliation candidate enters checks rather than reacquiring its gate. Assessment actions use the same tool path and return to assessment. Implementation repairs return to reconciliation/development, invalidate affected checks, and require final assessment again.
 
-Workspace setup creates a manifest at original B: copied file hashes, allowed write paths, dependency-closure basis and generation. Copying only a part never treats omitted paths as deletions. Preserve an explicit add/modify/delete/rename delta, then build a complete private view of current H and merge using B inside verification. Advance workspace generation/view; all final tools, checks, model context and commit refer to that integrated view. A stale-generation tool call is rejected. Closure expansion during development reads pinned B, while write expansion requires assignment authority. [Scoped-copy protocol](../simplified-os/README.md#6-each-agents-private-part-of-the-code)
+> **Edited 2026-10-20 because** full tracked task worktrees address inaccessible
+> work and incomplete build views (FIX-0040), while grants still bound edits.
+
+Default setup records a manifest at B and attaches a real task worktree with
+separate read/write authority. Reconciliation changes the logical view/generation
+without copying a new directory over retained source. Legacy isolated mode uses
+scoped copies, pinned closure expansion and complete private integration views;
+an omitted path is never a deletion. Both preserve attributable deltas and bind
+final tools/checks/model input to the exact integrated content. Stale generations
+and unauthorized write expansion remain rejected. See the
+[current workspace protocol](../simplified-os/README.md#6-each-agents-private-part-of-the-code).
 
 The complete view does not expand allowed writes: validate the worker's H-to-P delta, including rename sources/destinations. An omitted file is not proof that an add destination is absent in B. Commands/checks/hooks that change assessed inputs invalidate evidence; generation checks do not replace content preconditions. After a reconciled verification abort, retire the integration view and rebuild from the original preserved development delta at fresh H; abandoned integration repairs remain artifacts for explicit reapplication. Repeat reconciliation and assessment, with a new generation/steps. Do not reuse the old integrated tree as a B-relative delta or publish its old assessment. If the original publication receipt exists, finish that attempt instead of rebuilding.
 
@@ -235,7 +292,9 @@ The OS driver does not hold a global execution permit while awaiting `ainvoke` o
 
 ### Additive framework boundary
 
-Use an external adapter/SDK over public StateGraph nodes, runtime context, async invocation and the persistent saver interface. Agent changes are explicit effect nodes and workspace/phase metadata. Do not patch LangGraph/Pregel internals or installed source. A small compatibility module and supported-version conformance checks handle future public API changes; running graph/state/saver versions stay pinned. This is additive integration, not a promise that every future framework version is compatible. [Integration shape](../simplified-os/README.md#9-agent-cooperation-and-additive-langgraph-integration)
+Use the current RuntimePorts boundary over public StateGraph nodes, runtime
+context, async invocation and the persistent saver interface. A third shared
+agent library is deferred by FIX-0054; it is not required for direct OS access. Agent changes are explicit effect nodes and workspace/phase metadata. Do not patch LangGraph/Pregel internals or installed source. A small compatibility module and supported-version conformance checks handle future public API changes; running graph/state/saver versions stay pinned. This is additive integration, not a promise that every future framework version is compatible. [Integration shape](../simplified-os/README.md#9-agent-cooperation-and-additive-langgraph-integration)
 
 ### 4.5 Mapping the merged components
 
@@ -252,9 +311,9 @@ Use an external adapter/SDK over public StateGraph nodes, runtime context, async
 | Local coding agent loop / Local inference | Worker graph / model-query runtime port, respectively. Placement may change without changing worker semantics. |
 | Tools & observations | Validated capability operations, paired observations and exact revision evidence. |
 | Local Result Processor / Task verification | Worker phase routing / checks plus bounded final assessment. |
-| Private code copy / Shell mutex | Scoped private workspace / installation-wide command exclusion. |
+| Private code copy / Shell mutex | Full tracked task worktree or explicit legacy scoped copy / installation-wide command exclusion. |
 | Verification critical section / Merge head and reconciliation dev | Capture provisional head, merge, mandatory development turn, final assessment, commit and durable publication under one verifier. |
-| Commit & task report / Senior resolution and commit undo | Provisional commit plus unresolved report / separate keep, revert, retry or defer decisions. |
+| Commit & task report / Senior resolution and commit undo | Integrated or retained private candidate plus unresolved report / separate keep, revert, retry or defer decisions. |
 | Project acceptance | Independent checks of the senior-reviewed resulting project revision. |
 | Documentation / Immediate Memory | DocumentationBacklog and doc tasks / typed memory snapshots, hazards and SteeringBarrier. |
 | Trap frame / Key frame | Continuation plus effect journal / explicitly deferred consistent snapshot feature. |
@@ -264,6 +323,14 @@ Raw-model loop placement is a deliberate portability refinement: it is reusable 
 Preserve source identity when binding nodes: `state_45l9fwoc` is the cloud Result Processor; `state_b93kssuk` is the local Result Processor. Their identical titles do not make them one graph state. The source-derived program contract retains stable IDs and the merged HTML digest for traceability.
 
 ## 5. Runtime ports
+
+> **Edited 2026-10-20 because** current generic services and direct OS use
+> supersede the mandatory broad SDK sketch. The following is the historical
+> forward-looking interface, not a list of callable installed methods. Use
+> [src/polyinference/ports.py](../../src/polyinference/ports.py) for the implemented
+> API: there is no separate required MemoryPort or EventsPort, and records carry
+> current notes/history. The [settings reference](../simplified-os/AGENT_SETTINGS.md)
+> describes optional context services and defaults.
 
 ```python
 class RuntimePorts(Protocol):
@@ -291,6 +358,12 @@ class RuntimePorts(Protocol):
 | Events | read_after(cursor), wait_after(cursor) | Publication before notification; cursor recovery/deduplication. |
 
 ## 6. Data model
+
+The implementation adds optional ContextPart.compactable (default false), synchronized
+in the design Python/JSON schema. Explicit eligibility permits a derived input
+summary, never canonical-memory rewriting; instructions and tool pairs remain
+protected. See the [current OS settings reference](../simplified-os/AGENT_SETTINGS.md).
+Historical audit statements below describe their original baseline.
 
 [contracts.py](contracts.py) defines validated proposed wire models. [contract.schema.json](contract.schema.json) exports JSON Schema; [examples.json](examples.json) provides linked examples. These are design artifacts, not an agent/OS implementation. Semantic checks below supplement structural validation.
 
@@ -349,7 +422,7 @@ Resources are typed quantities: kind, domain, unit, amount, estimate/enforced st
 | agent_job | Objective/input refs, required worker phase protocol, workspace/tools, enforced job limits, continuation strategy and evidence/event visibility requirements. |
 | capability_call | Namespaced capability/schema digest, argument artifact, optional model call ID, workspace/revision preconditions, effect class, conflict claims and replay policy. |
 | memory_query | Namespaces/kinds, query ref, snapshot/freshness/code validity, byte/token/item caps and permitted tiers. |
-| publication | Expected record/head versions, commit and its sole parent, assessed final code, report/evidence refs, verification permit and event intents. Receipt records the actual new provisional head and durable report. |
+| publication | Historical provisional_all wire payload: expected versions, sole-parent candidate and unresolved report. Default in-place coding uses registered coding handlers and private/integrated receipts with real ancestry; see section 10. |
 
 ContextView is an ordered list of instruction/data/message/tool-result parts with source/trust/digest/visibility/omission metadata, pinned memory/docs, a context cap and compaction provenance. Part IDs are unique; each result follows its matching call. Provider rendering cannot silently remove required pins or split a tool pair. An unfit view returns context incompatibility or requests an explicit replacement view.
 
@@ -362,6 +435,12 @@ Children reference a parent budget account and bounded allocations. Runtime enfo
 Record parsing also rejects applied steering beyond received input, an open steering barrier with pending input, and a completed run with pending steering or mismatched reviewed/provisional revisions. These are necessary local checks. A complete acceptance decision additionally needs the atomic no-active-worker/effect and required-criteria checks described below; a valid JSON record alone cannot prove them.
 
 ## 7. Distribution and fidelity
+
+This section specifies richer future distribution semantics. The current OS
+uses static role bindings and FIFO admission; weighted scheduling, pressure-based
+rebindings and priority inheritance are not implemented. Mandatory unsupported
+semantics must still be rejected. Current semantic-validation gaps U01/U02 are
+listed in the [revision ledger](../simplified-os/DESIGN_REVISIONS.md#open-implementation-gaps).
 
 **Fidelity is adherence to the declared execution distribution.** It is independent of model quality, priority, determinism and memory-summary accuracy.
 
@@ -413,6 +492,13 @@ The simplified adapter keeps bindings fixed throughout a run. Cloud-only or feas
 
 ## 8. Multi-stage memory and documentation
 
+> **Edited 2026-10-20 because** FIX-0053/FIX-0058 add a bounded optional context
+> service, not the broader tier/index/canonical-memory platform described below.
+> Those broader interfaces remain future design. Current agents own their memory
+> records and choose manual, packing, compaction or hybrid preparation. Original
+> sources stay immutable, transformations need explicit eligibility and receipts
+> expose interventions. Lossy summaries are not evidence of task acceptance.
+
 Separate semantic kind from physical tier.
 
 | Kind | Purpose/authority |
@@ -444,13 +530,34 @@ Runtime owns single-generation startup, initialization, call leases, idle evicti
 
 ## 10. Publication and review
 
-The merged program requires `provisional_all`. Keep reviewed and provisional heads separate and initialize both to the starting accepted revision. Every normally assessed attempt, including fail/uncertain, publishes a real attributable commit and immutable unresolved report before verification ownership is released. Private development state and interrupted/incompletely assessed work remain private until reconciled; they are not normal completions.
+> **Edited 2026-10-20 because** O04/FIX-0040 replace all-verdict publication with
+> verified real-repository integration and retain actual task ancestry. These are
+> application rules; generic OS publication does not interpret coding verdicts.
 
-Under verification ownership: capture provisional H; preserve the scoped delta from original base B; assemble a complete private integration view of H and three-way merge that delta; run at least one reconciliation-development turn; run checks and the final model assessment; create P with sole parent H and the final assessed tree; atomically compare expected head/owner/application versions and publish `provisional_head=P`, report, hazards, and event intents. Retain B, H, both workspace views/generations, preserved private delta/history, reconciliation/assessment turn refs, final content/environment identity and P. A no-diff normal attempt may create an empty metadata commit, with the same actual-SHA requirement.
+Keep reviewed and provisional heads separate and initialize both at the starting
+accepted revision. In default in-place mode only successful verified candidates
+advance the integration checkout/head. Failed/uncertain candidates retain private
+reports/receipts on their task branches; a private candidate cannot be accepted
+with keep. Serial no-task-branch mode preserves non-successful edits uncommitted.
+Legacy isolated mode retains private failures but provisional uncertain results.
+Interrupted or incompletely assessed work has no fabricated normal report.
+
+Under verification ownership capture H, preserve the scoped B-relative delta,
+reconcile the complete candidate and run the required development turn, checks
+and final assessment. In-place commit P retains H and, when different, the prior
+task tip as parents. Fast-forward only that exact checked successful candidate,
+then compare/publish record updates and its receipt. Retain private report/
+receipt instead for fail/uncertain. Keep B, H, generation/content, original delta,
+turn/evidence refs and candidate provenance. A no-diff normal candidate may use
+an empty metadata commit. Legacy isolated candidate commits have sole parent H.
 
 A PublicationReceipt names the operation, verification permit, previous head H, published head P, report and publication revision. All IDs can be allocated before the transaction so immutable report/receipt records reference each other. Their visibility and the head pointer publish together. It is not evidence of completion merely to allocate a receipt ID: the adapter must read and validate the committed receipt. If publication is uncertain, retain ownership/recovery state and reconcile before normal closure or handoff.
 
-The next verifier captures the newly published P, not only a commit existing in its predecessor's private branch. It receives fail/uncertain/unresolved hazards describing code already present in that history. Required dependencies still wait for their declared senior disposition; publication does not satisfy a kept/reviewed prerequisite.
+The next verifier captures the actual current integrated head. Default private
+failed/uncertain candidates do not become that baseline; their hazards identify
+private code. Provisional hazards in legacy mode identify code already in shared
+history. Dependencies still wait for their declared senior disposition; retaining
+a report or publishing code does not satisfy a kept/reviewed prerequisite.
 
 Senior keep/revert/retry/defer remains separate. Keep accepts already-published work; it does not integrate a formerly private candidate. Reviewed head identifies an explicitly accepted resulting revision and cannot jump past unresolved ancestors merely because a later task was kept. Revert acquires verification ownership, examines later semantic/build dependencies, creates an inverse commit, checks the resulting content and publishes the updated provisional head before release. Invalidate affected evidence and record original/revert relationships. Retry/defer alone cannot erase code already published; any removal needs an explicit recorded revert. Git cannot reverse unrelated remote effects.
 
@@ -458,7 +565,13 @@ Worker `Publication`/PublicationReceipt records carry an unresolved TaskReport a
 
 Project acceptance is a separate guarded publication. With new starts closed and started coding workers settled, acquire verification, confirm the senior completion proposal matches the accepted reviewed/provisional head, and run independent project checks on a complete private view. Keep shell ownership per command. Complete only after an atomic comparison of head/plan/input versions, current permit, no active coding worker, no unresolved contributing work and no relevant uncertain effects. All required criteria must have current passing evidence on that content/environment. Steering received during checks invalidates the snapshot. A failed/stale attempt releases after effects settle and returns to review; it does not await a worker or senior while holding verification.
 
-Write immutable Git/evidence objects before the short record transaction; Git refs can be recoverable projections. No cross-Git/checkpoint/provider transaction is assumed. Crash recovery returns the original commit/receipt instead of creating another undo unit. The standalone adapter must implement the same provisional handoff, not substitute reviewed-only integration.
+Write immutable Git/evidence objects before short record publication. In-place
+Git is the user's actual repository, not merely a repaired metadata projection.
+Git fast-forward and SQLite/checkpoint/provider outcomes are separate consistency
+domains. A completed merge whose report cannot be recorded becomes uncertain and
+blocks further mutation. Recovery uses the original intent/receipt, not another
+undo or blind merge. Adapters must advertise the actual publication mode rather
+than claim the historical provisional_all semantics for private candidates.
 
 ## 11. Steering and recovery
 
@@ -481,6 +594,12 @@ Continuation records program/state/checkpoint, plan/spec/binding versions, works
 
 ## 12. Evolution and first build
 
+The staged roadmap and broader scenarios below preserve the original proposal.
+Current raw/native jobs, non-coding processes, attached worktrees and optional
+context services are implemented as recorded in the revision ledger; weighted
+allocation, memory tiers, MCP and migration are not. Required behavior is not
+proof that all current paths enforce it: U01–U05 remain open.
+
 Strict core parsing rejects unknown fields. Namespaced extensions declare required feature versions; unsupported mandatory meaning fails before dispatch. Optional extensions may be ignored only under documented optional semantics. Extensions cannot weaken core grants. Additive defaults can be minor versions; changed accounting/control semantics requires a major version. Running programs remain pinned; migrations are explicit and recorded. Unknown future enum values never become success by default.
 
 Opaque catalog classes/tier/capability IDs permit new providers, tools and memory stores without provider fields in WorkerState. A new execution protocol or guarantee needs negotiation.
@@ -498,7 +617,10 @@ Implementation acceptance scenarios:
 1. Initial default inference is senior; no runnable work with active workers waits.
 2. Check failure repairs within reserve; final tree is reassessed, committed and unresolved until senior review.
 3. Concurrent private work reconciles changed head, even after a clean merge; stale evidence cannot integrate.
-4. Every normally completed verdict publishes provisionally, remains unresolved and carries provenance. A private-only report, absent durable receipt or publication after gate release is rejected. Interrupted/incomplete assessment is retained without a fabricated verdict.
+4. Every normally assessed result retains attributable provenance and a durable
+   report/receipt before releasing verification. Default in-place fail/uncertain
+   stays private; successful candidates integrate. Legacy uncertain publication
+   follows its explicit mode. Interrupted/incomplete assessment has no fabricated verdict.
 5. Duplicate/reordered events and crashes around send/commit/publication do not double-settle or create an untracked writer.
 6. Steering captures cloud-rebound/gate-waiting workers; pending work stays unstarted; later steering remains pending.
 7. Strict senior waits on cloud exhaustion; flexible roles can run entirely local/cloud; bounded windows handle rounding, retries and uncertainty without counter resets.

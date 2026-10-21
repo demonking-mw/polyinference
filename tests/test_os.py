@@ -117,7 +117,7 @@ async def test_grants_logical_identity_and_finishing_lane_cannot_be_forged(confi
         forged = forged.model_copy(update={"intent_digest": operation_fingerprint(forged)})
         with pytest.raises(ValueError, match="ownership"):
             await runtime.execute(forged)
-        app.update("fixture-spec", {"kind": "task_spec", "allowed_capabilities": ["files.read"]})
+        runtime.workspaces.configure_grant("fixture-ws", capabilities=["files.read"])
         result, output = await app.capability(
             {"process_id": "fixture", "workspace_id": "fixture-ws"},
             "denied",

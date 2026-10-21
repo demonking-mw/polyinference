@@ -1,45 +1,51 @@
 {
-  "repository": "../../your-target-repository",
-  "state_directory": "../.polyinference/openai-run",
-  "objective": "Describe the bounded coding objective here.",
-  "allowed_write_paths": [
-    "src/example.py"
-  ],
-  "closure_paths": [
-    "src/example.py",
-    "pyproject.toml"
-  ],
-  "checks": [
-    {
-      "name": "tests",
-      "argv": [
-        "python3",
-        "-m",
-        "pytest",
-        "-q"
-      ],
-      "timeout_seconds": 120
+  "system": {
+    "repository": "../../your-target-repository",
+    "state_directory": "../.polyinference/openai-run",
+    "allowed_write_paths": [
+      "src/example.py"
+    ],
+    "closure_paths": [
+      "src/example.py",
+      "pyproject.toml"
+    ],
+    "checks": [
+      {
+        "name": "tests",
+        "argv": [
+          "python3",
+          "-m",
+          "pytest",
+          "-q"
+        ],
+        "timeout_seconds": 120
+      }
+    ],
+    "local": {
+      "protocol": "responses",
+      "base_url": "https://api.openai.com/v1",
+      "model": "YOUR_WORKER_MODEL",
+      "api_key_env": "OPENAI_API_KEY",
+      "max_inflight": 2
+    },
+    "cloud": {
+      "protocol": "responses",
+      "base_url": "https://api.openai.com/v1",
+      "model": "YOUR_SENIOR_MODEL",
+      "api_key_env": "OPENAI_API_KEY",
+      "max_inflight": 1
+    },
+    "role_bindings": {
+      "worker": "local",
+      "senior": "cloud",
+      "specialist": "cloud"
+    },
+    "max_workers": 2,
+    "check_execution": "trusted",
+    "context_policy": {
+      "auto_deal_context": true,
+      "auto_compaction": false
     }
-  ],
-  "check_execution": "trusted",
-  "local": {
-    "protocol": "responses",
-    "base_url": "https://api.openai.com/v1",
-    "model": "YOUR_WORKER_MODEL",
-    "api_key_env": "OPENAI_API_KEY",
-    "max_inflight": 2
   },
-  "cloud": {
-    "protocol": "responses",
-    "base_url": "https://api.openai.com/v1",
-    "model": "YOUR_SENIOR_MODEL",
-    "api_key_env": "OPENAI_API_KEY",
-    "max_inflight": 1
-  },
-  "role_bindings": {
-    "worker": "local",
-    "senior": "cloud",
-    "specialist": "cloud"
-  },
-  "max_workers": 2
+  "objective": "Describe the bounded coding objective here."
 }

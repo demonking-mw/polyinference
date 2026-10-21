@@ -15,15 +15,16 @@ from ..contracts import (
     MemoryItem,
     Publication,
     PublicationReceipt,
-    TaskAttempt,
     TaskReport,
     UsageMeasure,
 )
 from ..domain import Action, Assessment, Candidate, NeedsReview, WorkerReply, digest
-from ..os_contracts import PrivateCommitReceipt, PrivateTaskReport, task_report
+from ..runtime.workspace_state import WriteScopeError
+from .reports import PrivateCommitReceipt, PrivateTaskReport, task_report
 
 
 class WorkerState(TypedDict, total=False):
+    model_recovery: dict | None
     process_id: str
     task_spec_ref: str
     task_ledger_ref: str
@@ -46,6 +47,8 @@ class WorkerState(TypedDict, total=False):
     route: str
     report_ref: str | None
     interrupted: str | None
+    scope_recoveries: int
+    protocol_errors: int
 
 
 @dataclass(frozen=True)
@@ -63,6 +66,10 @@ async def load(state, runtime: Runtime[AppContext]):
         CodeRevision.model_validate(task["base"]),
         task["assignment"]["write_paths"],
         task["assignment"]["read_paths"],
+        capabilities=[*app.get(task["spec_ref"])["allowed_capabilities"], "workspace.commit", "workspace.retain",
+                      *(["coding.commit"] if app.repository else [])],
+        check_names=task["assignment"]["checks"],
+        expandable=task.get("category") == "setup" and app.config.write_scope == "project",
     )
     return {"workspace_generation": manifest.generation, "workspace_view": manifest.view}
 
@@ -83,7 +90,8 @@ async def model(state, runtime: Runtime[AppContext]):
     reply = await app.model(state)
     return {
         "reply": reply,
-        "calls": calls + 1,
+        "model_recovery": None,
+        "calls": max(calls + 1, app.model_call_count(state["process_id"])),
         "task_spec_ref": app.ports.workspaces.current(state["workspace_id"]).task_spec_ref,
     }
 
@@ -107,11 +115,15 @@ async def consume(state, runtime: Runtime[AppContext]):
             {"kind": "action", "tool": "protocol.validation"},
             {"error": str(exc)[:1500]},
         )
-        return {"trajectory_ref": history, "logical_step": step + 1, "route": "model"}
+        errors = state.get("protocol_errors", 0) + 1
+        return {"trajectory_ref": history, "logical_step": step + 1,
+                "protocol_errors": errors,
+                "route": "park" if errors > app.config.max_protocol_corrections else "model",
+                "interrupted": "Repeated invalid application replies" if errors > app.config.max_protocol_corrections else None}
     if isinstance(reply, Action):
-        return {"route": "tool"}
+        return {"route": "tool", "protocol_errors": 0}
     history = app.append_history(state.get("trajectory_ref"), f"turn-{step}", reply.model_dump(mode="json"))
-    update = {"trajectory_ref": history, "logical_step": step + 1}
+    update = {"trajectory_ref": history, "logical_step": step + 1, "protocol_errors": 0}
     if state["phase"] == "reconciliation":
         update["reconciliation_turn_refs"] = [*state.get("reconciliation_turn_refs", []), f"turn-{step}"]
     if isinstance(reply, NeedsReview):
@@ -135,8 +147,7 @@ async def consume(state, runtime: Runtime[AppContext]):
 async def tool(state, runtime: Runtime[AppContext]):
     app = runtime.context.services
     reply = Action.model_validate(state["reply"])
-    manifest = app.ports.workspaces.current(state["workspace_id"])
-    arguments = {**reply.arguments, "generation": manifest.generation}
+    arguments = reply.arguments
     if state["phase"] == "assessment" and reply.tool in {
         "files.write",
         "files.patch",
@@ -157,17 +168,7 @@ async def tool(state, runtime: Runtime[AppContext]):
             f"tool-{state['logical_step']}",
             reply.tool,
             arguments,
-            "private_write"
-            if reply.tool
-            in {
-                "files.write",
-                "files.patch",
-                "files.delete",
-                "checks.run",
-                "shell.run",
-                "repository.select_branch",
-            }
-            else "read",
+            app.ports.capabilities.get(reply.tool).effect_class,
         )
     await app.sync_setup(state)
     history = app.append_history(
@@ -195,10 +196,19 @@ async def tool(state, runtime: Runtime[AppContext]):
 
 async def acquire(state, runtime: Runtime[AppContext]):
     app = runtime.context.services
-    await app.ports.workspaces.preserve_delta(state["workspace_id"])
+    try:
+        await app.ports.workspaces.preserve_delta(state["workspace_id"])
+    except WriteScopeError as exc:
+        history = app.append_history(state.get("trajectory_ref"), f"scope-{state['logical_step']}",
+            {"kind": "action", "tool": "workspace.preserve"}, {"error": str(exc), **exc.detail})
+        attempts = state.get("scope_recoveries", 0)
+        recover = attempts < app.config.limits.max_repairs
+        return {"trajectory_ref": history, "scope_recoveries": attempts + 1,
+                "logical_step": state["logical_step"] + 1,
+                "route": "model" if recover else "park", "interrupted": str(exc)}
     permit = await app.ports.exclusive.acquire("verification/project", state["process_id"])
     app.process_status(state["process_id"], phase="verification", permit_refs=[permit])
-    return {"verification_permit_ref": permit}
+    return {"verification_permit_ref": permit, "route": "integrate", "interrupted": None}
 
 
 async def integrate(state, runtime: Runtime[AppContext]):
@@ -248,10 +258,12 @@ async def publish(state, runtime: Runtime[AppContext]):
         }
         if any(e.status == "failed" for e in evidence):
             verdict = "fail"
-        elif required != current_evidence or any(e.status != "passed" for e in evidence):
+        elif not required or required != current_evidence or any(e.status != "passed" for e in evidence):
             verdict = "uncertain"
         if not state.get("reconciliation_turn_refs") or not state.get("assessment_turn_refs"):
             raise RuntimeError("Missing mandatory phase turns")
+        if app.repository and verdict != "successful" and not app.get("coding/repository-policy")["task_branches"]:
+            raise RuntimeError("Checks did not pass; edits remain uncommitted in the current checkout")
         result, code_data = await app.capability(state, "commit", "workspace.commit", {}, "shared_write")
         if result.state != "succeeded":
             raise RuntimeError(str(code_data))
@@ -262,7 +274,7 @@ async def publish(state, runtime: Runtime[AppContext]):
         head = CodeRevision.model_validate(state["captured_head"])
         manifest = app.ports.workspaces.current(state["workspace_id"])
         hazard_refs = ["hazard/" + state["attempt_id"]] if verdict != "successful" else []
-        private = verdict == "fail"
+        private = verdict == "fail" or (app.repository is not None and verdict != "successful")
         report_type = PrivateTaskReport if private else TaskReport
         report = report_type(
             **app.base(report_ref),
@@ -316,7 +328,7 @@ async def publish(state, runtime: Runtime[AppContext]):
         task_version, task = app.ports.records.get(state["task_ledger_ref"])
         attempt_key = "attempt/" + state["attempt_id"]
         attempt_version, attempt_body = app.ports.records.get(attempt_key)
-        attempt = TaskAttempt.model_validate(attempt_body).model_copy(
+        attempt = app.task_attempt(attempt_body,
             update={
                 "revision": attempt_body["revision"] + 1,
                 "execution": "completed",
@@ -372,6 +384,11 @@ async def publish(state, runtime: Runtime[AppContext]):
         }
         app.ports.records.compare_and_publish({}, {}, {"staged/" + receipt_ref: batch})
     batch = app.get("staged/" + receipt_ref)
+    if app.repository:
+        result, output = await app.capability(state, "publication", "records.publish", batch, "shared_write")
+        if result.state != "succeeded" or not app.ports.records.get(receipt_ref):
+            raise RuntimeError("Publication lacks durable receipt: " + str(output))
+        return {"report_ref": report_ref}
     report = task_report(batch["immutable"][report_ref])
     payload = Publication(
         expected_versions=[ExpectedVersion(record_ref=k, revision=v) for k, v in batch["expected"].items()],
@@ -389,8 +406,9 @@ async def publish(state, runtime: Runtime[AppContext]):
     if report.code_location == "private":
         payload = CapabilityCall(
             capability_id="workspace.retain",
-            schema_digest=digest(b"workspace.retain/1"),
-            arguments=app.artifact({"receipt_ref": receipt_ref}, pid),
+            schema_digest=app.ports.capabilities.get("workspace.retain").schema_digest,
+            arguments=app.artifact({"receipt_ref": receipt_ref,
+                                    "generation": app.ports.workspaces.current(state["workspace_id"]).generation}, pid),
             model_call_id=None,
             workspace_id=state["workspace_id"],
             expected_code=report.final_code,
@@ -435,6 +453,7 @@ async def park(state, runtime: Runtime[AppContext]):
     if state.get("verification_permit_ref"):
         await app.ports.workspaces.abort(state["workspace_id"])
         await app.ports.exclusive.release(state["verification_permit_ref"], state["process_id"])
+    await app.preserve_interrupted(state["task_ledger_ref"])
     task = app.get(state["task_ledger_ref"])
     app.update(
         state["task_ledger_ref"],
@@ -446,7 +465,7 @@ async def park(state, runtime: Runtime[AppContext]):
     app.update("process/" + state["process_id"], {**process, "state": lifecycle})
     attempt_key = "attempt/" + state["attempt_id"]
     attempt_version, attempt_body = app.ports.records.get(attempt_key)
-    attempt = TaskAttempt.model_validate(attempt_body).model_copy(
+    attempt = app.task_attempt(attempt_body,
         update={
             "revision": attempt_body["revision"] + 1,
             "execution": "interrupted",
@@ -492,12 +511,13 @@ def build_worker(checkpointer):
     )
     for first, second in [
         ("tool", "model"),
-        ("acquire", "integrate"),
         ("integrate", "model"),
         ("checks", "model"),
         ("publish", "release"),
     ]:
         graph.add_edge(first, second)
+    graph.add_conditional_edges("acquire", lambda s: s["route"],
+                                {key: key for key in ("integrate", "model", "park")})
     graph.add_edge("release", END)
     graph.add_edge("park", END)
     return graph.compile(checkpointer=checkpointer)

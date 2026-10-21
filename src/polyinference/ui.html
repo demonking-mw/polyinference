@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>PolyInference · Test agent</title>
+<title>PolyInference · OS console</title>
 <style>
 :root{font-family:Inter,ui-sans-serif,system-ui,sans-serif;color:#24313e;background:#f5f6f8;font-size:14px}
 *{box-sizing:border-box}body{margin:0}header{background:white;border-bottom:1px solid #e1e5ea;padding:24px 32px}
@@ -17,7 +17,7 @@ button:disabled{opacity:.55;cursor:wait}#start{background:#295fe9;border-color:#
 .runbar{display:flex;align-items:center;gap:12px;margin:20px 0}select{max-width:380px;padding:8px;border:1px solid #cbd3dd;background:white;border-radius:6px}
 .badge{font-size:12px;border-radius:20px;background:#e5eaf1;padding:4px 9px;text-transform:capitalize}
 .badge.completed{background:#e1f2e9;color:#246547}.badge.failed,.badge.interrupted{background:#fbe8e6;color:#9d302b}.badge.running{background:#e8efff;color:#295fe9}
-#message{font-size:13px;color:#667481}#error{color:#9d302b;margin:12px 0;white-space:pre-wrap}
+#message{font-size:13px;color:#667481}#error{color:#9d302b;margin:12px 0;white-space:pre-wrap}#launchStatus{margin-top:12px;font-size:13px;color:#295fe9}#launchError{margin-top:12px;padding:12px;border:1px solid #d96c64;border-radius:6px;background:#fff2f0;color:#9d302b;white-space:pre-wrap}
 .layout{display:grid;grid-template-columns:minmax(300px,.9fr) minmax(400px,1.1fr);gap:20px;align-items:start}
 .panel{background:white;border:1px solid #dfe4e9;border-radius:10px;padding:20px;min-width:0}
 .panel h2{font-size:15px;margin:0 0 5px}.hint{font-size:12px;margin-bottom:18px}
@@ -31,41 +31,115 @@ h3{font-size:12px;margin:20px 0 8px;text-transform:uppercase;letter-spacing:.06e
 pre{font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace;background:#f6f8fa;padding:13px;border:1px solid #e5e9ee;border-radius:6px;white-space:pre-wrap;overflow-wrap:anywhere;margin:0;max-height:300px;overflow:auto}
 details{margin-top:14px}summary{cursor:pointer;font-size:12px;color:#52616f}.empty{padding:35px 15px;text-align:center;color:#7c8996;line-height:1.6}.operation{border-top:1px solid #e5e9ee;margin-top:20px;padding-top:4px}
 footer{padding-top:15px;font-size:11px;color:#86919c;overflow-wrap:anywhere}
+.console-tabs{display:flex;gap:6px;border-bottom:1px solid #dfe4e9;margin:20px 0}.console-tabs button{border:0;border-radius:6px 6px 0 0;background:transparent;padding:12px 18px}.console-tabs button[aria-selected=true]{color:#295fe9;background:#e8efff;box-shadow:inset 0 -2px #295fe9;font-weight:650}
+[hidden]{display:none!important}.console-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}.console-head h2{font-size:18px;margin:0 0 4px}.console-head p{font-size:12px}.metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:18px}.metric{background:white;border:1px solid #dfe4e9;border-radius:8px;padding:16px}.metric strong{font-size:25px;display:block;letter-spacing:-.8px;margin-bottom:4px}.metric span{font-size:11px;color:#667481;text-transform:uppercase;letter-spacing:.06em}
+.os-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.os-grid>.wide{grid-column:1/-1}.console-table{width:100%;border-collapse:collapse;font-size:12px;text-align:left}.table-scroll{overflow:auto;max-height:410px}.console-table th{position:sticky;top:0;background:#f8f9fb;color:#667481;font-size:10px;letter-spacing:.07em;text-transform:uppercase;white-space:nowrap;z-index:1}.console-table th,.console-table td{padding:10px 12px;border-bottom:1px solid #edf0f3;vertical-align:top}.console-table td{overflow-wrap:anywhere;max-width:340px}.record-link{font-size:12px;padding:0;color:#295fe9;background:transparent;border:0;text-align:left;overflow-wrap:anywhere}.console-table .badge{display:inline-block;font-size:10px;padding:3px 7px;white-space:nowrap}.badge.waiting,.badge.uncertain,.badge.paused{background:#fff0ce;color:#855d0a}.badge.held,.badge.active,.badge.acquired{background:#e8efff;color:#295fe9}.badge.released,.badge.succeeded{background:#e1f2e9;color:#246547}.console-note{background:#edf3ff;border:1px solid #cfdefb;color:#36547a;border-radius:8px;padding:12px 15px;font-size:12px;line-height:1.6;margin:0 0 18px}.console-note.warning{background:#fff7e5;border-color:#ebd6a7;color:#785b20}.lane{padding:14px 0;border-top:1px solid #edf0f3}.lane:first-child{border-top:0}.lane-heading{display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px}.lane-model{color:#667481;font-size:11px;margin-bottom:9px}.meter{height:6px;background:#e9edf3;border-radius:4px;overflow:hidden;margin:8px 0}.meter>span{display:block;height:100%;background:#527ce9}.lane-stats{display:flex;flex-wrap:wrap;gap:12px;color:#667481;font-size:11px}.policy{font-size:12px;line-height:1.6;color:#52616f;margin-top:12px}.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0}.toolbar input{flex:1;min-width:180px}.toolbar select{font-size:12px}.console-detail{width:850px;max-width:95vw;max-height:90vh;overflow:auto}.console-detail pre{max-height:65vh}.subtle{font-size:11px;color:#667481}.mono{font-family:ui-monospace,Consolas,monospace}.os-grid .hint{margin-bottom:12px}.record-browser{margin-bottom:20px}#journalInfo{margin:10px 0}.snapshot-actions{display:flex;gap:8px;flex-wrap:wrap}
+@media(max-width:1050px){.metrics{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.os-grid{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}.console-head{align-items:start;flex-direction:column}.panel{padding:14px}.console-tabs button{padding:10px}.console-table td{min-width:100px}.snapshot-actions{width:100%}}
 @media(max-width:850px){header{padding:20px}main{padding:20px}.launch{align-items:stretch;flex-direction:column}.layout{grid-template-columns:1fr}#inspector{position:static;max-height:none}.runbar{flex-wrap:wrap}}
+.monitor-nav{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #dfe4e9;margin:20px 0}.monitor-nav .console-tabs{margin:0;border:0}.quiet{padding:7px 10px;font-size:12px;color:#52616f}.monitor-stack{display:grid;gap:18px}.section-heading{display:flex;justify-content:space-between;gap:14px;align-items:start}.section-heading .hint{margin-bottom:14px}.resource-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px}.resource-grid h3{margin-top:10px}.kernel-details{margin:0;max-width:50%;text-align:right}.kernel-details p{overflow-wrap:anywhere;margin-top:8px}.attention{border:1px solid #e7c76b;border-left:4px solid #c48b12;background:#fff8e7;border-radius:8px;padding:13px 16px;margin-bottom:18px;line-height:1.6}.attention strong{display:block}.attention p{color:#785b20}.attention.danger{border-color:#d96c64;background:#fff2f0}.filter-bar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}.filter-bar button{font-size:12px;padding:7px 11px;border-radius:20px}.filter-bar button[aria-pressed=true]{color:#295fe9;border-color:#98b7ff;background:#edf3ff}.workflow{display:flex;gap:8px;flex-wrap:wrap;margin:5px 0 16px}.workflow-step{padding:7px 12px;background:#f2f4f7;border-radius:6px;font-size:12px;color:#667481}.workflow-step.current{background:#e8efff;color:#254d9f;box-shadow:inset 0 0 0 1px #bcd0ff;font-weight:650}.workflow-step.current::before{content:'● ';font-size:10px}.plan-summary{font-size:14px;color:#24313e;white-space:pre-wrap}.secondary-line{display:block;color:#667481;font-size:11px;line-height:1.6;margin-top:5px}.note-preview{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;white-space:pre-wrap;max-width:330px;line-height:1.5}.acceptance-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.acceptance-item{padding:11px 13px;border:1px solid #e5e9ee;border-radius:7px;display:flex;gap:10px;align-items:start;font-size:12px}.acceptance-item .check-icon{font-weight:bold;color:#8a98a7}.acceptance-item.passed .check-icon{color:#246547}.acceptance-item.pending .check-icon{color:#855d0a}.acceptance-item .secondary-line{margin-top:3px}.console-detail{position:fixed;left:auto;right:0;top:0;bottom:0;margin:0;width:min(900px,96vw);max-width:96vw;max-height:100dvh;height:100dvh;border-radius:12px 0 0 12px;padding:24px;overflow-y:auto}.console-detail>.dialog-title{position:sticky;top:-24px;background:white;z-index:3;margin:-1px 0 12px;padding:12px 0;border-bottom:1px solid #edf0f3}.console-detail .dialog-title h2{overflow-wrap:anywhere;max-width:60%}.drawer-actions{display:flex;gap:7px;flex-wrap:wrap;justify-content:end}.drawer-actions button{font-size:12px;padding:7px 9px}#inspector{position:static;max-height:none;margin-top:20px;border-top:1px solid #e5e9ee;padding-top:16px}.detail-section{border-top:1px solid #edf0f3;margin-top:20px;padding-top:4px}.detail-section p{white-space:pre-wrap;overflow-wrap:anywhere;color:#334352;font-size:13px}.detail-facts{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.record-links{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}.memory-note{border-top:1px solid #edf0f3;padding:12px 0}.memory-note p{font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.badge.successful,.badge.kept,.badge.resolved{background:#e1f2e9;color:#246547}.badge.fail{background:#fbe8e6;color:#9d302b}.badge.in_progress{background:#e8efff;color:#295fe9}.badge.waiting{background:#eef1f5;color:#52616f}.badge.needs-review,.badge.unknown-execution{background:#fff0ce;color:#855d0a}.phase-history{padding:10px 0;border-top:1px solid #edf0f3}.phase-history summary{font-weight:600;margin-bottom:10px}.console-table td:first-child{min-width:160px}.console-table .record-link{font-weight:550}#agentTasks .table-scroll{max-height:620px}#agentTasks td{max-width:330px}#osInspectorBody:empty{display:none}.console-detail pre{max-height:400px}#osCapture{font-size:12px}#sharedSummary{margin-top:10px}
+.runbar>select,.runbar>.button,.runbar>button,.runbar>.badge{flex-shrink:0}.runbar>select{max-width:260px}.runbar>#message{flex:1;min-width:180px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.task-objective{font-size:11px;color:#667481;margin-top:6px}#planSummary{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}.attention .record-link{margin-top:6px}.console-table th{font-weight:600}.console-detail #processes{margin-top:10px}
+@media(max-width:800px){.resource-grid,.acceptance-grid{grid-template-columns:1fr}.console-detail{width:100vw;max-width:100vw;border-radius:0;padding:16px}.console-detail>.dialog-title{top:-16px}.section-heading{flex-wrap:wrap}.kernel-details{max-width:45%}.drawer-actions{max-width:48%}.monitor-nav .console-tabs button{padding:12px 15px}}
 </style>
 </head>
 <body>
-<header><h1>PolyInference</h1><p>Run a small agent test, then inspect each process and node.</p></header>
+<header><h1>PolyInference <span class="role">OS console</span></h1><p>Inspect process scheduling, resource ownership and durable execution.</p></header>
 <main>
 <div class="controls">
-<label for="repository">Root repository</label>
-<div class="fieldrow"><input id="repository" placeholder="/home/mawa/projects/my-repository" spellcheck="false"><button id="browse" type="button">Browse…</button></div>
-<p class="hint" id="repoInfo" style="margin:7px 0 0">Development uses a private Git copy; new folders are initialized automatically.</p>
-<details class="check-settings" id="checkSettings"><summary>Check command</summary><input id="checkCommand" aria-label="Check command" spellcheck="false"><label for="baseBranch" style="margin-top:12px">Base branch (optional)</label><input id="baseBranch" placeholder="Current branch, or name the branch in your objective" spellcheck="false"></details>
+<label for="repository">Project path</label>
+<div class="fieldrow"><input id="repository" placeholder="/home/mawa/projects/my-project" spellcheck="false"><button id="browse" type="button">Browse…</button></div>
+<p class="hint" id="repoInfo" style="margin:7px 0 0">Enter an existing or new project path. Setup creates missing folders and initializes private Git.</p>
+<details class="check-settings" id="checkSettings"><summary>Check command (optional)</summary><input id="checkCommand" aria-label="Check command" placeholder="Automatic — inferred from your objective and project" spellcheck="false"><label for="baseBranch" style="margin-top:12px">Base branch (optional)</label><input id="baseBranch" placeholder="Current branch, or name the branch in your objective" spellcheck="false"></details>
 <div class="launch">
-<div class="objective"><label for="objective">Test objective</label><textarea id="objective" rows="2"></textarea></div>
-<button id="start" type="button">Run test</button>
-</div></div>
-<div class="runbar"><select id="runs" aria-label="Choose a run"><option value="">No runs yet</option></select><a id="export" class="button" aria-disabled="true" download>Export JSON</a><span id="status" class="badge">Ready</span><span id="message">Ready to run the configured test.</span></div>
+<div class="objective"><label for="objective">Run objective</label><textarea id="objective" rows="2"></textarea></div>
+<button id="start" type="button">Start run</button>
+</div><p id="launchStatus" role="status" aria-live="polite" hidden></p><div id="launchError" role="alert" hidden></div></div>
+<div class="runbar"><select id="runs" aria-label="Choose a run"><option value="">No runs yet</option></select><a id="export" class="button" aria-disabled="true" download>Save run · JSON</a><button id="openSnapshot" type="button">Open snapshot</button><input id="snapshotFile" type="file" accept=".json,application/json" hidden><button id="returnLive" type="button" hidden>Live runs</button><span id="status" class="badge">Ready</span><span id="message">Ready to start the configured workload.</span><button id="inspectIssue" class="quiet" type="button" hidden>Inspect issue</button></div>
 <div class="costbar"><strong id="runCost">Run ≈ $0.0000</strong><span id="codexCost">Codex ≈ $0.0000</span><span id="haikuCost">Haiku ≈ $0.0000</span><span id="allCost"></span></div>
 <details style="margin:-3px 0 16px"><summary>About cost estimates</summary><p class="hint" id="costNote">Standard USD API estimates. Codex is shown as an API-equivalent value, not a subscription charge.</p></details>
 <details class="steering" id="steeringPanel"><summary>Steering · update this run's instructions</summary><textarea id="steeringText" aria-label="Steering instructions" rows="2" placeholder="Describe a correction or new instruction for this run…"></textarea><button id="sendSteering" type="button" disabled>Send update</button><small id="steeringStatus">Start a run to send instructions.</small></details>
 <div id="error" role="alert"></div>
-<div class="layout">
-<section class="panel"><h2>Processes & nodes</h2><p class="hint">Nodes are shown in execution order. Blue nodes call a model.</p><div id="processes"><div class="empty">Run a test to see its execution.</div></div><footer id="statePath"></footer></section>
-<section id="inspector" class="panel" aria-live="polite"><div class="empty">Click a node to inspect its prompt and response.</div></section>
-</div>
+<section class="panel" aria-labelledby="userMessagesTitle"><h2 id="userMessagesTitle">Messages from agents</h2><div id="userMessages" role="log" aria-live="polite" style="max-height:360px;overflow:auto"><p>No messages yet.</p></div></section>
+<div class="monitor-nav"><div class="console-tabs" role="tablist" aria-label="Run inspection"><button id="tab-os" role="tab" aria-selected="false" aria-controls="view-os">OS</button><button id="tab-agent" role="tab" aria-selected="true" aria-controls="view-agent">Agents</button></div><button id="openRecords" class="quiet" type="button">Inspect records</button></div>
+<section id="view-os" role="tabpanel" aria-labelledby="tab-os" hidden>
+<div class="console-head"><div><h2>Kernel & health</h2><p id="osCapture">Select a run to inspect runtime state.</p></div><details class="kernel-details"><summary>Kernel details</summary><span id="kernelVersion"></span><p id="osRepository"></p><div id="kernelDetails"></div></details></div>
+<div id="snapshotNote" class="console-note" hidden></div><div id="osBlocker" class="attention" role="status" hidden></div>
+<div class="monitor-stack">
+<section class="panel"><div class="section-heading"><div><h2>Processes</h2><p class="hint">Runtime activity, waits and the resources behind them.</p></div><span id="processCount" class="subtle"></span></div><div id="osProcesses"></div><details><summary id="finishedProcessCount">Finished processes</summary><div id="finishedProcesses"></div></details></section>
+<section class="panel"><h2>Scheduling & resources</h2><p class="hint">Inference capacity and exclusive resources have separate limits.</p><div class="resource-grid"><div><h3>Inference endpoints</h3><div id="admissionLanes"></div><details><summary>Request queues & reservation history</summary><div id="reservationTable"></div><p class="policy">FIFO within each lane; ordinary and finishing requests alternate when both wait.</p></details></div><div><h3>Exclusive resources</h3><div id="criticalSections"></div><p class="policy">Verification spans integration through publication. Shell ownership covers one command at a time.</p></div></div><details><summary>Limits & usage</summary><p id="workerResidency" class="policy"></p><div id="osBudgets"></div><div id="osLimits"></div></details></section>
+<section class="panel"><h2>Workspaces & permissions</h2><p class="hint">Private file views and their effective write scope.</p><div id="osWorkspaces"></div><details><summary id="retainedWorkspaceCount">Retained workspace history</summary><div id="retainedWorkspaces"></div></details></section>
+<section class="panel"><h2>Operations & recovery</h2><p class="hint">Outstanding model and tool operations. Unknown execution retains conflicting resources until reconciled.</p><div class="toolbar"><input id="operationSearch" aria-label="Filter operations" placeholder="Search process, operation or capability…"></div><div id="osOperations"></div><details><summary id="settledOperationCount">Settled operation history</summary><div id="settledOperations"></div></details><details><summary>Kernel trace · historical record changes</summary><div class="toolbar"><input id="activitySearch" aria-label="Filter kernel activity" placeholder="Filter process, resource or record key…"><select id="activityCategory" aria-label="Activity category"><option value="">All activity</option><option>scheduling</option><option>critical sections</option><option>control</option><option>operations</option><option>budgets</option><option>workspace & records</option></select></div><div id="osActivity"></div><p id="journalInfo" class="subtle"></p><div class="toolbar"><button id="olderActivity" type="button">Older transactions</button><button id="latestActivity" type="button">Latest transactions</button><span id="activityPageInfo" class="subtle"></span></div></details></section>
+</div></section>
+<section id="view-agent" role="tabpanel" aria-labelledby="tab-agent"><div class="monitor-stack">
+<section class="panel"><div class="section-heading"><div><h2>Workflow & current plan</h2><p id="workflowSummary" class="hint">Select a run to inspect its work.</p></div><button id="inspectController" class="quiet" type="button">Controller details</button></div><div id="workflowStages" class="workflow"></div><p id="planSummary" class="plan-summary"></p><div id="seniorActivity"></div><details><summary>Plan & development allocation</summary><div id="planDetails"></div></details></section>
+<section class="panel"><h2>Task queue & history</h2><p class="hint">Execution, assessed verdict and senior review are independent. Completed tasks stay in this list.</p><div class="toolbar"><input id="taskSearch" aria-label="Search tasks" placeholder="Search task, objective, role or note…"></div><div id="taskFilters" class="filter-bar" role="group" aria-label="Task filter"></div><div id="agentTasks"></div><p id="taskCount" class="subtle"></p></section>
+<section class="panel"><h2>Shared notes & hazards</h2><p class="hint">Current senior summary and new task handoffs; original notes remain with each task.</p><div id="agentHazards"></div><div id="sharedSummary"></div><details><summary id="newNoteCount">Worker notes</summary><div id="agentNotes"></div></details></section>
+<section class="panel"><div class="section-heading"><div><h2>Project acceptance & output</h2><p id="acceptanceSummary" class="hint"></p></div><span id="acceptanceStatus" class="badge"></span></div><div id="acceptanceChecks" class="acceptance-grid"></div><details><summary>Revisions, checks & delivery details</summary><div id="acceptanceDetails"></div></details></section>
+</div></section>
 <footer id="configuration"></footer>
 </main>
-<dialog id="folderDialog"><div class="dialog-title"><h2>Choose repository root</h2><button id="closeFolders" type="button">Close</button></div><div class="fieldrow"><button id="upFolder" type="button">Up</button><input id="folderPath" aria-label="Browse directory" spellcheck="false"><button id="openFolder" type="button">Go</button></div><div id="directoryError" role="alert"></div><div class="folders" id="folders"></div><button id="selectFolder" type="button" disabled>Use this repository</button></dialog>
+<dialog id="folderDialog"><div class="dialog-title"><h2>Choose project folder</h2><button id="closeFolders" type="button">Close</button></div><div class="fieldrow"><button id="upFolder" type="button">Up</button><input id="folderPath" aria-label="Browse directory" spellcheck="false"><button id="openFolder" type="button">Go</button></div><div id="directoryError" role="alert"></div><div class="folders" id="folders"></div><button id="selectFolder" type="button" disabled>Use this folder</button></dialog>
+<dialog id="osInspector" class="console-detail" aria-labelledby="osInspectorTitle"><div class="dialog-title"><h2 id="osInspectorTitle">Details</h2><div class="drawer-actions"><button id="drawerBack" type="button" hidden>Back</button><button id="drawerRefresh" type="button" hidden>Refresh details</button><button id="closeOSInspector" type="button">Close</button></div></div><p id="osInspectorMeta" class="hint"></p><div id="osInspectorBody"></div><section id="recordBrowser" hidden><p class="hint">All retained records. Select one for its current value and artifact links.</p><div class="toolbar"><input id="recordSearch" aria-label="Filter records" placeholder="Filter record keys…"></div><div id="osRecords"></div><p id="recordCount" class="subtle"></p></section><section id="executionDetails" hidden><h3>Execution history</h3><div id="processes"></div><section id="inspector" aria-live="polite"><p class="hint">Select a node to inspect its input, response and tool results.</p></section><footer id="statePath"></footer></section></dialog>
+<script src="/ui-monitor.js"></script>
 <script>
 const $=id=>document.getElementById(id);
-let current=null,selectedNode=null,polling=false,renderedKey="",selectedRepository="",initialObjective="",browseRoot="",parentFolder="";
+let current=null,selectedNode=null,polling=false,selectedRepository="",initialObjective="",browseRoot="",parentFolder="";
+let starting=false,hasRunningRun=false,viewVersion=0,refreshPending=false;
+let osState=null,savedDocument=null,savedURL=null,inspection=0;
+let activityPage=null,activityRun=null,activityLoading=false;
 const pretty=value=>typeof value==="string"?value:JSON.stringify(value,null,2);
 const element=(tag,text,className)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node};
-async function api(path,options){const response=await fetch(path,options);const data=await response.json();if(!response.ok)throw Error(data.error||"Request failed");return data}
+async function api(path,options){const response=await fetch(path,options);const data=await response.json();if(!response.ok)throw Object.assign(Error(data.error||"Request failed"),{data});return data}
 function error(message){$("error").textContent=message||""}
 function block(parent,title,value){parent.append(element("h3",title),element("pre",pretty(value)))}
+const number=value=>value===null||value===undefined?"—":Number(value).toLocaleString();
+const stamp=value=>value?new Date(value).toLocaleString():"Time unavailable";
+const stateBadge=value=>element("span",({"in_progress":"In progress","unknown-execution":"Execution unknown","budget_stopped":"Budget stopped"}[value]||value||"unrecorded"),"badge "+(value||""));
+const matches=(value,query)=>JSON.stringify(value).toLowerCase().includes(query.toLowerCase());
+function recordLink(key,label){const button=element("button",label||key,"record-link");button.type="button";button.onclick=()=>inspectRecord(key);return button}
+function table(target,headers,rows,empty="No records yet."){
+ const box=$(target),scrollTop=box.querySelector(".table-scroll")?.scrollTop||0;box.replaceChildren();
+ if(!rows.length){box.append(element("div",empty,"empty"));return}
+ const wrap=element("div",undefined,"table-scroll"),grid=element("table",undefined,"console-table"),head=element("thead"),tr=element("tr");
+ headers.forEach(title=>tr.append(element("th",title)));head.append(tr);grid.append(head);
+ const body=element("tbody");for(const row of rows){const line=element("tr");for(const value of row){const cell=element("td");cell.append(value instanceof Node?value:document.createTextNode(String(value??"—")));line.append(cell)}body.append(line)}
+ grid.append(body);wrap.append(grid);box.append(wrap);wrap.scrollTop=scrollTop;
+}
+function showOSDetail(title,meta,value,restore=null){
+ const back=drawerRestore,box=openDrawer(title,meta,restore,back);box.append(element("pre",pretty(value)));artifactLinks(box,value);
+}
+async function inspectRecord(key){
+ const request=++inspection,run=current;
+ try{
+  const data=savedDocument?{key,revision:savedDocument.record_revisions?.[key],value:savedDocument.records?.[key]}:await api("/api/record?"+new URLSearchParams({run,key}));
+  if(request!==inspection||run!==current)return;
+  showOSDetail(key,"Current retained record · revision "+(data.revision??"unknown"),data.value??"Record unavailable in this snapshot.",()=>inspectRecord(key));
+  if(key.startsWith("workspace/")){const grant="workspace-grant/"+key.slice(10);$("osInspectorBody").append(recordLink(grant,"Effective capabilities & workspace grant"))}
+ }catch(exc){if(request===inspection&&run===current)error(exc.message)}
+}
+function inspectEvent(row){++inspection;showOSDetail(row.key,"Transaction #"+row.sequence+" · "+stamp(row.at)+" · historical revision "+row.revision,row.value??{note:"Historical values were not captured by this version of the runtime.",event:row},()=>inspectEvent(row))}
+function duration(start,end){if(!start)return"—";const milliseconds=new Date(end||osState?.captured_at)-new Date(start);if(!Number.isFinite(milliseconds))return"—";const seconds=Math.max(0,milliseconds)/1000;return seconds<60?seconds.toFixed(1)+" s":seconds<3600?Math.floor(seconds/60)+"m "+Math.floor(seconds%60)+"s":Math.floor(seconds/3600)+"h "+Math.floor(seconds%3600/60)+"m"}
+function renderActivity(){
+ if(!osState)return;
+ const source=activityPage?activityPage.rows:osState.activity;
+ const rows=source.filter(row=>(!$("activityCategory").value||row.category===$("activityCategory").value)&&matches(row,$("activitySearch").value)).slice().reverse();
+ table("osActivity",["Transaction / time","Subsystem","Record","Process / resource","Transition"],rows.map(row=>{
+  const button=element("button",row.key,"record-link");button.type="button";button.onclick=()=>inspectEvent(row);
+  return ["#"+row.sequence+" · "+stamp(row.at),row.category,button,[row.process_id,row.resource].filter(Boolean).join(" · ")||"—",stateBadge(row.state||"updated")]
+ }),"No matching activity in this journal page.");
+ const first=activityPage?.first_sequence??source[0]?.sequence;
+ $("olderActivity").disabled=activityLoading||!first||first<=osState.journal.first_sequence||activityPage?.has_older===false;
+ $("latestActivity").disabled=!activityPage;
+ $("activityPageInfo").textContent=(activityPage?"Historical page":"Latest page")+" · #"+(first??"—")+"–"+(activityPage?.last_sequence??source.at(-1)?.sequence??"—");
+}
+let recordLimit=250;
+function renderRecords(){
+ if(!osState)return;
+ const rows=osState.record_index.filter(row=>matches(row,$("recordSearch").value));
+ table("osRecords",["Record key","Subsystem","Revision"],rows.slice(0,recordLimit).map(row=>[recordLink(row.key),row.category,row.revision]));
+ $("recordCount").textContent=Math.min(rows.length,recordLimit)+" of "+rows.length+" matching records. Save includes all records and exact artifact bytes.";
+ if(rows.length>recordLimit){const more=element("button","Show 250 more records");more.type="button";more.onclick=()=>{recordLimit+=250;renderRecords()};$("osRecords").append(more)}
+}
 const dollars=value=>Number(value||0).toFixed(4);
 function showCost(cost){
  $("runCost").textContent="Run ≈ $"+dollars(cost.estimated_usd)+(cost.partial?"+":"");
@@ -79,7 +153,6 @@ async function applyRepository(path){
  selectedRepository=data.repository;$("repository").value=data.repository;$("checkCommand").value=data.check_command;
  $("repoInfo").textContent=data.scope+" · "+data.file_count+" files. Development uses a private copy.";
  if(data.clear_objective&&$("objective").value===initialObjective)$("objective").value="";
- if(!data.check_command)$("checkSettings").open=true;
  error("");
 }
 async function folders(path){
@@ -89,13 +162,13 @@ async function folders(path){
   $("selectFolder").disabled=!data.is_repository;
   const list=$("folders");list.replaceChildren();
   for(const entry of data.directories){const button=element("button",entry.name+"/");button.type="button";button.onclick=()=>folders(entry.path);list.append(button)}
-  if(!data.directories.length)list.append(element("p","No subdirectories.","hint"));
+  if(!data.directories.length)list.append(element("p",data.exists?"No subdirectories.":"This folder will be created when the run starts.","hint"));
  }catch(exc){$("directoryError").textContent=exc.message}
 }
 function inspect(data){
  const box=$("inspector");box.replaceChildren(element("h2",data.name));
  const meta=element("div",data.process_id+" · "+(data.phase?data.phase+" · ":"")+data.status);meta.id="nodeMeta";box.append(meta);
- const models=data.operations.filter(operation=>operation.prompt.length);
+ const models=(data.operations||[]).filter(operation=>operation.prompt.length);
  if(models.length){
   for(const operation of models){
    block(box,"Prompt",operation.prompt.map(message=>message.role.toUpperCase()+"\n"+message.content).join("\n\n"));
@@ -109,7 +182,7 @@ function inspect(data){
   box.append(element("p","This node runs application logic and has no model prompt.","hint"));
   block(box,"Input",data.input);block(box,"Output",data.output);
  }
- const tools=data.operations.filter(operation=>!operation.prompt.length);
+ const tools=(data.operations||[]).filter(operation=>!operation.prompt.length);
  for(const operation of tools){
   const div=element("div",undefined,"operation");div.append(element("h3",(operation.tool||operation.kind)+" · "+operation.status));
   if(operation.arguments)block(div,"Arguments",operation.arguments);
@@ -121,62 +194,78 @@ function inspect(data){
 async function selectNode(id){
  selectedNode=id;
  document.querySelectorAll(".node").forEach(node=>node.classList.toggle("selected",node.dataset.id===id));
- try{const run=current;const data=await api("/api/node?"+new URLSearchParams({run,id}));if(current===run&&selectedNode===id)inspect(data)}catch(exc){error(exc.message)}
+ try{const run=current,request=inspection;const data=savedDocument?savedDocument.processes.flatMap(process=>process.nodes).find(node=>node.id===id):await api("/api/node?"+new URLSearchParams({run,id}));if(data&&current===run&&selectedNode===id&&request===inspection)inspect(data)}catch(exc){error(exc.message)}
 }
 function render(data){
  $("status").textContent=data.status;$("status").className="badge "+data.status;
- const running=data.status==="running";
- $("message").textContent=running?"Running… you can inspect recorded nodes as they finish.":data.status==="completed"?"Finished. Click any node to inspect it.":"Select a node to inspect the recorded run.";
+ const running=data.status==="running"&&!savedDocument;
+ $("message").textContent=running?"Running · select a task to inspect its progress.":data.status==="completed"?(data.output?.directory?"Finished. Output files: "+data.output.directory:"Finished · inspect tasks and project acceptance below."):(data.blocker?"Stopped: "+compactText(data.blocker_detail||data.blocker,180):"Select a task to inspect the recorded run.");
+ $("message").title=data.blocker_detail||data.blocker||"";$("inspectIssue").hidden=!data.blocker&&!data.error;
+ if(data.failure_stage==="startup")$("message").textContent="Startup failed · process "+data.process_id+". Save run includes the exact error.";
+ if(savedDocument)$("message").textContent="Saved snapshot · "+stamp(savedDocument.exported_at);
  error(data.error);$("statePath").textContent=(data.repository?data.repository+" · ":"")+data.state;
+ const repo=data.repository_summary,setup=data.repository_setup;
+ if(setup?.isolated===false){
+  const head=repo?.head||data.agents?.records?.["head/provisional"]?.code?.commit_id||setup.base_commit;
+  const remaining=(repo?.workers||[]).filter(w=>!w.merged||w.changes).length;
+  $("statePath").textContent+=" · branch "+(setup.base_branch||"detached HEAD")+" · "+head.slice(0,12)+(remaining?" · "+remaining+" unfinished worker worktrees":"");
+  $("statePath").title=JSON.stringify(repo||setup,null,2);
+ }
  showCost(data.cost);
  $("sendSteering").disabled=!running;
  $("steeringStatus").textContent=running?(data.steering_received+" received · "+(data.steering_received-data.steering_applied)+" awaiting review. Started workers finish before updates apply."):"Steering is available while a run is running.";
- $("export").href="/api/export?"+new URLSearchParams({id:data.id});$("export").setAttribute("aria-disabled","false");
- const key=JSON.stringify([data.id,data.status,data.processes]);
- if(key===renderedKey)return;renderedKey=key;
- const container=$("processes");container.replaceChildren();
- for(const process of data.processes){
-  const section=element("div",undefined,"process"),title=element("div",undefined,"process-title");
-  title.append(element("span",process.id),element("span",process.role,"role"));section.append(title);
-  const nodes=element("div",undefined,"nodes");
-  process.nodes.forEach((node,index)=>{
-   if(index)nodes.append(element("span","→","arrow"));
-   const button=element("button",node.name,"node "+node.status+(node.model_call?" model":"")+(node.id===selectedNode?" selected":""));
-   button.type="button";button.dataset.id=node.id;button.title=node.status;
-   button.setAttribute("aria-label",process.id+": "+node.name+" "+node.phase);
-   if(node.phase)button.append(element("span",node.phase,"phase"));
-   button.onclick=()=>selectNode(node.id);nodes.append(button);
-  });section.append(nodes);container.append(section);
- }
- if(!data.processes.length)container.append(element("div",running?"Starting the agent…":"No node checkpoints were recorded.","empty"));
+ $("export").href=savedDocument?savedURL:"/api/export?"+new URLSearchParams({id:data.id});$("export").setAttribute("aria-disabled","false");
+ renderOS(data);
+ renderUserMessages(data.os?.messages||[]);
+ renderAgents(data);
 }
 async function refresh(){
- if(polling)return;polling=true;
+ if(savedDocument||starting)return;
+ if(polling){refreshPending=true;return}polling=true;
+ const version=viewVersion;
  try{
   const data=await api("/api/runs");
+  if(savedDocument||starting||version!==viewVersion)return;
   if(!$("objective").dataset.loaded){
    initialObjective=data.objective;$("objective").value=data.objective;$("objective").dataset.loaded="true";
    selectedRepository=data.repository;$("repository").value=data.repository;$("checkCommand").value=data.check_command;$("baseBranch").value=data.base_branch||"";browseRoot=data.browse_root;
   }
   $("allCost").textContent="All saved runs ≈ $"+dollars(data.total_cost.estimated_usd)+(data.total_cost.partial?"+":"");
-  $("configuration").textContent="Configuration: "+data.configuration;
+  $("configuration").textContent="Launch configuration: "+data.configuration;
   const select=$("runs");select.replaceChildren();
   if(!data.runs.length)select.append(new Option("No runs yet",""));
   for(const run of data.runs)select.append(new Option(run.id+" · "+run.status,run.id));
   if(!current&&data.runs.length)current=data.runs[0].id;
   select.value=current||"";
-  $("start").disabled=data.runs.some(run=>run.status==="running");
-  if(current){const id=current;const view=await api("/api/run?"+new URLSearchParams({id}));if(current===id)render(view)}
- }catch(exc){error(exc.message)}finally{polling=false}
+  hasRunningRun=data.runs.some(run=>run.status==="running");$("start").disabled=hasRunningRun;
+  if(current){const id=current;const view=await api("/api/run?"+new URLSearchParams({id}));if(current===id&&!savedDocument&&!starting&&version===viewVersion)render(view)}
+ }catch(exc){if(!starting&&version===viewVersion)error(exc.message)}finally{polling=false;if(refreshPending){refreshPending=false;refresh()}}
 }
-$("runs").onchange=()=>{current=$("runs").value;selectedNode=null;$("inspector").replaceChildren(element("div","Click a node to inspect its prompt and response.","empty"));refresh()};
+$("runs").onchange=()=>{++viewVersion;current=$("runs").value;selectedNode=null;renderOS({id:current,os:null});renderAgents({id:current,agents:{records:{},texts:{}},processes:[]});$("message").textContent="Loading selected run…";$("inspectIssue").hidden=true;error("");refresh()};
+function showStartedRun(id,status){
+ leaveSnapshot();++viewVersion;current=id;selectedNode=null;
+ const select=$("runs"),previous=Array.from(select.options).filter(option=>option.value&&option.value!==current&&!option.value.startsWith("snapshot:"));
+ select.replaceChildren(new Option(current+" · "+status,current),...previous);select.value=current;
+ $("status").textContent=status;$("status").className="badge "+status;
+ $("message").textContent=status==="failed"?"Run failed to start. Save run includes the exact error.":"Run started. Loading execution details…";
+ $("processes").replaceChildren(element("div",status==="failed"?"No agent nodes ran. Startup diagnostics are available in Save run.":"Initializing processes…","empty"));
+ $("inspector").replaceChildren(element("div","Select a node when it appears.","empty"));
+ renderOS({id:current,os:null});renderAgents({id:current,agents:{records:{},texts:{}},processes:[]});$("osCapture").textContent="Loading run "+current+"…";
+ $("statePath").textContent="";$("export").href="/api/export?"+new URLSearchParams({id:current});$("export").setAttribute("aria-disabled","false");
+}
 $("start").onclick=async()=>{
- $("start").disabled=true;error("");
+ if(starting)return;starting=true;++viewVersion;
+ $("start").disabled=true;$("start").textContent="Starting…";error("");
+ $("launchError").hidden=true;$("launchError").textContent="";
+ $("launchStatus").hidden=false;$("launchStatus").textContent="Starting run…";
  try{
-  await applyRepository($("repository").value);
   const data=await api("/api/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({objective:$("objective").value,repository:$("repository").value,check_command:$("checkCommand").value,base_branch:$("baseBranch").value})});
-  current=data.id;selectedNode=null;$("inspector").replaceChildren(element("div","Select a node when it appears.","empty"));await refresh();
- }catch(exc){error(exc.message);$("start").disabled=false}
+  hasRunningRun=true;showStartedRun(data.id,"running");
+  $("launchStatus").textContent="Started run "+current+".";
+ }catch(exc){
+  if(exc.data?.id)showStartedRun(exc.data.id,"failed");
+  $("launchStatus").hidden=true;$("launchError").hidden=false;$("launchError").textContent=(exc.data?"Could not start run"+(exc.data.id?" "+exc.data.id:""):"Could not confirm run startup")+": "+exc.message;
+ }finally{starting=false;$("start").textContent="Start run";$("start").disabled=hasRunningRun;refresh()}
 };
 $("browse").onclick=()=>{$("folderDialog").showModal();folders(browseRoot)};
 $("closeFolders").onclick=()=>$("folderDialog").close();
@@ -190,7 +279,57 @@ $("sendSteering").onclick=async()=>{
  try{
   const data=await api("/api/steer",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:current,text:$("steeringText").value})});
   $("steeringText").value="";$("steeringStatus").textContent="Update #"+data.sequence+" queued. Started workers finish before review.";await refresh();
- }catch(exc){error(exc.message)}finally{$("sendSteering").disabled=$("status").textContent!=="running"}
+ }catch(exc){error(exc.message)}finally{$("sendSteering").disabled=!!savedDocument||$("status").textContent!=="running"}
+};
+function selectTab(name){
+ for(const other of ["os","agent"]){$("tab-"+other).setAttribute("aria-selected",String(other===name));$("tab-"+other).tabIndex=other===name?0:-1;$("view-"+other).hidden=other!==name}
+}
+for(const name of ["os","agent"]){
+ const tab=$("tab-"+name);tab.tabIndex=name==="agent"?0:-1;tab.onclick=()=>selectTab(name);
+ tab.onkeydown=event=>{let next;if(event.key==="ArrowRight"||event.key==="ArrowLeft")next=name==="os"?"agent":"os";if(event.key==="Home")next="os";if(event.key==="End")next="agent";if(next){event.preventDefault();selectTab(next);$("tab-"+next).focus()}};
+}
+$("openRecords").onclick=showRecords;
+$("inspectIssue").onclick=showRunIssue;
+$("taskSearch").oninput=renderTasks;
+$("inspectController").onclick=()=>showProcess("controller");
+$("closeOSInspector").onclick=()=>{++inspection;$("osInspector").close()};
+$("operationSearch").oninput=renderOperations;$("activitySearch").oninput=renderActivity;$("activityCategory").onchange=renderActivity;
+$("recordSearch").oninput=()=>{recordLimit=250;renderRecords()};
+$("latestActivity").onclick=()=>{activityPage=null;renderActivity()};
+$("olderActivity").onclick=async()=>{
+ if(activityLoading||!osState)return;const run=current,before=activityPage?.first_sequence??osState.activity[0]?.sequence;if(!before)return;
+ activityLoading=true;$("olderActivity").disabled=true;
+ try{
+  let page;
+  if(savedDocument){
+   const events=savedDocument.events.filter(event=>event.sequence<before),recent=events.slice(-120),rows=[];
+   for(const event of recent){
+    const append=(key,revision,state,value)=>rows.push({sequence:event.sequence,at:event.at,key,category:osState.record_index.find(row=>row.key===key)?.category||"workspace & records",revision,state,value,process_id:value?.process_id||value?.scope?.process_id||value?.request?.scope?.process_id,resource:value?.resource});
+    for(const [key,change] of Object.entries(event.changes||{}))append(key,change.revision,change.state,change.value);
+    for(const key of event.immutable||[])append(key,1,"created",event.immutable_values?.[key]);
+   }
+   page={rows,first_sequence:recent[0]?.sequence,last_sequence:recent.at(-1)?.sequence,has_older:events.length>recent.length};
+  }else page=await api("/api/activity?"+new URLSearchParams({run,before}));
+  if(current===run)activityPage=page;
+ }catch(exc){error(exc.message)}finally{activityLoading=false;renderActivity()}
+};
+$("openSnapshot").onclick=()=>$("snapshotFile").click();
+function leaveSnapshot(){
+ savedDocument=null;if(savedURL){URL.revokeObjectURL(savedURL);savedURL=null}$("returnLive").hidden=true;$("runs").disabled=false;$("export").removeAttribute("download");++inspection;
+}
+$("returnLive").onclick=()=>{leaveSnapshot();current=null;selectedNode=null;refresh()};
+$("snapshotFile").onchange=async()=>{
+ const file=$("snapshotFile").files[0];if(!file)return;
+ try{
+  const document=JSON.parse(await file.text());
+  if(document.schema_version!==2||!document.run||!document.os||!document.records||!Array.isArray(document.processes)||!Array.isArray(document.os.record_index)||!Array.isArray(document.os.activity))throw Error("Choose a version 2 PolyInference run snapshot saved with this viewer.");
+  leaveSnapshot();savedDocument=document;current="snapshot:"+document.run.id;selectedNode=null;
+  savedURL=URL.createObjectURL(new Blob([JSON.stringify(document,null,2)],{type:"application/json"}));
+  $("export").download=file.name;$("returnLive").hidden=false;$("runs").replaceChildren(new Option("Snapshot · "+document.run.id,current));$("runs").disabled=true;
+  $("allCost").textContent="Saved diagnostic snapshot";$("configuration").textContent="Saved configuration · local: "+(document.configuration?.local?.model||"unrecorded")+" · cloud: "+(document.configuration?.cloud?.model||"unrecorded");
+  $("inspector").replaceChildren(element("div","Select a process checkpoint from this snapshot.","empty"));
+  render({...document.run,id:current,processes:document.processes,os:document.os,agents:snapshotAgentSource(document)});selectTab("agent");
+ }catch(exc){error(exc.message)}finally{$("snapshotFile").value=""}
 };
 refresh();setInterval(refresh,2000);
 </script>

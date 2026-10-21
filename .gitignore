@@ -84,7 +84,7 @@ test-results/
 /testing/
 
 # Local agent state and generated artifacts
-/.polyinference/
+.polyinference/
 /.langgraph_api/
 /checkpoints/
 /runs/
@@ -92,6 +92,9 @@ test-results/
 /logs/
 /tmp/
 *.log
+
+# Rolling history snapshots in custom archive directories
+**/history/[0-9]*T[0-9]*Z-*.json
 
 # Standalone runtime files in custom state directories
 records.sqlite

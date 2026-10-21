@@ -1,39 +1,67 @@
 {
-  "repository": "../../your-target-repository",
-  "state_directory": "../.polyinference/anthropic-run",
-  "objective": "Describe the bounded coding objective here.",
-  "allowed_write_paths": [
-    "src/example.py"
-  ],
-  "closure_paths": [
-    "src/example.py",
-    "pyproject.toml"
-  ],
-  "checks": [
-    {
-      "name": "tests",
-      "argv": [
-        "python3",
-        "-m",
-        "pytest",
-        "-q"
-      ],
-      "timeout_seconds": 120
+  "system": {
+    "repository": "../../your-target-repository",
+    "state_directory": "../.polyinference/anthropic-run",
+    "allowed_write_paths": [
+      "src/example.py"
+    ],
+    "closure_paths": [
+      "src/example.py",
+      "pyproject.toml"
+    ],
+    "checks": [
+      {
+        "name": "tests",
+        "argv": [
+          "python3",
+          "-m",
+          "pytest",
+          "-q"
+        ],
+        "timeout_seconds": 120
+      }
+    ],
+    "local": {
+      "protocol": "anthropic",
+      "base_url": "https://api.anthropic.com/v1",
+      "model": "claude-haiku-5-5",
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "max_inflight": 2,
+      "max_context_tokens": 128000,
+      "reserved_context_tokens": 256000
+    },
+    "cloud": {
+      "protocol": "anthropic",
+      "base_url": "https://api.anthropic.com/v1",
+      "model": "claude-haiku-5-5",
+      "api_key_env": "ANTHROPIC_API_KEY",
+      "max_inflight": 1,
+      "max_context_tokens": 128000,
+      "reserved_context_tokens": 256000
+    },
+    "limits": {
+      "max_steps": 2048,
+      "max_model_calls": 512,
+      "max_repairs": 2,
+      "max_input_tokens_per_call": 96000,
+      "max_output_tokens_per_call": 32000,
+      "max_total_tokens": 16000000,
+      "max_output_bytes": 262144,
+      "max_wall_time_ms": 3600000,
+      "max_api_spend_microusd": 0,
+      "cost_guarantee": "estimate",
+      "final_phase_reserve": {
+        "reconciliation_model_calls": 2,
+        "assessment_model_calls": 2,
+        "publication_steps": 2,
+        "cleanup_steps": 1
+      }
+    },
+    "check_execution": "trusted",
+    "context_policy": {
+      "auto_deal_context": true,
+      "auto_compaction": false
     }
-  ],
-  "check_execution": "trusted",
-  "local": {
-    "protocol": "anthropic",
-    "base_url": "https://api.anthropic.com/v1",
-    "model": "claude-haiku-5-5",
-    "api_key_env": "ANTHROPIC_API_KEY",
-    "max_inflight": 2
   },
-  "cloud": {
-    "protocol": "anthropic",
-    "base_url": "https://api.anthropic.com/v1",
-    "model": "claude-haiku-5-5",
-    "api_key_env": "ANTHROPIC_API_KEY",
-    "max_inflight": 1
-  }
+  "objective": "Describe the bounded coding objective here."
 }

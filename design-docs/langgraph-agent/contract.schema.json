@@ -71,9 +71,6 @@
         "kind": {
           "const": "agent_job",
           "default": "agent_job",
-          "enum": [
-            "agent_job"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -157,9 +154,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -199,9 +193,6 @@
         "kind": {
           "const": "agent_program",
           "default": "agent_program",
-          "enum": [
-            "agent_program"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -323,9 +314,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -365,9 +353,6 @@
         "kind": {
           "const": "backend_descriptor",
           "default": "backend_descriptor",
-          "enum": [
-            "backend_descriptor"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -556,9 +541,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -598,9 +580,6 @@
         "kind": {
           "const": "binding_decision",
           "default": "binding_decision",
-          "enum": [
-            "binding_decision"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -648,6 +627,10 @@
             "minLength": 1,
             "type": "string"
           },
+          "propertyNames": {
+            "maxLength": 256,
+            "minLength": 1
+          },
           "title": "Selected Backend Classes",
           "type": "object"
         },
@@ -671,6 +654,10 @@
             "minimum": 0,
             "type": "integer"
           },
+          "propertyNames": {
+            "maxLength": 256,
+            "minLength": 1
+          },
           "title": "Distribution Before",
           "type": "object"
         },
@@ -679,14 +666,22 @@
             "minimum": 0,
             "type": "integer"
           },
+          "propertyNames": {
+            "maxLength": 256,
+            "minLength": 1
+          },
           "title": "Distribution After",
           "type": "object"
         },
         "total_variation_by_rule": {
           "additionalProperties": {
-            "maximum": 1.0,
-            "minimum": 0.0,
+            "maximum": 1,
+            "minimum": 0,
             "type": "number"
+          },
+          "propertyNames": {
+            "maxLength": 256,
+            "minLength": 1
           },
           "title": "Total Variation By Rule",
           "type": "object"
@@ -759,9 +754,6 @@
         "kind": {
           "const": "capability_call",
           "default": "capability_call",
-          "enum": [
-            "capability_call"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -858,9 +850,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -900,9 +889,6 @@
         "kind": {
           "const": "capability_descriptor",
           "default": "capability_descriptor",
-          "enum": [
-            "capability_descriptor"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -1223,6 +1209,11 @@
           },
           "title": "Derived From",
           "type": "array"
+        },
+        "compactable": {
+          "default": false,
+          "title": "Compactable",
+          "type": "boolean"
         }
       },
       "required": [
@@ -1304,9 +1295,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -1346,9 +1334,6 @@
         "kind": {
           "const": "continuation",
           "default": "continuation",
-          "enum": [
-            "continuation"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -1718,9 +1703,6 @@
         },
         "duplicate_behavior_precedence": {
           "const": "expanded_execution_contracts",
-          "enum": [
-            "expanded_execution_contracts"
-          ],
           "title": "Duplicate Behavior Precedence",
           "type": "string"
         }
@@ -1772,9 +1754,6 @@
         "on_unmatched": {
           "const": "reject",
           "default": "reject",
-          "enum": [
-            "reject"
-          ],
           "title": "On Unmatched",
           "type": "string"
         },
@@ -1862,9 +1841,13 @@
         },
         "target_weights": {
           "additionalProperties": {
-            "maximum": 1.0,
-            "minimum": 0.0,
+            "maximum": 1,
+            "minimum": 0,
             "type": "number"
+          },
+          "propertyNames": {
+            "maxLength": 256,
+            "minLength": 1
           },
           "title": "Target Weights",
           "type": "object"
@@ -1906,8 +1889,8 @@
           "type": "integer"
         },
         "max_total_variation": {
-          "maximum": 1.0,
-          "minimum": 0.0,
+          "maximum": 1,
+          "minimum": 0,
           "title": "Max Total Variation",
           "type": "number"
         },
@@ -1949,9 +1932,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -1991,9 +1971,6 @@
         "kind": {
           "const": "documentation_batch",
           "default": "documentation_batch",
-          "enum": [
-            "documentation_batch"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -2254,9 +2231,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -2296,9 +2270,6 @@
         "kind": {
           "const": "memory_item",
           "default": "memory_item",
-          "enum": [
-            "memory_item"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -2466,9 +2437,6 @@
         "kind": {
           "const": "memory_query",
           "default": "memory_query",
-          "enum": [
-            "memory_query"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -2584,9 +2552,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -2626,9 +2591,6 @@
         "kind": {
           "const": "memory_snapshot",
           "default": "memory_snapshot",
-          "enum": [
-            "memory_snapshot"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -2714,18 +2676,12 @@
         "protocol_id": {
           "const": "polyinference/merged-worker/1",
           "default": "polyinference/merged-worker/1",
-          "enum": [
-            "polyinference/merged-worker/1"
-          ],
           "title": "Protocol Id",
           "type": "string"
         },
         "publication_policy": {
           "const": "provisional_all",
           "default": "provisional_all",
-          "enum": [
-            "provisional_all"
-          ],
           "title": "Publication Policy",
           "type": "string"
         },
@@ -2744,18 +2700,12 @@
         "shell_scope": {
           "const": "installation",
           "default": "installation",
-          "enum": [
-            "installation"
-          ],
           "title": "Shell Scope",
           "type": "string"
         },
         "verification_scope": {
           "const": "project",
           "default": "project",
-          "enum": [
-            "project"
-          ],
           "title": "Verification Scope",
           "type": "string"
         },
@@ -2769,16 +2719,10 @@
           "prefixItems": [
             {
               "const": "verification",
-              "enum": [
-                "verification"
-              ],
               "type": "string"
             },
             {
               "const": "shell",
-              "enum": [
-                "shell"
-              ],
               "type": "string"
             }
           ],
@@ -2788,9 +2732,6 @@
         "normal_report_resolution": {
           "const": "unresolved",
           "default": "unresolved",
-          "enum": [
-            "unresolved"
-          ],
           "title": "Normal Report Resolution",
           "type": "string"
         }
@@ -2804,9 +2745,6 @@
         "kind": {
           "const": "model_query",
           "default": "model_query",
-          "enum": [
-            "model_query"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -2845,8 +2783,8 @@
           "type": "array"
         },
         "temperature": {
-          "maximum": 2.0,
-          "minimum": 0.0,
+          "maximum": 2,
+          "minimum": 0,
           "title": "Temperature",
           "type": "number"
         },
@@ -2883,9 +2821,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -2925,9 +2860,6 @@
         "kind": {
           "const": "operation_request",
           "default": "operation_request",
-          "enum": [
-            "operation_request"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -3117,9 +3049,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -3159,9 +3088,6 @@
         "kind": {
           "const": "operation_result",
           "default": "operation_result",
-          "enum": [
-            "operation_result"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -3429,7 +3355,7 @@
         "value": {
           "anyOf": [
             {
-              "minimum": 0.0,
+              "minimum": 0,
               "type": "number"
             },
             {
@@ -3484,9 +3410,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -3526,9 +3449,6 @@
         "kind": {
           "const": "pressure_snapshot",
           "default": "pressure_snapshot",
-          "enum": [
-            "pressure_snapshot"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -3627,9 +3547,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -3669,9 +3586,6 @@
         "kind": {
           "const": "process_spec",
           "default": "process_spec",
-          "enum": [
-            "process_spec"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -3820,9 +3734,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -3862,9 +3773,6 @@
         "kind": {
           "const": "process_status",
           "default": "process_status",
-          "enum": [
-            "process_status"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -4079,9 +3987,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -4121,9 +4026,6 @@
         "kind": {
           "const": "project_run",
           "default": "project_run",
-          "enum": [
-            "project_run"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -4160,9 +4062,6 @@
         "publication_policy": {
           "const": "provisional_all",
           "default": "provisional_all",
-          "enum": [
-            "provisional_all"
-          ],
           "title": "Publication Policy",
           "type": "string"
         },
@@ -4236,9 +4135,6 @@
         "kind": {
           "const": "publication",
           "default": "publication",
-          "enum": [
-            "publication"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -4286,9 +4182,6 @@
         "policy": {
           "const": "provisional_all",
           "default": "provisional_all",
-          "enum": [
-            "provisional_all"
-          ],
           "title": "Policy",
           "type": "string"
         },
@@ -4346,9 +4239,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -4388,9 +4278,6 @@
         "kind": {
           "const": "publication_receipt",
           "default": "publication_receipt",
-          "enum": [
-            "publication_receipt"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -4441,9 +4328,6 @@
         "publication_policy": {
           "const": "provisional_all",
           "default": "provisional_all",
-          "enum": [
-            "provisional_all"
-          ],
           "title": "Publication Policy",
           "type": "string"
         }
@@ -4519,7 +4403,7 @@
           "type": "string"
         },
         "amount": {
-          "minimum": 0.0,
+          "minimum": 0,
           "title": "Amount",
           "type": "number"
         },
@@ -4599,9 +4483,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -4641,9 +4522,6 @@
         "kind": {
           "const": "review_resolution",
           "default": "review_resolution",
-          "enum": [
-            "review_resolution"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -4867,9 +4745,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -4909,9 +4784,6 @@
         "kind": {
           "const": "sprint_plan",
           "default": "sprint_plan",
-          "enum": [
-            "sprint_plan"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -5002,9 +4874,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -5044,9 +4913,6 @@
         "kind": {
           "const": "steering_barrier",
           "default": "steering_barrier",
-          "enum": [
-            "steering_barrier"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -5113,9 +4979,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -5155,9 +5018,6 @@
         "kind": {
           "const": "task_attempt",
           "default": "task_attempt",
-          "enum": [
-            "task_attempt"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -5256,9 +5116,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -5298,9 +5155,6 @@
         "kind": {
           "const": "task_report",
           "default": "task_report",
-          "enum": [
-            "task_report"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -5331,18 +5185,12 @@
         "execution": {
           "const": "completed",
           "default": "completed",
-          "enum": [
-            "completed"
-          ],
           "title": "Execution",
           "type": "string"
         },
         "resolution": {
           "const": "unresolved",
           "default": "unresolved",
-          "enum": [
-            "unresolved"
-          ],
           "title": "Resolution",
           "type": "string"
         },
@@ -5433,18 +5281,12 @@
         "publication_policy": {
           "const": "provisional_all",
           "default": "provisional_all",
-          "enum": [
-            "provisional_all"
-          ],
           "title": "Publication Policy",
           "type": "string"
         },
         "code_location": {
           "const": "provisional",
           "default": "provisional",
-          "enum": [
-            "provisional"
-          ],
           "title": "Code Location",
           "type": "string"
         },
@@ -5507,9 +5349,6 @@
         "contract_version": {
           "const": "2.0",
           "default": "2.0",
-          "enum": [
-            "2.0"
-          ],
           "title": "Contract Version",
           "type": "string"
         },
@@ -5549,9 +5388,6 @@
         "kind": {
           "const": "task_spec",
           "default": "task_spec",
-          "enum": [
-            "task_spec"
-          ],
           "title": "Kind",
           "type": "string"
         },
@@ -5670,7 +5506,7 @@
         "value": {
           "anyOf": [
             {
-              "minimum": 0.0,
+              "minimum": 0,
               "type": "number"
             },
             {
@@ -5787,9 +5623,6 @@
     "contract_version": {
       "const": "2.0",
       "default": "2.0",
-      "enum": [
-        "2.0"
-      ],
       "title": "Contract Version",
       "type": "string"
     },

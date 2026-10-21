@@ -8,7 +8,7 @@ For a prototype where a LangGraph node submits a task and receives the result of
 
 The desired operation is: give Codex an objective, let its runtime choose and execute tools over multiple steps, and return the outcome. A proxy that only forwards model requests does not supply that execution loop.
 
-This fits the `agent_job` backend described in [the project design](../design-docs/project-design.md), section 5.2. It does not replace the separate `model_inference` interface used when Polyinference owns the action/observation loop. This brief adds an implementation candidate; it does not change the project's architecture or select a production dependency.
+This fits the `agent_job` backend described in [the project design](../design-docs/polyinference-design/project_design.md), section 5.2. It does not replace the separate `model_inference` interface used when Polyinference owns the action/observation loop. This brief adds an implementation candidate; it does not change the project's architecture or select a production dependency.
 
 ## Third-party candidates
 

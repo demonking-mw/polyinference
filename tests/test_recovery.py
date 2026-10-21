@@ -146,3 +146,28 @@ async def test_review_crash_between_two_reverts_resumes_only_remaining_dispositi
         assert count == "5"
     finally:
         await runtime.close()
+
+
+async def test_delivery_receipt_recovers_lost_result_and_old_acceptance_lease(config):
+    runtime, app, _ = await populated(config)
+    effect_key, revision, effect = next(
+        item for item in runtime.records.scan("effect/")
+        if item[2]["request"]["payload"].get("capability_id") == "outputs.deliver"
+    )
+    await runtime.exclusive.acquire("verification/project", "controller")
+    app.update("app/run", {**app.get("app/run"), "status": "delivering"})
+    runtime.records.compare_and_publish(
+        {effect_key: revision}, {effect_key: {**effect, "state": "submitting", "result": None}}
+    )
+    await runtime.close()
+    runtime = await StandaloneRuntime(config).open()
+    try:
+        assert not runtime.uncertain()
+        app = AgentServices(runtime, config)
+        assert (await ProjectAgent(app).run())["outcome"] == "completed"
+        assert len(runtime.records.scan("output-delivery/")) == 1
+        assert not runtime.records.get("permit/verification/project")[1].get("process_id")
+        assert runtime.processes.status("controller")["state"] == "completed"
+        assert (config.state_path / "result/a.py").read_text() == "VALUE = 2\n"
+    finally:
+        await runtime.close()

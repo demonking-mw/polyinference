@@ -14,11 +14,14 @@ def coding_tools(config, setup=False):
         "files.write",
         "files.delete",
         "checks.run",
+        "user.notify",
     ]
     if config.shell_execution != "disabled":
         tools.append("shell.run")
     if setup:
         tools.append("repository.select_branch")
+        if not config.checks:
+            tools.append("checks.configure")
     return tools
 
 
@@ -37,9 +40,6 @@ def make_task(app, assignment, plan_ref, base, attempt, category="development"):
     }
     spec = TaskSpec(
         **app.base(task["spec_ref"]),
-        extensions={"polyinference/project-write": True}
-        if category == "setup" and app.config.write_scope == "project"
-        else {},
         task_id=assignment.task_id,
         plan_ref=plan_ref,
         objective=app.artifact(assignment.objective),

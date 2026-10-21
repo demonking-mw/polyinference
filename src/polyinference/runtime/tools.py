@@ -6,16 +6,27 @@ import asyncio
 import os
 import shutil
 import signal
+from contextlib import AsyncExitStack
 from pathlib import Path
 
-from ..domain import canonical, digest, now
+from ..execution_contracts import Check
+from ..primitives import canonical, digest, now
 from ..workspace_contracts import relative_path
+from .tool_environment import tool_environment
 
 
 class Tools:
     def __init__(self, config, workspaces, exclusive, artifacts, scope):
         self.config, self.workspaces, self.exclusive = config, workspaces, exclusive
         self.artifacts, self.scope = artifacts, scope
+
+    def register_check(self, check):
+        check = Check.model_validate(check)
+        self.workspaces.records.put_once("runtime/check/" + check.name, check.model_dump(mode="json"))
+        return check
+
+    def check_definitions(self):
+        return [Check.model_validate(value) for _, _, value in self.workspaces.records.scan("runtime/check/")]
 
     async def call(self, payload, arguments):
         manifest = self.workspaces.current(payload.workspace_id)
@@ -42,6 +53,8 @@ class Tools:
 
             return await run(self, manifest, arguments)
         if tool == "checks.run":
+            if arguments["name"] not in self.workspaces.grant(manifest.workspace_id).check_names:
+                raise ValueError("Check exceeds the workspace grant")
             return await self.check(manifest.workspace_id, arguments["name"])
         if tool == "files.list":
             paths = sorted((await self.workspaces.scan_async(root)))
@@ -103,7 +116,7 @@ class Tools:
                         ],
                     }
                 )
-                await self.workspaces.materialize_async(self.workspaces.root_for(new), updated_tree)
+                await self.workspaces.materialize_view(new, manifest, updated_tree)
                 key = "workspace/" + manifest.workspace_id
                 rev = self.workspaces.records.get(key)[0]
                 self.workspaces.records.compare_and_publish(
@@ -128,7 +141,7 @@ class Tools:
                 "generation": self.workspaces.current(manifest.workspace_id).generation,
             }
         if path not in manifest.allowed_write_paths:
-            manifest = await self.workspaces.extend_setup_scope(manifest.workspace_id, [path])
+            manifest = await self.workspaces.extend_write_scope(manifest.workspace_id, [path])
             root = self.workspaces.root_for(manifest)
             target = root / path
         existing = target.read_bytes() if target.exists() else None
@@ -169,10 +182,13 @@ class Tools:
 
     async def check(self, workspace_id, name):
         manifest = self.workspaces.current(workspace_id)
-        check = next((c for c in self.config.checks if c.name == name), None)
+        check = next((c for c in self.check_definitions() if c.name == name), None)
         if not check:
             raise ValueError("Only configured check names may execute")
-        before = await self.workspaces.revision(workspace_id)
+        await self.workspaces.prepare_environment(manifest)
+        root = self.workspaces.root_for(manifest)
+        before_tree = await self.workspaces.scan_async(root)
+        before = self.workspaces.code(before_tree)
         invocation = self.artifacts.put(canonical(check), self.scope)
         if self.config.check_execution == "disabled":
             content = b"Configured checks are disabled; select a trusted or sandboxed check backend."
@@ -180,31 +196,24 @@ class Tools:
         else:
             argv = list(check.argv)
             root = self.workspaces.root_for(manifest)
-            if self.config.check_execution == "bubblewrap":
-                if not shutil.which("bwrap"):
-                    raise ValueError("bubblewrap requested but unavailable")
-                prefix = ["bwrap", "--unshare-all", "--die-with-parent", "--new-session"]
-                for system in ("/usr", "/bin", "/lib", "/lib64", "/etc"):
-                    if Path(system).exists():
-                        prefix += ["--ro-bind", system, system]
-                argv = prefix + [
-                    "--bind",
-                    str(root),
-                    "/workspace",
-                    "--chdir",
-                    "/workspace",
-                    "--tmpfs",
-                    "/tmp",
-                    "--proc",
-                    "/proc",
-                    "--dev",
-                    "/dev",
-                    "--",
-                    *argv,
-                ]
+            sandboxed = self.config.check_execution == "bubblewrap"
+            if sandboxed and not shutil.which("bwrap"):
+                raise ValueError("bubblewrap requested but unavailable")
             permit = await self.exclusive.acquire("shell/installation", manifest.process_id)
             proc = None
+            resources = AsyncExitStack()
             try:
+                environment, mounts = await resources.enter_async_context(tool_environment(self.workspaces, sandboxed))
+                if sandboxed:
+                    prefix = ["bwrap", "--unshare-all", "--die-with-parent", "--new-session"]
+                    for system in ("/usr", "/bin", "/lib", "/lib64", "/etc"):
+                        if Path(system).exists():
+                            prefix += ["--ro-bind", system, system]
+                    argv = prefix + [
+                        "--bind", str(root), "/workspace", *mounts,
+                        "--chdir", "/workspace", "--tmpfs", "/tmp",
+                        "--proc", "/proc", "--dev", "/dev", "--", *argv,
+                    ]
                 proc = await asyncio.create_subprocess_exec(
                     *argv,
                     cwd=root,
@@ -212,13 +221,7 @@ class Tools:
                     stderr=asyncio.subprocess.STDOUT,
                     stdin=asyncio.subprocess.DEVNULL,
                     start_new_session=True,
-                    env={
-                        "PATH": os.environ.get("PATH", ""),
-                        "HOME": str(root),
-                        "PYTHONDONTWRITEBYTECODE": "1",
-                        "PYTEST_ADDOPTS": "-p no:cacheprovider",
-                        "LANG": "C.UTF-8",
-                    },
+                    env=environment,
                 )
                 collected = bytearray()
                 truncated = False
@@ -248,14 +251,26 @@ class Tools:
             except FileNotFoundError:
                 status, exit_code, content = "unavailable", None, b"Configured executable unavailable"
             finally:
-                if proc is not None and proc.returncode is None:
-                    os.killpg(proc.pid, signal.SIGKILL)
-                    await proc.wait()
-                await self.exclusive.release(permit, manifest.process_id)
-        after = await self.workspaces.revision(workspace_id)
+                try:
+                    if proc is not None and proc.returncode is None:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                        await proc.wait()
+                finally:
+                    try:
+                        await resources.aclose()
+                    finally:
+                        await self.exclusive.release(permit, manifest.process_id)
+        await self.workspaces.capture_environment(manifest)
+        after_tree = await self.workspaces.scan_async(root)
+        after = self.workspaces.code(after_tree)
         if after.effective_tree_digest != before.effective_tree_digest:
             status = "inconclusive"
-            content += b"\nCheck modified source; evidence invalidated."
+            changed = sorted(path for path in before_tree.keys() | after_tree.keys()
+                             if before_tree.get(path) != after_tree.get(path))
+            cap = self.config.limits.max_output_bytes
+            notice = ("\nCheck modified source; evidence invalidated.\nChanged source paths: "
+                      + ", ".join(changed)).encode()[:cap]
+            content = content[:max(0, cap - len(notice))] + notice
         output = self.artifacts.put(content, self.scope, "text/plain")
         return {
             "evidence_id": digest(

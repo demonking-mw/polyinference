@@ -1,5 +1,12 @@
 # Design atlas
 
+> **Status clarified 2026-10-20 because** the static readers preserve the original
+> 17 October design and stories. Their scoped copies, all-verdict publication,
+> sole-parent commits and resource descriptions are historical where superseded
+> by the [accepted revisions](../simplified-os/DESIGN_REVISIONS.md). They are not
+> a current runtime monitor or conformance claim. This documentation alignment
+> does not regenerate readers, alter source graphs or update fingerprints alone.
+
 Open either file directly in a browser; no server, package install, network access or external library is required:
 
 - [Agent design](agent-design.html)

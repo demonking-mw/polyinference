@@ -33,6 +33,7 @@ async def test_complete_agent_over_real_http(config, protocol, monkeypatch):
                 assert self.headers["x-api-key"] == "fixture-credential"
                 assert self.headers["anthropic-version"] == "2023-06-01"
                 assert payload["system"] and all(m["role"] != "system" for m in payload["messages"])
+                assert payload["messages"][-1]["role"] == "user", "Configured Claude models reject assistant prefill"
             assert "tools" not in payload
             data = json.loads(
                 next(

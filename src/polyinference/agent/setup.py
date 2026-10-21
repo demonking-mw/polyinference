@@ -4,9 +4,14 @@ from __future__ import annotations
 
 import asyncio
 
-from ..contracts import CodeRevision, SprintPlan, TaskAttempt
+from ..contracts import CodeRevision, SprintPlan
 from ..domain import Assignment
 from .tasks import make_task
+
+
+class SetupAssignment(Assignment):
+    # Only setup can begin before acceptance checks have been discovered.
+    checks: list[str]
 
 
 async def prepare(engine):
@@ -17,14 +22,14 @@ async def prepare(engine):
         base = app.get("head/provisional")["code"]
         tree = await app.ports.workspaces.tree(base["commit_id"])
         paths = sorted(tree) if app.config.write_scope == "project" else app.config.allowed_write_paths
-        assignment = Assignment(
+        assignment = SetupAssignment(
             task_id="project_setup",
             role="specialist",
             objective="Prepare Git/branch and requested development prerequisites for: "
             + app.config.objective,
             write_paths=paths or app.config.allowed_write_paths,
             read_paths=sorted(tree),
-            checks=[check.name for check in app.config.checks],
+            checks=[check.name for check in app.check_definitions],
         )
         task, specs = make_task(app, assignment, "setup/plan", base, "setup-project", "setup")
         plan = SprintPlan(
@@ -44,6 +49,8 @@ async def prepare(engine):
             {key: 0}, {key: task}, {**specs, plan.record_id: plan.model_dump(mode="json")}
         )
     task = app.get(key)
+    if task["execution"] == "cancelled":
+        return  # An explicitly retired setup is replaced by the senior's new plan.
     if task["execution"] != "completed":
         run_version, run = app.ports.records.get("app/run")
         updates = {
@@ -55,7 +62,7 @@ async def prepare(engine):
             task_version, task = app.ports.records.get(key)
             attempt_key = "attempt/" + task["attempt_id"]
             attempt_version, body = app.ports.records.get(attempt_key)
-            attempt = TaskAttempt.model_validate(body).model_copy(
+            attempt = app.task_attempt(body,
                 update={"revision": body["revision"] + 1, "execution": "in_progress"}
             )
             expected.update({key: task_version, attempt_key: attempt_version})

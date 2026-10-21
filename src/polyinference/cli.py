@@ -5,16 +5,44 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
+import shlex
 import subprocess
 import sys
 import tempfile
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .agent.controller import ProjectAgent
 from .agent.services import AgentServices
 from .config import AgentConfig
+from .history import save_run_history
 from .runtime.kernel import KernelRuntime
 from .runtime.storage import Conflict, Records
+
+
+def load_saved_credentials():
+    """Read the private credential file as data, without executing shell code."""
+    if "ANTHROPIC_API_KEY" in os.environ:
+        return
+    path = Path.home() / ".config" / "polyinference" / "anthropic.env"
+    if not path.is_file():
+        return
+    for number, line in enumerate(path.read_text().splitlines(), 1):
+        try:
+            parts = shlex.split(line, comments=True)
+        except ValueError:
+            raise ValueError(f"Invalid credential file syntax at {path}:{number}") from None
+        if parts[:1] == ["export"]:
+            parts = parts[1:]
+        if not parts:
+            continue
+        if len(parts) != 1 or "=" not in parts[0]:
+            raise ValueError(f"Expected KEY=value at {path}:{number}")
+        name, value = parts[0].split("=", 1)
+        if name == "ANTHROPIC_API_KEY":
+            os.environ.setdefault(name, value)
 
 
 def load_config(path):
@@ -24,20 +52,43 @@ def load_config(path):
         update={
             "repository": str((source.parent / config.repository).resolve()),
             "state_directory": str((source.parent / config.state_directory).resolve()),
+            **({"output_directory": str((source.parent / config.output_directory).resolve())}
+               if config.output_directory is not None else {}),
         }
     )
 
 
-async def execute(config):
+async def execute(config, *, save_history=True, retry_task=None, retry_reason=None, retry_output_reason=None):
+    metadata = {
+        "id": uuid.uuid4().hex[:12],
+        "state": str(config.state_path),
+        "repository": config.repository,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "error": None,
+    }
     runtime = KernelRuntime(config)
     try:
         await runtime.open()
         app = AgentServices(runtime, config)
         engine = ProjectAgent(app)
+        if retry_task is not None:
+            await engine.initialize()
+            await engine.retry_worker(retry_task, retry_reason or "explicit model recovery")
+        if retry_output_reason is not None:
+            await engine.initialize()
+            engine.retry_outputs(retry_output_reason)
         await engine.run()
         return app.get("app/run")
+    except BaseException as exc:
+        metadata["error"] = str(exc)[:4000] or type(exc).__name__
+        raise
     finally:
-        await runtime.close()
+        try:
+            await runtime.close()
+        finally:
+            if save_history:
+                metadata["finished_at"] = datetime.now(timezone.utc).isoformat()
+                await save_run_history(config, metadata=metadata)
 
 
 async def probe_endpoint(config, name):
@@ -99,6 +150,7 @@ def record_steering(state_directory, text):
                     {
                         "app/run": {
                             **run,
+                            "status": "active" if run["status"] == "paused" else run["status"],
                             "starts_closed": True,
                             "steering_received": sequence,
                             "captured_workers": sorted(
@@ -158,14 +210,35 @@ def main():
         help="Attest that provider execution AND host descendants have ended",
     )
     item.add_argument("--evidence", required=True, help="Text file recording termination evidence")
+    item = sub.add_parser("retry-model")
+    item.add_argument("config")
+    item.add_argument("task_id")
+    item.add_argument("--reason", required=True)
+    item = sub.add_parser("retry-output")
+    item.add_argument("config")
+    item.add_argument("--reason", required=True)
     args = parser.parse_args()
     try:
+        load_saved_credentials()
+        if args.command == "retry-output":
+            result = asyncio.run(execute(load_config(args.config), retry_output_reason=args.reason))
+            print(json.dumps(result, indent=2))
+            if result["status"] != "completed":
+                sys.exit(2)
+            return
+        if args.command == "retry-model":
+            result = asyncio.run(execute(load_config(args.config), retry_task=args.task_id, retry_reason=args.reason))
+            print(json.dumps(result, indent=2))
+            if result["status"] != "completed":
+                sys.exit(2)
+            return
         if args.command == "reconcile":
 
             async def recover():
                 runtime = KernelRuntime(load_config(args.config))
                 try:
                     await runtime.open()
+                    AgentServices(runtime, runtime.config)
                     await runtime.reconcile_stopped(args.operation_id, Path(args.evidence).read_text())
                     return runtime.diagnostics()
                 finally:
@@ -196,9 +269,11 @@ def main():
             if args.command == "events":
                 print(json.dumps(records.events(args.after), indent=2))
             elif args.command == "cancel":
+                from .agent.services import close_for_cancellation
                 from .runtime.processes import request_cancel
 
                 request_cancel(records, args.process_id, args.reason)
+                close_for_cancellation(records, args.process_id)
                 print("Cancellation recorded; the current effect settles before the process stops.")
             elif args.command == "status":
                 run = records.get("app/run")
@@ -211,6 +286,8 @@ def main():
                     "owners": [value for _, _, value in records.scan("permit/") if value.get("process_id")],
                     "provisional": records.get("head/provisional"),
                     "reviewed": records.get("head/reviewed"),
+                    "repository_setup": records.get("repository/setup"),
+                    "repository_summary": records.get("coding/repository-summary"),
                     "tasks": [
                         {
                             **body,
@@ -229,13 +306,16 @@ def main():
                 }
                 print(json.dumps(report, indent=2))
             elif args.command == "export":
+                setup = records.get("repository/setup")
+                git_directory = (setup[1].get("common_git_directory") if setup else None) or str(
+                    Path(args.state_directory).resolve() / "repository.git")
                 initial = records.get("head/initial")[1]["code"]["commit_id"]
                 final = records.get("head/provisional")[1]["code"]["commit_id"]
                 patch = subprocess.check_output(
                     [
                         "git",
                         "--git-dir",
-                        str(Path(args.state_directory).resolve() / "repository.git"),
+                        git_directory,
                         "diff",
                         "--binary",
                         initial,

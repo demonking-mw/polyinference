@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Annotated, Literal
 
-from pydantic import AfterValidator, Field, model_validator
+from pydantic import AfterValidator, model_validator
 
 from . import contracts as agent
 
@@ -26,8 +26,8 @@ def relative_path(value: str) -> str:
         raise ValueError("Use a nonempty project-relative POSIX path")
     if any(part in {"", ".", ".."} for part in value.split("/")):
         raise ValueError("Absolute paths and traversal are forbidden")
-    if any(part.casefold() == ".git" for part in value.split("/")):
-        raise ValueError("Agent file paths cannot address Git control data")
+    if any(part.casefold() in {".git", ".polyinference"} for part in value.split("/")):
+        raise ValueError("Agent file paths cannot address Git or runtime control data")
     return value
 
 
@@ -105,8 +105,8 @@ class WorkspaceManifest(Wire):
     original_base: CodeRevision
     captured_head: CodeRevision | None
     effective_code: CodeRevision | None
-    copied_files: Annotated[list[CopiedFile], Field(min_length=1)]
-    allowed_write_paths: Annotated[list[RelativePath], Field(min_length=1)]
+    copied_files: list[CopiedFile]
+    allowed_write_paths: list[RelativePath]
     closure_basis_ref: Identifier
     preserved_delta_ref: Identifier | None
 

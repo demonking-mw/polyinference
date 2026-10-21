@@ -7,6 +7,7 @@ import fcntl
 import json
 import math
 from contextlib import AsyncExitStack
+from datetime import datetime, timedelta
 
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
@@ -16,22 +17,41 @@ from ..contracts import (
     CapabilityCall,
     ErrorDetail,
     ModelQuery,
+    OperationRequest,
     OperationResult,
     Publication,
     Scope,
     UsageMeasure,
 )
-from ..domain import canonical, digest, now, operation_fingerprint
+from ..primitives import canonical, digest, now, operation_fingerprint
+from .capabilities import Capabilities
 from .codex import CodexAppServer, CodexProxy
+from .context import ContextService, InputOverflow
 from .exclusive import Exclusive
-from .inference import Admission, EndpointError, HTTPInference, UnknownExecution
+from .inference import (
+    Admission,
+    EndpointError,
+    HTTPInference,
+    IncompleteGeneration,
+    ModelResponseError,
+    ProviderError,
+    UnknownExecution,
+)
+from .messages import Messages, UserNotification
+from .model_retries import ModelRetries
+from .outputs import Outputs
 from .processes import Processes
 from .storage import Artifacts, Records
+from .tool_contracts import FILE_CAPABILITIES
 from .tools import Tools
 from .workspace import Workspaces
 
 
 class UncertainEffect(RuntimeError):
+    pass
+
+
+class ProcessCancelled(RuntimeError):
     pass
 
 
@@ -55,11 +75,86 @@ class KernelRuntime:
         self.tools = Tools(config, self.workspaces, self.exclusive, self.artifacts, self.scope)
         self.operations = self
         self.processes = Processes(self.records, config.max_workers)
+        self.outputs = Outputs(config, self.records, self.artifacts)
+        self.messages = Messages(self.records)
         self.clients = {}
         self.admission = {}
         self.inflight = {}
+        self.model_retries = ModelRetries(self)
+        self.agent_protocols = {}
+        self.contexts = ContextService(self)
+        self.capabilities = Capabilities(self.records)
+        self.publication_policies = {}
         self.stack = AsyncExitStack()
         self.closing = False
+        self.on_reconciled = None
+        self.register_capability(
+            "user.notify", self.messages.notify, input_type=UserNotification,
+            effect_class="shared_write", workspace=False,
+            description="Show a plain-text message to the user in the UI and terminal.",
+        )
+        for name, (input_type, effect_class) in FILE_CAPABILITIES.items():
+            self.register_capability(name, self._file_capability, input_type=input_type,
+                                     effect_class=effect_class, workspace=True)
+        for name, workspace in (("workspace.commit", True), ("workspace.retain", True),
+                                ("records.publish", False), ("outputs.deliver", False)):
+            self.register_capability(name, self._system_capability, effect_class="shared_write",
+                                     workspace=workspace)
+        for check in config.checks:
+            self.tools.register_check(check)
+
+    def register_capability(self, name, handler, **options):
+        return self.capabilities.register(name, handler, **options)
+
+    def install_workspaces(self, provider):
+        """Trusted application bootstrap may supply an optional file-resource provider."""
+        self.workspaces.blocking.close()
+        self.workspaces = provider
+        self.tools.workspaces = provider
+
+    def publish_records(self, arguments, process_id):
+        """Publish an explicit application's batch through the normal OS guards."""
+        return self._publish(arguments, process_id)
+
+    def register_publication_policy(self, program_id, policy):
+        self.records.put_once("runtime/publication-policy/" + program_id, {"required": True})
+        self.publication_policies[program_id] = policy
+
+    async def _file_capability(self, request, arguments):
+        return await self.tools.call(request.payload, arguments)
+
+    async def _system_capability(self, request, arguments):
+        payload = request.payload
+        if payload.capability_id in {"workspace.retain", "records.publish"}:
+            if payload.capability_id == "workspace.retain":
+                staged = self.records.get("staged/" + arguments["receipt_ref"])
+                if not staged:
+                    raise ValueError("Missing staged record batch")
+                arguments = staged[1]
+            self._publish(arguments, request.scope.process_id)
+            return {"receipt_ref": arguments["receipt_ref"], "published": True}
+        if payload.capability_id == "workspace.commit":
+            manifest = self.workspaces.current(payload.workspace_id)
+            owner = self.records.get("permit/verification/project")
+            if not owner or owner[1].get("process_id") != request.scope.process_id:
+                raise ValueError("Commit preparation requires verification ownership")
+            actual = await self.workspaces.revision(payload.workspace_id)
+            if payload.expected_code and actual != payload.expected_code:
+                raise ValueError("Commit content precondition failed")
+            code = await self.workspaces.commit(payload.workspace_id, manifest.captured_head, request.operation_id)
+            return code.model_dump(mode="json")
+        return await self.outputs.deliver(arguments["delivery_id"], arguments["files"])
+
+    def register_agent_protocol(self, name, schema, *, workspace="snapshot", brokered=False, instructions=""):
+        """The calling agent owns its output grammar and phase policy."""
+        if workspace not in {"snapshot", "workspace", "none"}:
+            raise ValueError("Unknown native workspace kind")
+        definition = {"schema": schema, "workspace": workspace, "brokered": brokered,
+                      "instructions": instructions}
+        if name in self.agent_protocols and self.agent_protocols[name] != definition:
+            raise ValueError("Native protocol already registered with another definition")
+        self.records.put_once("runtime/agent-protocol/" + name, {"digest": digest(canonical(definition))})
+        self.agent_protocols[name] = json.loads(canonical(definition))
 
     def negotiate(self, requirements):
         supported = {
@@ -72,6 +167,7 @@ class KernelRuntime:
                 "verification-exclusion",
                 "atomic-record-publication",
                 "scoped-workspace-copy",
+                "attached-workspace",
                 "workspace-view",
                 "local-cbatch-admission",
                 "direct-tools",
@@ -83,6 +179,12 @@ class KernelRuntime:
                 "project-scope",
                 "agent-job",
                 "native-broker-callbacks",
+                "output-delivery",
+                "model-recovery",
+                "model-retries",
+                "generic-processes",
+                "artifact-snapshots",
+                "user-messages",
             )
         }
         for requirement in requirements:
@@ -100,7 +202,7 @@ class KernelRuntime:
         if pinned and pinned[1]["digest"] != fingerprint:
             raise RuntimeError("Configuration changed: start a new run/state directory")
         self.records.put_once("runtime/config", {"digest": fingerprint, "run_id": self.run_id})
-        self.records.put_once("runtime/kernel", {"version": "simple-os/1"})
+        self.records.put_once("runtime/kernel", {"version": "simple-os/2"})
         for name in sorted(set(self.config.role_bindings.values())):
             endpoint = getattr(self.config, name)
             cls = (
@@ -111,6 +213,10 @@ class KernelRuntime:
             self.clients[name] = cls(endpoint)
             if hasattr(self.clients[name], "output_cap"):
                 self.clients[name].output_cap = self.config.max_model_response_bytes
+            if isinstance(self.clients[name], HTTPInference):
+                self.clients[name].require_completion_metadata = self.config.inference_safety.require_completion_metadata
+            if isinstance(self.clients[name], CodexProxy):
+                self.clients[name].http.output_cap = self.config.max_model_response_bytes
             self.admission[name] = Admission(
                 endpoint.max_inflight,
                 endpoint.reserved_context_tokens,
@@ -125,6 +231,9 @@ class KernelRuntime:
         await self.reconcile_known()
         for admission in self.admission.values():
             admission.restore()
+        for key, revision, body in self.records.scan("ownership-wait/"):
+            if body["state"] == "waiting":
+                self.records.compare_and_publish({key: revision}, {key: {**body, "state": "interrupted"}})
         return self
 
     async def reconcile_known(self):
@@ -156,6 +265,14 @@ class KernelRuntime:
                     retained = self.records.get("commit/" + request.operation_id)
                     if retained:
                         output = retained[1]
+                elif payload.capability_id == "outputs.deliver":
+                    receipt = self.records.get("output-delivery/" + arguments["delivery_id"])
+                    if receipt:
+                        output = receipt[1]
+                elif payload.capability_id == "user.notify":
+                    message_ref = "user-message/" + request.operation_id
+                    if self.records.get(message_ref):
+                        output = {"message_ref": message_ref}
             if output is None:
                 continue
             result = OperationResult(
@@ -196,6 +313,7 @@ class KernelRuntime:
             return
         self.closing = True
         await self.processes.close()
+        await self.model_retries.close()
         tasks = list(self.inflight.values())
         for task in tasks:
             task.cancel()
@@ -205,6 +323,7 @@ class KernelRuntime:
             await client.close()
         self.workspaces.blocking.close()
         await self.stack.aclose()
+        self.exclusive.close()
         self.records.db.close()
         self.driver.close()
 
@@ -216,6 +335,10 @@ class KernelRuntime:
         self.records.compare_and_publish({key: current[0] if current else 0}, {key: body})
 
     async def execute(self, request):
+        result = await self._execute_once(request)
+        return await self.model_retries.run(request, result)
+
+    async def _execute_once(self, request):
         key = "effect/" + request.operation_id
         saved = self.records.get(key)
         expected_digest = operation_fingerprint(request)
@@ -240,18 +363,35 @@ class KernelRuntime:
         process = self.records.get("process/" + request.scope.process_id)
         if not process:
             raise ValueError("Unknown process principal")
+        if process[1]["state"] in {"completed", "cancelled", "failed", "paused"}:
+            raise ValueError("Process is stopped; an explicit recovery or new process is required")
+        control = self.records.get("process-control/" + request.scope.process_id)
+        if control and control[1].get("cancel_requested"):
+            raise ValueError("Process cancellation requested; no new operations may start")
         if request.owner_generation != process[1]["owner_generation"]:
             raise ValueError("Stale owner generation")
         if request.grant_ref != "grant/run" or request.budget_account_ref != "budget/run":
             raise ValueError("Unknown grant or budget account")
         if request.limits != self.config.limits:
             raise ValueError("Operation limits differ from the pinned process grant")
-        if request.conflict_keys and not (
-            self.records.get("permit/verification/project")
-            and self.records.get("permit/verification/project")[1].get("process_id")
-            == request.scope.process_id
-        ):
-            raise ValueError("Protected operation requires current verification ownership")
+        started = process[1].get("started_at")
+        if started:
+            cutoff = datetime.fromisoformat(started.replace("Z", "+00:00")) + timedelta(milliseconds=request.limits.max_wall_time_ms)
+            if now() >= cutoff or request.deadline > cutoff:
+                raise ValueError("Operation exceeds the process wall-time allowance")
+        recovery = request.extensions.get("polyinference/recovery-of")
+        if request.extensions.get("runtime/model-retry"):
+            # The originating recovery was already authorized. Revalidate the
+            # OS-issued retry intent without charging another caller recovery.
+            self.model_retries.authorize(request)
+        elif request.extensions.get("runtime/output-retry"):
+            self.model_retries.authorize_output(request)
+        elif recovery:
+            self._authorize_recovery(request, recovery)
+        for resource in request.conflict_keys:
+            owner = self.records.get("permit/" + resource)
+            if not owner or owner[1].get("process_id") != request.scope.process_id:
+                raise ValueError("Protected operation requires current resource ownership: " + resource)
         logical_key = "logical/" + digest(canonical([request.scope.process_id, request.logical_step_id]))
         logical = self.records.get(logical_key)
         if logical and logical[1]["operation_id"] != request.operation_id:
@@ -276,26 +416,18 @@ class KernelRuntime:
         if request.causal_parent_ref:
             if (
                 not parent
-                or parent[1]["state"] != "active"
+                or parent[1]["state"] not in {"active", "prepared"}
                 or parent[1]["request"]["scope"] != request.scope.model_dump(mode="json")
             ):
                 raise ValueError("Subordinate effect requires its active parent and inherited scope")
-            if not isinstance(request.payload, CapabilityCall) or request.payload.capability_id not in {
-                "files.list",
-                "files.read",
-                "files.search",
-                "files.patch",
-                "files.write",
-                "files.delete",
-                "checks.run",
-                "shell.run",
-                "repository.select_branch",
-            }:
-                raise ValueError("Only actual broker tool callbacks may be subordinate")
-            if request.payload.capability_id not in parent[1]["request"]["payload"].get(
-                "allowed_capabilities", []
-            ):
-                raise ValueError("Subordinate tool exceeds its parent capability grant")
+            if request.extensions.get("runtime/context-compaction"):
+                self.contexts.authorize_compaction(request, parent[1])
+            else:
+                if not isinstance(request.payload, CapabilityCall) or parent[1]["state"] != "active":
+                    raise ValueError("Only broker callbacks or OS-issued compaction may be subordinate")
+                self.capabilities.get(request.payload.capability_id)
+                if request.payload.capability_id not in parent[1]["request"]["payload"].get("allowed_capabilities", []):
+                    raise ValueError("Subordinate tool exceeds its parent capability grant")
         if isinstance(request.payload, (ModelQuery, AgentJob)) and request.payload.role != process[1]["role"]:
             raise ValueError("Model role differs from authenticated process binding")
         for _, _, body in self.records.scan("effect/"):
@@ -335,8 +467,9 @@ class KernelRuntime:
         ]
         expected, updates = {}, {}
         for key, limit in keys:
-            if key == "budget/run" and request.payload.role != "senior":
-                limit -= self.config.review_token_reserve
+            process = self.records.get("process/" + request.scope.process_id)[1]
+            if key == "budget/run" and not process.get("management", False):
+                limit -= self.config.control_token_reserve
             saved = self.records.get(key)
             used = saved[1]["reserved_or_used"] if saved else 0
             if used + amount > limit:
@@ -431,7 +564,8 @@ class KernelRuntime:
         updated = status.model_copy(
             update={
                 "revision": status.revision + 1,
-                "state": "waiting" if pending else "ready",
+                "state": status.state if status.state in {"completed", "cancelled", "failed", "paused"}
+                else "waiting" if pending else "ready",
                 "wait": wait,
                 "pending_operations": pending,
             }
@@ -446,6 +580,7 @@ class KernelRuntime:
         outputs = []
         saved = self.records.get(key)[1]
         dispatched = False
+        extensions = {}
         try:
             if request.deadline <= now():
                 raise EndpointError("Operation deadline expired before dispatch")
@@ -467,28 +602,42 @@ class KernelRuntime:
             if isinstance(payload, (ModelQuery, AgentJob)):
                 name = self.config.role_bindings[payload.role]
                 endpoint = getattr(self.config, name)
-                messages = []
-                for part in payload.context.parts:
-                    text = self.artifacts.read(part.content).decode()
-                    messages.append(
-                        {
-                            "role": "system"
-                            if part.part_kind == "instruction" and part.trust in {"application", "user"}
-                            else "assistant"
-                            if part.part_kind in {"message", "tool_call"}
-                            else "user",
-                            "content": text,
-                        }
-                    )
-                # UTF-8 byte count is a conservative token bound, not an average chars/token guess.
-                input_bound = len(canonical(messages))
-                reserved = input_bound + request.limits.max_output_tokens_per_call
-                if input_bound > min(
-                    payload.context.maximum_input_tokens, request.limits.max_input_tokens_per_call
-                ):
-                    raise EndpointError("Required context does not fit; no silent pin removal")
-                if reserved > endpoint.max_context_tokens:
-                    raise EndpointError("Context/output cannot fit backend")
+                attempted = {"binding_ref": name, "model": endpoint.model, "protocol": endpoint.protocol,
+                             "submitted": False}
+                extensions["polyinference/attempted-backend"] = attempted
+                circuit = self.records.get(self._model_failure_key(request))
+                if circuit and circuit[1]["count"] >= self.config.max_repeated_model_failures and not request.extensions.get("polyinference/recovery-of"):
+                    raise EndpointError("Model dispatch stopped after repeated permanent failures; explicit recovery required")
+                output_tokens = min(request.limits.max_output_tokens_per_call,
+                    request.extensions.get("runtime/output-tokens", request.limits.max_output_tokens_per_call))
+                if not isinstance(output_tokens, int) or isinstance(output_tokens, bool) or output_tokens < 1:
+                    raise ValueError("Invalid output-token allowance")
+                protocol = self.agent_protocols.get(payload.required_phase_protocol) if isinstance(payload, AgentJob) else None
+                def measure(messages):
+                    client = self.clients[name]
+                    if isinstance(client, HTTPInference):
+                        prepared = client.prepare(messages, output_tokens)
+                    elif isinstance(client, CodexProxy):
+                        prepared = client.http.prepare(messages, output_tokens)
+                    elif isinstance(client, CodexAppServer):
+                        if not protocol:
+                            raise EndpointError("Unsupported native phase protocol")
+                        prepared = client.prepare(messages, protocol["schema"],
+                            tools=self.capabilities.descriptors(payload.allowed_capabilities) if protocol["brokered"] else [],
+                            instructions=protocol["instructions"], max_output=output_tokens)
+                    else:
+                        prepared = messages
+                    return prepared, len(canonical(prepared))
+                if (self.config.inference_safety.require_output_token_enforcement
+                        and endpoint.protocol in {"codex_app_server", "codex_proxy"}):
+                    raise EndpointError("Selected native adapter cannot enforce a hard output-token limit")
+                messages, prepared, receipt = await self.contexts.prepare(request, measure)
+                if self.uncertain():
+                    raise EndpointError("Context preparation left uncertain effects; reconcile before submission")
+                extensions["runtime/context-receipt"] = receipt
+                extensions["runtime/output-token-enforcement"] = endpoint.protocol in {"chat", "responses", "gemini", "anthropic"}
+                input_bound = receipt["submitted_bytes"]
+                reserved = input_bound + output_tokens
                 manifest_ref = request.extensions.get("polyinference/workspace-view")
                 if manifest_ref:
                     current = self.workspaces.current(manifest_ref["workspace_id"])
@@ -501,51 +650,90 @@ class KernelRuntime:
                         required_view.view,
                     ):
                         raise ValueError("Stale model workspace view")
-                finishing = bool(request.conflict_keys and "verification/project" in request.conflict_keys)
+                finishing = bool(request.conflict_keys)
                 async with self.admission[name].reserve(
                     reserved,
                     finishing,
                     request.operation_id,
                     max(0, (request.deadline - now()).total_seconds()),
+                    process_id=request.scope.process_id,
                 ):
                     if request.deadline <= now():
                         raise EndpointError("Deadline expired before provider submission")
                     self._reserve_budget(request, reserved)
                     self._reserve_spend(request, reserved, endpoint)
                     self._update(key, {**saved, "state": "submitting"})
+                    control = self.records.get("process-control/" + request.scope.process_id)
+                    if control and control[1].get("cancel_requested"):
+                        raise ProcessCancelled("Cancellation requested before model submission")
                     self._update(key, {**saved, "state": "active"})
                     timeout = min(endpoint.timeout_seconds, (request.deadline - now()).total_seconds())
                     if isinstance(payload, ModelQuery):
                         if endpoint.protocol not in {"chat", "responses", "gemini", "anthropic"}:
                             raise EndpointError("Native backend requires AgentJob")
+                        if hasattr(self.clients[name], "validate_messages"):
+                            self.clients[name].validate_messages(messages)
                         dispatched = True
+                        attempted["submitted"] = True
                         result = await asyncio.wait_for(
-                            self.clients[name].generate(messages, request.limits.max_output_tokens_per_call),
+                            self.clients[name].generate(messages, output_tokens,
+                                **({"prepared": prepared} if isinstance(self.clients[name], HTTPInference) else {})),
                             timeout,
                         )
                     else:
-                        from pydantic import TypeAdapter
-
-                        from ..domain import Assessment, Candidate, NeedsReview, SeniorProposal
-
                         callback = None
-                        if payload.required_phase_protocol == "polyinference/senior-readonly/1":
+                        protocol = self.agent_protocols.get(payload.required_phase_protocol)
+                        if not protocol:
+                            raise EndpointError("Unsupported native phase protocol")
+                        process = self.records.get("process/" + request.scope.process_id)[1]
+                        if not set(payload.allowed_capabilities) <= set(process.get("capabilities", [])):
+                            raise ValueError("Native tool set exceeds the process grant")
+                        schema = protocol["schema"]
+                        if protocol["workspace"] == "none":
+                            snapshot = self.config.state_path / "native" / digest(request.scope.process_id.encode())[7:]
+                            await self.workspaces.blocking.run(lambda: snapshot.mkdir(parents=True, exist_ok=True))
+                        elif protocol["workspace"] == "snapshot":
                             snapshot = self.workspaces.snapshot_root(payload.workspace_id)
-                            schema = SeniorProposal.model_json_schema()
-                        elif (
-                            payload.required_phase_protocol == "polyinference/worker-phase/1"
-                            and endpoint.brokered_tools
-                        ):
+                        else:
                             manifest = self.workspaces.current(payload.workspace_id)
                             if manifest.process_id != request.scope.process_id:
                                 raise ValueError("Native workspace owner mismatch")
-                            snapshot = self.workspaces.root_for(manifest)
-                            schema = TypeAdapter(Candidate | Assessment | NeedsReview).json_schema()
+                            # Native tools see an immutable input copy, never the
+                            # writable broker directory (which changes generations).
+                            snapshot = await self.workspaces.native_view(payload.workspace_id, request.operation_id)
+                        native_before = await self.workspaces.scan_exact_async(snapshot)
+                        broker_views = {}
 
+                        async def remember_broker_views():
+                            if protocol["workspace"] == "workspace":
+                                root = self.workspaces.root_for(self.workspaces.current(payload.workspace_id))
+                                broker_views[root] = None
+                                for root in broker_views:
+                                    broker_views[root] = await self.workspaces.scan_async(root)
+
+                        async def unbrokered_changes():
+                            current = await self.workspaces.scan_exact_async(snapshot)
+                            changes = [path for path in native_before.keys() | current.keys()
+                                       if native_before.get(path) != current.get(path)]
+                            for root, expected in broker_views.items():
+                                current = await self.workspaces.scan_async(root)
+                                changes.extend(path for path in expected.keys() | current.keys()
+                                               if expected.get(path) != current.get(path))
+                            return sorted(set(changes))
+
+                        await remember_broker_views()
+                        if protocol["brokered"]:
+                            if not endpoint.brokered_tools:
+                                raise EndpointError("Native backend lacks brokered tools")
+                            tool_descriptors = self.capabilities.descriptors(payload.allowed_capabilities)
                             async def callback(call_id, arguments):
-                                return await self._native_callback(request, call_id, arguments)
-                        else:
-                            raise EndpointError("Unsupported native phase protocol")
+                                changes = await unbrokered_changes()
+                                if changes:
+                                    raise UnknownExecution("Native harness modified files outside the broker: "
+                                                           + ", ".join(changes))
+                                observation = await self._native_callback(request, call_id, arguments)
+                                await remember_broker_views()
+                                return observation
                         # Direct app-server has native shell disabled: only actual broker
                         # callbacks take shell. An opaque read-only proxy needs wider exclusion.
                         from .codex import NativeJobStopped
@@ -556,8 +744,6 @@ class KernelRuntime:
                                 "shell/installation", request.scope.process_id
                             )
                         try:
-                            dispatched = True
-
                             async def observer(event, thread_id, turn_id):
                                 current = self.records.get(key)[1]
                                 self._update(
@@ -577,6 +763,16 @@ class KernelRuntime:
                                 if isinstance(self.clients[name], CodexAppServer)
                                 else {}
                             )
+                            if isinstance(self.clients[name], CodexAppServer):
+                                options.update(
+                                    tools=tool_descriptors if callback else [],
+                                    instructions=protocol["instructions"],
+                                    prepared=prepared, max_output=output_tokens,
+                                )
+                            elif isinstance(self.clients[name], CodexProxy):
+                                options.update(max_output=output_tokens, prepared=prepared)
+                            dispatched = True
+                            attempted["submitted"] = True
                             if callback:
                                 result = await asyncio.wait_for(
                                     self.clients[name].generate_job(
@@ -589,20 +785,38 @@ class KernelRuntime:
                                     self.clients[name].generate_job(messages, snapshot, schema, **options),
                                     timeout,
                                 )
-                        except NativeJobStopped:
+                            paths = await unbrokered_changes()
+                            if paths:
+                                raise NativeJobStopped("Native harness modified files outside the broker: "
+                                                       + ", ".join(paths))
+                        except (NativeJobStopped, IncompleteGeneration, ProviderError, ModelResponseError) as exc:
+                            paths = await unbrokered_changes()
                             if native_shell:
                                 await self.exclusive.release(native_shell, request.scope.process_id)
+                            if paths:
+                                raise NativeJobStopped("Native harness modified files outside the broker: "
+                                                       + ", ".join(paths), retryable=False) from exc
                             raise
                         except BaseException as exc:
-                            raise UnknownExecution(
+                            failure = UnknownExecution(
                                 "Native job did not establish a terminal result: "
                                 + type(exc).__name__
                                 + ": "
                                 + str(exc)[:1500]
-                            ) from exc
+                            )
+                            failure.native_diagnostics = getattr(exc, "native_diagnostics", None)
+                            raise failure from exc
                         else:
                             if native_shell:
                                 await self.exclusive.release(native_shell, request.scope.process_id)
+                reported_usage = result.get("usage") or {}
+                emitted = reported_usage.get("output_tokens", reported_usage.get("completion_tokens",
+                    reported_usage.get("outputTokens")))
+                if isinstance(emitted, int) and not isinstance(emitted, bool) and emitted > output_tokens:
+                    raise IncompleteGeneration(result, "reported_output_limit_exceeded", output_tokens)
+                if len(result["text"].encode()) > request.limits.max_output_bytes:
+                    result = {**result, "text": result["text"].encode()[:request.limits.max_output_bytes].decode(errors="replace")}
+                    raise IncompleteGeneration(result, "response_byte_limit", output_tokens)
                 backend = ActualBackend(
                     catalog_ref="static/1",
                     backend_id=name,
@@ -612,6 +826,15 @@ class KernelRuntime:
                     harness_location="local",
                     provider_session_ref=result.get("session_id"),
                 )
+                if circuit:
+                    self._update(self._model_failure_key(request), {"count": 0})
+                recovered = request.extensions.get("polyinference/recovery-of")
+                if recovered:
+                    previous = self.records.get("effect/" + recovered)
+                    if previous:
+                        failure_key = self._model_failure_key(OperationRequest.model_validate(previous[1]["request"]))
+                        if self.records.get(failure_key):
+                            self._update(failure_key, {"count": 0})
                 raw_usage = result.get("usage")
                 total = raw_usage.get("total_tokens") if raw_usage else None
                 if not isinstance(total, int) or isinstance(total, bool) or total < 0:
@@ -628,40 +851,24 @@ class KernelRuntime:
                 ]
                 outputs = [self.artifacts.put(canonical(result), request.scope)]
             elif isinstance(payload, CapabilityCall):
-                self._authorize_capability(request)
+                capability, arguments = await self._authorize_capability(request)
                 self._update(key, {**saved, "state": "submitting"})
                 dispatched = True
                 if payload.workspace_id:
                     manifest = self.workspaces.current(payload.workspace_id)
                     if manifest.process_id != request.scope.process_id:
                         raise ValueError("Workspace belongs to another process")
-                arguments = json.loads(self.artifacts.read(payload.arguments))
-                if payload.capability_id == "workspace.retain":
-                    staged = self.records.get("staged/" + arguments["receipt_ref"])
-                    if not staged:
-                        raise ValueError("Missing private commit batch")
-                    self._publish(staged[1], request.scope.process_id)
-                    result = {"receipt_ref": arguments["receipt_ref"], "code_location": "private"}
-                elif payload.capability_id == "records.publish":
-                    self._publish(arguments, request.scope.process_id)
-                    result = {"published": True, "receipt_ref": arguments["receipt_ref"]}
-                elif payload.capability_id == "workspace.commit":
-                    owner = self.records.get("permit/verification/project")
-                    if not owner or owner[1].get("process_id") != request.scope.process_id:
-                        raise ValueError("Commit preparation requires verification ownership")
-                    actual = await self.workspaces.revision(payload.workspace_id)
-                    if (
-                        payload.expected_code
-                        and actual.effective_tree_digest != payload.expected_code.effective_tree_digest
-                    ):
-                        raise ValueError("Commit content precondition failed")
-                    head = self.workspaces.current(payload.workspace_id).captured_head
-                    code = await self.workspaces.commit(payload.workspace_id, head, request.operation_id)
-                    result = code.model_dump(mode="json")
-                else:
-                    result = await self.tools.call(payload, arguments)
-                outputs = [self.artifacts.put(canonical(result), request.scope)]
+                try:
+                    result = await capability.handler(request, arguments)
+                    outputs = [self.artifacts.put(canonical(result), request.scope)]
+                except Exception as exc:
+                    if capability.effect_class == "external_write":
+                        raise UnknownExecution("External capability did not establish its effects") from exc
+                    raise
             elif isinstance(payload, Publication):
+                process = self.records.get("process/" + request.scope.process_id)[1]
+                if "records.publish" not in process.get("capabilities", []):
+                    raise ValueError("Record publication exceeds the process grant")
                 self._update(key, {**saved, "state": "submitting"})
                 dispatched = True
                 staged = self.records.get("staged/" + payload.receipt_ref)
@@ -680,19 +887,63 @@ class KernelRuntime:
                     )
                 self._effect_status(request, False)
                 raise
-            self._update(key, {**self.records.get(key)[1], "state": "uncertain", "diagnostic": str(exc)})
+            self._update(key, {**self.records.get(key)[1], "state": "uncertain", "diagnostic": str(exc),
+                               "failure": {"category": "unknown_execution", "error_type": type(exc).__name__},
+                               "native_diagnostics": getattr(exc, "native_diagnostics", None),
+                               "attempted_backend": extensions.get("polyinference/attempted-backend")})
             raise UncertainEffect(request.operation_id) from exc
         except Exception as exc:
-            self._settle_budget(request, None if dispatched else 0)
+            if isinstance(exc, InputOverflow):
+                extensions["runtime/io-error"] = exc.diagnostics
+            if isinstance(exc, ProviderError) and exc.diagnostics["category"] == "input_overflow":
+                extensions["runtime/io-error"] = exc.diagnostics
+            failed_response = exc.response if isinstance(exc, (IncompleteGeneration, ModelResponseError)) else None
+            total = (failed_response.get("usage") or {}).get("total_tokens") if failed_response else None
+            if not isinstance(total, int) or isinstance(total, bool) or total < 0:
+                total = None
+            submitted = dispatched and not (isinstance(exc, ProviderError) and not exc.diagnostics["submitted"])
+            self._settle_budget(request, total if failed_response else (None if submitted else 0))
+            if failed_response:
+                extension = ("polyinference/incomplete-generation" if isinstance(exc, IncompleteGeneration)
+                             else "polyinference/model-output-error")
+                extensions[extension] = exc.diagnostics
+                backend = ActualBackend(
+                    catalog_ref="static/1", backend_id=name, model_version=failed_response["model"],
+                    harness_version=endpoint.protocol, inference_location=endpoint.physical_location,
+                    harness_location="local", provider_session_ref=None,
+                )
+                usage = [UsageMeasure(
+                    metric="tokens", unit="tokens", value=total,
+                    provenance="provider_reported" if total is not None else "unknown",
+                    account_scope_ref=request.budget_account_ref,
+                )]
+            if getattr(exc, "native_diagnostics", None):
+                extensions["polyinference/native-diagnostics"] = exc.native_diagnostics
             state, termination = "failed", "confirmed_stopped"
+            if isinstance(exc, ProcessCancelled):
+                state, termination = "cancelled", "not_started"
             error = ErrorDetail(
                 code=type(exc).__name__,
                 message=str(exc)[:4000],
-                retryable_after_reconciliation=False,
-                retry_after_ms=None,
+                retryable_after_reconciliation=getattr(exc, "retryable", False),
+                retry_after_ms=getattr(exc, "diagnostics", {}).get("retry_after_ms"),
             )
-            outputs = [self.artifacts.put(canonical({"error": str(exc)[:4000]}), request.scope)]
+            if isinstance(exc, ProviderError):
+                extensions["polyinference/provider-error"] = exc.diagnostics
+                if not exc.diagnostics["submitted"] and "polyinference/attempted-backend" in extensions:
+                    extensions["polyinference/attempted-backend"]["submitted"] = False
+                if not exc.retryable:
+                    failure_key = self._model_failure_key(request)
+                    prior = self.records.get(failure_key)
+                    self._update(failure_key, {"count": (prior[1]["count"] if prior else 0) + 1,
+                                               "last_operation_id": request.operation_id,
+                                               "diagnostic": exc.diagnostics})
+            detail = getattr(exc, "detail", {})
+            if detail:
+                extensions["polyinference/workspace-error"] = detail
+            outputs = [self.artifacts.put(canonical(failed_response or {"error": str(exc)[:4000], **detail}), request.scope)]
         result = OperationResult(
+            extensions=extensions,
             record_id="result/" + request.operation_id,
             revision=1,
             scope=request.scope,
@@ -719,47 +970,116 @@ class KernelRuntime:
         self._effect_status(request, False)
         return result
 
-    def _authorize_capability(self, request):
-        payload = request.payload
-        process = self.records.get("process/" + request.scope.process_id)[1]
-        if payload.capability_id == "records.publish":
-            if process["role"] != "senior":
-                raise ValueError("Record publication capability requires a senior process")
-            return
-        if payload.capability_id in {"workspace.commit", "workspace.retain"}:
-            return  # Ownership, content and final write scope are validated by the broker.
-        if not payload.workspace_id:
-            raise ValueError("Tool requires a workspace")
-        manifest = self.workspaces.current(payload.workspace_id)
-        spec = self.records.get(manifest.task_spec_ref)
-        if spec and spec[1].get("kind") != "task_spec":
-            spec = None
-        allowed = (
-            spec[1].get("allowed_capabilities", [])
-            if spec
-            else [
-                "files.list",
-                "files.read",
-                "files.search",
-                "files.patch",
-                "files.write",
-                "files.delete",
-                "checks.run",
-            ]
-        )
-        if not spec and self.config.shell_execution != "disabled":
-            allowed.append("shell.run")
-        if payload.capability_id not in allowed:
-            raise ValueError("Capability exceeds the task grant")
-        if payload.capability_id == "checks.run" and spec:
-            arguments = json.loads(self.artifacts.read(payload.arguments))
-            from ..contracts import ArtifactRef
+    def _model_failure_key(self, request):
+        endpoint = getattr(self.config, self.config.role_bindings[request.payload.role])
+        return "model-failures/" + digest(canonical({
+            "role": request.payload.role, "model": endpoint.model, "protocol": endpoint.protocol,
+            "endpoint": endpoint.base_url, "phase": getattr(request.payload, "phase", None),
+            "protocol_id": getattr(request.payload, "required_phase_protocol", None),
+            "configuration": self.records.get("runtime/config")[1]["digest"],
+            "intent": request.intent_digest,
+        }))
 
-            permitted = json.loads(
-                self.artifacts.read(ArtifactRef.model_validate(spec[1]["acceptance_spec"]))
-            )
-            if arguments.get("name") not in permitted:
-                raise ValueError("Check exceeds the task grant")
+    def _authorize_recovery(self, request, failed_id):
+        root = self.recovery_allowed(failed_id, request.scope, operation_id=request.operation_id)
+        if not isinstance(request.payload, (ModelQuery, AgentJob)):
+            raise ValueError("Recovery requires a model operation")
+        if not request.extensions.get("polyinference/recovery-reason"):
+            raise ValueError("Recovery needs an explicit reason")
+        self.records.put_once("recovery/" + request.operation_id, {
+            "previous_operation_id": failed_id, "reason": request.extensions["polyinference/recovery-reason"],
+            "request_digest": request.intent_digest, "root_operation_id": root,
+        })
+
+    def recovery_allowed(self, failed_id, scope, *, operation_id=None):
+        prior = self.records.get("effect/" + failed_id)
+        if not prior:
+            raise ValueError("Recovery requires a known failed model operation")
+        original = prior[1]
+        result = original.get("result") or {}
+        if (original["state"] != "failed" or result.get("execution_termination") != "confirmed_stopped"
+                or result.get("effects") != "known"
+                or original["request"]["scope"] != scope.model_dump(mode="json")
+                or original["request"]["payload"]["kind"] not in {"model_query", "agent_job"}):
+            raise ValueError("Only a confirmed stopped model failure in the same process may be recovered")
+        chain = failed_id
+        while True:
+            extensions = self.records.get("effect/" + chain)[1]["request"].get("extensions", {})
+            older = (extensions.get("polyinference/recovery-of")
+                     or extensions.get("runtime/model-retry", {}).get("previous_operation_id"))
+            if not older:
+                break
+            chain = older
+        count = sum(body.get("root_operation_id", body["previous_operation_id"]) == chain
+                    for _, _, body in self.records.scan("recovery/"))
+        existing = self.records.get("recovery/" + operation_id) if operation_id else None
+        if not existing and count >= self.config.max_model_recoveries:
+            raise ValueError("Model recovery allowance exhausted")
+        return chain
+
+    async def recover_model(self, failed_id, request, reason):
+        """An explicit new intent; immutable replay of the original still wins."""
+        if not reason.strip():
+            raise ValueError("Recovery needs a reason")
+        if request.operation_id == failed_id:
+            raise ValueError("Recovery needs a new operation identity")
+        if self.uncertain():
+            raise ValueError("Reconcile unknown effects before recovery")
+        request = request.model_copy(update={"extensions": {
+            **request.extensions, "polyinference/recovery-of": failed_id,
+            "polyinference/recovery-reason": reason[:4000],
+        }})
+        request = request.model_copy(update={"intent_digest": operation_fingerprint(request)})
+        self._authorize_recovery(request, failed_id)
+        process_key = "process/" + request.scope.process_id
+        process = self.records.get(process_key)
+        if process and process[1]["state"] == "paused":
+            self._update(process_key, {**process[1], "state": "ready"})
+            status_key = "process-status/" + request.scope.process_id
+            status = self.records.get(status_key)
+            if status:
+                self._update(status_key, {**status[1], "state": "ready", "revision": status[1]["revision"] + 1,
+                                          "wait": None, "pending_operations": []})
+        return await self.execute(request)
+
+    async def _authorize_capability(self, request):
+        payload = request.payload
+        capability = self.capabilities.get(payload.capability_id)
+        process = self.records.get("process/" + request.scope.process_id)[1]
+        if payload.capability_id not in process.get("capabilities", []):
+            raise ValueError("Capability exceeds the process grant")
+        if payload.effect_class != capability.effect_class:
+            raise ValueError("Capability effect class differs from its registered ABI")
+        if payload.schema_digest != capability.schema_digest:
+            raise ValueError("Capability argument schema differs from its registered ABI")
+        arguments = json.loads(self.artifacts.read(payload.arguments))
+        if capability.workspace:
+            if not payload.workspace_id:
+                raise ValueError("Capability requires a workspace")
+            manifest = self.workspaces.current(payload.workspace_id)
+            grant = self.workspaces.grant(payload.workspace_id)
+            blocked = self.records.get("workspace-blocked/" + payload.workspace_id)
+            if blocked and capability.effect_class != "read":
+                failure = ValueError("Attached workspace blocked after scope violation: " + blocked[1]["reason"])
+                failure.detail = {"workspace_id": payload.workspace_id, "paths": blocked[1]["paths"],
+                                  "allowed_write_paths": manifest.allowed_write_paths}
+                raise failure
+            if manifest.process_id != request.scope.process_id or grant.process_id != request.scope.process_id:
+                raise ValueError("Workspace belongs to another process")
+            if payload.capability_id not in grant.capabilities:
+                raise ValueError("Capability exceeds the workspace grant")
+            generation = arguments.get("generation")
+            if generation != manifest.generation:
+                raise ValueError("Stale workspace generation")
+            if payload.expected_code:
+                current = await self.workspaces.revision(payload.workspace_id)
+                if current.effective_tree_digest != payload.expected_code.effective_tree_digest:
+                    raise ValueError("Stale workspace content")
+            arguments = capability.arguments({k: v for k, v in arguments.items() if k != "generation"})
+            arguments["generation"] = generation
+        else:
+            arguments = capability.arguments(arguments)
+        return capability, arguments
 
     async def _native_callback(self, parent, call_id, arguments):
         if (
@@ -772,18 +1092,19 @@ class KernelRuntime:
             for _, _, value in self.records.scan("effect/")
             if value["request"].get("causal_parent_ref") == parent.operation_id
         )
-        manifest = self.workspaces.current(parent.payload.workspace_id)
-        args = {**arguments.get("arguments", {}), "generation": manifest.generation}
+        capability = self.capabilities.get(arguments["tool"])
+        manifest = self.workspaces.current(parent.payload.workspace_id) if capability.workspace else None
+        args = arguments.get("arguments", {})
+        if manifest:
+            args = {**args, "generation": manifest.generation}
         payload = CapabilityCall(
             capability_id=arguments["tool"],
-            schema_digest=digest(arguments["tool"].encode()),
+            schema_digest=capability.schema_digest,
             arguments=self.artifacts.put(canonical(args), parent.scope),
             model_call_id=call_id,
-            workspace_id=manifest.workspace_id,
-            expected_code=await self.workspaces.revision(manifest.workspace_id),
-            effect_class="read"
-            if arguments["tool"] in {"files.read", "files.list", "files.search"}
-            else "private_write",
+            workspace_id=manifest.workspace_id if manifest else None,
+            expected_code=await self.workspaces.revision(manifest.workspace_id) if manifest else None,
+            effect_class=capability.effect_class,
             reconciliation_strategy_ref="journal/1",
         )
         operation_id = digest(canonical([parent.operation_id, call_id]))
@@ -794,7 +1115,7 @@ class KernelRuntime:
             ).OperationRequest.model_validate(retained[1]["request"])
             original = json.loads(self.artifacts.read(child.payload.arguments))
             if child.payload.capability_id != arguments["tool"] or {
-                k: v for k, v in original.items() if k != "generation"
+                k: v for k, v in original.items() if not capability.workspace or k != "generation"
             } != arguments.get("arguments", {}):
                 raise ValueError("Native callback ID reused with changed arguments")
         else:
@@ -815,9 +1136,9 @@ class KernelRuntime:
             "manifest_ref": manifest.manifest_id,
             "generation": manifest.generation,
             "view": manifest.view,
-        }
+        } if manifest else None
         if not retained:
-            child = child.model_copy(update={"extensions": {"polyinference/workspace-view": view}})
+            child = child.model_copy(update={"extensions": {"polyinference/workspace-view": view} if view else {}})
             child = child.model_copy(update={"intent_digest": operation_fingerprint(child)})
         result = await self.execute(child)
         return {"state": result.state, "observation": json.loads(self.artifacts.read(result.output_refs[0]))}
@@ -826,45 +1147,23 @@ class KernelRuntime:
         receipt = self.records.get(arguments["receipt_ref"])
         if receipt:
             return  # Prior atomic publication wins replay, regardless of retired permits.
-        if not self.exclusive.owns(arguments["permit_ref"], "verification/project", process_id):
-            raise ValueError("Publication requires current verification permit")
-        expected, updates = dict(arguments["expected"]), dict(arguments["updates"])
-        reports = [v for k, v in arguments["immutable"].items() if k.startswith("report/")]
-        candidate = (updates.get("head/provisional") or {}).get("code")
-        if reports:
-            candidate = reports[0]["final_code"]
-        if candidate:
-            head = self.records.get("head/provisional")
-            if expected.get("head/provisional") != head[0]:
-                raise ValueError("Code publication requires expected shared head")
-            minted = [
-                value
-                for _, _, value in self.records.scan("commit-info/")
-                if value["code"] == candidate and value["process_id"] == process_id
-            ]
-            if not minted or minted[0]["parent"] != head[1]["code"]:
-                raise ValueError("Candidate must be a broker commit parented on the current shared head")
-        for report in reports:
-            if report["process_id"] != process_id:
-                raise ValueError("Report belongs to another process")
-            private = report.get("code_location") == "private"
-            if private and "head/provisional" in updates:
-                raise ValueError("Private failed commit must not advance the shared head")
-            if report["verdict"] != "successful":
-                version, run = self.records.get("app/run")
-                expected["app/run"] = version
-                updates["app/run"] = {
-                    **run,
-                    "starts_closed": True,
-                    "completion_proposed": False,
-                    "review_reason": "worker_" + report["verdict"],
-                    "captured_workers": sorted(set(run["captured_workers"]) | set(run["active_workers"])),
-                }
+        if not any(owner.get("permit") == arguments["permit_ref"] and owner.get("process_id") == process_id
+                   for _, _, owner in self.records.scan("permit/")):
+            raise ValueError("Publication requires a currently owned resource permit")
+        process = self.records.get("process/" + process_id)[1]
+        spec = self.records.get(process["spec_ref"])[1]
+        program_id = spec["program"]["program_id"]
+        policy = self.publication_policies.get(program_id)
+        if self.records.get("runtime/publication-policy/" + program_id) and policy is None:
+            raise ValueError("Reinstall the program's publication policy before new publication: " + program_id)
+        if policy:
+            arguments = policy(arguments, process_id)
+        expected, updates = arguments["expected"], arguments["updates"]
         self.records.compare_and_publish(expected, updates, arguments["immutable"])
 
     def diagnostics(self):
         return {
-            "kernel": "simple-os/1",
+            "kernel": "simple-os/2",
             "admission": {name: value.snapshot() for name, value in self.admission.items()},
             "processes": [value for _, _, value in self.records.scan("process-status/")],
             "uncertain_operations": self.uncertain(),
@@ -877,7 +1176,7 @@ class KernelRuntime:
         """Operator attestation, never an inference from connection loss or timeout.
 
         Caller must establish provider AND host effects have stopped. A reconciled
-        effect is failed, never retried under a new ID; the worker returns to review.
+        effect is failed. Any later recovery is a separate, explicitly linked intent.
         """
         if any(not task.done() for task in self.inflight.values()):
             raise ValueError("Reconcile only with dispatch stopped")
@@ -952,33 +1251,6 @@ class KernelRuntime:
         for _, _, owner in self.records.scan("permit/"):
             if owner.get("process_id") == pid:
                 await self.exclusive.release(owner["permit"], pid)
-        for task_key, revision, task in self.records.scan("task/"):
-            if task["process_id"] != pid or task.get("report_ref"):
-                continue
-            if self.records.get("workspace/" + task["workspace_id"]):
-                await self.workspaces.abort(task["workspace_id"])
-            self.records.compare_and_publish(
-                {task_key: revision},
-                {
-                    task_key: {
-                        **task,
-                        "execution": "interrupted",
-                        "exception": "Reconciled operation " + operation_id,
-                    }
-                },
-            )
-            attempt_key = "attempt/" + task["attempt_id"]
-            attempt = self.records.get(attempt_key)
-            if attempt:
-                self._update(
-                    attempt_key,
-                    {
-                        **attempt[1],
-                        "revision": attempt[1]["revision"] + 1,
-                        "execution": "interrupted",
-                        "stop_reason": "operator reconciliation",
-                    },
-                )
         process = self.records.get("process/" + pid)
         if process:
             self._update("process/" + pid, {**process[1], "state": "paused"})
@@ -996,18 +1268,5 @@ class KernelRuntime:
                     "wait": None,
                 },
             )
-        run = self.records.get("app/run")
-        if run:
-            self.records.compare_and_publish(
-                {"app/run": run[0]},
-                {
-                    "app/run": {
-                        **run[1],
-                        "starts_closed": True,
-                        "status": "active",
-                        "completion_proposed": False,
-                        "active_workers": [value for value in run[1]["active_workers"] if value != pid],
-                        "captured_workers": [value for value in run[1]["captured_workers"] if value != pid],
-                    }
-                },
-            )
+        if self.on_reconciled:
+            await self.on_reconciled(request, result)

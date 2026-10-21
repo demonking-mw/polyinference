@@ -2,53 +2,37 @@
 
 from __future__ import annotations
 
-import hashlib
-import json
-from datetime import datetime, timezone
 from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
 from .contracts import Limits, PhaseReserve, Wire
+from .execution_contracts import Check as Check
+from .primitives import canonical as canonical
+from .primitives import digest as digest
+from .primitives import now as now
+from .primitives import operation_fingerprint as operation_fingerprint
 from .workspace_contracts import RelativePath
 
-PROGRAM_VERSION = "agent-3-simple-os-private-failure"
-STATE_VERSION = "2.1"
+PROGRAM_VERSION = "agent-5-in-place-repository"
+STATE_VERSION = "2.3"
 
 
-def now():
-    return datetime.now(timezone.utc)
+class GitPolicy(Wire):
+    mode: Literal["new", "existing", "current"] = "new"
+    branch: str | None = None
+    task_branches: bool = True
+    reason: str = "Git policy selected by the coding agent"
+    blocker: str | None = None
+    change_requested: bool = False
 
-
-def canonical(value) -> bytes:
-    if hasattr(value, "model_dump"):
-        value = value.model_dump(mode="json")
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()
-
-
-def digest(value: bytes) -> str:
-    return "sha256:" + hashlib.sha256(value).hexdigest()
-
-
-def operation_fingerprint(request):
-    data = request.model_dump(mode="json")
-    keys = (
-        "payload",
-        "extensions",
-        "grant_ref",
-        "owner_generation",
-        "expected_process_revision",
-        "expected_binding_generation",
-        "schedule_ref",
-        "budget_account_ref",
-        "limits",
-        "resources",
-        "conflict_keys",
-        "safe_boundary",
-        "replay_policy",
-        "required_features",
-    )
-    return digest(canonical({key: data[key] for key in keys}))
+    @model_validator(mode="after")
+    def coherent(self):
+        if self.mode == "existing" and not self.branch:
+            raise ValueError("An existing branch must be named")
+        if self.mode == "current" and self.branch:
+            raise ValueError("Current-branch policy cannot name another branch")
+        return self
 
 
 def default_limits() -> Limits:
@@ -69,18 +53,13 @@ def default_limits() -> Limits:
     )
 
 
-class Check(Wire):
-    name: str
-    argv: Annotated[list[str], Field(min_length=1)]
-    timeout_seconds: Annotated[float, Field(gt=0, le=600)] = 60
-
-
 class Assignment(Wire):
     task_id: Annotated[str, Field(pattern=r"^[a-zA-Z0-9_-]{1,80}$")]
     objective: Annotated[str, Field(min_length=1, max_length=16000)]
     write_paths: Annotated[list[RelativePath], Field(min_length=1)]
     read_paths: list[RelativePath] = Field(default_factory=list)
     dependencies: list[str] = Field(default_factory=list)
+    resume_from: str | None = None
     role: Literal["worker", "specialist"] = "worker"
     checks: Annotated[list[str], Field(min_length=1)]
 
@@ -102,6 +81,7 @@ class Disposition(Wire):
 
 class SeniorProposal(Wire):
     goal: str
+    user_brief: Annotated[str, Field(min_length=1, max_length=8000)] | None = None
     tasks: list[Assignment] = Field(default_factory=list)
     dispositions: list[Disposition] = Field(default_factory=list)
     complete: bool = False
@@ -150,8 +130,10 @@ class Action(Wire):
         "files.write",
         "files.delete",
         "checks.run",
+        "checks.configure",
         "shell.run",
         "repository.select_branch",
+        "user.notify",
     ]
     arguments: dict
 

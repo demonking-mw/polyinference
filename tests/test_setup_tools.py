@@ -1,18 +1,23 @@
 from __future__ import annotations
 
+import asyncio
 import json
+import shlex
+import threading
 from pathlib import Path
 
+import httpx
 import pytest
 from conftest import ScriptedAgent, git
 
 from polyinference.agent.controller import ProjectAgent
 from polyinference.agent.routing import allocate
 from polyinference.agent.services import AgentServices
+from polyinference.config import AgentConfig
 from polyinference.contracts import CodeRevision, TaskSpec
 from polyinference.domain import Assignment
 from polyinference.runtime.adapter import StandaloneRuntime
-from polyinference.ui import TestUI
+from polyinference.ui import TestUI, make_server
 
 
 def pinned(messages):
@@ -23,7 +28,8 @@ def pinned(messages):
     )
 
 
-async def test_cloud_setup_selects_requested_branch_runs_shell_and_publishes_before_planning(config):
+@pytest.mark.parametrize("automatic_checks", [False, True])
+async def test_cloud_setup_selects_requested_branch_runs_shell_and_publishes_before_planning(config, automatic_checks):
     source = Path(config.repository)
     original = git(source, "branch", "--show-current")
     git(source, "checkout", "-qb", "requested-base")
@@ -41,6 +47,9 @@ async def test_cloud_setup_selects_requested_branch_runs_shell_and_publishes_bef
             "cloud": config.cloud.model_copy(update={"protocol": "codex_app_server", "brokered_tools": True}),
         }
     )
+    original_checks = config.checks
+    if automatic_checks:
+        config = config.model_copy(update={"checks": []})
     junior = ScriptedAgent(two=False)
     called = []
     runtime = await StandaloneRuntime(config).open()
@@ -59,6 +68,21 @@ async def test_cloud_setup_selects_requested_branch_runs_shell_and_publishes_bef
                         {"tool": "repository.select_branch", "arguments": {"name": "requested-base"}},
                     )
                     assert selected["state"] == "succeeded", selected
+                    if automatic_checks:
+                        check = original_checks[0].model_dump(mode="json")
+                        observation = await callback("choose-check", {"tool": "checks.configure", "arguments": check})
+                        assert observation["state"] == "succeeded", observation
+                        replay = await callback("choose-check", {"tool": "checks.configure", "arguments": check})
+                        assert replay == observation
+                        replacement = await callback("replace-check", {
+                            "tool": "checks.configure", "arguments": {**check, "argv": ["replacement"]},
+                        })
+                        assert replacement["state"] == "failed", replacement
+                        # Native jobs may run the selected check before returning to application code.
+                        observation = await callback("run-selected", {
+                            "tool": "checks.run", "arguments": {"name": check["name"]},
+                        })
+                        assert observation["observation"]["status"] == "passed", observation
                     observation = await callback(
                         "setup-script",
                         {
@@ -140,20 +164,29 @@ async def test_cloud_setup_selects_requested_branch_runs_shell_and_publishes_bef
         assert setup["original_base"]["commit_id"] == branch_commit
         assert TaskSpec.model_validate(app.get(setup["task_spec_ref"])).base.commit_id == branch_commit
         children = [e for _, _, e in runtime.records.scan("effect/") if e["request"].get("causal_parent_ref")]
-        assert len(children) == 2
+        assert len(children) == (5 if automatic_checks else 2)
         assert git(source, "branch", "--show-current") == original
         assert not (source / "setup.txt").exists()
         assert git(source, "status", "--porcelain") == ""
     finally:
         await runtime.close()
+    if automatic_checks:
+        reopened = await StandaloneRuntime(config).open()
+        try:
+            assert AgentServices(reopened, config).check_definitions == original_checks
+            assert reopened.records.get("setup/checks")[1]["checks"] == [c.model_dump(mode="json") for c in original_checks]
+        finally:
+            await reopened.close()
 
 
-@pytest.mark.parametrize("empty", [False, True])
+@pytest.mark.parametrize("project_kind", ["populated", "empty", "missing"])
 async def test_prepare_initializes_private_git_for_plain_folder_without_tracking_secrets(
-    config, tmp_path, empty
+    config, tmp_path, project_kind
 ):
-    source = tmp_path / "new-project"
-    source.mkdir()
+    source = tmp_path / "new-project" / "nested"
+    empty = project_kind != "populated"
+    if project_kind != "missing":
+        source.mkdir(parents=True)
     if not empty:
         (source / "main.py").write_text("VALUE = 1\n")
         (source / ".env").write_text("SECRET=fixture\n")
@@ -165,6 +198,7 @@ async def test_prepare_initializes_private_git_for_plain_folder_without_tracking
     runtime = await StandaloneRuntime(selected).open()
     try:
         code = await runtime.workspaces.initialize()
+        assert source.is_dir()
         tree = await runtime.workspaces.tree(code.commit_id)
         assert ".env" not in tree and "ignored.txt" not in tree
         assert ("main.py" in tree) != empty
@@ -183,8 +217,9 @@ async def test_prepare_initializes_private_git_for_plain_folder_without_tracking
                 app, assignment, "setup-test", code.model_dump(mode="json"), "empty-setup", "setup"
             )
             runtime.records.compare_and_publish({}, {}, specs)
+            app.process(task["process_id"], assignment.role, task["spec_ref"], task)
             await runtime.workspaces.create(
-                task["workspace_id"], task["process_id"], task["spec_ref"], code, ["README.md"], []
+                task["workspace_id"], task["process_id"], task["spec_ref"], code, ["README.md"], sorted(tree)
             )
             await runtime.workspaces.select_branch(task["workspace_id"], "new-project", create=True)
             assert "README.md" in runtime.workspaces.current(task["workspace_id"]).allowed_write_paths
@@ -216,9 +251,11 @@ def test_development_allocation_is_cumulative_and_excludes_setup_and_management(
     assert all(t.role == "specialist" for t in allocate([task("on")], [], 1))
 
 
-async def test_ui_accepts_plain_project_folder_and_preserves_explicit_branch(config, tmp_path):
-    source = tmp_path / "plain"
-    source.mkdir()
+@pytest.mark.parametrize("exists", [False, True])
+async def test_ui_accepts_plain_project_folder_and_preserves_explicit_branch(config, tmp_path, exists):
+    source = tmp_path / "plain" / "nested"
+    if exists:
+        source.mkdir(parents=True)
     manager = TestUI(tmp_path / "ui")
     options = manager.repository_options(str(source))
     assert options["repository"] == str(source) and options["file_count"] == 0
@@ -227,6 +264,163 @@ async def test_ui_accepts_plain_project_folder_and_preserves_explicit_branch(con
     assert selected.role_bindings["specialist"] == "cloud"
     assert selected.shell_execution == "trusted"
     assert selected.cloud.brokered_tools
+    assert source.exists() == exists  # Selection/preview must not create the project.
+
+
+@pytest.mark.parametrize("automatic_checks", [False, True])
+@pytest.mark.parametrize("launch", ["direct", "ui"])
+async def test_default_setup_creates_missing_project_and_follows_objective_before_planning(config, tmp_path, launch, automatic_checks):
+    source = tmp_path / "new-parent" / "project"
+    selected = AgentConfig.model_validate({
+        **config.model_dump(exclude={"prepare_repository"}),
+        "repository": str(source),
+        "objective": "Prepare src/ready.py with READY = True before planning.",
+        "write_scope": "project",
+    })
+    assert selected.prepare_repository
+    import sys
+
+    command = [sys.executable, "-c", "from pathlib import Path; assert Path('src/ready.py').read_text() == 'READY = True\\n'"]
+    if automatic_checks:
+        selected = selected.model_copy(update={
+            "checks": [], "objective": selected.objective + " Verify with: " + shlex.join(command),
+        })
+    runtime = None
+    calls = []
+
+    class Cloud:
+        async def generate(self, messages, max_output, response_schema=None):
+            data = pinned(messages)
+            calls.append(data)
+            if "assignment" in data:
+                assert data["assignment"]["task_id"] == "project_setup"
+                assert data["user_objective"] == selected.objective
+                assert data["repository_setup"]["source_repository"] == str(source)
+                assert data["repository_setup"]["git_initialized"]
+                assert source.is_dir()
+                assert (runtime.config.state_path / "repository.git").is_dir()
+                if data["phase"] == "development" and len(calls) == 1:
+                    reply = {
+                        "kind": "action", "tool": "files.write",
+                        "arguments": {
+                            "path": "src/ready.py", "expected_digest": None, "content": "READY = True\n",
+                        },
+                    }
+                elif automatic_checks and data["phase"] == "development" and not data["configured_checks"]:
+                    assert shlex.join(command) in data["user_objective"]
+                    assert "checks.configure" in data["available_tools"]
+                    reply = {"kind": "action", "tool": "checks.configure", "arguments": {
+                        "name": "ready", "argv": command,
+                    }}
+                elif data["phase"] == "assessment":
+                    if automatic_checks:
+                        assert data["assignment"]["checks"] == ["ready"]
+                        assert data["evidence"][0]["status"] == "passed"
+                    reply = {"kind": "assessment", "verdict": "successful", "summary": "Setup checked"}
+                else:
+                    reply = {"kind": "candidate", "summary": "Ready for planning"}
+            else:
+                assert runtime.records.get("setup/completed")
+                code = runtime.records.get("head/provisional")[1]["code"]
+                tree = await runtime.workspaces.tree(code["commit_id"])
+                assert tree["src/ready.py"][1] == b"READY = True\n"
+                reply = {
+                    "goal": "Requested setup complete", "complete": True,
+                    "dispositions": [
+                        {"report_ref": report["record_id"], "action": "keep", "reason": "Reviewed"}
+                        for report in data["reports"]
+                    ],
+                }
+            return {"text": json.dumps(reply), "model": "cloud-fixture", "usage": {"total_tokens": 50}}
+
+        async def close(self):
+            pass
+
+    async def run(run_config):
+        nonlocal runtime
+        runtime = await StandaloneRuntime(run_config).open()
+        try:
+            for client in runtime.clients.values():
+                await client.close()
+            runtime.clients = {"local": ScriptedAgent(two=False), "cloud": Cloud()}
+            app = AgentServices(runtime, run_config)
+            engine = ProjectAgent(app)
+            outcome = await engine.run()
+            assert outcome["outcome"] == "completed", app.get("app/run")
+            assert calls[0]["assignment"]["task_id"] == "project_setup"
+            assert runtime.records.get("setup/completed")
+            count = len(calls)
+            await engine.run()
+            assert len(calls) == count  # Completed setup is retained when execution resumes.
+            return outcome
+        finally:
+            await runtime.close()
+
+    if launch == "direct":
+        await run(selected)
+        return
+
+    path = tmp_path / "config.json"
+    path.write_text(selected.model_dump_json())
+    manager = TestUI(tmp_path / "ui", config_path=path, runner=run)
+    server = make_server(manager, 0)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    origin = f"http://127.0.0.1:{server.server_port}"
+    try:
+        async with httpx.AsyncClient(base_url=origin, headers={"Origin": origin}) as client:
+            page = (await client.get("/")).text
+            assert "Project path" in page and "Use this folder" in page
+            preview = await client.get("/api/repository", params={"path": str(source)})
+            assert preview.status_code == 200 and preview.json()["file_count"] == 0
+            picker = (await client.get("/api/directories", params={"path": str(source)})).json()
+            assert picker["is_repository"] and not picker["exists"]
+            assert not source.exists()
+            response = await client.post("/api/run", json={
+                "repository": str(source), "objective": selected.objective,
+                "check_command": "" if automatic_checks else shlex.join(selected.checks[0].argv),
+            })
+            assert response.status_code == 202, response.text
+            run_id = response.json()["id"]
+            for _ in range(500):
+                view = (await client.get("/api/run", params={"id": run_id})).json()
+                if view["status"] != "running":
+                    break
+                await asyncio.sleep(0.02)
+            assert view["status"] == "completed", view
+            assert source.is_dir()
+            snapshots = list((tmp_path / "history").glob("*.json"))
+            assert len(snapshots) == 1
+            assert json.loads(snapshots[0].read_text())["run"]["id"] == run_id
+    finally:
+        await asyncio.to_thread(server.shutdown)
+        server.server_close()
+        thread.join(timeout=2)
+
+
+async def test_project_setup_rejects_file_paths_and_respects_explicit_opt_out(config, tmp_path):
+    from polyinference.ui_repository import project
+
+    source = tmp_path / "file.txt"
+    source.write_text("Keep this file")
+    with pytest.raises(ValueError, match="must be a directory"):
+        project(str(source))
+    selected = config.model_copy(update={"repository": str(source), "prepare_repository": True})
+    runtime = await StandaloneRuntime(selected).open()
+    try:
+        with pytest.raises(ValueError, match="must be a directory"):
+            await runtime.workspaces.initialize()
+        assert source.read_text() == "Keep this file"
+        assert not runtime.workspaces.gitdir.exists()
+        missing = tmp_path / "missing"
+        runtime.workspaces.config = selected.model_copy(
+            update={"repository": str(missing), "prepare_repository": False}
+        )
+        with pytest.raises(ValueError, match="enable prepare_repository"):
+            await runtime.workspaces.initialize()
+        assert not missing.exists()
+    finally:
+        await runtime.close()
 
 
 async def test_explicit_base_branch_is_selected_without_changing_source_checkout(config):
@@ -239,6 +433,7 @@ async def test_explicit_base_branch_is_selected_without_changing_source_checkout
         await runtime.workspaces.initialize()
         assert runtime.records.get("repository/setup")[1]["base_branch"] == "feature"
         assert git(source, "branch", "--show-current") == original
+        AgentServices(runtime, selected).process("worker", "worker")
         await runtime.workspaces.create(
             "ordinary",
             "worker",
@@ -252,7 +447,7 @@ async def test_explicit_base_branch_is_selected_without_changing_source_checkout
             ["a.py"],
             ["a.py"],
         )
-        with pytest.raises(ValueError, match="initial setup"):
+        with pytest.raises(ValueError, match="workspace grant"):
             await runtime.workspaces.select_branch("ordinary", "feature")
     finally:
         await runtime.close()
@@ -433,3 +628,60 @@ async def test_shell_is_journaled_bounded_and_restores_out_of_scope_changes(conf
         assert (Path(config.repository) / "a.py").read_text() == "VALUE = 1\n"
     finally:
         await runtime.close()
+
+
+async def test_missing_discovered_checks_cannot_be_published_as_success(config):
+    selected = AgentConfig.model_validate({
+        **config.model_dump(), "checks": [], "prepare_repository": True, "max_sprints": 2,
+    })
+
+    class Unverified:
+        async def generate(self, messages, max_output, response_schema=None):
+            data = pinned(messages)
+            if "assignment" in data:
+                reply = (
+                    {"kind": "assessment", "verdict": "successful", "summary": "Unverified claim"}
+                    if data["phase"] == "assessment" else {"kind": "candidate", "summary": "Ready"}
+                )
+            else:
+                reply = {
+                    "goal": "Claim completion", "complete": True,
+                    "dispositions": [
+                        {"report_ref": r["record_id"], "action": "keep", "reason": "Reviewed"}
+                        for r in data["reports"]
+                    ],
+                }
+            return {"text": json.dumps(reply), "model": "fixture", "usage": {"total_tokens": 50}}
+
+        async def close(self):
+            pass
+
+    runtime = await StandaloneRuntime(selected).open()
+    try:
+        for client in runtime.clients.values():
+            await client.close()
+        runtime.clients = {"local": Unverified(), "cloud": Unverified()}
+        app = AgentServices(runtime, selected)
+        outcome = await asyncio.wait_for(ProjectAgent(app).run(), 20)
+        assert outcome["outcome"] != "completed"
+        task = app.get("task/project_setup")
+        assert app.get(task["report_ref"])["verdict"] == "uncertain"
+        assert not runtime.records.scan("acceptance-receipt/")
+    finally:
+        await runtime.close()
+
+
+@pytest.mark.parametrize("filename,content", [
+    ("main.py", "print('hello')\n"),
+    ("package.json", '{"scripts":{"test":"node --test"}}'),
+])
+def test_ui_leaves_check_selection_to_agent_for_existing_projects(tmp_path, filename, content):
+    source = tmp_path / "project"
+    source.mkdir()
+    (source / filename).write_text(content)
+    manager = TestUI(tmp_path / "ui")
+    assert manager.repository_options(str(source))["check_command"] == ""
+    for command in (None, "", "   "):
+        selected = manager.configure_run(str(source), command)
+        assert selected.checks == [] and selected.prepare_repository
+    assert manager.configure_run(str(source), "custom-check --all").checks[0].argv == ["custom-check", "--all"]

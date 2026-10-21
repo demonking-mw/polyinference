@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import sys
 
+import pytest
 from conftest import ScriptedAgent
 
 from polyinference.agent.controller import ProjectAgent
@@ -26,7 +28,10 @@ for line in sys.stdin:
  elif method=="thread/start":
   assert message["params"]["dynamicTools"][0]["name"]=="polyinference_tool"
   assert message["params"]["permissions"]=="polyinference_readonly"
-  send({"id":message["id"],"result":{"thread":{"id":"native-thread"}}})
+  assert message["params"]["approvalPolicy"]=="never"
+  assert message["params"]["config"]["features.shell_tool"] is False
+  assert "Never use native shell, apply_patch" in message["params"]["developerInstructions"]
+  send({"id":message["id"],"result":{"thread":{"id":"native-thread"},"sandbox":{"type":"readOnly"},"approvalPolicy":"never"}})
  elif method=="turn/start":
   messages=json.loads(message["params"]["input"][0]["text"])
   data=json.loads(next(m["content"] for m in messages if "Pinned application inputs:" in m["content"]).split("Pinned application inputs:\n".replace("\\n","\n"),1)[1])
@@ -91,5 +96,68 @@ for line in sys.stdin:
         tree = await runtime.workspaces.tree(report["candidate_commit_id"])
         assert tree["a.py"][1] == b"VALUE = 2\n"
         assert runtime.records.get("permit/shell/installation")[1]["process_id"] is None
+    finally:
+        await runtime.close()
+
+
+@pytest.mark.parametrize("target", ["native_source", "native_ignored", "broker_source", "retired_view", "before_callback"])
+async def test_unbrokered_native_writes_are_rejected_even_inside_source_grant(config, target):
+    native = config.cloud.model_copy(update={"protocol": "codex_app_server", "brokered_tools": True})
+    config = config.model_copy(update={"cloud": native, "prepare_repository": True, "write_scope": "project"})
+    runtime = await StandaloneRuntime(config).open()
+    app = AgentServices(runtime, config)
+    input_roots = []
+
+    class Unbrokered:
+        async def generate_job(self, messages, snapshot, schema, callback=None):
+            manifest = runtime.workspaces.current("workspace-setup-project")
+            broker_root = runtime.workspaces.root_for(manifest)
+            assert snapshot != broker_root
+            assert "read-only" in messages[0]["content"]
+            input_roots.append(snapshot)
+            if target in {"native_source", "before_callback"}:
+                (snapshot / "a.py").write_text("unbrokered")
+                if target == "before_callback":
+                    await callback("should-not-run", {"tool": "files.write", "arguments": {
+                        "path": "README.md", "content": "unreachable", "expected_digest": None}})
+                    pytest.fail("A callback after input tampering must not execute")
+            elif target == "native_ignored":
+                (snapshot / "node_modules").mkdir()
+                (snapshot / "node_modules/hidden").write_text("unbrokered")
+            else:
+                if target == "retired_view":
+                    observed = await callback("expand", {"tool": "files.write", "arguments": {
+                        "path": "README.md", "content": "registered", "expected_digest": None}})
+                    assert observed["state"] == "succeeded", observed
+                    assert runtime.workspaces.current(manifest.workspace_id).generation > manifest.generation
+                (broker_root / "a.py").write_text("unbrokered")
+            return {"text": json.dumps({"kind": "candidate", "summary": "done"}),
+                    "usage": {"total_tokens": 10}, "model": "fixture", "events": []}
+
+        async def close(self):
+            pass
+
+    await runtime.clients["cloud"].close()
+    runtime.clients["cloud"] = Unbrokered()
+    try:
+        result = await ProjectAgent(app).run()
+        assert result["outcome"] == "paused", app.get("app/run")
+        assert input_roots and not runtime.records.scan("report/")
+        effects = [value for _, _, value in runtime.records.scan("effect/")
+                   if value["request"]["payload"]["kind"] == "agent_job"]
+        if target == "before_callback":
+            assert effects[-1]["state"] == "uncertain"
+            assert "outside the broker" in effects[-1]["diagnostic"]
+            assert runtime.uncertain()  # No terminal reply: do not invent stopped execution.
+            assert not any(value["request"]["causal_parent_ref"] for _, _, value in runtime.records.scan("effect/"))
+        else:
+            assert effects[-1]["state"] == "failed"
+            assert "outside the broker" in effects[-1]["result"]["error"]["message"]
+            assert not runtime.uncertain()  # A returned terminal job is known stopped.
+        head = app.get("head/provisional")["code"]
+        assert (await runtime.workspaces.tree(head["commit_id"]))["a.py"][1] == b"VALUE = 1\n"
+        if target.startswith("native") or target == "before_callback":
+            root = runtime.workspaces.root_for(runtime.workspaces.current("workspace-setup-project"))
+            assert (root / "a.py").read_text() == "VALUE = 1\n"
     finally:
         await runtime.close()

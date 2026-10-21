@@ -1,0 +1,71 @@
+# Configure a repeatable run
+
+[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
+
+All OS settings are configured together in the examples' `system` block. The
+[complete OS settings reference](../../design-docs/simplified-os/AGENT_SETTINGS.md)
+documents every field, default, context mode and I/O recovery limit. Coding
+workflow choices such as `objective` and `max_sprints` stay outside that block.
+The bundled agent's OS defaults and UI preferences live together in
+[src/polyinference/agent/system_settings.py](../../src/polyinference/agent/system_settings.py).
+Legacy flat configuration remains accepted; do not configure the same field in
+both locations. The field names below refer to their entries inside `system`
+unless they are agent workflow settings.
+
+The UI defaults are useful for a first test. Use a JSON configuration to pin your
+own project, permissions, checks and endpoint settings:
+
+```bash
+mkdir -p .polyinference
+cp examples/agent.mixed.json .polyinference/agent.json
+```
+
+Edit `.polyinference/agent.json` before running it. The example's repository,
+objective and file names are placeholders. At minimum, update these fields:
+
+| Field | What to set |
+| --- | --- |
+| `repository` | Absolute host path to the target root, e.g. `/home/yourname/projects/my-app`. |
+| `state_directory` | A fresh directory, e.g. `"./my-project-state"`. In this copied config that resolves to `.polyinference/my-project-state/`. |
+| `objective` | The full development request and acceptance criteria. |
+| `allowed_write_paths` | Exact project-relative writable file names, including intended new files, when using the default `write_scope: "explicit"`. |
+| `closure_paths` | Additional project-relative source, manifests, scripts and test files needed in the initial worker view. |
+| `checks` | Named executable/argument lists that verify the project, with suitable timeouts. |
+| `local`, `cloud` | Provider protocols, URLs, accessible model IDs, credential variable names and concurrency/context settings. |
+
+For example, replace the check with this object inside the `checks` list, using
+an interpreter that has your project's dependencies installed:
+
+```json
+{
+  "name": "tests",
+  "argv": ["/absolute/path/to/project-venv/bin/python", "-m", "pytest", "-q"],
+  "timeout_seconds": 120
+}
+```
+
+`repository` and `state_directory` resolve relative to the **configuration file's
+parent directory**, not your terminal's working directory. Source file grants
+and closure paths resolve relative to the target repository; use POSIX paths
+such as `src/example.py`, not Windows paths or absolute file paths. The check
+executable runs from the private workspace, so use an absolute executable path
+when you need a particular virtual environment.
+
+For a build check, declare project-relative generated directories with
+`"output_paths": ["dist"]` (without a trailing slash). Automatic setup selects
+these alongside the command. Declared outputs are excluded from source evidence
+and commits; tracked and explicitly granted source files always remain source.
+`.gitignore` cannot hide a source change. Check selection, including outputs, is
+fixed for the run. Installed `node_modules` and private virtual environments are
+copied independently across workspace generations when dependency inputs match;
+a changed manifest or lockfile invalidates that execution state before the next
+command. Dependency copies are private and count against storage limits.
+
+Scope errors report the offending paths, grant, and phase. Before integration,
+the worker receives a bounded opportunity to correct its setup or request review;
+the runtime retains its work and never expands source authority merely because a
+check produced files.
+
+
+
+Next: [Budgets and execution settings](budgets.md) includes validation, probes and launch commands. Update configuration docs and module guides after changing settings.

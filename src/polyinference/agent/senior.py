@@ -41,9 +41,8 @@ async def validate(state, runtime: Runtime[AppContext]):
                 app.config.allowed_write_paths
             ):
                 raise ValueError("Proposed write scope exceeds user grant")
-            if not set(assignment.checks) <= {c.name for c in app.config.checks}:
+            if not assignment.checks or not set(assignment.checks) <= {c.name for c in app.check_definitions}:
                 raise ValueError("Unknown configured check")
-        return {"proposal": proposal.model_dump(mode="json"), "error": None}
     except ValueError as exc:
         history = app.append_history(
             state.get("trajectory_ref"),
@@ -52,6 +51,13 @@ async def validate(state, runtime: Runtime[AppContext]):
             {"error": str(exc)[:2000]},
         )
         return {"trajectory_ref": history, "logical_step": state["logical_step"] + 1, "error": str(exc)}
+    if proposal.user_brief:
+        result, output = await app.capability(
+            state, "user-brief", "user.notify", {"text": proposal.user_brief}, "shared_write"
+        )
+        if result.state != "succeeded":
+            raise RuntimeError(str(output))
+    return {"proposal": proposal.model_dump(mode="json"), "error": None}
 
 
 def build_senior(checkpointer):
