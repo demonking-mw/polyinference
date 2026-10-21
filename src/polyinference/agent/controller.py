@@ -19,7 +19,7 @@ from ..contracts import (
 from ..domain import SeniorProposal, canonical, digest, now
 from ..ports import RecordConflict
 from .design_basis import DESIGN_BASIS
-from .routing import allocate
+from .routing import allocate, development_history, was_started
 from .senior import build_senior
 from .services import ModelOperationFailure
 from .tasks import make_task
@@ -600,7 +600,8 @@ class ProjectAgent:
                 {"app/run": version, key: task_version, attempt_key: attempt_version},
                 {
                     "app/run": {**run, "active_workers": [*run["active_workers"], task["process_id"]]},
-                    key: {**task, "execution": "in_progress", "base": base, "spec_ref": spec_ref},
+                    key: {**task, "execution": "in_progress", "base": base, "spec_ref": spec_ref,
+                          "started_at": task.get("started_at") or now().isoformat()},
                     attempt_key: attempt.model_dump(mode="json"),
                 },
                 {spec_ref: spec.model_dump(mode="json")},
@@ -667,10 +668,10 @@ class ProjectAgent:
             "development_allocation": {
                 "senior_fraction": app.config.senior_development_fraction,
                 "tasks": [
-                    {"task_id": body["assignment"]["task_id"], "role": body["assignment"]["role"]}
-                    for _, _, body in app.ports.records.scan("task/")
-                    if body.get("category", "development") == "development"
-                    and body["execution"] != "cancelled"
+                    {"task_id": body["assignment"]["task_id"], "role": body["assignment"]["role"],
+                     "started": was_started(body), "reserved": body["execution"] == "pending"}
+                    for body in development_history(
+                        (body for _, _, body in app.ports.records.scan("task/")), reserve_pending=True)
                 ],
             },
             "repository_context": await app.repository_context(head),
@@ -780,7 +781,7 @@ class ProjectAgent:
         retained = [
             body
             for _, _, body in app.ports.records.scan("task/")
-            if body["assignment"]["task_id"] not in proposal.cancel_pending_task_ids
+            if body["assignment"]["task_id"] not in proposal.cancel_pending_task_ids or was_started(body)
         ]
         proposal = proposal.model_copy(
             update={"tasks": allocate(proposal.tasks, retained, app.config.senior_development_fraction)}

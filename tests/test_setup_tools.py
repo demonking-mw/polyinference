@@ -11,7 +11,7 @@ import pytest
 from conftest import ScriptedAgent, git
 
 from polyinference.agent.controller import ProjectAgent
-from polyinference.agent.routing import allocate
+from polyinference.agent.routing import accounting, allocate
 from polyinference.agent.services import AgentServices
 from polyinference.config import AgentConfig
 from polyinference.contracts import CodeRevision, TaskSpec
@@ -249,6 +249,64 @@ def test_development_allocation_is_cumulative_and_excludes_setup_and_management(
     assert roles[2] == "specialist"  # Prefer the senior's nominated complex task.
     assert all(t.role == "worker" for t in allocate([task("off", "specialist")], [], 0))
     assert all(t.role == "specialist" for t in allocate([task("on")], [], 1))
+
+
+@pytest.mark.parametrize("start_evidence", [{"started_at": "2026-10-21T13:00:00+00:00"},
+                                           {"spec_ref": "task-spec/old:started"}])
+def test_cancelled_started_tasks_remain_in_accounting_and_role_history(start_evidence):
+    task = {"category": "development", "execution": "cancelled",
+            "assignment": {"role": "specialist"}, **start_evidence}
+    pending_cancel = {"category": "development", "execution": "cancelled",
+                      "assignment": {"role": "worker"}}
+    records = {"task/started": task, "task/unstarted": pending_cancel}
+    result = accounting(records, 0.5)
+    assert result["started_development_tasks"] == result["senior_tasks"] == 1
+    assert result["junior_tasks"] == 0
+    proposed = Assignment(task_id="next", objective="Next", write_paths=["a.py"], checks=["syntax"])
+    assert allocate([proposed], list(records.values()), 0.5)[0].role == "worker"
+    # Pending assignments reserve quota but never inflate the reported start count.
+    records["task/reserved"] = {"category": "development", "execution": "pending",
+                                 "assignment": {"role": "worker"}}
+    assert accounting(records)["started_development_tasks"] == 1
+    assert allocate([proposed], list(records.values()), 0.5)[0].role == "specialist"
+
+
+async def test_retiring_started_development_preserves_count_and_replacement_allocation(config):
+    config = config.model_copy(update={"senior_development_fraction": 0.5})
+
+    class RetiringAgent(ScriptedAgent):
+        async def generate(self, messages, *args):
+            data = pinned(messages)
+            if data.get("assignment", {}).get("task_id") == "a":
+                reply = {"kind": "needs_review", "reason": "Replace this safely stopped assignment"}
+            elif "assignment" not in data and data["all_task_ids"] and "b" not in data["all_task_ids"]:
+                reply = {"goal": "Replace a", "cancel_pending_task_ids": ["a"], "tasks": [{
+                    "task_id": "b", "objective": "Set b to 2", "write_paths": ["b.py"],
+                    "read_paths": ["b.py"], "checks": ["syntax"]}]}
+            else:
+                return await super().generate(messages, *args)
+            return {"text": json.dumps(reply), "model": "fixture", "usage": {"total_tokens": 5}}
+
+    runtime = await StandaloneRuntime(config).open()
+    client = RetiringAgent(two=False)
+    for old in runtime.clients.values():
+        await old.close()
+    runtime.clients = {name: client for name in runtime.clients}
+    app, engine = AgentServices(runtime, config), None
+    engine = ProjectAgent(app)
+    try:
+        await engine.run()
+        assert app.get("app/run")["status"] == "completed"
+        assert app.get("task/a")["execution"] == "cancelled"
+        assert app.get("task/a")["started_at"]
+        assert app.get("task/b")["assignment"]["role"] == "worker"
+        records = {key: body for key, _, body in runtime.records.scan("task/")}
+        assert accounting(records)["started_development_tasks"] == 2
+        assert accounting(records)["senior_tasks"] == 1
+        await engine.run()
+        assert accounting({key: body for key, _, body in runtime.records.scan("task/")}) == accounting(records)
+    finally:
+        await runtime.close()
 
 
 @pytest.mark.parametrize("exists", [False, True])

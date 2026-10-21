@@ -5,12 +5,20 @@ from __future__ import annotations
 import math
 
 
+def was_started(task):
+    # Older task records retain the immutable dispatch-time spec even after retirement.
+    return bool(task.get("started_at") or task.get("spec_ref", "").endswith(":started")
+                or task["execution"] not in {"pending", "cancelled"})
+
+
+def development_history(retained, *, reserve_pending=False):
+    return [task for task in retained if task.get("category", "development") == "development"
+            and (was_started(task) or (reserve_pending and task["execution"] == "pending"))]
+
+
 def allocate(assignments, retained, fraction):
-    prior = [
-        task
-        for task in retained
-        if task.get("category", "development") == "development" and task["execution"] != "cancelled"
-    ]
+    # Pending tasks reserve future quota but are not historical starts in accounting.
+    prior = development_history(retained, reserve_pending=True)
     senior = sum(task["assignment"]["role"] == "specialist" for task in prior)
     quota = max(
         0, min(len(assignments), math.floor((len(prior) + len(assignments)) * fraction + 0.5) - senior)
@@ -24,13 +32,7 @@ def allocate(assignments, retained, fraction):
 
 
 def accounting(records, fraction=0.1):
-    tasks = [
-        task
-        for key, task in records.items()
-        if key.startswith("task/")
-        and task.get("category", "development") == "development"
-        and task["execution"] not in {"pending", "cancelled"}
-    ]
+    tasks = development_history(task for key, task in records.items() if key.startswith("task/"))
     senior = sum(task["assignment"]["role"] == "specialist" for task in tasks)
     return {
         "target_senior_fraction": fraction,

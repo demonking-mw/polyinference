@@ -133,6 +133,7 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0081](#fix-0081) | 2026-10-21 | Reassess unfinished older backlog items against current implementation |
 | [FIX-0082](#fix-0082) | 2026-10-21 | Preserve a tested current-version checkpoint and schedule sequential fixes |
 | [FIX-0083](#fix-0083) | 2026-10-21 | Wait at the effective coding-worker capacity |
+| [FIX-0084](#fix-0084) | 2026-10-21 | Retain cancelled development starts in accounting and allocation |
 
 
 ## Entry template
@@ -3740,3 +3741,49 @@ and patch whitespace checks passed. Reviewed adjacent repository/settings/bounda
 guides; no interface/default/navigation change requires further edits. Earlier
 history is preserved. Tests use disposable repositories and local transports;
 no live provider, historical run mutation, migration or push occurred.
+
+<a id="fix-0084"></a>
+## FIX-0084 — 2026-10-21 — Retain cancelled development starts in accounting and allocation
+
+Status: implemented; queue item 2 / OSAG-07.
+Related history: [FIX-0041](#fix-0041), [FIX-0081](#fix-0081), [FIX-0083](#fix-0083).
+
+### Problem
+
+Superseding a started task removed its historical start and specialist allocation,
+allowing recovery churn to change both displayed work and subsequent role choice.
+
+### What was wrong
+
+Agent routing and senior inputs filtered by current cancellation state. Review
+also removed every task being retired before calculating replacement allocation,
+even when it had started. Pending quota reservations and executed history were
+not distinguished. Prior lifecycle validation preserved valid records but did
+not preserve their accounting meaning.
+
+### How it was fixed
+
+Dispatch atomically records started_at. Shared routing helpers retain those
+starts, recognize legacy immutable :started specs, and exclude never-started
+cancellations. Allocation includes pending reservations separately; reporting
+counts only starts. Senior inputs expose started/reserved flags, and retiring
+started tasks remain in allocation history. No OS storage schema was changed.
+Updated workflow/budget/test guides and tracker status.
+
+### Design principle enforced or reconstructed
+
+Execution history survives later application disposition. Count distinct started
+development tasks rather than resumes, and keep future reservations distinct
+from executed work. Coding-agent policy owns these definitions; generic OS
+records continue to provide atomicity without interpreting tasks.
+
+### Verification
+
+Both new timestamp/legacy-spec cases failed before correction. The final focused
+setup, transition, pending-cancellation and agent-UI run passed 28 tests in 55.90
+seconds. A complete scripted run parks and retires a started specialist, checks
+the replacement is a worker, and verifies two starts after completion/replay.
+Existing never-started cancellation and setup-exclusion coverage passed.
+Documentation generation/check, changed-file Ruff and patch whitespace passed.
+Reviewed inspection and runtime-boundary guides: interfaces remain unchanged.
+No historical records were rewritten, live providers called or commits pushed.

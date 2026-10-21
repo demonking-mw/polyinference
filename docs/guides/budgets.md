@@ -11,7 +11,7 @@ Additional settings worth reviewing:
 | `write_scope` | `explicit` restricts development to file grants; `project` allows task grants anywhere in the selected project directory, including new files. |
 | `shell_execution` | `disabled`, `trusted` or `bubblewrap`. Default UI and mixed example use `trusted`. |
 | `check_execution` | Independently enables configured checks using `trusted` or `bubblewrap`. Generic default is `disabled`, which yields unavailable check evidence. |
-| `senior_development_fraction` | Default `0.1`: target share of development tasks assigned to the specialist. |
+| `senior_development_fraction` | Default `0.1`: target specialist share of durable development starts, retaining superseded starts. Pending assignments reserve quota without counting as started; setup/management are excluded. |
 | `max_workers` | Concurrent started workers; UI default is 1, generic config default is 2. |
 | `POLYINFERENCE_LOCAL_BATCH_SIZE` | Environment override for local-lane `max_inflight` (1–32); pinned at startup. Use 1 for a cloud API substitution experiment. |
 | `control_token_reserve` | Parent token allowance reserved for control processes; the coding agent reserves 32,000 for planning/review. The former `review_token_reserve` input spelling is accepted. |

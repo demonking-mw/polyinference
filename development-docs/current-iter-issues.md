@@ -20,7 +20,8 @@ implementation of the fixes; record actual start and completion evidence later.
 
 Actual wakeup clock check: **2026-10-21 09:14:29 EDT (13:14:29 UTC)**, after the
 requested 01:55 start. Baseline cb02d02 was verified on codex/simple-os-v1 with a
-clean working tree before editing. Completion records: item 1, [FIX-0083](FIXES.md#fix-0083).
+clean working tree before editing. Completion records: item 1, [FIX-0083](FIXES.md#fix-0083);
+item 2, [FIX-0084](FIXES.md#fix-0084).
 
 | Order | Item | Owning layer and bounded scope |
 | --- | --- | --- |
@@ -1430,7 +1431,8 @@ existing reconciliation requirements and retained-capacity safeguards remain int
 
 Status: report items 1, 2, 4, 5, 6 and 7 implemented, together with OS output
 delivery and verified support for non-coding agents. Report items 3 and 8 remain
-open below. The README identifies this file as the place for current-iteration fixes.
+open in the historical report below; item 8 is now corrected by
+[FIX-0084](FIXES.md#fix-0084). Item 3 remains open. This file tracks current-version fixes.
 
 ### Deferred work recorded before implementation
 
@@ -1449,7 +1451,7 @@ handoffs, provider diagnostics (OSAG-02), and explicit recovery (OSAG-04).
   cannot finish a game objective; launch, gameplay and world/player persistence
   requirements have corresponding final evidence.
 - **Report item 8 / OSAG-07 — P2: preserve historical development starts.**
-  Still open and outside this implementation. Started tasks later cancelled as
+  Implemented by [FIX-0084](FIXES.md#fix-0084). Historical problem: started tasks later cancelled as
   superseded disappear from accounting and allocation history. Count durable
   starts independently of final disposition; never-started cancellations must
   remain excluded. Acceptance: this incident counts four development starts,
@@ -1506,7 +1508,8 @@ The selected implementation now includes:
   its own `retry-output` path, receipt reconciliation and verification-lease cleanup.
 
 The historical incident is not rewritten or silently migrated. These fixes do not
-create a Minecraft product retroactively. Report items 3 and 8 above remain open.
+create a Minecraft product retroactively. Report item 3 remains open; the later
+FIX-0084 correction covers item 8 without changing historical run evidence.
 
 Verification: the full Python suite passed with **157 passed, 1 skipped**. The
 skipped frontend wrapper requires Node 18+; the default executable is Node 12.
@@ -1749,6 +1752,9 @@ fixture, then passes after OSAG-01. Cover repairs and assert that failure does n
 publish, lose the private delta, or retain verification ownership after a known stop.
 
 ### OSAG-07 — P2: superseding started tasks erases them from development accounting
+
+Status: implemented by [FIX-0084](FIXES.md#fix-0084), including pending-reservation
+separation and legacy started-spec evidence. The original incident is retained below.
 
 The export reports zero started development tasks despite this executed worker.
 `agent/routing.py::accounting()` excludes every cancelled task, including tasks

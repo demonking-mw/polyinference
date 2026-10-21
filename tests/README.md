@@ -32,7 +32,7 @@ need separately stated checks. Update affected docs and FIXES.md with every fix.
 | [test_runtime.py](test_runtime.py) | Runtime tools, scopes, cancellation and effect settlement. |
 | [test_runtime_general.py](test_runtime_general.py) | Non-coding/artifact-only HTTP/native process lifecycles. |
 | [test_saved_credentials.py](test_saved_credentials.py) | Data-only private key loading and environment precedence. |
-| [test_setup_tools.py](test_setup_tools.py) | Setup/check selection and bounded coding tool behavior. |
+| [test_setup_tools.py](test_setup_tools.py) | Setup/check selection, durable task-start/quota accounting and bounded coding tool behavior. |
 | [test_tool_environment.py](test_tool_environment.py) | Private homes/caches and command cleanup. |
 | [test_ui.py](test_ui.py) | UI launch/project picker/API/export/default settings. |
 | [test_ui_agents.py](test_ui_agents.py) | Coding task/review/history projections. |
