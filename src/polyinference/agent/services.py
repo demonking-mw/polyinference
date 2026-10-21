@@ -42,7 +42,7 @@ from ..domain import (
     operation_fingerprint,
 )
 from ..ports import RuntimePorts
-from .prompts import BOOTSTRAP, SENIOR, WORKER
+from .prompts import BOOTSTRAP, SENIOR, SENIOR_IN_PLACE, SENIOR_ISOLATED, WORKER
 from .runtime_policy import CheckSelection, CodingRuntimePolicy, configured_checks, purpose_checks
 from .tasks import coding_tools
 
@@ -121,7 +121,7 @@ class AgentServices:
             program_version=PROGRAM_VERSION,
             graph_digest=digest(b"".join(p.read_bytes() for p in sorted(Path(__file__).parent.glob("*.py")))),
             state_schema_version=STATE_VERSION,
-            prompt_bundle_digest=digest((WORKER + SENIOR + BOOTSTRAP).encode()),
+            prompt_bundle_digest=digest((WORKER + SENIOR + SENIOR_IN_PLACE + SENIOR_ISOLATED + BOOTSTRAP).encode()),
         )
         self.runtime_policy = CodingRuntimePolicy(self)
         for check in self.check_definitions:
@@ -654,6 +654,7 @@ class AgentServices:
         if senior:
             data = dict(state["input"])
             schema, instruction, phase = SeniorProposal.model_json_schema(), SENIOR, state["mode"]
+            instruction += SENIOR_IN_PLACE if self.repository else SENIOR_ISOLATED
         else:
             task = self.get(state["task_ledger_ref"])
             manifest = self.ports.workspaces.current(state["workspace_id"])

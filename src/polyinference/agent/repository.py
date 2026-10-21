@@ -378,6 +378,40 @@ class RepositoryWorkspaces(Workspaces):
             await self.materialize_view(manifest, manifest, tree)
         return manifest
 
+    async def source_offer(self, reference, head):
+        """Read-only planning preflight; create rechecks the same grant/base at use."""
+        offer = {"resume_from": reference, "available": False, "required_write_paths": [], "conflict_paths": []}
+        try:
+            if reference.startswith("coding/interrupted/"):
+                row = self.records.get(reference)
+                if not row:
+                    raise ValueError("Unknown interrupted source reference")
+                snapshot = row[1]
+                parent = await self.tree(snapshot["base_commit"])
+                changes = {p: ((item["mode"], self.artifacts.read(ArtifactRef.model_validate(item["content"])))
+                               if item else None) for p, item in snapshot["changes"].items()}
+                offer["kind"] = "interrupted_source"
+            else:
+                report = next((r for _, _, r in self.records.scan("report/")
+                               if r["candidate_commit_id"] == reference and r.get("code_location") == "private"), None)
+                if not report:
+                    raise ValueError("Source must name a retained private candidate from this run")
+                parent = await self.tree(report["candidate_parent_commit_id"])
+                candidate = await self.tree(reference)
+                changes = {p: candidate.get(p) for p in parent.keys() | candidate.keys()
+                           if parent.get(p) != candidate.get(p)}
+                offer["kind"] = "private_candidate"
+            current = await self.tree(head["commit_id"])
+            offer["required_write_paths"] = sorted(changes)
+            offer["conflict_paths"] = sorted(p for p, item in changes.items()
+                                             if current.get(p) != parent.get(p) and current.get(p) != item)
+            if offer["conflict_paths"]:
+                raise ValueError("Retained source conflicts with current integration; plan an authorized repair")
+            offer.update(available=True, reason="Explicit resume_from can materialize this scoped source")
+        except (ValueError, RuntimeError, FileNotFoundError) as exc:
+            offer["reason"] = str(exc)[:1000]
+        return offer
+
     async def preserve_interrupted(self, workspace_id):
         """Retain authorized pre-candidate edits without committing or granting extra paths."""
         key = "coding/interrupted/" + workspace_id

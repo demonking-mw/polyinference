@@ -15,6 +15,11 @@ Default coding work uses the selected actual repository, integration branch and 
 The agent installs RepositoryWorkspaces over generic OS attached-directory grants
 and leases. In-place is the default; isolated mode is explicit. Failed preparation
 reaches engineers as evidence; configured checks still run after known failure.
+Senior retained_sources offers describe exact resume_from references, required
+write paths and current integration conflicts for private candidates/interrupted
+source. Validation corrects unavailable references or incomplete grants before
+dispatch; materialization rechecks them. References carry one whole scoped delta,
+not arbitrary selective multi-candidate access. Publication rules are mode-specific.
 
 ## Principles to preserve
 

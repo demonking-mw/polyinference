@@ -294,6 +294,69 @@ async def test_failed_candidate_is_in_real_git_and_can_feed_a_replacement(config
         await runtime.close()
 
 
+@pytest.mark.parametrize("invalid", ["unavailable", "grant"])
+async def test_senior_selects_retained_source_and_corrects_unavailable_handoff(config, invalid):
+    runtime, app, engine, scripted = await app_for(
+        config, max_sprints=5,
+        limits=config.limits.model_copy(update={"max_input_tokens_per_call": 96000}),
+        local=config.local.model_copy(update={"max_context_tokens": 128000, "reserved_context_tokens": 256000}),
+        cloud=config.cloud.model_copy(update={"max_context_tokens": 128000, "reserved_context_tokens": 256000}))
+    scripted.two, scripted.verdict = False, "uncertain"
+    original = scripted.generate
+    correction, reads = 0, 0
+
+    async def generate(messages, max_output, response_schema=None):
+        nonlocal correction, reads
+        data = json.loads(next(m["content"] for m in messages if "Pinned application inputs:" in m["content"])
+                          .split("Pinned application inputs:\n", 1)[1])
+        if "reports" in data and data["reports"]:
+            assert "only successful candidates are published" in messages[0]["content"]
+            assert "Successful and uncertain reports are already" not in messages[0]["content"]
+            if "repair" not in data["all_task_ids"]:
+                source = data["retained_sources"][0]
+                assert source["available"] and source["required_write_paths"] == ["a.py"]
+                reply = {"goal": "Reuse private work", "dispositions": [
+                    {"report_ref": data["reports"][0]["record_id"], "action": "retry", "reason": "Repair privately"}],
+                    "tasks": [{"task_id": "repair", "objective": "Inspect and verify retained implementation",
+                               "write_paths": ["b.py"] if correction == 0 and invalid == "grant" else ["a.py"],
+                               "checks": ["syntax"],
+                               "resume_from": "unavailable" if correction == 0 and invalid == "unavailable"
+                               else source["resume_from"]}]}
+                if correction:
+                    assert ("Cannot resume retained source" if invalid == "unavailable"
+                            else "Replacement grant must include retained paths: a.py") in str(messages)
+                correction += 1
+            else:
+                reply = {"goal": "Complete", "complete": True, "dispositions": [
+                    {"report_ref": r["record_id"], "action": "revert" if r["code_location"] == "private" else "keep",
+                     "reason": "Replacement preserves source"} for r in data["reports"]]}
+        elif data.get("assignment", {}).get("task_id") == "repair":
+            if data["phase"] == "development" and reads == 0:
+                reads += 1
+                reply = {"kind": "action", "tool": "files.read", "arguments": {"path": "a.py"}}
+            elif data["phase"] == "development":
+                assert "VALUE = 2" in str(messages)
+                reply = {"kind": "candidate", "summary": "Retained implementation present"}
+            elif data["phase"] == "assessment":
+                reply = {"kind": "assessment", "verdict": "successful", "summary": "Exact tree checked"}
+            else:
+                reply = {"kind": "candidate", "summary": "Reconciled retained source"}
+        else:
+            return await original(messages, max_output, response_schema)
+        return {"text": json.dumps(reply), "usage": {"total_tokens": 50}, "model": "fixture", "events": []}
+
+    scripted.generate = generate
+    try:
+        await engine.run()
+        assert app.get("app/run")["status"] == "completed", app.get("app/run")
+        assert correction == 2 and reads == 1
+        assert (config.repo_path / "a.py").read_text() == "VALUE = 2\n"
+        assert app.get("report/1-a")["code_location"] == "private"
+        assert app.get("task/repair")["assignment"]["resume_from"] == app.get("report/1-a")["candidate_commit_id"]
+    finally:
+        await runtime.close()
+
+
 async def test_interrupted_uncommitted_work_can_feed_replacement_without_unauthorized_files(config):
     runtime, app, engine, _ = await app_for(config, shell_execution="trusted")
     try:
@@ -628,6 +691,10 @@ async def test_interrupted_source_rejects_reuse_without_partially_copying_edits(
             app.update("head/provisional", {**app.get("head/provisional"), "code": base.model_dump(mode="json")})
         app.process("new", "worker")
         app.update("task/new", {"workspace_id": "new", "assignment": {"resume_from": ref}})
+        offer = await app.repository.source_offer(ref, base.model_dump(mode="json"))
+        assert offer["required_write_paths"] == ["a.py", "b.py"]
+        assert offer["available"] == (failure == "grant")
+        assert offer["conflict_paths"] == (["b.py"] if failure == "base_conflict" else [])
         with pytest.raises(ValueError, match="grant|conflicts"):
             await app.repository.create("new", "new", "opaque", base, write_paths, [])
         new_root = app.repository.root_for(app.repository.current("new"))

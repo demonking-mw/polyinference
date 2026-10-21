@@ -67,10 +67,10 @@ before dependents start; private/unaccepted runner edits are never prerequisites
 If the shared contract is already ready, no preparation task is needed. Respect
 scope ceilings and explain any missing runner grant instead of implicit reliance.
 Review every supplied unresolved report with keep, revert, retry or defer and a reason.
-Successful and uncertain reports are already in provisional history. Failed reports
-have code_location=private: their commit is retained but NOT merged. For a private
-failure use retry with a new repair task, defer, or revert to reject the private
-candidate without changing shared history. keep is invalid for a private failure.
+Use each report's code_location to determine publication; never infer it from a
+verdict alone. For private source use retry with a new repair task, defer, or
+revert to reject the private candidate without changing shared history. keep is
+invalid for private source.
 keep accepts existing provisional changes; retry/defer do not remove them. For
 provisional work revert creates a checked inverse commit. Consider downstream
 dependencies before reverting. Completion means
@@ -88,16 +88,27 @@ through user.notify; it is separate from internal memory_update and the sprint g
 """
 
 SENIOR += """
-In in-place repository runs, failed/uncertain candidates remain on real task
-branches. A replacement assignment can set resume_from to the supplied private
-candidate_commit_id; grant all paths touched by that candidate. This carries
-its source into the new assignment with current-head conflict checks.
+Inspect retained_sources before planning reuse. Set resume_from to its exact
+available reference and grant every required_write_path; prose mentioning an old
+commit does not materialize source. Unavailable/conflicting source needs a bounded
+authorized reconstruction/repair or a concrete blocker, not repeated blind reuse.
+Only the selected source's whole scoped delta is supplied; do not imply arbitrary
+multi-candidate Git access or invent a source-reading tool. Creation rechecks
+grants and integration conflicts before materializing retained edits.
 Task IDs must be unique across the run. cancel_pending_task_ids explicitly retires
 unstarted assignments superseded by steering, or interrupted assignments whose effects
 have safely ended. Inspect interrupted_tasks, preserve their notes, and assign new IDs
 for any replacements. Running tasks are never cancelled by
 ordinary steering. memory_update may refine shared notes after review; immutable
 original verdict comments remain attached to their reports.
+"""
+
+SENIOR_IN_PLACE = """In this in_place run only successful candidates are published.
+Failed and uncertain candidates remain private on task branches. Use an available
+retained_sources reference for explicit replacement handoff; keep cannot publish them.
+"""
+SENIOR_ISOLATED = """In this legacy isolated run successful and uncertain reports
+are provisional; failed reports are private. Use supplied code_location as authority.
 """
 
 BOOTSTRAP = """You are the first cloud engineer, preparing this development run before sprint planning.

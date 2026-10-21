@@ -43,6 +43,15 @@ async def validate(state, runtime: Runtime[AppContext]):
                 raise ValueError("Proposed write scope exceeds user grant")
             if not assignment.checks or not set(assignment.checks) <= {c.name for c in app.task_check_definitions}:
                 raise ValueError("Unknown configured check")
+            if assignment.resume_from and app.repository:
+                source = next((s for s in state["input"].get("retained_sources", [])
+                               if s["resume_from"] == assignment.resume_from), None)
+                if not source or not source["available"]:
+                    reason = source["reason"] if source else "Use a supplied retained_sources reference"
+                    raise ValueError("Cannot resume retained source: " + reason)
+                missing = set(source["required_write_paths"]) - set(assignment.write_paths)
+                if missing:
+                    raise ValueError("Replacement grant must include retained paths: " + ", ".join(sorted(missing)))
         checks = {c.name for c in app.task_check_definitions}
         tasks = {t.task_id: t for t in proposal.tasks}
         known = set(state["input"].get("all_task_ids", [])) | set(tasks)

@@ -22,7 +22,8 @@ Actual wakeup clock check: **2026-10-21 09:14:29 EDT (13:14:29 UTC)**, after the
 requested 01:55 start. Baseline cb02d02 was verified on codex/simple-os-v1 with a
 clean working tree before editing. Completion records: item 1, [FIX-0083](FIXES.md#fix-0083);
 item 2, [FIX-0084](FIXES.md#fix-0084); item 3, [FIX-0085](FIXES.md#fix-0085);
-item 4, [FIX-0086](FIXES.md#fix-0086); item 5, [FIX-0088](FIXES.md#fix-0088).
+item 4, [FIX-0086](FIXES.md#fix-0086); item 5, [FIX-0088](FIXES.md#fix-0088);
+item 6, [FIX-0089](FIXES.md#fix-0089).
 
 | Order | Item | Owning layer and bounded scope |
 | --- | --- | --- |
@@ -132,6 +133,11 @@ configured checks actually run both after integration; retain scope isolation.
 
 <a id="run13-02"></a>
 ### RUN13-02 — P1: materialize private candidates through explicit handoff
+
+Bounded explicit-handoff fix implemented in [FIX-0089](FIXES.md#fix-0089).
+Planning gets actionable source/grant/conflict offers and mode-correct prompts;
+invalid handoffs receive bounded corrections before dispatch. Arbitrary selective
+multi-candidate recovery remains outside this item. Historical evidence follows.
 
 Owner: coding agent planner/prompts/recovery. Sprints 4–6 named private candidates
 in prose with resume_from null; sprint 6 parked because current-view file tools

@@ -50,6 +50,9 @@ the actual checkout. A candidate includes the captured integration commit and it
 previous task tip; the root fast-forwards to the checked candidate. Failed/uncertain
 candidates remain on real task branches. A replacement's explicit `resume_from`
 names a retained candidate and receives its scoped edits with conflict checks.
+The agent supplies read-only retained-source planning offers and validates exact
+references/grants before dispatch; materialization rechecks current conflicts.
+This adds no OS Git/source-reading capability or automatic publication authority.
 
 Git and SQLite are separate resources: intent/outcome records and retained effects
 do not make a filesystem merge atomic with report publication. A completed merge

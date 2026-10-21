@@ -701,6 +701,12 @@ class ProjectAgent:
             "acceptance_checks": [c.name for c in app.acceptance_check_definitions],
             "previous_acceptance": run.get("acceptance_failure"),
         }
+        if app.repository:
+            references = [r["candidate_commit_id"] for r in reports if r.get("code_location") == "private"]
+            references += [v["preserved_source_ref"] for v in snapshot["interrupted_tasks"]
+                           if v.get("preserved_source_ref")]
+            snapshot["retained_sources"] = [await app.repository.source_offer(ref, head)
+                                            for ref in dict.fromkeys(references)]
         progress = {k: v for k, v in snapshot.items()
                     if k not in {"memory", "all_task_ids", "development_allocation", "previous_user_brief"}}
         fingerprint = digest(canonical(progress))

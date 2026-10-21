@@ -138,6 +138,7 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0086](#fix-0086) | 2026-10-21 | Separate setup prerequisites from final product acceptance |
 | [FIX-0087](#fix-0087) | 2026-10-21 | Record future learned routing and quota-aware task scheduling (ID corrected from duplicate 0085) |
 | [FIX-0088](#fix-0088) | 2026-10-21 | Declare shared-check preparation owners before parallel dispatch |
+| [FIX-0089](#fix-0089) | 2026-10-21 | Make explicit retained-source handoff actionable during planning |
 
 
 ## Entry template
@@ -3996,3 +3997,53 @@ the assertion to inspect the actual model correction, then that regression passe
 (1 passed, 6.19 seconds). Ruff and documentation generation/check passed; scoped
 whitespace passed. No live model, historical-state mutation or push. Unrelated
 next-iteration edits remain outside this commit.
+
+<a id="fix-0089"></a>
+## FIX-0089 — 2026-10-21 — Make explicit retained-source handoff actionable during planning
+
+Status: implemented. Related: [FIX-0040](#fix-0040), [FIX-0060](#fix-0060),
+[FIX-0068](#fix-0068), [FIX-0077](#fix-0077),
+[RUN13-02](current-iter-issues.md#run13-02).
+
+### Problem
+
+Repeated replacement plans named private source in prose but left resume_from
+unset; replacements therefore started from shared source without retained edits.
+Legacy and in-place prompt paragraphs contradicted each other about uncertainty.
+
+### What was wrong
+
+Earlier coverage proved provider materialization only after manual selection.
+Planning lacked actionable changed-path/conflict offers and pre-dispatch source
+validation. The legacy provisional-uncertain rule leaked into in-place prompts.
+
+### How it was fixed
+
+RepositoryWorkspaces.source_offer reads retained private candidates or interrupted
+snapshots and reports exact references, required grants, conflicts and availability.
+Controller review supplies these offers; senior validation rejects unavailable
+references and incomplete grants through its existing bounded correction path.
+Actual creation retains its independent grant/conflict checks. Prompts require
+explicit references and append the actual mode's publication rule; in-place
+uncertain candidates remain private. No arbitrary multi-candidate recovery, new
+Git tool, automatic reconstruction or OS interface is introduced. Updated primary
+repository/worker guides, boundary and tracker. Setup/usage/settings were reviewed
+and need no new configuration; navigation ownership is unchanged.
+
+### Design principle enforced or reconstructed
+
+Preservation is distinct from publication. The coding agent chooses source and
+replacement scope; the OS enforces ordinary grants and execution certainty. A
+planning preflight cannot authorize stale writes, so materialization rechecks the
+current head. Unavailable reuse needs an actionable bounded correction or blocker.
+
+### Verification
+
+Affected in-place, agent and recovery suites: 38 passed in 104.57 seconds.
+The two new senior-to-replacement cases correct unavailable references or missing
+grants once, read the retained implementation through files.read, and complete
+without reconstructing it or publishing the original uncertain report. Existing
+interrupted-source grant/conflict refusal tests remain passing; added planning
+offer assertions passed separately (2 passed, 2.27 seconds). Ruff, scoped
+whitespace and documentation generation/check passed. No live provider, run-state
+migration or push; unrelated next-iteration edits are excluded.

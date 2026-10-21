@@ -20,6 +20,9 @@ CheckSelection adds agent-only prerequisite/task/acceptance purposes to the gene
 Check schema. Initial setup pins discovered criteria per purpose; explicit user
 criteria cannot be replaced. setup_check_definitions, task_check_definitions and
 acceptance_check_definitions select phase policy without changing OS check execution.
+Senior context includes shared check commands/source previews and read-only
+retained-source offers; these guide explicit dependencies and resume_from grants.
+Mode-specific prompts distinguish in-place private uncertainty from legacy publication.
 
 ## Principles to preserve
 

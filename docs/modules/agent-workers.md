@@ -21,6 +21,9 @@ When a shared check needs preparation, check_preparations names its new owner;
 every other assignment using that check must explicitly depend on that owner.
 Invalid ownership/dependencies receive the existing bounded proposal correction.
 An already prepared contract needs no extra task. Dependencies start only after keep.
+Senior publication instructions distinguish in-place private uncertain candidates
+from isolated provisional ones. Retained-source offers drive explicit resume_from
+and bounded corrections for unavailable source or incomplete replacement grants.
 
 ## Principles to preserve
 
