@@ -95,14 +95,138 @@ function artifactLinks(parent,value){
  if(refs.size){const links=element("div",undefined,"record-links");for(const ref of refs.values())links.append(buttonLink("Artifact "+ref.digest.slice(7,19),()=>inspectArtifact(ref)));parent.append(links)}
 }
 async function inspectArtifact(ref){
- const back=drawerRestore,run=current,request=++inspection;
+ const back=drawerRestore,run=current,request=++inspection,document=savedDocument;
  try{
-  let text;
-  if(savedDocument){const item=(savedDocument.artifacts||[]).find(row=>row.digest===ref.digest);if(!item||item.error)throw Error(item?.error||"Artifact not retained in this snapshot.");text=new TextDecoder().decode(Uint8Array.from(atob(item.data),c=>c.charCodeAt(0)))}
-  else text=(await api("/api/artifact?"+new URLSearchParams({run,digest:ref.digest}))).text;
-  if(current!==run||request!==inspection)return;
+  const text=await contextArtifact(ref,{run,document});
+  if(current!==run||request!==inspection||document!==savedDocument)return;
   const box=openDrawer("Artifact",ref.digest,null,back);box.append(element("pre",text));
- }catch(exc){if(current===run&&request===inspection)error(exc.message)}
+ }catch(exc){if(current===run&&request===inspection&&document===savedDocument)error(exc.message)}
+}
+async function contextRecord(key,source){
+ if(source.document){
+  if(!Object.hasOwn(source.document.records||{},key))throw Object.assign(Error("Record not retained: "+key),{status:404});
+  return {key,value:source.document.records[key],revision:source.document.record_revisions?.[key]};
+ }
+ return api("/api/record?"+new URLSearchParams({run:source.run,key}));
+}
+async function contextArtifact(ref,source){
+ if(!/^sha256:[0-9a-f]{64}$/.test(ref?.digest||""))throw Error("Invalid artifact reference");
+ if(!source.document)return (await api("/api/artifact?"+new URLSearchParams({run:source.run,digest:ref.digest}))).text;
+ const row=(source.document.artifacts||[]).find(item=>item.digest===ref.digest);
+ if(!row||row.error||typeof row.data!=="string")throw Error(row?.error||"Artifact not retained in this snapshot.");
+ return new TextDecoder().decode(Uint8Array.from(atob(row.data),c=>c.charCodeAt(0)));
+}
+function contextOperations(){
+ if(!savedDocument?.records)return osState?.operations||[];
+ const records=savedDocument.records;
+ return Object.entries(records).filter(([key])=>key.startsWith("effect/")).map(([key,effect])=>{
+  const request=effect.request||{},ext=request.extensions||{},id=request.operation_id;
+  return {key,operation_id:id,process_id:request.scope?.process_id,state:effect.state,kind:request.payload?.kind,
+   created_at:request.created_at,logical_step_id:request.logical_step_id,parent_operation_id:request.causal_parent_ref,
+   model_retry:ext["runtime/model-retry"],output_retry:ext["runtime/output-retry"],context_compaction:!!ext["runtime/context-compaction"],
+   model_retry_outcome:records["model-retry-outcome/"+id]?.result_operation_id,
+   output_retry_outcome:records["output-retry-outcome/"+id]?.operation_id};
+ });
+}
+const modelOperation=row=>["model_query","agent_job"].includes(row.kind);
+const contextOrder=(a,b)=>(a.created_at||"").localeCompare(b.created_at||"")||(a.operation_id||"").localeCompare(b.operation_id||"");
+function contextInvocations(rows,pid){
+ const selected=rows.filter(row=>row.process_id===pid&&modelOperation(row)),map=new Map(selected.map(row=>[row.operation_id,row])),groups=new Map();
+ function root(row,visited=new Set()){
+  if(visited.has(row.operation_id))throw Error("Retry provenance cycle");
+  const next=new Set([...visited,row.operation_id]),roots=new Set();
+  for(const marker of [row.model_retry,row.output_retry])if(marker){
+   if(typeof marker!=="object"||!marker.root_operation_id||!marker.previous_operation_id)throw Error("Incomplete retry provenance");
+   for(const id of [marker.root_operation_id,marker.previous_operation_id]){
+    const parent=map.get(id);if(!parent||parent.context_compaction)throw Error("Missing or cross-process retry provenance");
+    roots.add(root(parent,next));
+   }
+  }
+  if(roots.size>1)throw Error("Conflicting retry roots");
+  return roots.size?[...roots][0]:row.operation_id;
+ }
+ for(const row of selected){
+  let id=row.operation_id,issue=null;
+  if(!row.context_compaction)try{id=root(row)}catch(exc){issue=exc.message}
+  if(!groups.has(id))groups.set(id,{id,attempts:[],helper:!!row.context_compaction,issue});
+  const group=groups.get(id);group.attempts.push(row);if(issue)group.issue=issue;
+ }
+ for(const group of groups.values()){
+  group.attempts.sort(contextOrder);const ids=new Set(group.attempts.map(row=>row.operation_id));
+  const outstanding=group.attempts.filter(row=>!settledOperation(row.state));
+  let effective=map.get(group.id),visited=new Set(),hasOutcome=false;
+  while(effective){
+   if(visited.has(effective.operation_id)){group.issue="Retry outcome cycle";effective=null;break}
+   visited.add(effective.operation_id);
+   const next=effective.output_retry_outcome||effective.model_retry_outcome;
+   if(!next||next===effective.operation_id)break;
+   hasOutcome=true;
+   if(!ids.has(next)){group.issue="Retry outcome unavailable in this invocation";effective=null;break}
+   effective=map.get(next);
+  }
+  group.selected=outstanding.at(-1)||(hasOutcome?effective:null)||group.attempts.at(-1);
+  group.outstanding=outstanding.length;group.latest=group.attempts.at(-1);
+ }
+ return [...groups.values()].sort((a,b)=>contextOrder(a.latest,b.latest));
+}
+async function showMemory(pid,operationId=null,choice=null,back=drawerRestore){
+ const rows=contextOperations(),groups=contextInvocations(rows,pid),ordinary=groups.filter(group=>!group.helper);
+ const preferred=ordinary.filter(group=>group.outstanding).at(-1)||ordinary.at(-1);
+ const selected=operationId?rows.find(row=>row.operation_id===operationId&&row.process_id===pid&&modelOperation(row)):preferred?.selected;
+ const box=openDrawer("Memory / context",pid+" · retained invocation input",()=>showMemory(pid,selected?.operation_id,choice,back),back);
+ const source={run:current,document:savedDocument,generation:inspection},valid=()=>source.run===current&&source.document===savedDocument&&source.generation===inspection;
+ paragraph(box,"Scope","Retained explicit invocation input, not hidden reasoning, provider KV state or every record the process could read. Completed processes show their last retained invocation.");
+ if(!selected){paragraph(box,"Context",groups.length?"No caller invocation retained. Compaction helper calls are separately inspectable.":"No model context recorded for this process.");for(const group of groups)box.append(buttonLink("Compaction helper "+group.id,()=>showMemory(pid,group.id,null,back)));return}
+ const chooser=element("select");chooser.setAttribute("aria-label","Invocation and retry attempt");
+ for(const group of groups)for(const attempt of group.attempts){const option=element("option",(group.helper?"Compaction helper · ":"Invocation "+group.id+" · ")+attempt.operation_id+" · "+attempt.state);option.value=attempt.operation_id;chooser.append(option)}
+ chooser.value=selected.operation_id;chooser.onchange=()=>showMemory(pid,chooser.value,null,back);box.append(chooser);
+ const outstanding=ordinary.filter(group=>group.outstanding).length;
+ if(outstanding>1)paragraph(box,"Outstanding invocations",outstanding+" invocations have outstanding attempts; select either explicitly.");
+ if(preferred?.selected.operation_id!==selected.operation_id)paragraph(box,"Other retained work","A newer or outstanding invocation is available in the selector. Your selected attempt is preserved.");
+ const group=groups.find(group=>group.attempts.some(row=>row.operation_id===selected.operation_id));
+ if(group?.issue)paragraph(box,"Provenance issue",group.issue+"; this attempt remains separately inspectable.");
+ if(selected.context_compaction)paragraph(box,"Helper call","OS context compaction helper, separate from the caller invocation.");
+ paragraph(box,"Capture times","OS list: "+stamp(osState?.captured_at)+" · details fetched: "+stamp(new Date().toISOString())+". Separate live reads are not one atomic snapshot.");
+ const id=selected.operation_id,keys=[selected.key||"effect/"+id,"context-prepared/"+id,"context-receipt/"+id];
+ const results=await Promise.allSettled(keys.map(key=>contextRecord(key,source)));
+ if(!valid())return;
+ const values=results.map((result,index)=>{if(result.status==="fulfilled")return result.value.value;if(result.reason.status!==404)paragraph(box,"Record load failed: "+keys[index],result.reason.message);return null});
+ const [effect,prepared,standalone]=values,request=effect?.request;
+ if(!request){paragraph(box,"Context","Selected effect unavailable; refresh details or inspect its raw record.");return}
+ if(request.operation_id!==id||request.scope?.process_id!==pid){paragraph(box,"Identity mismatch","Effect identity does not match the selected operation/process. Inspect raw records.");return}
+ const original=request.payload?.context,receipt=prepared?.receipt||standalone,effective=prepared?.context;
+ const matched=!!effective&&!!receipt&&receipt.context_ref===original?.view_id&&receipt.prepared_context_ref===effective.view_id;
+ if(receipt&&receipt.context_ref!==original?.view_id)paragraph(box,"Receipt identity mismatch","Receipt names another original context; inspect raw records.");
+ if(effective&&!matched)paragraph(box,"Identity mismatch","Prepared context and embedded receipt do not match this original input; showing original input. Inspect raw records.");
+ if(prepared&&standalone&&["context_ref","prepared_context_ref","prepared_digest"].some(key=>prepared.receipt?.[key]!==standalone[key]))paragraph(box,"Receipt discrepancy","Standalone receipt differs from the prepared record's embedded receipt. The embedded receipt identifies that prepared view.");
+ const useEffective=matched&&choice!=="original",context=useEffective?effective:original;
+ const views=element("div",undefined,"record-links");
+ if(matched)views.append(buttonLink("Effective prepared input",()=>showMemory(pid,id,"effective",back)));
+ views.append(buttonLink("Original supplied input",()=>showMemory(pid,id,"original",back)));box.append(views);
+ paragraph(box,"Selected input",useEffective?"Effective prepared input":"Original supplied input"+(!matched?" · prepared input unavailable or invalid":""));
+ paragraph(box,"Operation",id+" · step "+(request.logical_step_id||"unrecorded")+" · "+(effect.state||"unrecorded")+" · created "+stamp(request.created_at));
+ const submitted=(effect.result?.extensions?.["polyinference/attempted-backend"]||effect.attempted_backend||{}).submitted;
+ paragraph(box,"Submission",submitted===true?"Submission recorded; a dispatch marker does not prove remote receipt":submitted===false?"Recorded as not submitted":"Submission evidence unavailable");
+ if(effect.state==="uncertain")paragraph(box,"Execution certainty","Termination remains unknown; preparation and submission do not establish completion.");
+ if(receipt){
+  paragraph(box,"Measured adapter input",`Original ${receipt.original_bytes??"?"} · prepared ${receipt.submitted_bytes??"?"} · required ${receipt.required_bytes??"?"} · allowance ${receipt.input_allowance??"?"} · ${receipt.unit||"unit unrecorded"}. Byte bound, not provider tokenizer usage. Prepared size does not prove submission.`);
+  disclosure(box,"Preparation receipt & policy",receipt);
+  for(const summary of receipt.summaries||[]){const section=paragraph(box,"Summary provenance",summary.part_id||"Derived context");artifactLinks(section,summary)}
+  for(const helper of receipt.compaction_operations||[]){const row=rows.find(row=>row.operation_id===helper);box.append(row?buttonLink("Compaction helper "+helper,()=>showMemory(row.process_id,helper,null,()=>showMemory(pid,id,choice,back))):recordLink("effect/"+helper,"Compaction helper record "+helper))}
+ }else paragraph(box,"Preparation","No preparation receipt retained. Original input remains inspectable.");
+ paragraph(box,"Representation limit","Context parts omit some adapter-added tools, schemas, protocol instructions and provider framing. This is not a complete wire dump.");
+ if(!context||!Array.isArray(context.parts))paragraph(box,"Parts","No valid ContextView parts retained.");
+ for(const [index,part] of (Array.isArray(context?.parts)?context.parts:[]).entries()){
+  const section=element("details");section.append(element("summary",(index+1)+" · "+(part.part_id||"unnamed")+" · "+(part.part_kind||"unknown")+(!useEffective&&(receipt?.omitted_refs||[]).includes(part.part_id)?" · omitted by preparation":"")));
+  disclosure(section,"Part metadata",{part_id:part.part_id,part_kind:part.part_kind,source_ref:part.source_ref,trust:part.trust,required:part.required,compactable:part.compactable,call_id:part.call_id,artifact:part.content,derived_from:part.derived_from});
+  const load=buttonLink("Read full content",async()=>{load.disabled=true;try{const text=await contextArtifact(part.content,source);if(valid())section.append(element("pre",text))}catch(exc){if(valid())section.append(element("p","Content unavailable: "+exc.message))}finally{if(valid())load.disabled=false}});section.append(load);artifactLinks(section,part.content);box.append(section);
+  for(const ref of part.derived_from||[])if(typeof ref==="string"&&/^sha256:[0-9a-f]{64}$/.test(ref))section.append(buttonLink("Derived from "+ref,()=>inspectArtifact({digest:ref})));
+ }
+ const refs=paragraph(box,"Referenced memory snapshots","");
+ const index=new Set((osState?.record_index||[]).map(row=>row.key));
+ for(const ref of context?.memory_snapshot_refs||[]){const key=typeof ref==="string"?ref:null;refs.append(key&&(source.document?Object.hasOwn(source.document.records||{},key):index.has(key))?recordLink(key):element("pre",pretty(ref)))}
+ if(!(context?.memory_snapshot_refs||[]).length)refs.append(element("p","None declared."));
+ for(const key of keys)box.append(recordLink(key));
 }
 function showRecords(){
  if(!osState)return;
@@ -135,7 +259,7 @@ function showProcess(pid){
  const box=openDrawer(pid+" · "+(pid==="controller"?"controller":process?.role||"process"),"Runtime state captured "+stamp(osState?.captured_at),()=>showProcess(pid));
  if(process){
   paragraph(box,"Activity",processActivity(process));const facts=element("div",undefined,"detail-facts");facts.append(stateBadge(process.state),element("span",process.status?.phase||""));box.append(facts);
-  const links=element("div",undefined,"record-links");links.append(recordLink(process.key,"Status"),recordLink("process-spec/"+pid,"Specification & limits"));box.append(links);
+  const links=element("div",undefined,"record-links");links.append(recordLink(process.key,"Status"),recordLink("process-spec/"+pid,"Specification & limits"),buttonLink("Memory / context",()=>showMemory(pid,null,null,()=>showProcess(pid))));box.append(links);
   const task=agentTasks.find(row=>row.process_id===pid);if(task)box.append(buttonLink("Open task: "+task.id,()=>showTask(task.key)));
   const effects=(osState.operations||[]).filter(row=>row.process_id===pid&&!settledOperation(row.state));for(const effect of effects)box.append(buttonLink((effect.capability||effect.kind)+" · "+effect.state,()=>showOperation(effect)));
   disclosure(box,"Resources, continuation & control",process);
@@ -150,6 +274,7 @@ function showOperation(row,back=drawerRestore){
  box.append(buttonLink("Inspect full operation record",()=>inspectRecord(row.key)),element("span"," · "),buttonLink("Open process",()=>showProcess(row.process_id)));
  if(row.parent_operation_id){const parent=osState?.operations.find(item=>item.operation_id===row.parent_operation_id);if(parent)box.append(element("span"," · "),buttonLink("Parent native job",()=>showOperation(parent)))}
  if(row.native_diagnostics)disclosure(box,"Native transport diagnostics",row.native_diagnostics);
+ if(modelOperation(row))box.append(buttonLink("Memory / context",()=>showMemory(row.process_id,row.operation_id,null,()=>showOperation(row,back))));
 }
 function showTask(key){
  const task=agentTasks.find(row=>row.key===key);if(!task)return;

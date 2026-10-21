@@ -13,6 +13,8 @@ The OS measures prepared adapter input and can derive a smaller view under calle
 ContextPolicy resolves defaults, process preferences and request overrides.
 `auto_deal_context` permits optional-group omission; `auto_compaction` separately
 permits eligible summaries. Hard bounds always apply, including manual mode.
+The OS Memory / context inspector exposes retained originals, prepared views,
+receipts and helper provenance without changing this service or canonical memory.
 
 ## Principles to preserve
 

@@ -28,14 +28,17 @@ snapshots retain their original evidence and use the same cautious rendering.
 - Distinguish live, historical, missing and pruned evidence.
 - Snapshots contain artifact bytes, not private Git stores or a restorable backup.
 - Observer/archive failures never replace primary outcomes.
-- Effective-context visibility remains MEM-01; original prompts may differ from prepared views.
+- Memory / context reads original/prepared views and receipts by exact operation identity.
+- Retry roots/outcomes group attempts; compaction helpers never replace caller input.
+- Node prompts label their origin, retain originals and separate native transport observations.
+- Load artifact text on demand; discard stale reads/errors after navigation or close.
 
 ## Verification and related reading
 
 [OS monitor](../../tests/test_ui_os.py), [agent monitor](../../tests/test_ui_agents.py),
 [history](../../tests/test_history.py), [costs](../../tests/test_costs.py) and [frontend](../../tests/ui_start.test.cjs).
 
-[Archives](../guides/archives.md) · [Memory inspector proposal](../../development-docs/current-iter-issues.md#os-memory-context-inspector).
+[Archives](../guides/archives.md) · [Memory inspector design and coverage](../../development-docs/current-iter-issues.md#os-memory-context-inspector).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).

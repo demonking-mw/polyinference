@@ -72,6 +72,49 @@ def activity(events, records):
     return rows
 
 
+def context_metadata(request, effect, records):
+    """Small, artifact-free relationships for live and saved invocation inspection."""
+    oid = request.get("operation_id")
+    extensions = request.get("extensions") or {}
+    attempted = ((effect.get("result") or {}).get("extensions") or {}).get(
+        "polyinference/attempted-backend", effect.get("attempted_backend") or {})
+    return {
+        "logical_step_id": request.get("logical_step_id"),
+        "model_retry": extensions.get("runtime/model-retry"),
+        "output_retry": extensions.get("runtime/output-retry"),
+        "context_compaction": bool(extensions.get("runtime/context-compaction")),
+        "original_context_ref": request.get("payload", {}).get("context", {}).get("view_id"),
+        "prepared_record": "context-prepared/" + str(oid) if "context-prepared/" + str(oid) in records else None,
+        "receipt_record": "context-receipt/" + str(oid) if "context-receipt/" + str(oid) in records else None,
+        "submitted": attempted.get("submitted"),
+        "model_retry_outcome": records.get("model-retry-outcome/" + str(oid), {}).get("result_operation_id"),
+        "output_retry_outcome": records.get("output-retry-outcome/" + str(oid), {}).get("operation_id"),
+    }
+
+
+def invocation_root(oid, operations, visiting=None):
+    """Follow only explicit retry edges; malformed chains remain separate."""
+    visiting = set() if visiting is None else visiting
+    if oid in visiting:
+        raise ValueError("Retry provenance cycle")
+    row = operations[oid]
+    visiting = visiting | {oid}
+    roots = set()
+    for marker in (row.get("model_retry"), row.get("output_retry")):
+        if marker is None:
+            continue
+        if not isinstance(marker, dict) or not marker.get("root_operation_id") or not marker.get("previous_operation_id"):
+            raise ValueError("Incomplete retry provenance")
+        for reference in (marker["root_operation_id"], marker["previous_operation_id"]):
+            parent = operations.get(reference)
+            if not parent or parent["process_id"] != row["process_id"] or parent.get("context_compaction"):
+                raise ValueError("Missing or cross-process retry provenance")
+            roots.add(invocation_root(reference, operations, visiting))
+    if len(roots) > 1:
+        raise ValueError("Conflicting retry roots")
+    return next(iter(roots), oid)
+
+
 def runtime_view(snapshot, configuration, running=False):
     records, events = snapshot["records"], snapshot["events"]
 
@@ -91,6 +134,7 @@ def runtime_view(snapshot, configuration, running=False):
             "conflict_keys": request.get("conflict_keys", []), "diagnostic": row.get("diagnostic"),
             "native_diagnostics": row.get("native_diagnostics") or
             (row.get("result") or {}).get("extensions", {}).get("polyinference/native-diagnostics"),
+            **context_metadata(request, row, records),
         })
     reservations = group("reservation/")
     lanes = []

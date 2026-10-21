@@ -22,7 +22,8 @@ Snapshot viewing makes no provider requests. Picker observations are not accepta
 - Linux/WSL backend paths must not become Windows paths.
 - Selecting a project must not overwrite unrelated existing source.
 - Reporting observes durable state without controlling or replacing it.
-- SIM-01 and MEM-01 are proposals, not implemented controls.
+- Memory / context is read-only, uses existing record/artifact endpoints, and works offline.
+- SIM-01 remains a proposed launch preset until its separate implementation.
 
 ## Verification and related reading
 

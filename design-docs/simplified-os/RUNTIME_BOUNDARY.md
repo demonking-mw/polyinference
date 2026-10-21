@@ -329,6 +329,11 @@ blocks. Runtime defaults can be overridden per process and request. Manual,
 automatic and hybrid agents use the same resource and authority guards. Original
 memory/artifacts are immutable, summary calls inherit the same binding/grants,
 and canonical memory remains agent-owned.
+The read-only OS Memory / context drawer joins exact operation IDs to retained
+original/prepared views and receipts. Retry provenance groups caller attempts;
+compaction helpers remain separate. Live and saved node prompts label their
+origin and expose original/native observations separately. Prepared bytes and
+dispatch markers never establish remote receipt, termination or hidden state.
 
 Confirmed output cutoffs and detectable completed overages use bounded OS
 smaller-response recovery under the declared protocol. Feedback is remeasured;

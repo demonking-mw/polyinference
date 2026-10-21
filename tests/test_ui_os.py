@@ -5,11 +5,88 @@ import base64
 import hashlib
 import json
 
+import pytest
+
 from polyinference.runtime.exclusive import Exclusive
 from polyinference.runtime.inference import Admission
 from polyinference.runtime.storage import Records
 from polyinference.ui import TestUI
 from polyinference.ui_os import activity, artifact_references, export_artifacts, read_snapshot, runtime_view
+
+
+@pytest.mark.parametrize("mismatch", [False, True])
+def test_node_prompt_preserves_original_and_prepared_nested_retry_provenance(tmp_path, mismatch):
+    from polyinference.snapshots import detail
+    from polyinference.ui_os import invocation_root
+
+    root = tmp_path / "artifacts"
+    root.mkdir()
+
+    def artifact(text):
+        raw = text.encode()
+        name = hashlib.sha256(raw).hexdigest()
+        (root / name).write_bytes(raw)
+        return {"digest": "sha256:" + name, "artifact_id": "sha256:" + name, "size_bytes": len(raw)}
+
+    original = {"view_id": "original", "parts": [{"part_id": "notes", "part_kind": "memory", "trust": "user",
+                 "content": artifact("Full original memory <script> & café")}], "memory_snapshot_refs": ["opaque"]}
+    effective = {"view_id": "prepared", "parts": [{"part_id": "notes", "part_kind": "summary", "trust": "model",
+                  "content": artifact("Derived memory summary")}], "memory_snapshot_refs": ["opaque"]}
+    records = {}
+    for index, oid in enumerate(("root", "output", "transport", "helper")):
+        extensions = {}
+        if oid in {"output", "transport"}:
+            extensions["runtime/output-retry"] = {"root_operation_id": "root", "previous_operation_id": "root"}
+        if oid == "transport":
+            extensions["runtime/model-retry"] = {"root_operation_id": "output", "previous_operation_id": "output"}
+        if oid == "helper":
+            extensions["runtime/context-compaction"] = True
+        records["effect/" + oid] = {"state": "succeeded" if oid in {"transport", "helper"} else "failed",
+            "request": {"operation_id": oid, "scope": {"process_id": "generic"}, "created_at": str(index),
+                        "logical_step_id": "model-0" if oid == "root" else oid,
+                        "extensions": extensions, "payload": {"kind": "agent_job", "context": original}}}
+    receipt = {"context_ref": "wrong" if mismatch else "original", "prepared_context_ref": "prepared"}
+    records["context-prepared/transport"] = {"context": effective, "receipt": receipt}
+    records["context-receipt/transport"] = receipt
+    records["output-retry-outcome/root"] = {"operation_id": "transport"}
+    records["model-retry-outcome/output"] = {"result_operation_id": "transport"}
+    response = {"text": "done", "events": [{"params": {"item": {"type": "userMessage", "content": [
+        {"text": json.dumps([{"role": "user", "content": "Native framing evidence"}])}]}}}]}
+    records["effect/transport"]["result"] = {"output_refs": [artifact(json.dumps(response))],
+        "extensions": {"polyinference/attempted-backend": {"submitted": True}}}
+    node = {"process_id": "generic", "started_at": "0", "finished_at": "9", "logical_step": 0, "model_call": True}
+    result = detail(tmp_path, node, records)
+    assert result["selected_operation_id"] == "transport"
+    assert [o["id"] for o in result["operations"]] == ["root", "output", "transport"]
+    last = result["operations"][-1]
+    assert last["prompt_origin"] == ("original_supplied" if mismatch else "effective_prepared")
+    assert last["prompt"][0]["content"] == ("Full original memory <script> & café" if mismatch else "Derived memory summary")
+    assert last["original_prompt"][0]["content"].startswith("Full original")
+    assert last["native_observed_prompt"][0]["content"] == "Native framing evidence"
+    snapshot = {"records": records, "events": [], "revisions": dict.fromkeys(records, 1), "captured_at": "now"}
+    operations = runtime_view(snapshot, {})["operations"]
+    mapped = {o["operation_id"]: o for o in operations}
+    assert invocation_root("transport", mapped) == "root"
+    assert mapped["transport"]["prepared_record"] == "context-prepared/transport"
+    assert mapped["transport"]["submitted"] is True
+    assert mapped["root"]["submitted"] is None
+    assert mapped["helper"]["context_compaction"]
+    assert all("parts" not in o for o in operations)
+    mapped["root"]["model_retry"] = {"root_operation_id": "transport", "previous_operation_id": "transport"}
+    with pytest.raises(ValueError, match="cycle"):
+        invocation_root("transport", mapped)
+
+
+def test_missing_prompt_artifact_does_not_hide_other_node_evidence(tmp_path):
+    from polyinference.snapshots import detail
+
+    effect = {"state": "failed", "request": {"operation_id": "x", "scope": {"process_id": "p"},
+              "created_at": "0", "logical_step_id": "model-0", "payload": {"kind": "model_query", "context": {
+                  "parts": [{"part_kind": "memory", "content": {"digest": "invalid"}}]}}}}
+    result = detail(tmp_path, {"process_id": "p", "started_at": "0", "finished_at": None,
+                              "logical_step": 0, "model_call": True}, {"effect/x": effect})
+    assert "Artifact unavailable" in result["operations"][0]["prompt"][0]["content"]
+    assert result["operations"][0]["status"] == "failed"
 
 
 async def test_admission_history_tracks_wait_hold_and_cancellation(tmp_path):

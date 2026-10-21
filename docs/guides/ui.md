@@ -11,6 +11,7 @@
 | Other nodes | Inspect state transitions, inputs, outputs and recorded operations. |
 | Steering | Send new instructions while the selected run is active. |
 | OS | Kernel health, active/finished processes, inference capacity, exclusive resources, private workspaces, outstanding operations and recovery diagnostics. Detailed budgets, reservation history and kernel trace expand on demand. |
+| Memory / context | Select an OS process or model operation. Inspect original and effective prepared input, individual retry attempts, ordered parts, opaque memory references, preparation receipts and summary provenance. Full artifact text loads on demand. |
 | Agents (default) | Current workflow/plan, searchable task queue and full history, separate execution/verdict/senior review, shared notes/hazards, and project acceptance/output. Select a task or senior query to inspect evidence and phase-grouped execution nodes. |
 | Inspect records | Open the shared inspector drawer to search every retained durable record, including schedule contracts, grants and workspace manifests. Artifact links open the retained text. |
 | Save run · JSON | Download the selected run's full diagnostic snapshot, including records/revisions, retained events, checkpoints and exact artifact bytes. |
@@ -38,6 +39,15 @@ are captured separately, so a running workload can advance during capture. The
 snapshot includes all retained diagnostic records and artifacts, including binary
 artifacts encoded as base64. It does not contain private Git objects and is not a
 runnable OS backup. Artifact read/integrity errors are listed in the snapshot.
+
+Memory / context defaults to the newest outstanding caller invocation, otherwise
+its latest retained outcome; compaction helpers stay separate. An operation opens
+that exact attempt. Refresh preserves selection; the selector exposes other work.
+Prepared input is labelled only when its embedded receipt matches; otherwise the
+drawer explicitly shows original input. Byte bounds do not prove submission or
+provider token usage. This view omits hidden reasoning, KV state and some adapter
+framing. Node prompts label prepared/original origin and separate native transport
+observations. Saved JSON uses retained records/artifacts entirely offline.
 
 Steering closes new task starts immediately. Workers that have already started,
 including workers waiting for a gate or model slot, finish their original

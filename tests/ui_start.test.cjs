@@ -204,6 +204,134 @@ test('paused run shows its original operation diagnostic instead of an opaque bl
 });
 
 const textOf = element => [element.textContent, ...element.children.map(textOf)].join(' ');
+const descendants = element => [element,...element.children.flatMap(descendants)];
+
+function contextFixture() {
+  const artifacts=[];
+  function part(id,kind,text,extra={}) {
+    const digest='sha256:'+require('node:crypto').createHash('sha256').update(text).digest('hex');
+    artifacts.push({digest,data:Buffer.from(text).toString('base64')});
+    return {part_id:id,part_kind:kind,trust:'user',required:false,compactable:true,
+      content:{artifact_id:digest,digest,size_bytes:Buffer.byteLength(text)},...extra};
+  }
+  const instruction=part('instruction','instruction','Literal <img onerror=evil> café / 中文',{required:true,trust:'application'});
+  const call=part('call','tool_call','tool invocation',{call_id:'pair'}), result=part('result','tool_result','tool result',{call_id:'pair'});
+  const memory=part('notes','memory','Original memory '.repeat(1500));
+  const summary=part('notes','summary','Effective summary',{trust:'model',derived_from:[memory.content.digest]});
+  const original={view_id:'original',parts:[instruction,call,result,memory],memory_snapshot_refs:['opaque-handle','memory/generic']};
+  const effective={view_id:'prepared',parts:[instruction,summary],memory_snapshot_refs:original.memory_snapshot_refs};
+  const receipt={context_ref:'original',prepared_context_ref:'prepared',original_bytes:40000,submitted_bytes:900,
+    required_bytes:500,input_allowance:1000,unit:'utf8_bytes_conservative_token_bound',omitted_refs:['call','result'],
+    summaries:[{part_id:'notes',source:memory.content,summary:summary.content}],compaction_operations:['helper'],prepared_digest:'wire'};
+  const records={'memory/generic':{summary:'Agent-owned memory'}};
+  for(const [index,id] of ['root','output','transport','helper'].entries()) {
+    const extensions={};
+    if(['output','transport'].includes(id))extensions['runtime/output-retry']={root_operation_id:'root',previous_operation_id:'root'};
+    if(id==='transport')extensions['runtime/model-retry']={root_operation_id:'output',previous_operation_id:'output'};
+    if(id==='helper')extensions['runtime/context-compaction']=true;
+    records['effect/'+id]={state:id==='transport'||id==='helper'?'succeeded':'failed',request:{operation_id:id,
+      scope:{process_id:'generic'},logical_step_id:'model-'+index,created_at:'2026-10-21T12:00:0'+index+'Z',extensions,
+      payload:{kind:'model_query',context:original}}};
+  }
+  records['effect/root'].attempted_backend={submitted:false};
+  records['effect/transport'].result={extensions:{'polyinference/attempted-backend':{submitted:true}}};
+  records['context-prepared/transport']={context:effective,receipt};
+  records['context-receipt/transport']=receipt;
+  records['context-receipt/root']={...receipt,submitted_bytes:40000,compaction_operations:[],summaries:[],omitted_refs:[]};
+  records['output-retry-outcome/root']={operation_id:'transport'};
+  records['model-retry-outcome/output']={result_operation_id:'transport'};
+  return {records,artifacts,processes:[]};
+}
+
+test('context selection follows nested retries, excludes helpers and isolates malformed provenance', async () => {
+  const app=await ui(); app.context.snapshot=contextFixture();
+  const groups=vm.runInContext('savedDocument=snapshot;contextInvocations(contextOperations(),"generic")',app.context);
+  assert.equal(groups.length,2); assert.equal(groups[0].selected.operation_id,'transport');
+  assert.equal(groups[1].helper,true);
+  vm.runInContext('delete snapshot.records["output-retry-outcome/root"];delete snapshot.records["model-retry-outcome/output"];',app.context);
+  const noOutcome=vm.runInContext('contextInvocations(contextOperations(),"generic")',app.context);
+  assert.equal(noOutcome[0].selected.operation_id,'transport');
+  app.context.rows=JSON.parse(JSON.stringify(vm.runInContext('contextOperations()',app.context)));
+  app.context.rows.push({operation_id:'other',process_id:'different',kind:'model_query',state:'active',created_at:'9'});
+  app.context.rows.push({operation_id:'bad',process_id:'generic',kind:'model_query',state:'uncertain',created_at:'8',model_retry:{root_operation_id:'other',previous_operation_id:'other'}});
+  let projected=vm.runInContext('contextInvocations(rows,"generic")',app.context);
+  assert.equal(projected.at(-1).id,'bad'); assert.match(projected.at(-1).issue,/cross-process/);
+  app.context.rows[0].model_retry={root_operation_id:'transport',previous_operation_id:'transport'};
+  projected=vm.runInContext('contextInvocations(rows,"generic")',app.context);
+  assert.ok(projected.some(group=>/cycle/.test(group.issue)));
+});
+
+test('saved context drawer is lazy, literal, provenance-aware and offline with original fallback', async () => {
+  const app=await ui(); app.context.snapshot=contextFixture(); app.context.runtime=osFixture();
+  vm.runInContext('savedDocument=snapshot;current="snapshot:generic";osState=runtime;',app.context);
+  app.setHandler(()=>{throw Error('Saved context must stay offline')});
+  await vm.runInContext('showMemory("generic")',app.context);
+  let body=app.elements.get('osInspectorBody'), text=textOf(body);
+  assert.match(text,/Effective prepared input/); assert.match(text,/Submission recorded/);
+  assert.match(text,/prepared 900/); assert.doesNotMatch(text,/Original memory Original/);
+  assert.match(text,/Summary provenance/); assert.match(text,/opaque-handle/);
+  let load=descendants(body).find(node=>node.textContent==='Read full content'); await load.onclick();
+  assert.match(textOf(body),/Literal <img onerror=evil> café \/ 中文/);
+  await vm.runInContext('showMemory("generic","transport","original")',app.context);
+  body=app.elements.get('osInspectorBody'); assert.match(textOf(body),/omitted by preparation/);
+  const loads=descendants(body).filter(node=>node.textContent==='Read full content'); await loads.at(-1).onclick();
+  assert.match(textOf(body),new RegExp('Original memory '.repeat(100)));
+  await vm.runInContext('showMemory("generic","root")',app.context);
+  text=textOf(app.elements.get('osInspectorBody'));
+  assert.match(text,/Original supplied input · prepared input unavailable/); assert.match(text,/Recorded as not submitted/);
+  assert.doesNotMatch(text,/Selected input Effective prepared input/);
+  await vm.runInContext('showMemory("empty")',app.context);
+  assert.match(textOf(app.elements.get('osInspectorBody')),/No model context recorded/);
+});
+
+test('live context refresh preserves attempt, distinguishes absent preparation and keeps errors local', async () => {
+  const app=await ui(); const snapshot=contextFixture(); app.context.snapshot=snapshot; app.context.runtime=osFixture();
+  const rows=vm.runInContext('savedDocument=snapshot;contextOperations()',app.context); app.context.rows=rows;
+  vm.runInContext('savedDocument=null;current="live";osState=runtime;osState.operations=rows;',app.context);
+  let artifacts=0;
+  app.setHandler(url=>{const parsed=new URL(url,'http://fixture');
+    if(parsed.pathname==='/api/artifact'){artifacts++;return response({text:'Downloaded content'})}
+    const key=parsed.searchParams.get('key'); return response(snapshot.records[key]?{value:snapshot.records[key]}:{error:'Absent'},snapshot.records[key]?200:404);
+  });
+  await vm.runInContext('showMemory("generic","root")',app.context);
+  assert.equal(artifacts,0); assert.match(textOf(app.elements.get('osInspectorBody')),/Recorded as not submitted/);
+  snapshot.records['context-prepared/root']={context:snapshot.records['effect/root'].request.payload.context,
+    receipt:{context_ref:'original',prepared_context_ref:'original',submitted_bytes:40000}};
+  await app.elements.get('drawerRefresh').onclick();
+  assert.match(textOf(app.elements.get('osInspectorBody')),/Effective prepared input/);
+  assert.match(app.elements.get('osInspectorMeta').textContent,/generic/);
+  snapshot.records['effect/root'].state='uncertain'; delete snapshot.records['effect/root'].attempted_backend;
+  snapshot.records['context-prepared/root'].receipt.context_ref='mismatch';
+  await app.elements.get('drawerRefresh').onclick();
+  const text=textOf(app.elements.get('osInspectorBody'));
+  assert.match(text,/Identity mismatch/); assert.match(text,/Submission evidence unavailable/); assert.match(text,/Termination remains unknown/);
+  app.setHandler(()=>response({error:'Read failed'},500));
+  await vm.runInContext('showMemory("generic","transport")',app.context);
+  assert.match(textOf(app.elements.get('osInspectorBody')),/Record load failed/);
+});
+
+test('late context records and errors cannot replace drawers after close, Back, selection, run or snapshot changes', async () => {
+  for(const steer of ['close','back','selection','run','snapshot']) {
+    const app=await ui(); app.context.snapshot=contextFixture(); app.context.runtime=osFixture();
+    app.context.rows=vm.runInContext('savedDocument=snapshot;contextOperations()',app.context);
+    vm.runInContext('savedDocument=null;current="live";osState=runtime;osState.operations=rows;',app.context);
+    const pending=deferred(); app.setHandler(()=>pending.promise);
+    const loading=vm.runInContext('showMemory("generic","transport",null,()=>openDrawer("Back target",""))',app.context);
+    if(steer==='close')app.elements.get('closeOSInspector').onclick();
+    if(steer==='back')app.elements.get('drawerBack').onclick();
+    if(steer==='run')vm.runInContext('current="another";openDrawer("New run","")',app.context);
+    if(steer==='snapshot')vm.runInContext('savedDocument=snapshot;openDrawer("Snapshot","")',app.context);
+    if(steer==='selection'){
+      app.setHandler(url=>{const key=new URL(url,'http://fixture').searchParams.get('key');return response({value:app.context.snapshot.records[key]},app.context.snapshot.records[key]?200:404)});
+      await vm.runInContext('showMemory("generic","root")',app.context);
+    }
+    const before=textOf(app.elements.get('osInspectorBody'));
+    pending.resolve(response({error:'Stale error'},500)); await loading;
+    assert.equal(textOf(app.elements.get('osInspectorBody')),before);
+    assert.doesNotMatch(app.elements.get('error').textContent,/Stale error/);
+    if(steer==='close')assert.equal(app.elements.get('osInspector').open,false);
+  }
+});
 
 test('repository facts keep inherited ancestry, private source and accepted contribution distinct', async () => {
   const app = await ui();
@@ -308,7 +436,9 @@ test('two-tab monitor renders all tasks, filters resolved history and opens task
 test('legacy saved snapshots retain Unicode notes and require no live record or artifact requests', async () => {
   const app = await ui({monitoring:true}), fixture = monitorFixture();
   const content = 'Durable note: café / 中文';
-  app.context.snapshot = {records:fixture.records, artifacts:[{digest:'note-kept',data:Buffer.from(JSON.stringify(content)).toString('base64')}]};
+  const digest = 'sha256:'+require('node:crypto').createHash('sha256').update(JSON.stringify(content)).digest('hex');
+  fixture.records['report/kept'].assessment_summary = {digest};
+  app.context.snapshot = {records:fixture.records, artifacts:[{digest,data:Buffer.from(JSON.stringify(content)).toString('base64')}]};
   assert.equal(vm.runInContext('projectTasks(snapshotAgentSource(snapshot).records,snapshotAgentSource(snapshot).texts)[0].comment', app.context), content);
   app.context.runtime = osFixture();
   app.context.snapshot.os = app.context.runtime; app.context.snapshot.processes = [];
@@ -316,7 +446,8 @@ test('legacy saved snapshots retain Unicode notes and require no live record or 
   app.setHandler(() => {throw Error('Offline inspector must not fetch');});
   await vm.runInContext('inspectRecord("report/kept")', app.context);
   assert.match(textOf(app.elements.get('osInspectorBody')), /unresolved/);
-  await vm.runInContext('inspectArtifact({digest:"note-kept"})', app.context);
+  app.context.artifactDigest = digest;
+  await vm.runInContext('inspectArtifact({digest:artifactDigest})', app.context);
   assert.match(textOf(app.elements.get('osInspectorBody')), /café \/ 中文/);
 });
 

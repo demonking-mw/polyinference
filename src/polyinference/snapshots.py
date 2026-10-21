@@ -16,7 +16,14 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from .agent.routing import accounting
 from .costs import run_cost
 from .ui_agents import agent_snapshot
-from .ui_os import artifact_references, export_artifacts, read_snapshot, runtime_view
+from .ui_os import (
+    artifact_references,
+    context_metadata,
+    export_artifacts,
+    invocation_root,
+    read_snapshot,
+    runtime_view,
+)
 
 
 def read_records(state):
@@ -120,30 +127,73 @@ def detail(state, node, records):
     ]
     if node["model_call"]:
         step = "model-" + str(node["logical_step"])
-        matching = [effect for effect in effects if effect["request"]["logical_step_id"] == step]
+        models = {effect["request"]["operation_id"]: {
+            "process_id": node["process_id"], **context_metadata(effect["request"], effect, records)}
+            for effect in effects if effect["request"]["payload"]["kind"] in {"model_query", "agent_job"}}
+        roots = {oid for oid, row in models.items() if row["logical_step_id"] == step and not row["context_compaction"]}
+        selected = set(roots)
+        for oid, row in models.items():
+            if row["context_compaction"]:
+                continue
+            try:
+                if invocation_root(oid, models) in roots:
+                    selected.add(oid)
+            except ValueError:
+                pass
+        matching = [effect for effect in effects if effect["request"]["operation_id"] in selected]
     operations = []
-    for effect in sorted(matching, key=lambda effect: effect["request"]["created_at"]):
+    def text(ref):
+        try:
+            return read_artifact(state, ref)
+        except (ValueError, OSError, TypeError) as exc:
+            return "Artifact unavailable: " + str(exc)
+
+    def messages(context):
+        return [{"role": "system" if part.get("part_kind") == "instruction"
+                 and part.get("trust") in {"application", "user"} else "assistant"
+                 if part.get("part_kind") in {"message", "tool_call"} else "user",
+                 "content": text(part.get("content", {}))} for part in context.get("parts", [])]
+
+    matching.sort(key=lambda effect: (effect["request"]["created_at"], effect["request"]["operation_id"]))
+    selected_operation = None
+    if node["model_call"] and matching:
+        retained = {e["request"]["operation_id"]: e for e in matching}
+        outstanding = [e for e in matching if e["state"] not in {"succeeded", "failed", "cancelled"}]
+        effective_id, visited = next(iter(sorted(roots)), None), set()
+        outcome = None
+        while effective_id in retained and effective_id not in visited:
+            visited.add(effective_id)
+            metadata = models[effective_id]
+            target = metadata["output_retry_outcome"] or metadata["model_retry_outcome"]
+            if not target or target == effective_id:
+                break
+            if target in visited:
+                outcome = None
+                break
+            outcome = target if target in retained else None
+            effective_id = target
+        selected_operation = (outstanding[-1]["request"]["operation_id"] if outstanding else
+                              outcome or matching[-1]["request"]["operation_id"])
+    for effect in matching:
         request = effect["request"]
         payload = request["payload"]
-        prompt = []
-        for part in payload.get("context", {}).get("parts", []):
-            role = (
-                "system"
-                if part["part_kind"] == "instruction" and part["trust"] in {"application", "user"}
-                else "assistant"
-                if part["part_kind"] in {"message", "tool_call"}
-                else "user"
-            )
-            prompt.append({"role": role, "content": read_artifact(state, part["content"])})
+        original = payload.get("context", {})
+        prepared = records.get("context-prepared/" + request["operation_id"], {})
+        effective = prepared.get("context")
+        receipt = prepared.get("receipt", {})
+        identity_ok = bool(effective and receipt.get("context_ref") == original.get("view_id")
+                           and receipt.get("prepared_context_ref") == effective.get("view_id"))
+        prompt = messages(effective if identity_ok else original)
+        native_prompt = None
         response = None
         if effect.get("result"):
             refs = effect["result"]["output_refs"]
             if refs:
-                text = read_artifact(state, refs[0])
+                raw = text(refs[0])
                 try:
-                    response = json.loads(text)
+                    response = json.loads(raw)
                 except ValueError:
-                    response = text
+                    response = raw
         # Codex persists the submitted application messages in its userMessage event.
         if payload["kind"] == "agent_job" and isinstance(response, dict):
             for event in response.get("events", []):
@@ -159,8 +209,8 @@ def detail(state, node, records):
                         isinstance(message, dict) and "role" in message and "content" in message
                         for message in native
                     ):
-                        prompt = native
-        arguments = read_artifact(state, payload["arguments"]) if payload.get("arguments") else None
+                        native_prompt = native
+        arguments = text(payload["arguments"]) if payload.get("arguments") else None
         operations.append(
             {
                 "id": request["operation_id"],
@@ -168,12 +218,17 @@ def detail(state, node, records):
                 "tool": payload.get("capability_id"),
                 "status": effect["state"],
                 "prompt": prompt,
+                "prompt_origin": "effective_prepared" if identity_ok else "original_supplied",
+                "prompt_issue": "Prepared context/receipt identity mismatch" if effective and not identity_ok else None,
+                "original_prompt": messages(original),
+                "native_observed_prompt": native_prompt,
+                "context_compaction": bool(request.get("extensions", {}).get("runtime/context-compaction")),
                 "arguments": arguments,
                 "response": response,
                 "error": effect.get("diagnostic"),
             }
         )
-    return {**node, "operations": operations}
+    return {**node, "operations": operations, "selected_operation_id": selected_operation}
 
 
 def run_summary(metadata, records, configuration, active=False, cost=None):

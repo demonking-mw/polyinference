@@ -89,7 +89,7 @@ let osState=null,savedDocument=null,savedURL=null,inspection=0;
 let activityPage=null,activityRun=null,activityLoading=false;
 const pretty=value=>typeof value==="string"?value:JSON.stringify(value,null,2);
 const element=(tag,text,className)=>{const node=document.createElement(tag);if(text!==undefined)node.textContent=text;if(className)node.className=className;return node};
-async function api(path,options){const response=await fetch(path,options);const data=await response.json();if(!response.ok)throw Object.assign(Error(data.error||"Request failed"),{data});return data}
+async function api(path,options){const response=await fetch(path,options);const data=await response.json();if(!response.ok)throw Object.assign(Error(data.error||"Request failed"),{data,status:response.status});return data}
 function error(message){$("error").textContent=message||""}
 function block(parent,title,value){parent.append(element("h3",title),element("pre",pretty(value)))}
 const number=value=>value===null||value===undefined?"—":Number(value).toLocaleString();
@@ -109,13 +109,13 @@ function showOSDetail(title,meta,value,restore=null){
  const back=drawerRestore,box=openDrawer(title,meta,restore,back);box.append(element("pre",pretty(value)));artifactLinks(box,value);
 }
 async function inspectRecord(key){
- const request=++inspection,run=current;
+ const request=++inspection,run=current,document=savedDocument;
  try{
-  const data=savedDocument?{key,revision:savedDocument.record_revisions?.[key],value:savedDocument.records?.[key]}:await api("/api/record?"+new URLSearchParams({run,key}));
-  if(request!==inspection||run!==current)return;
+  const data=await contextRecord(key,{run,document});
+  if(request!==inspection||run!==current||document!==savedDocument)return;
   showOSDetail(key,"Current retained record · revision "+(data.revision??"unknown"),data.value??"Record unavailable in this snapshot.",()=>inspectRecord(key));
   if(key.startsWith("workspace/")){const grant="workspace-grant/"+key.slice(10);$("osInspectorBody").append(recordLink(grant,"Effective capabilities & workspace grant"))}
- }catch(exc){if(request===inspection&&run===current)error(exc.message)}
+ }catch(exc){if(request===inspection&&run===current&&document===savedDocument)error(exc.message)}
 }
 function inspectEvent(row){++inspection;showOSDetail(row.key,"Transaction #"+row.sequence+" · "+stamp(row.at)+" · historical revision "+row.revision,row.value??{note:"Historical values were not captured by this version of the runtime.",event:row},()=>inspectEvent(row))}
 function duration(start,end){if(!start)return"—";const milliseconds=new Date(end||osState?.captured_at)-new Date(start);if(!Number.isFinite(milliseconds))return"—";const seconds=Math.max(0,milliseconds)/1000;return seconds<60?seconds.toFixed(1)+" s":seconds<3600?Math.floor(seconds/60)+"m "+Math.floor(seconds%60)+"s":Math.floor(seconds/3600)+"h "+Math.floor(seconds%3600/60)+"m"}
@@ -171,7 +171,11 @@ function inspect(data){
  const models=(data.operations||[]).filter(operation=>operation.prompt.length);
  if(models.length){
   for(const operation of models){
-   block(box,"Prompt",operation.prompt.map(message=>message.role.toUpperCase()+"\n"+message.content).join("\n\n"));
+   block(box,"Prompt · "+operation.id+" · "+(operation.prompt_origin||"legacy original/transport origin unrecorded")+(data.selected_operation_id===operation.id?" · selected outcome/attempt":""),operation.prompt.map(message=>message.role.toUpperCase()+"\n"+message.content).join("\n\n"));
+   if(operation.prompt_issue)block(box,"Prompt issue",operation.prompt_issue);
+   if(operation.original_prompt)disclosure(box,"Original supplied input",operation.original_prompt);
+   if(operation.native_observed_prompt)disclosure(box,"Observed native transport messages",operation.native_observed_prompt);
+   if(operation.id)box.append(buttonLink("Memory / context · this attempt",()=>showMemory(data.process_id,operation.id)));
    const response=operation.response;
    let text=response&&typeof response==="object"&&"text" in response?response.text:response||operation.error||"No response was recorded.";
    if(typeof text==="string"){try{text=JSON.parse(text)}catch{}}
@@ -293,6 +297,8 @@ $("inspectIssue").onclick=showRunIssue;
 $("taskSearch").oninput=renderTasks;
 $("inspectController").onclick=()=>showProcess("controller");
 $("closeOSInspector").onclick=()=>{++inspection;$("osInspector").close()};
+$("osInspector").oncancel=()=>{++inspection};
+$("osInspector").onclose=()=>{++inspection};
 $("operationSearch").oninput=renderOperations;$("activitySearch").oninput=renderActivity;$("activityCategory").onchange=renderActivity;
 $("recordSearch").oninput=()=>{recordLimit=250;renderRecords()};
 $("latestActivity").onclick=()=>{activityPage=null;renderActivity()};

@@ -4,6 +4,8 @@ PolyInference pairs a LangGraph coding agent with a small orchestration OS.
 A senior plans and reviews, workers implement, and the runtime records bounded
 model/tool execution. The OS also supports agents that produce artifacts without
 code or Git. The default UI uses Codex for senior work and Anthropic Haiku for workers.
+In the [UI](docs/guides/ui.md), OS processes and model operations expose a read-only
+Memory / context drawer for retained original/prepared input and its provenance.
 
 - [Setup](setup.md) — Linux, WSL, macOS and provider setup.
 - [Use PolyInference](docs/README.md) — runs, UI, CLI, configuration and recovery.

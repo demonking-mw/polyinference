@@ -23,7 +23,8 @@ requested 01:55 start. Baseline cb02d02 was verified on codex/simple-os-v1 with 
 clean working tree before editing. Completion records: item 1, [FIX-0083](FIXES.md#fix-0083);
 item 2, [FIX-0084](FIXES.md#fix-0084); item 3, [FIX-0085](FIXES.md#fix-0085);
 item 4, [FIX-0086](FIXES.md#fix-0086); item 5, [FIX-0088](FIXES.md#fix-0088);
-item 6, [FIX-0089](FIXES.md#fix-0089); item 7, [FIX-0090](FIXES.md#fix-0090).
+item 6, [FIX-0089](FIXES.md#fix-0089); item 7, [FIX-0090](FIXES.md#fix-0090);
+item 8, [FIX-0091](FIXES.md#fix-0091).
 
 | Order | Item | Owning layer and bounded scope |
 | --- | --- | --- |
@@ -357,8 +358,11 @@ claimed as implemented by this documentation task.
 <a id="os-memory-context-inspector"></a>
 ## MEM-01 — Inspect an agent's memory and effective context from the OS — 2026-10-20
 
-Status: planned for the current version; research/design only. Implementation
-remains open. Initial investigation: [FIX-0062](FIXES.md#fix-0062).
+Status: implemented in [FIX-0091](FIXES.md#fix-0091), including the read-only
+drawer, retry metadata, node prompt correction and live/saved coverage. The
+original design/acceptance criteria below are retained for traceability;
+MEM-02's new memory management APIs remain outside scope.
+Initial investigation: [FIX-0062](FIXES.md#fix-0062).
 README routes current-version defects and designs to this document.
 
 ### Requested behavior and ownership
@@ -548,7 +552,8 @@ correct retry selection. No agent-side edit is required.
 
 ### Acceptance and regression coverage
 
-These are required future checks, not tests performed for this design.
+These were required future checks when this design was written; actual
+implementation verification is recorded in FIX-0091.
 
 | Case | Required result and likely coverage |
 | --- | --- |

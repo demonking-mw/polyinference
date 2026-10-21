@@ -140,6 +140,7 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0088](#fix-0088) | 2026-10-21 | Declare shared-check preparation owners before parallel dispatch |
 | [FIX-0089](#fix-0089) | 2026-10-21 | Make explicit retained-source handoff actionable during planning |
 | [FIX-0090](#fix-0090) | 2026-10-21 | Separate inherited ancestry from accepted task contributions |
+| [FIX-0091](#fix-0091) | 2026-10-21 | Inspect retained original and effective OS context with provenance |
 
 
 ## Entry template
@@ -4093,3 +4094,69 @@ Affected repository/UI projection suites: 38 passed in 79.97 seconds. Windows
 Node frontend: 15/15 passed, including cautious legacy rendering. Ruff, scoped
 whitespace and native documentation generation/check passed. No live provider,
 historical-state rewrite or push; concurrent next-iteration edits are excluded.
+
+<a id="fix-0091"></a>
+## FIX-0091 — 2026-10-21 — Inspect retained original and effective OS context with provenance
+
+Status: implemented. Related: [FIX-0037](#fix-0037), [FIX-0058](#fix-0058),
+[FIX-0062](#fix-0062), [FIX-0070](#fix-0070),
+[MEM-01](current-iter-issues.md#os-memory-context-inspector).
+
+### Problem
+
+The OS exposed no dedicated invocation-context inspector. Node prompts normally
+showed original parts and could be silently overridden by native transport text,
+even when OS preparation had omitted or summarized input. Newer compaction calls
+and retries made a newest-effect heuristic misleading.
+
+### What was wrong
+
+Viewer joins predated context preparation and explicit retry relationships.
+Runtime context tests protected originals but did not validate inspection parity.
+This was a visibility gap, not canonical-memory loss or a missing memory store.
+
+### How it was fixed
+
+ui_os projects small artifact-free context, retry, outcome and helper metadata.
+ui-monitor adds Memory / context from process/model-operation drawers, explicit
+attempt selection, transitive same-process retry grouping with cycle/missing-chain
+diagnostics, outstanding/outcome selection and separate compaction helpers.
+Shared live/saved readers fetch exact effect/prepared/receipt records independently;
+embedded matching receipts identify effective views, with explicit original fallback.
+Ordered parts, trust, required/compactable flags, omissions, opaque references,
+summary/source provenance and byte metrics remain inspectable. Full artifact text
+loads on demand. Submission/uncertainty are separately labelled. Generation and
+source-identity guards discard stale detail/content/error reads after navigation.
+
+snapshots.detail follows model retry provenance, labels original/effective origin
+and selected attempt, retains original messages separately and treats native
+messages as observed transport evidence. Missing artifact blocks no longer hide
+all node evidence. Live node details, manual Save and archives share this code.
+Schema version 2, existing endpoints, validation/host checks and runtime/context
+policy are unchanged. No canonical memory manager, agent convention or OS scheduler
+was added. Updated README, UI/inspection/context guides, runtime boundary and tracker.
+Reviewed settings/setup/archive guides: no new settings, storage or commands.
+No files/features moved, so authored navigation remains current.
+
+### Design principle enforced or reconstructed
+
+The OS faithfully inspects retained explicit input and transformations; the agent
+owns canonical memory and meaning. Prepared size is not submission, a dispatch
+marker is not remote receipt, and neither proves termination or hidden state.
+Historical records remain immutable; absent or inconsistent evidence stays visible.
+
+### Verification
+
+Affected UI, OS/agent projection, context, retry and history suites: 115 passed in
+58.43 seconds. Windows Node frontend: 19/19 passed. Coverage includes nested
+transport/output retries, malformed/cyclic/cross-process provenance, helpers,
+omission pairs, prepared/original origin, lazy literal long text, overflow/no
+prepared view, unsubmitted/unknown states, unchanged-checkpoint refresh, absent
+records, offline saved data and stale responses after close/Back/selection/run/
+snapshot changes. Missing prompt artifacts remain local errors. Ruff, scoped
+whitespace and native documentation generation/check passed.
+
+A local non-coding fixture without Git/coding records or checkpoints was inspected
+through the browser in live and saved JSON modes:
+effective summary, receipt/provenance, original Unicode and literal markup were
+visible. The disposable loopback server/tab were closed; no provider was contacted.
