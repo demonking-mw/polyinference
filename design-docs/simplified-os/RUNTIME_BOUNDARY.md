@@ -320,6 +320,10 @@ The OS schema and all exported settings are documented together in
 [AGENT_SETTINGS.md](AGENT_SETTINGS.md). Definitions live in
 `system_settings.py`; the coding agent's defaults and UI choices live together in
 `agent/system_settings.py`. JSON examples group OS preferences under `system`.
+The coding UI's invocation-only --sim-batch N overlay owns provider selection and
+worker/slot/reservation sizing. Generic validation supports resolving capacity
+without rereading the legacy environment override; the OS receives ordinary
+validated settings. Admission has no Claude-specific scheduling or Git policy.
 
 `runtime/context.py` measures the known final adapter request. Hard input/output
 bounds, completion checks, effect certainty and receipts always apply. Optional

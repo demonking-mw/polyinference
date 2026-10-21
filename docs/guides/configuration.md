@@ -20,6 +20,12 @@ mkdir -p .polyinference
 cp examples/agent.mixed.json .polyinference/agent.json
 ```
 
+UI-only `--sim-batch N` applies a validated invocation overlay after base loading,
+overriding the legacy capacity environment variable. It preserves complete custom
+Anthropic endpoint fields; other local protocols select the full remote Haiku
+preset. New-run config.json records effective values, not a future preference.
+See [scope/precedence and recovery](../../codex-haiku-setup.md).
+
 Edit `.polyinference/agent.json` before running it. The example's repository,
 objective and file names are placeholders. At minimum, update these fields:
 

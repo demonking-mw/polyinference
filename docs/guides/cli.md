@@ -24,6 +24,7 @@ any saved commit as final success.
 | `polyinference operation STATE OPERATION_ID` | Inspect one journaled operation. |
 | `polyinference export STATE OUTPUT.patch` | Export the initial-to-provisional code diff. |
 | `polyinference ui --state STATE` | View a persisted run in the UI. |
+| `polyinference ui --sim-batch N` | New-run remote Haiku simulation with N workers/slots (1..16), scoped to this server invocation. Works with --port/--config/--state; old state is inspection-only. |
 
 Run `polyinference --help` or `polyinference COMMAND --help` for argument syntax.
 `ui --state` imports an existing run for inspection; **Start run** still creates a

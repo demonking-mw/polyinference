@@ -6,6 +6,8 @@ model/tool execution. The OS also supports agents that produce artifacts without
 code or Git. The default UI uses Codex for senior work and Anthropic Haiku for workers.
 In the [UI](docs/guides/ui.md), OS processes and model operations expose a read-only
 Memory / context drawer for retained original/prepared input and its provenance.
+Use `polyinference ui --sim-batch 2` for an invocation-only remote Haiku simulation
+with two worker slots; see the [tester setup](codex-haiku-setup.md) for limits.
 
 - [Setup](setup.md) — Linux, WSL, macOS and provider setup.
 - [Use PolyInference](docs/README.md) — runs, UI, CLI, configuration and recovery.

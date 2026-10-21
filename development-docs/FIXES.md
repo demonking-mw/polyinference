@@ -141,6 +141,7 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0089](#fix-0089) | 2026-10-21 | Make explicit retained-source handoff actionable during planning |
 | [FIX-0090](#fix-0090) | 2026-10-21 | Separate inherited ancestry from accepted task contributions |
 | [FIX-0091](#fix-0091) | 2026-10-21 | Inspect retained original and effective OS context with provenance |
+| [FIX-0092](#fix-0092) | 2026-10-21 | Add an invocation-only remote Haiku simulation preset |
 
 
 ## Entry template
@@ -4160,3 +4161,78 @@ A local non-coding fixture without Git/coding records or checkpoints was inspect
 through the browser in live and saved JSON modes:
 effective summary, receipt/provenance, original Unicode and literal markup were
 visible. The disposable loopback server/tab were closed; no provider was contacted.
+
+<a id="fix-0092"></a>
+## FIX-0092 — 2026-10-21 — Add an invocation-only remote Haiku simulation preset
+
+Status: implemented. Related: [FIX-0061](#fix-0061), [FIX-0074](#fix-0074),
+[FIX-0075](#fix-0075), [FIX-0083](#fix-0083),
+[SIM-01](current-iter-issues.md#sim-batch-ui).
+
+### Problem
+
+Testing N overlapping local-stand-in requests required custom JSON/environment
+changes. The legacy capacity environment setting changed inference slots only,
+not worker capacity, and could undo an explicit selection during revalidation.
+
+### What was wrong
+
+The UI lacked invocation-scoped orchestration of full provider settings, workers
+and aggregate context reservations. RuntimeConfig.system revalidated against the
+ambient environment instead of providing a view of resolved values. Earlier
+provider/admission fixes did not supply this coding UI launch policy.
+
+### How it was fixed
+
+UI-only --sim-batch N validates 1..16 and flows through serve/TestUI. The coding
+settings module shares one complete Haiku endpoint factory and applies a pure
+validated overlay: worker/local binding, N workers/slots, and reservation at least
+N maximum contexts. Complete custom Anthropic fields and other role/provider
+settings survive; other local protocols visibly select the full Haiku preset.
+No per-call limit, budget, finishing reserve, grant or Git ordering is weakened.
+
+Generic validation context can skip only the legacy capacity environment overlay;
+base loading, merged UI validation and resolved system views preserve that choice.
+No simulation setting is serialized and os.environ/default files are unchanged.
+New runs save effective config; imported history/pins are read unchanged. Opening
+the UI makes no billed call. Start checks a nonempty referenced credential and
+retains sanitized failures through the normal startup/export path. Launch/UI
+labels identify remote model, limits and task-readiness dependence. Generic
+admission and Anthropic framing/retry semantics remain unchanged.
+
+Updated README, tester/setup/launch/CLI/configuration guides, settings/UI/CLI
+module docs, central settings/boundary references and tracker. Added
+test_sim_batch.py to tests/README.md and JSON navigation, regenerated HTML.
+Reviewed recovery/archive docs; existing exact-config/pin and read-only history
+rules still apply, with conflicting ambient overrides addressed in tester docs.
+
+### Design principle enforced or reconstructed
+
+Provider simulation and coding task readiness belong to the application. The OS
+enforces generic slots, context reservations, evidence and execution certainty.
+Concurrent remote calls approximate admission/refill, not GPU batching or KV
+performance. Invocation preferences cannot silently alter later launches or old runs.
+
+### Verification
+
+Affected simulation/UI/credential/Anthropic/endpoint/context suites: 116 passed in
+58.89 seconds. Additional simulation/navigation run (including imported-history
+immutability and persisted-config validation) passed 50 tests in 11.37 seconds.
+One/two-slot blocking transports prove overlap limits, independent histories and
+immediate refill while another slot remains held. A normal two-assignment coding
+run completes through the real Anthropic adapter, and effective settings survive
+Start/export. CLI 1/2/16, invalid inputs, separate launches, custom/grouped
+endpoints, absent/stale/malformed ambient settings, missing/blank credentials
+and sanitized 401/404/429 startup errors are covered. Full Ruff, scoped whitespace
+and documentation generation/check passed (257 files, 116 leaves). Final broad
+integration verification follows the per-fix commit.
+Official [Haiku documentation](https://platform.claude.com/docs/en/models/haiku-5-5/overview)
+was rechecked. With existing backend credentials, a read-only Models API request
+returned 200 and the exact selected ID. Two concurrently issued live requests,
+each capped at 16 output tokens, completed (22 and 20 total tokens respectively).
+This is bounded provider readiness evidence, not a performance benchmark.
+
+An initial test scaffold incorrectly used the default ignored state path. Its
+new creation times and absence of app/effect/report history were verified; only
+those new files/directories were retained under the ignored inspector fixture.
+Tests now use disposable state throughout. No historical run was modified.

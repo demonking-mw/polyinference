@@ -1,4 +1,4 @@
-# Tester checklist: Codex + serial Haiku
+# Tester checklist: Codex + Haiku
 
 [Setup](setup.md) · [Documentation](docs/README.md) · [Developer onboarding](dev-readme.md)
 
@@ -42,6 +42,32 @@ comparing results.
    paths. Keep state/evidence if a run pauses; see [troubleshooting](docs/guides/troubleshooting.md).
 
 For later launches, reactivate the checkout environment and repeat step 3.
+For concurrent remote simulation, use:
+
+```bash
+polyinference ui --sim-batch 2
+```
+
+N accepts 1..16 and applies to new runs on that UI server: worker binding local,
+N workers, N local inference slots, and at least N full-context reservations.
+The explicit flag overrides POLYINFERENCE_LOCAL_BATCH_SIZE, including stale or
+malformed values, without modifying the environment or future UI launches.
+With --config, a complete Anthropic local endpoint retains its custom model,
+URL, credential reference, timeout and price; another protocol selects the full
+default Haiku endpoint visibly. Senior/cloud settings and other bindings remain.
+Missing/blank referenced credentials produce an inspectable startup failure;
+opening the UI itself makes no billed request. Each new run saves its effective
+config. Old --state runs remain unchanged. Resume needs those saved settings and
+a matching environment; unset conflicting legacy capacity overrides first.
+
+Slots are maximums, not guaranteed occupancy. Use independent tasks to exercise
+overlap; the greeting asks for one. No-task-branch Git policy still permits only
+one editor. This simulates request admission/refill, not GPU token-step batching,
+KV memory, latency/throughput or Anthropic's Message Batches API. Shared account
+quotas still apply. Model availability was rechecked against the
+[official Haiku overview](https://platform.claude.com/docs/en/models/haiku-5-5/overview);
+account access requires its own readiness evidence.
+
 [Launch controls](docs/guides/launching.md) cover ports and stopping the idle server.
 Snapshots are diagnostic evidence, not complete Git backups or resumable state.
 See [provider distinctions](docs/guides/providers.md) before selecting `codex_proxy`.

@@ -24,7 +24,7 @@ clean working tree before editing. Completion records: item 1, [FIX-0083](FIXES.
 item 2, [FIX-0084](FIXES.md#fix-0084); item 3, [FIX-0085](FIXES.md#fix-0085);
 item 4, [FIX-0086](FIXES.md#fix-0086); item 5, [FIX-0088](FIXES.md#fix-0088);
 item 6, [FIX-0089](FIXES.md#fix-0089); item 7, [FIX-0090](FIXES.md#fix-0090);
-item 8, [FIX-0091](FIXES.md#fix-0091).
+item 8, [FIX-0091](FIXES.md#fix-0091); item 9, [FIX-0092](FIXES.md#fix-0092).
 
 | Order | Item | Owning layer and bounded scope |
 | --- | --- | --- |
@@ -595,8 +595,9 @@ resume was performed. Validate the acceptance matrix when implementing MEM-01.
 <a id="sim-batch-ui"></a>
 ## SIM-01 — Launch-scoped Claude batch simulation — 2026-10-20
 
-Status: planned for the current version; research/design only. **Do not implement
-until the user requests it.** Related research: [FIX-0061](FIXES.md#fix-0061).
+Status: implemented in [FIX-0092](FIXES.md#fix-0092) under the authorized queue.
+The original design/required checks below are retained; actual fixture/live
+verification is in that entry. Related research: [FIX-0061](FIXES.md#fix-0061).
 README identifies this file as the current-version issue tracker.
 
 ### Requested behavior and scope

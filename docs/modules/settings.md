@@ -21,7 +21,13 @@ JSON groups OS preferences under `system`; workflow fields stay at the top level
 Legacy flat input remains accepted, but duplicate placements are rejected.
 Agent-only prerequisite_checks and acceptance_checks stay at top level; legacy
 checks remain combined task/final criteria unless acceptance_checks overrides them.
-`POLYINFERENCE_LOCAL_BATCH_SIZE` overrides local endpoint admission only.
+`POLYINFERENCE_LOCAL_BATCH_SIZE` overrides local endpoint admission only, unless
+an explicit UI --sim-batch N invocation resolves capacity itself. The generic
+validation context can skip that legacy overlay; system views reflect resolved
+values without rereading ambient overrides. No simulation flag is serialized.
+The coding settings module owns the complete Haiku factory and pure simulation
+overlay (worker binding/cap, slots, full-context reservations), preserving custom
+Anthropic fields and other providers/bindings. OS admission remains generic.
 
 ## Principles to preserve
 

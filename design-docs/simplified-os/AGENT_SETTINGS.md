@@ -56,8 +56,19 @@ without requiring coding workflows, checks or Git.
 
 Precedence is generic defaults, coding defaults when using AgentConfig, explicit
 configuration, then **POLYINFERENCE_LOCAL_BATCH_SIZE** for local.max_inflight.
-That environment override accepts 1–32 and is pinned at startup. Nested settings
-objects are validated with their own defaults: an explicit object replaces the
+That environment override accepts 1–32 and is pinned at startup.
+Explicit coding UI --sim-batch N (1..16) takes precedence for that server's new
+runs. It suppresses the legacy capacity overlay throughout base and merged
+validation, sets worker/local binding, worker/slot capacity and at least N full
+context reservations. Custom Anthropic local endpoints retain every other field;
+other protocols select the complete remote Haiku preset. Other bindings/providers,
+per-call bounds, budgets and finishing reserves remain configured. The flag is
+not serialized or written to environment/defaults; per-run config saves effective
+values, while imported history is unchanged. RuntimeConfig.system is a validated
+view of resolved values and never rereads ambient capacity. See
+[tester scope and recovery](../../codex-haiku-setup.md).
+
+Nested settings objects are validated with their own defaults: an explicit object replaces the
 application's default object rather than recursively merging its preferences.
 
 Legacy flat input is accepted. A field cannot appear both in system and at top

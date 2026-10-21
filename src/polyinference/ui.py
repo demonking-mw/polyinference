@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import hashlib
 import json
+import os
 import re
 import shlex
 import sqlite3
@@ -105,7 +106,7 @@ async def run_with_terminal_events(runner, config, run_id, reporting_errors=None
             return await task
 
 
-def greeting_config(root):
+def greeting_config(root, *, context=None):
     """One tiny committed fixture, independent of machine-specific smoke-test files."""
     source = root / "fixture"
     if not source.exists():
@@ -133,7 +134,7 @@ def greeting_config(root):
             subprocess.run(["git", "-C", str(source), *argv], check=True, capture_output=True)
     from .agent.system_settings import ui_system_settings
 
-    return AgentConfig(
+    return AgentConfig.model_validate(dict(
         system=ui_system_settings(source),
         objective=(
             "Fix greeting(name) to return exactly Hello, {name}! with the comma and exclamation mark. "
@@ -141,13 +142,17 @@ def greeting_config(root):
             "run the greeting check."
         ),
         max_sprints=27,
-    )
+    ), context=context)
 
 
 class TestUI:
     __test__ = False
 
-    def __init__(self, root, config_path=None, state=None, runner=partial(execute, save_history=False)):
+    def __init__(self, root, config_path=None, state=None, runner=partial(execute, save_history=False), *, sim_batch=None):
+        if sim_batch is not None and (type(sim_batch) is not int or not 1 <= sim_batch <= 16):
+            raise ValueError("--sim-batch requires an integer from 1 to 16")
+        self.sim_batch = sim_batch
+        self.validation_context = {"resolve_environment_capacity": False} if sim_batch is not None else None
         self.root = Path(root).resolve()
         self.root.mkdir(parents=True, exist_ok=True)
         self.config_path = Path(config_path).resolve() if config_path else None
@@ -174,7 +179,16 @@ class TestUI:
 
     def configuration(self):
         with self.lock:
-            return load_config(self.config_path) if self.config_path else greeting_config(self.root)
+            config = (load_config(self.config_path, context=self.validation_context) if self.config_path else
+                      greeting_config(self.root, context=self.validation_context))
+            if self.sim_batch is not None:
+                from .agent.system_settings import simulation_config
+                config = simulation_config(config, self.sim_batch)
+            return config
+
+    def simulation_label(self, config):
+        return (f"Remote Anthropic simulation · {config.local.model} · {config.local.max_inflight} slots · "
+                f"{config.max_workers} workers (maximums; independent ready work required)")
 
     def repository_options(self, path):
         base = self.configuration()
@@ -210,7 +224,7 @@ class TestUI:
                 ),
                 *config.checks[1:],
             ] if argv else config.checks
-        return AgentConfig.model_validate({**config.model_dump(), **updates})
+        return AgentConfig.model_validate({**config.model_dump(), **updates}, context=self.validation_context)
 
     def cost(self, state, records):
         signature = tuple(
@@ -290,8 +304,14 @@ class TestUI:
                         raise ValueError("Enter a test objective of 1–16000 characters")
                     config = config.model_copy(update={"objective": objective.strip()})
                 config = config.model_copy(update={"state_directory": metadata["state"]})
+                config = AgentConfig.model_validate(config.model_dump(), context=self.validation_context)
                 (directory / "config.json").write_text(config.model_dump_json(indent=2))
                 metadata.update(repository=config.repository, objective=config.objective)
+                if self.sim_batch is not None:
+                    name = config.local.api_key_env
+                    if not name or not os.environ.get(name, "").strip():
+                        raise ValueError("Simulation requires a nonempty credential in local.api_key_env "
+                                         f"({name or 'not configured'}); set it on the backend host")
                 self.save(metadata)
                 self.runs[run_id] = metadata
                 self.active = run_id
@@ -470,7 +490,7 @@ def make_server(manager, port=8765):
                             "base_branch": config.base_branch,
                             "browse_root": str(Path.cwd().parent),
                             "total_cost": combine_costs(unique.values()),
-                            "configuration": str(manager.config_path)
+                            "configuration": manager.simulation_label(config) if manager.sim_batch is not None else str(manager.config_path)
                             if manager.config_path
                             else "Haiku juniors + Codex setup/senior · 90/10 development · 9 sprints",
                         },
@@ -545,8 +565,10 @@ def make_server(manager, port=8765):
     return ThreadingHTTPServer(("127.0.0.1", port), Handler)
 
 
-def serve(port=8765, config_path=None, state=None):
-    manager = TestUI(Path.cwd() / ".polyinference" / "ui", config_path, state)
+def serve(port=8765, config_path=None, state=None, *, sim_batch=None):
+    manager = TestUI(Path.cwd() / ".polyinference" / "ui", config_path, state, sim_batch=sim_batch)
+    if sim_batch is not None:
+        print(manager.simulation_label(manager.configuration()), flush=True)
     server = make_server(manager, port)
     print(f"PolyInference OS console: http://localhost:{server.server_port}", flush=True)
     try:

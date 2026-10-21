@@ -35,7 +35,9 @@ needed if your target project uses them.
   [repeatable configuration](docs/guides/configuration.md) and the full
   [OS settings reference](design-docs/simplified-os/AGENT_SETTINGS.md).
 
-For the serial Codex/Haiku experiment, use the [tester checklist](codex-haiku-setup.md).
+For serial Codex/Haiku or invocation-only `ui --sim-batch N` experiments, use the
+[tester checklist](codex-haiku-setup.md). Simulation uses paid remote requests;
+opening the UI does not send a generation request.
 For remote host recovery and OS deployment details, use the
 [OS runbook](design-docs/simplified-os/RUNBOOK.md).
 

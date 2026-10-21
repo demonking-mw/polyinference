@@ -13,6 +13,8 @@ The CLI loads configuration/environment and invokes application/runtime services
 The installed `polyinference` entry point calls main(). Paths in configuration
 resolve from its parent directory. CLI and UI share application/snapshot paths.
 Probes make real requests; schema validation does not establish provider readiness.
+UI-only --sim-batch N validates 1..16 and passes invocation policy to TestUI;
+it does not modify saved credentials or ordinary run/resume configuration.
 
 ## Principles to preserve
 

@@ -23,6 +23,26 @@ def coding_system_defaults():
     }
 
 
+def haiku_endpoint():
+    """Complete remote stand-in, shared by the ordinary UI and launch overlay."""
+    return Endpoint(protocol="anthropic", base_url="https://api.anthropic.com/v1",
+                    model="claude-haiku-5-5", api_key_env="ANTHROPIC_API_KEY",
+                    max_context_tokens=128000, reserved_context_tokens=256000,
+                    max_inflight=1, timeout_seconds=180, inference_location="cloud")
+
+
+def simulation_config(config, slots):
+    """Pure invocation policy; the OS receives ordinary fully validated settings."""
+    if type(slots) is not int or not 1 <= slots <= 16:
+        raise ValueError("--sim-batch requires an integer from 1 to 16")
+    endpoint = config.local if config.local.protocol == "anthropic" else haiku_endpoint()
+    local = {**endpoint.model_dump(), "max_inflight": slots,
+             "reserved_context_tokens": max(endpoint.reserved_context_tokens, slots * endpoint.max_context_tokens)}
+    return type(config).model_validate({**config.model_dump(), "local": local, "max_workers": slots,
+        "role_bindings": {**config.role_bindings, "worker": "local"}},
+        context={"resolve_environment_capacity": False})
+
+
 def ui_system_settings(source):
     """The UI coding agent's complete OS preferences, configured together."""
     endpoint = Endpoint(
@@ -42,17 +62,7 @@ def ui_system_settings(source):
         closure_paths=["greeting.py", "test_greeting.py"],
         checks=[Check(name="greeting", argv=[sys.executable, "-m", "unittest", "-q"])],
         check_execution="trusted",
-        local=Endpoint(
-            protocol="anthropic",
-            base_url="https://api.anthropic.com/v1",
-            model="claude-haiku-5-5",
-            api_key_env="ANTHROPIC_API_KEY",
-            max_context_tokens=128000,
-            reserved_context_tokens=256000,
-            max_inflight=1,
-            timeout_seconds=180,
-            inference_location="cloud",
-        ),
+        local=haiku_endpoint(),
         cloud=endpoint.model_copy(update={"brokered_tools": True}),
         max_workers=1,
         limits=default_limits().model_copy(

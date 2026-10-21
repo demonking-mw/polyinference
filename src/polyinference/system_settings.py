@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import Annotated, Literal
 
-from pydantic import AliasChoices, Field, model_validator
+from pydantic import AliasChoices, Field, ValidationInfo, model_validator
 
 from .contracts import Limits, Wire
 from .execution_contracts import Check
@@ -123,11 +123,14 @@ class RuntimeConfig(Wire):
     @property
     def system(self):
         """One validated view of the complete OS configuration, without agent policy."""
-        return RuntimeConfig.model_validate({key: getattr(self, key) for key in RuntimeConfig.model_fields})
+        return RuntimeConfig.model_validate({key: getattr(self, key) for key in RuntimeConfig.model_fields},
+                                            context={"resolve_environment_capacity": False})
 
     @model_validator(mode="before")
     @classmethod
-    def environment_capacity(cls, value):
+    def environment_capacity(cls, value, info: ValidationInfo):
+        if info.context and info.context.get("resolve_environment_capacity") is False:
+            return value
         if isinstance(value, dict) and "POLYINFERENCE_LOCAL_BATCH_SIZE" in os.environ:
             value = dict(value)
             grouped = value.get("system")

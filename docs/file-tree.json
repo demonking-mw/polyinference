@@ -913,6 +913,7 @@
               "tests/test_runtime_general.py",
               "tests/test_saved_credentials.py",
               "tests/test_setup_tools.py",
+              "tests/test_sim_batch.py",
               "tests/test_tool_environment.py",
               "tests/test_ui.py",
               "tests/test_ui_agents.py",

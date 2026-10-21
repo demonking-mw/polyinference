@@ -45,9 +45,9 @@ def load_saved_credentials():
             os.environ.setdefault(name, value)
 
 
-def load_config(path):
+def load_config(path, *, context=None):
     source = Path(path).resolve()
-    config = AgentConfig.model_validate_json(source.read_text())
+    config = AgentConfig.model_validate_json(source.read_text(), context=context)
     return config.model_copy(
         update={
             "repository": str((source.parent / config.repository).resolve()),
@@ -179,6 +179,16 @@ def main():
     item.add_argument("--port", type=int, default=8765)
     item.add_argument("--config")
     item.add_argument("--state")
+    def simulation_slots(value):
+        try:
+            count = int(value)
+        except ValueError:
+            raise argparse.ArgumentTypeError("--sim-batch requires an integer from 1 to 16") from None
+        if not 1 <= count <= 16:
+            raise argparse.ArgumentTypeError("--sim-batch requires an integer from 1 to 16")
+        return count
+    item.add_argument("--sim-batch", type=simulation_slots, metavar="N",
+                      help="Invocation-only remote Haiku simulation with N workers/slots (1..16)")
     item = sub.add_parser("probe")
     item.add_argument("config")
     item.add_argument("--endpoint", choices=["local", "cloud"], default="cloud")
@@ -249,7 +259,7 @@ def main():
         if args.command == "ui":
             from .ui import serve
 
-            serve(args.port, args.config, args.state)
+            serve(args.port, args.config, args.state, sim_batch=args.sim_batch)
             return
         if args.command == "probe":
             print(json.dumps(asyncio.run(probe_endpoint(load_config(args.config), args.endpoint)), indent=2))

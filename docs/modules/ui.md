@@ -15,6 +15,9 @@ The local test runner hosts fresh runs, project selection and inspection without
 The default preset uses Haiku workers/Codex seniors with one worker/slot. Every
 Start run creates fresh state. A custom config preserves its grants/providers.
 Snapshot viewing makes no provider requests. Picker observations are not acceptance.
+UI --sim-batch N (1..16) applies only to this TestUI instance's new configurations.
+CLI, project selection, Start, display and saved config share the validated overlay.
+Missing/blank simulation credentials retain an ordinary exportable startup failure.
 
 ## Principles to preserve
 
@@ -23,7 +26,7 @@ Snapshot viewing makes no provider requests. Picker observations are not accepta
 - Selecting a project must not overwrite unrelated existing source.
 - Reporting observes durable state without controlling or replacing it.
 - Memory / context is read-only, uses existing record/artifact endpoints, and works offline.
-- SIM-01 remains a proposed launch preset until its separate implementation.
+- Simulation never mutates environment/defaults/old state or bypasses Git/task policy.
 
 ## Verification and related reading
 
