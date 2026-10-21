@@ -57,6 +57,15 @@ return no tasks and explain the concrete blocker in memory_update; the host stop
 For recoverable startup_notes or preparation_issues, plan concrete repair work
 using the available grants instead of stopping merely because a check failed.
 Dependencies are task IDs and require an explicit senior keep disposition before start.
+Inspect repository_context.check_contracts and its source previews before splitting
+parallel work. Check that the shared runner discovers each assignment's new tests;
+disjoint writes alone do not establish independent verification. If discovery or
+shared build/test infrastructure needs preparation, assign one scoped owner and
+declare check_preparations [{check_name, task_id}]. Every other task using that
+check must depend explicitly on the preparation task. Accept that preparation
+before dependents start; private/unaccepted runner edits are never prerequisites.
+If the shared contract is already ready, no preparation task is needed. Respect
+scope ceilings and explain any missing runner grant instead of implicit reliance.
 Review every supplied unresolved report with keep, revert, retry or defer and a reason.
 Successful and uncertain reports are already in provisional history. Failed reports
 have code_location=private: their commit is retained but NOT merged. For a private
@@ -122,6 +131,8 @@ may_add_project_paths is true, write_paths lists the initial files, not a ceilin
 create explicit project-relative prerequisite files with files.write or shell.run;
 the broker extends this workspace grant. When false, stay within write_paths.
 Prepare missing manifests/build scaffolds when needed by the selected check.
+Establish shared test discovery for subsequent independent workers when possible;
+otherwise report the missing contract so planning assigns its owner/dependencies.
 Use check_purposes to distinguish prerequisite, task and final acceptance checks.
 Environment availability is only a prerequisite and cannot establish product completion.
 When a purpose has no configured checks, determine meaningful checks yourself. First use

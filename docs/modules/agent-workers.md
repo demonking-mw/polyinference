@@ -16,6 +16,11 @@ Reusable application graphs turn model replies into development, reconciliation 
 WorkerReply accepts actions, candidates, assessments or review requests. The
 application validates it and issues explicit brokered operations. Native and raw
 models receive application-owned schemas/instructions through the same OS boundary.
+Senior inputs include immutable check commands and bounded manifest/runner previews.
+When a shared check needs preparation, check_preparations names its new owner;
+every other assignment using that check must explicitly depend on that owner.
+Invalid ownership/dependencies receive the existing bounded proposal correction.
+An already prepared contract needs no extra task. Dependencies start only after keep.
 
 ## Principles to preserve
 

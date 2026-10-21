@@ -356,7 +356,10 @@ class AgentServices:
         from ..contracts import CodeRevision
 
         tree = await self.ports.workspaces.tree(CodeRevision.model_validate(code).commit_id)
-        selected = list(dict.fromkeys(self.config.allowed_write_paths + self.config.closure_paths))
+        contracts = [check.model_dump(mode="json") for check in self.task_check_definitions]
+        contract_paths = [path for path in ("package.json", "pyproject.toml", "Makefile") if path in tree]
+        contract_paths += [arg for check in contracts for arg in check["argv"] if arg in tree]
+        selected = list(dict.fromkeys(contract_paths + self.config.allowed_write_paths + self.config.closure_paths))
         remaining, contents = 5000, []
         for path in selected:
             if path not in tree or remaining <= 0:
@@ -373,6 +376,7 @@ class AgentServices:
                 }
             )
         return {
+            "check_contracts": contracts,
             "paths": sorted(tree)[:100],
             "omitted_path_count": max(0, len(tree) - 100),
             "contents": contents,

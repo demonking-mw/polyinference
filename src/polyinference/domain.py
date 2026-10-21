@@ -79,6 +79,11 @@ class Disposition(Wire):
     reason: Annotated[str, Field(min_length=1, max_length=8000)]
 
 
+class CheckPreparation(Wire):
+    check_name: str
+    task_id: str
+
+
 class SeniorProposal(Wire):
     goal: str
     user_brief: Annotated[str, Field(min_length=1, max_length=8000)] | None = None
@@ -87,6 +92,7 @@ class SeniorProposal(Wire):
     complete: bool = False
     memory_update: str | None = None
     cancel_pending_task_ids: list[str] = Field(default_factory=list)
+    check_preparations: list[CheckPreparation] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_dag(self):

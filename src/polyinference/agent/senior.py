@@ -43,6 +43,24 @@ async def validate(state, runtime: Runtime[AppContext]):
                 raise ValueError("Proposed write scope exceeds user grant")
             if not assignment.checks or not set(assignment.checks) <= {c.name for c in app.task_check_definitions}:
                 raise ValueError("Unknown configured check")
+        checks = {c.name for c in app.task_check_definitions}
+        tasks = {t.task_id: t for t in proposal.tasks}
+        known = set(state["input"].get("all_task_ids", [])) | set(tasks)
+        for assignment in proposal.tasks:
+            if not set(assignment.dependencies) <= known:
+                raise ValueError("Unknown task dependency")
+        seen = set()
+        for preparation in proposal.check_preparations:
+            if preparation.check_name not in checks or preparation.task_id not in tasks:
+                raise ValueError("Check preparation must name a configured check and its new owner task")
+            if preparation.check_name in seen:
+                raise ValueError("Each check preparation needs one owner")
+            seen.add(preparation.check_name)
+            for assignment in proposal.tasks:
+                if (assignment.task_id != preparation.task_id and preparation.check_name in assignment.checks
+                        and preparation.task_id not in assignment.dependencies):
+                    raise ValueError(f"Check {preparation.check_name} needs dependency {preparation.task_id} "
+                                     f"before task {assignment.task_id} can start")
     except ValueError as exc:
         history = app.append_history(
             state.get("trajectory_ref"),

@@ -16,6 +16,8 @@ The application chooses ready work, starts independent workers, drains before re
 ProjectAgent uses AgentServices/RuntimePorts and LangGraph continuations.
 Dependencies become ready after senior keep resolutions. Verification/integration
 is serialized by an explicit resource permit; starts close while review drains.
+Shared runner preparation has one declared owner and explicit dependent tasks;
+private source cannot satisfy that dependency. Planning sees commands/source previews.
 Dispatch records started_at atomically with task admission. Historical development
 counts retain cancelled/superseded starts; legacy :started specs remain evidence.
 Role allocation uses those same starts plus pending quota reservations, which are

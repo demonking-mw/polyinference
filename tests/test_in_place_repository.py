@@ -66,6 +66,94 @@ async def test_default_real_repository_merges_concurrent_workers_before_completi
         await runtime.close()
 
 
+async def test_shared_check_preparation_is_accepted_before_two_isolated_test_writers(config):
+    from polyinference.domain import Check
+
+    repo = config.repo_path
+    (repo / "runner.py").write_text("print('legacy runner: no discovered tests')\n")
+    git(repo, "add", "runner.py")
+    git(repo, "-c", "user.name=Test", "-c", "user.email=test@example.com", "commit", "-qm", "runner")
+    runtime, app, engine, scripted = await app_for(
+        config, max_sprints=5,
+        limits=config.limits.model_copy(update={"max_input_tokens_per_call": 96000}),
+        local=config.local.model_copy(update={"max_context_tokens": 128000, "reserved_context_tokens": 256000}),
+        cloud=config.cloud.model_copy(update={"max_context_tokens": 128000, "reserved_context_tokens": 256000}),
+        allowed_write_paths=["runner.py", "a.py", "b.py", "test_a.py", "test_b.py"],
+        checks=[Check(name="tests", argv=[sys.executable, "runner.py"])])
+    calls, starts, corrected, planning_calls = {}, [], False, 0
+    runner = ("from pathlib import Path\n"
+              "for p in sorted(Path('.').glob('test_*.py')):\n"
+              "    print(p.name)\n    exec(p.read_text())\n")
+
+    async def generate(messages, max_output, response_schema=None):
+        nonlocal corrected, planning_calls
+        from polyinference.domain import digest
+
+        data = json.loads(next(m["content"] for m in messages if "Pinned application inputs:" in m["content"])
+                          .split("Pinned application inputs:\n", 1)[1])
+        if "repository_observation" in data:
+            reply = {"mode": "new", "task_branches": True, "reason": "Test"}
+        elif "assignment" not in data:
+            if not data["all_task_ids"]:
+                planning_calls += 1
+                if corrected:
+                    assert "needs dependency runner" in str(messages)
+                context = data["repository_context"]
+                assert context["check_contracts"][0]["argv"][-1] == "runner.py"
+                assert any(c["path"] == "runner.py" and "legacy runner" in c["content"]
+                           for c in context["contents"])
+                assert "check_preparations" in messages[0]["content"]
+                tasks = [{"task_id": "runner", "objective": "Prepare test discovery",
+                          "write_paths": ["runner.py"], "checks": ["tests"]}]
+                tasks += [{"task_id": n, "objective": "Update value and add discovered test",
+                           "write_paths": [n + ".py", "test_" + n + ".py"], "checks": ["tests"],
+                           "dependencies": ["runner"] if corrected else []} for n in ("a", "b")]
+                reply = {"goal": "Prepare then parallelize", "tasks": tasks,
+                         "check_preparations": [{"check_name": "tests", "task_id": "runner"}]}
+                corrected = True
+            else:
+                reply = {"goal": "Review", "complete": len(data["all_task_ids"]) == 3 and len(starts) == 3,
+                         "dispositions": [{"report_ref": r["record_id"], "action": "keep", "reason": "Verified"}
+                                          for r in data["reports"]]}
+        else:
+            name, phase = data["assignment"]["task_id"], data["phase"]
+            key = name, phase
+            step = calls.get(key, 0)
+            calls[key] = step + 1
+            if phase == "development" and step == 0:
+                starts.append(name)
+                if name != "runner":
+                    assert app.get("resolution/" + app.get("task/runner")["report_ref"])["action"] == "keep"
+                    assert "glob" in (repo / "runner.py").read_text()
+                    assert data["assignment"]["write_paths"] == [name + ".py", "test_" + name + ".py"]
+            if phase == "development" and (step == 0 or (name != "runner" and step == 1)):
+                path = "runner.py" if name == "runner" else (name + ".py" if step == 0 else "test_" + name + ".py")
+                content = runner if name == "runner" else (
+                    "VALUE = 2\n" if step == 0 else
+                    f"from pathlib import Path\nassert 'VALUE = 2' in Path('{name}.py').read_text()\n")
+                old = (repo / path).read_bytes() if (repo / path).exists() else None
+                reply = {"kind": "action", "tool": "files.write",
+                         "arguments": {"path": path, "content": content,
+                                       "expected_digest": digest(old) if old else None}}
+            elif phase == "assessment":
+                reply = {"kind": "assessment", "verdict": "successful", "summary": "Discovered tests pass"}
+            else:
+                reply = {"kind": "candidate", "summary": "Scoped changes"}
+        return {"text": json.dumps(reply), "usage": {"total_tokens": 50}, "model": "fixture", "events": []}
+
+    scripted.generate = generate
+    try:
+        await engine.run()
+        assert app.get("app/run")["status"] == "completed", app.get("app/run")
+        assert starts[0] == "runner" and set(starts) == {"runner", "a", "b"}
+        output = subprocess.check_output([sys.executable, "runner.py"], cwd=repo).decode()
+        assert "test_a.py" in output and "test_b.py" in output
+        assert len({v["path"] for _, _, v in runtime.records.scan("coding/worktree/")}) >= 3
+        assert planning_calls == 2
+    finally:
+        await runtime.close()
+
+
 async def test_no_new_branches_uses_serial_current_checkout(config):
     branch = git(config.repo_path, "branch", "--show-current")
     runtime, app, engine, scripted = await app_for(

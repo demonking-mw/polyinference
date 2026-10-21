@@ -136,7 +136,8 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0084](#fix-0084) | 2026-10-21 | Retain cancelled development starts in accounting and allocation |
 | [FIX-0085](#fix-0085) | 2026-10-21 | Preserve caller grammar in generic output recovery |
 | [FIX-0086](#fix-0086) | 2026-10-21 | Separate setup prerequisites from final product acceptance |
-| [FIX-0085](#fix-0085) | 2026-10-21 | Record future learned routing and quota-aware task scheduling |
+| [FIX-0087](#fix-0087) | 2026-10-21 | Record future learned routing and quota-aware task scheduling (ID corrected from duplicate 0085) |
+| [FIX-0088](#fix-0088) | 2026-10-21 | Declare shared-check preparation owners before parallel dispatch |
 
 
 ## Entry template
@@ -3887,8 +3888,13 @@ the baseline Linux Node/npm limitations; frontend coverage was exercised in the
 preceding baseline and will be rerun with the later UI work. No live providers, historical-state
 mutation or push occurred. Existing unrelated next-iteration edits are excluded.
 
-<a id="fix-0085"></a>
-## FIX-0085 — 2026-10-21 — Record future learned routing and quota-aware task scheduling
+<a id="fix-0087"></a>
+## FIX-0087 — 2026-10-21 — Record future learned routing and quota-aware task scheduling
+
+ID correction (2026-10-21, FIX-0088): concurrent documentation assigned this
+entry FIX-0085 after that ID was already allocated to output recovery. Only this
+duplicate identifier/index was corrected to the next unused ID; its findings
+and future proposals are preserved. This investigation is separate concurrent work.
 
 Status: investigated; future proposals documented, no implementation changed.
 Related history: [FIX-0054](#fix-0054), [FIX-0061](#fix-0061),
@@ -3936,3 +3942,57 @@ already owns and links the backlog; no file or feature leaf was added or moved.
 Documentation generation/check and scoped whitespace checks passed under WSL.
 No runtime tests or live providers were used for these documentation-only ideas.
 Concurrent current-version fixes and their history entries are separate work.
+
+<a id="fix-0088"></a>
+## FIX-0088 — 2026-10-21 — Declare shared-check preparation owners before parallel dispatch
+
+Status: implemented. Related: [FIX-0077](#fix-0077), [FIX-0086](#fix-0086)
+and [RUN13-01](current-iter-issues.md#run13-01).
+
+### Problem
+
+Disjoint feature writers could require test discovery supplied only by another
+worker's private candidate. Passing direct tests did not establish that the
+configured shared runner exercised them.
+
+### What was wrong
+
+Planning received check names without commands/runner previews, and no explicit
+shared-check preparation ownership contract. Scope isolation did not express this
+dependency. Earlier Git isolation and check evidence fixes could not choose it.
+
+### How it was fixed
+
+AgentServices now prioritizes bounded manifest/check-argv source previews and
+includes immutable check definitions in repository_context. Setup/senior prompts
+require inspecting discovery, preparing it once or assigning one owner. The
+agent-only SeniorProposal.check_preparations declaration names that owner; senior
+validation refuses other users of the check without an explicit dependency,
+using the existing bounded correction path. Existing keep-gated readiness supplies
+the runtime order. Generic OS scheduling/check contracts and grants are unchanged.
+Updated worker/workflow guides and tracker; configuration/setup/usage and boundary
+guides were reviewed and need no new settings or OS instructions. No files moved.
+
+Explicit history correction: concurrent future-proposal documentation reused
+FIX-0085. Its identifier/index alone is corrected to FIX-0087 with a visible note;
+its substantive text is retained. It was concurrent work, not this queue's fix.
+
+### Design principle enforced or reconstructed
+
+The coding agent owns dependency and verification policy. Private/unaccepted
+infrastructure cannot be an implicit prerequisite. Grant isolation and OS command
+success do not prove product behavior or test discovery. Model planning must still
+identify preparation honestly; declarations cannot automatically prove arbitrary
+runner semantics.
+
+### Verification
+
+Real-repository regression rejects an omitted runner dependency, observes the
+actionable correction, accepts preparation before two separate worktrees start,
+and verifies the configured runner executes both newly added tests after
+integration. Affected repository/transition run: 29 passed and one final assertion
+failed because history payloads live in artifacts, not record bodies; corrected
+the assertion to inspect the actual model correction, then that regression passed
+(1 passed, 6.19 seconds). Ruff and documentation generation/check passed; scoped
+whitespace passed. No live model, historical-state mutation or push. Unrelated
+next-iteration edits remain outside this commit.

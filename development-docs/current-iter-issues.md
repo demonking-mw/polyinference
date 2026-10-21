@@ -22,7 +22,7 @@ Actual wakeup clock check: **2026-10-21 09:14:29 EDT (13:14:29 UTC)**, after the
 requested 01:55 start. Baseline cb02d02 was verified on codex/simple-os-v1 with a
 clean working tree before editing. Completion records: item 1, [FIX-0083](FIXES.md#fix-0083);
 item 2, [FIX-0084](FIXES.md#fix-0084); item 3, [FIX-0085](FIXES.md#fix-0085);
-item 4, [FIX-0086](FIXES.md#fix-0086).
+item 4, [FIX-0086](FIXES.md#fix-0086); item 5, [FIX-0088](FIXES.md#fix-0088).
 
 | Order | Item | Owning layer and bounded scope |
 | --- | --- | --- |
@@ -111,6 +111,10 @@ later parallelism. CONC-01 remains open beyond this workload.
 
 <a id="run13-01"></a>
 ### RUN13-01 — P1: establish shared test prerequisites before parallel dispatch
+
+Implemented in [FIX-0088](FIXES.md#fix-0088): source/command planning context,
+explicit check-preparation ownership and validated dependencies, with a real
+two-worktree test-discovery regression. The evidence below is retained.
 
 Owner: coding agent planning/check policy. Sprint 2 required the persistence
 worker to add automatically discovered tests, but its write grant excluded the
