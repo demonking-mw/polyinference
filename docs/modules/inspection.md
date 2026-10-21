@@ -18,6 +18,9 @@ Read-only projections expose OS facts and coding history, sharing one diagnostic
 UI Save and automatic archives use the same serializer. Records/events share
 a read transaction; checkpoints/artifacts are separate reads. Costs are diagnostic
 estimates, not provider billing or subscription allowance.
+Repository UI facts separate ancestry, private/dirty source, recorded publication
+and accepted contributions. Legacy merged fields prove no contribution; saved
+snapshots retain their original evidence and use the same cautious rendering.
 
 ## Principles to preserve
 

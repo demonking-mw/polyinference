@@ -23,7 +23,7 @@ requested 01:55 start. Baseline cb02d02 was verified on codex/simple-os-v1 with 
 clean working tree before editing. Completion records: item 1, [FIX-0083](FIXES.md#fix-0083);
 item 2, [FIX-0084](FIXES.md#fix-0084); item 3, [FIX-0085](FIXES.md#fix-0085);
 item 4, [FIX-0086](FIXES.md#fix-0086); item 5, [FIX-0088](FIXES.md#fix-0088);
-item 6, [FIX-0089](FIXES.md#fix-0089).
+item 6, [FIX-0089](FIXES.md#fix-0089); item 7, [FIX-0090](FIXES.md#fix-0090).
 
 | Order | Item | Owning layer and bounded scope |
 | --- | --- | --- |
@@ -220,6 +220,10 @@ improvement under the current 32k setting without assuming the cap alone solves 
 
 <a id="run13-06"></a>
 ### RUN13-06 — P2: distinguish ancestor tips from accepted task contributions
+
+Implemented in [FIX-0090](FIXES.md#fix-0090): distinct ancestry, source,
+publication and kept nonempty-contribution facts in new summaries/UI. Old saved
+merged fields remain ancestry-only and unverified; history is not migrated.
 
 Owner: coding repository summary/UI projection. The parked sprint-6 worker had
 no new commit and its HEAD equaled the accepted persistence baseline, yet

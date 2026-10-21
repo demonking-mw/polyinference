@@ -89,6 +89,8 @@ completion/failure/pause. UI, CLI status and exports include branch/commit/workt
 locations. The root stays on the integration branch; there is no automatic push,
 merge-back or branch cleanup. The artifact delivery service remains optional for
 other workflows.
+The coding summary distinguishes ancestry, dirty/private source, publication and
+kept nonempty contributions; it never interprets inherited ancestry as new work.
 
 The coding program marker is `agent-5-in-place-repository`, state schema `2.3`.
 New runs require fresh state. Historical runs are not migrated or rewritten.

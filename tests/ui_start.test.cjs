@@ -204,6 +204,24 @@ test('paused run shows its original operation diagnostic instead of an opaque bl
 });
 
 const textOf = element => [element.textContent, ...element.children.map(textOf)].join(' ');
+
+test('repository facts keep inherited ancestry, private source and accepted contribution distinct', async () => {
+  const app = await ui();
+  app.context.summary = {workers:[
+    {task_id:'parked',tip_is_ancestor:true,code_location:'unreported',changes:' M a.py',path:'/private'},
+    {task_id:'done',tip_is_ancestor:true,publication_recorded:true,accepted_contribution:true,code_location:'provisional',path:'/done'},
+    {task_id:'old',merged:true,path:'/legacy'},
+  ]};
+  vm.runInContext('document.getElementById("acceptanceDetails").replaceChildren();renderRepositorySummary(document.getElementById("acceptanceDetails"),summary)', app.context);
+  const rows = app.elements.get('acceptanceDetails').children;
+  assert.match(textOf(rows[0]), /Ancestor of current HEAD/);
+  assert.match(textOf(rows[0]), /No recorded task publication/);
+  assert.match(textOf(rows[0]), /uncommitted changes retained/);
+  assert.doesNotMatch(textOf(rows[0]), /Accepted contribution/);
+  assert.match(textOf(rows[1]), /Accepted contribution/);
+  assert.match(textOf(rows[2]), /Legacy ancestry-only summary; contribution unverified/);
+  assert.doesNotMatch(textOf(rows[2]), /Accepted contribution/);
+});
 function monitorFixture() {
   const code = {repository_id:'repo', commit_id:'commit', effective_tree_digest:'tree', environment_digest:'env'};
   const records = {

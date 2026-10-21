@@ -20,6 +20,9 @@ write paths and current integration conflicts for private candidates/interrupted
 source. Validation corrects unavailable references or incomplete grants before
 dispatch; materialization rechecks them. References carry one whole scoped delta,
 not arbitrary selective multi-candidate access. Publication rules are mode-specific.
+Repository summaries separate tip/candidate ancestry, dirty source, publication
+receipts and kept nonempty contributions. An inherited tip or empty publication
+does not establish an accepted task contribution; review remains a separate fact.
 
 ## Principles to preserve
 

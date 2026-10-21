@@ -270,6 +270,19 @@ function renderNotes(){
  $("newNoteCount").textContent="New worker notes · "+notes.length;
  for(const [key,note] of notes){const box=element("div",undefined,"memory-note");box.append(element("p",previewText(note.content)),recordLink(key,note.author_ref||key));const task=agentTasks.find(task=>(note.provenance_refs||[]).includes(task.report_ref));if(task)box.append(element("span"," · "),buttonLink(task.id,()=>showTask(task.key)));$("agentNotes").append(box)}
 }
+function renderRepositorySummary(box,summary){
+ if(!summary)return;
+ for(const worker of summary.workers||[]){
+  const row=element("div",undefined,"memory-note");
+  row.append(element("strong",worker.task_id||worker.workspace_id||worker.branch||"Retained worktree"));
+  paragraph(row,"Tip ancestry",worker.tip_is_ancestor===undefined?"Legacy ancestry-only summary; contribution unverified":worker.tip_is_ancestor?"Ancestor of current HEAD":"Outside current HEAD ancestry");
+  paragraph(row,"Task contribution",worker.accepted_contribution===true?"Accepted contribution":worker.publication_recorded?"Published; review: "+(worker.review_action||"unreviewed"):"No recorded task publication");
+  paragraph(row,"Source",(worker.code_location||"unrecorded")+" · "+(worker.changes?"uncommitted changes retained":"no recorded uncommitted changes"));
+  paragraph(row,"Location",worker.path||"unavailable");
+  if(worker.report_ref)row.append(recordLink(worker.report_ref,"Task report"));
+  box.append(row);
+ }
+}
 function renderAcceptance(){
  const facts=acceptanceFacts(agentRecords,osState?.operations||[]),run=facts.run,accepted=facts.accepted;
  const inPlace=agentRecords["repository/setup"]?.isolated===false;
@@ -283,7 +296,7 @@ function renderAcceptance(){
  for(const check of facts.checks){const line=element("p");line.append(stateBadge(check.status),element("span"," "+check.criterion_ref+" · "+evidenceFreshness(check,facts.head)));box.append(line);artifactLinks(box,[check.invocation,check.output])}
  if(run.acceptance_ref)box.append(recordLink(run.acceptance_ref,"Acceptance receipt"));
  if(run.output)paragraph(box,inPlace?"Project checkout":"Delivered output",typeof run.output==="string"?run.output:run.output.directory||pretty(run.output));
- if(inPlace){paragraph(box,"Integration branch",agentRecords["repository/setup"].base_branch||"detached HEAD");box.append(recordLink("coding/repository-summary","Repository branches and worker paths"))}
+ if(inPlace){paragraph(box,"Integration branch",agentRecords["repository/setup"].base_branch||"detached HEAD");box.append(recordLink("coding/repository-summary","Repository branches and worker paths"));renderRepositorySummary(box,agentRecords["coding/repository-summary"])}
  if(run.output_error||run.output_failure)paragraph(box,"Delivery issue",pretty(run.output_error||run.output_failure));
  if(accepted&&run.status==="paused"&&run.blocker)paragraph(box,"Delivery blocked",monitorData?.blocker_detail||run.blocker);
  if(facts.receipt&&!accepted)paragraph(box,"Earlier acceptance is stale","The recorded acceptance no longer matches the current revision, plan, input watermark or settled work. A new acceptance is required.");

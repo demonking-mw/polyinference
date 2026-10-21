@@ -602,14 +602,39 @@ class RepositoryWorkspaces(Workspaces):
         work = []
         head = await self.optional(self.project, "rev-parse", "--verify", "HEAD") or "unavailable"
         current_branch = await self.optional(self.project, "symbolic-ref", "--quiet", "--short", "HEAD")
-        for _, _, item in self.records.scan("coding/worktree/"):
+        tasks = {t["workspace_id"]: t for _, _, t in self.records.scan("task/")}
+        for key, _, item in self.records.scan("coding/worktree/"):
             if item.get("checking"):
                 continue
             path = Path(item["path"])
             tip = await self.optional(path, "rev-parse", "--verify", "HEAD")
-            merged = bool(tip and await self.optional(self.project, "merge-base", "--is-ancestor", tip, head)
-                          is not None)
-            work.append({**item, "commit": tip, "merged": merged,
+            ancestry = bool(tip and await self.optional(self.project, "merge-base", "--is-ancestor", tip, head)
+                            is not None)
+            task = tasks.get(key.removeprefix("coding/worktree/"), {})
+            report_ref = task.get("report_ref")
+            report = (self.records.get(report_ref) or (0, {}))[1] if report_ref else {}
+            receipt_ref = report.get("publication_receipt_ref")
+            integrated = (self.records.get("coding/integrated/" + receipt_ref) or (0, {}))[1] if receipt_ref else {}
+            receipt = (self.records.get(receipt_ref) or (0, {}))[1] if receipt_ref else {}
+            candidate = report.get("candidate_commit_id")
+            published = bool(candidate and report.get("code_location") != "private"
+                             and integrated.get("code", {}).get("commit_id") == candidate
+                             and receipt.get("published_head", {}).get("commit_id") == candidate
+                             and receipt.get("report_ref") == report_ref)
+            candidate_ancestor = bool(candidate and await self.optional(
+                self.project, "merge-base", "--is-ancestor", candidate, head) is not None)
+            changed = await self.optional(self.project, "diff", "--name-only",
+                                          report["candidate_parent_commit_id"], candidate) if candidate else None
+            resolution = (self.records.get("resolution/" + report_ref) or (0, {}))[1] if report_ref else {}
+            accepted = bool(published and candidate_ancestor and changed and resolution.get("action") == "keep")
+            work.append({**item, "workspace_id": key.removeprefix("coding/worktree/"),
+                         "task_id": task.get("assignment", {}).get("task_id"), "commit": tip,
+                         "tip_is_ancestor": ancestry, "report_ref": report_ref,
+                         "code_location": report.get("code_location", "provisional" if report else "unreported"),
+                         "candidate_commit_id": candidate, "candidate_is_ancestor": candidate_ancestor,
+                         "contribution_paths": changed.splitlines() if changed else [],
+                         "publication_recorded": published, "review_action": resolution.get("action"),
+                         "accepted_contribution": accepted,
                          "changes": "\n".join(await self.dirty(path)) if tip else "Worktree unavailable"})
         return {"project": str(self.project), "original_branch": setup[1]["original_branch"],
                 "original_commit": setup[1]["original_commit"], "integration_branch": setup[1]["base_branch"],
@@ -630,16 +655,20 @@ class RepositoryWorkspaces(Workspaces):
         if "integration_branch" not in summary:
             return "Repository setup incomplete. Project: " + summary["project"]
         workers = summary["workers"]
-        remaining = [w for w in workers if not w["merged"] or w["changes"]]
+        remaining = [w for w in workers if not w["accepted_contribution"] or w["changes"]]
         lines = ["Project: " + summary["project"],
                  "Started from: " + str(summary["original_branch"] or "detached/unborn HEAD")
                  + " at " + str(summary["original_commit"] or "no commit"),
                  "Working branch: " + str(summary["integration_branch"] or "detached HEAD"),
                  "Current checkout: " + str(summary["current_branch"] or "detached/unavailable HEAD"),
                  "Final HEAD: " + summary["head"], "Branch policy: " + summary["policy"]["reason"],
-                 f"Worker worktrees: {len(workers)} retained; {len(remaining)} unfinished."]
+                 f"Worker worktrees: {len(workers)} retained; "
+                 f"{sum(w['accepted_contribution'] for w in workers)} with accepted contributions; "
+                 f"{len(remaining)} require inspection."]
         for worker in remaining:
             lines.append(str(worker["branch"] or "detached HEAD") + " at " + worker["path"]
-                         + "\n" + worker["changes"])
+                         + f"\nTip ancestry: {worker['tip_is_ancestor']}; source: {worker['code_location']}; "
+                         + f"publication recorded: {worker['publication_recorded']}; "
+                         + f"review: {worker['review_action'] or 'unreviewed'}\n" + worker["changes"])
         lines.append("No push or merge back was performed. Full locations: coding/repository-summary.")
         return "\n".join(lines)[:15000]

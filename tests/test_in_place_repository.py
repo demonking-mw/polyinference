@@ -170,6 +170,54 @@ async def test_no_new_branches_uses_serial_current_checkout(config):
         await runtime.close()
 
 
+@pytest.mark.parametrize("source", ["untouched", "interrupted", "private", "accepted", "empty_published"])
+async def test_repository_summary_separates_ancestry_source_and_accepted_contribution(config, source):
+    runtime, app, engine, scripted = await app_for(config)
+    scripted.two = False
+    scripted.verdict = "fail" if source == "private" else "successful"
+    original = scripted.generate
+
+    async def empty(messages, max_output, response_schema=None):
+        if '"phase":"development"' in str(messages).replace(" ", ""):
+            return {"text": json.dumps({"kind": "candidate", "summary": "No change"}),
+                    "usage": {"total_tokens": 20}, "model": "fixture", "events": []}
+        return await original(messages, max_output, response_schema)
+
+    if source == "empty_published":
+        scripted.generate = empty
+    try:
+        await engine.initialize()
+        if source in {"untouched", "interrupted"}:
+            app.process("observer", "worker")
+            app.update("task/observer", {"workspace_id": "observer", "assignment": {"task_id": "observer"}})
+            base = CodeRevision.model_validate(app.get("head/provisional")["code"])
+            manifest = await app.repository.create("observer", "observer", "opaque", base, ["a.py"], [])
+            if source == "interrupted":
+                (app.repository.root_for(manifest) / "a.py").write_text("VALUE = 9\n")
+        elif source == "private":
+            await engine.review()
+            await engine.dispatch()
+            await asyncio.gather(*engine.workers.values())
+            await engine.consume()
+        else:
+            await engine.run()
+            assert app.get("app/run")["status"] == "completed"
+        summary = await app.repository.summary()
+        worker, = summary["workers"]
+        assert "merged" not in worker
+        assert worker["tip_is_ancestor"] == (source != "private")
+        assert worker["publication_recorded"] == (source in {"accepted", "empty_published"})
+        assert worker["accepted_contribution"] == (source == "accepted")
+        assert bool(worker["changes"]) == (source == "interrupted")
+        assert worker["contribution_paths"] == (["a.py"] if source in {"accepted", "private"} else [])
+        assert worker["code_location"] == ("private" if source == "private" else
+                                          "provisional" if source in {"accepted", "empty_published"} else "unreported")
+        assert "unfinished" not in app.repository.summary_message(summary)
+    finally:
+        await app.repository.close_run()
+        await runtime.close()
+
+
 async def test_serial_policy_waits_for_active_worker_with_another_ready_task(config):
     runtime, app, engine, scripted = await app_for(
         config, git_policy={"mode": "current", "task_branches": False, "reason": "Serial project"})

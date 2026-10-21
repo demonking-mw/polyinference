@@ -139,6 +139,7 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0087](#fix-0087) | 2026-10-21 | Record future learned routing and quota-aware task scheduling (ID corrected from duplicate 0085) |
 | [FIX-0088](#fix-0088) | 2026-10-21 | Declare shared-check preparation owners before parallel dispatch |
 | [FIX-0089](#fix-0089) | 2026-10-21 | Make explicit retained-source handoff actionable during planning |
+| [FIX-0090](#fix-0090) | 2026-10-21 | Separate inherited ancestry from accepted task contributions |
 
 
 ## Entry template
@@ -4047,3 +4048,48 @@ interrupted-source grant/conflict refusal tests remain passing; added planning
 offer assertions passed separately (2 passed, 2.27 seconds). Ruff, scoped
 whitespace and documentation generation/check passed. No live provider, run-state
 migration or push; unrelated next-iteration edits are excluded.
+
+<a id="fix-0090"></a>
+## FIX-0090 — 2026-10-21 — Separate inherited ancestry from accepted task contributions
+
+Status: implemented. Related: [FIX-0068](#fix-0068), [FIX-0077](#fix-0077),
+[RUN13-06](current-iter-issues.md#run13-06).
+
+### Problem
+
+An untouched or dirty interrupted worker inherited an integrated HEAD and was
+labelled merged:true despite contributing no accepted source. Private, empty and
+accepted work could not be distinguished from ancestry alone.
+
+### What was wrong
+
+The coding summary called merge-base ancestry merged and counted it as finished
+work. Prior publication safety was correct but did not validate this projection.
+
+### How it was fixed
+
+Repository summaries replace merged with explicit tip/candidate ancestry, dirty
+changes, code location, report/review, contribution paths and publication facts.
+Publication requires matching report, generic receipt and coding integration
+record. Accepted contribution additionally needs keep, current ancestry and a
+nonempty candidate delta. Deterministic messages report these distinctions and
+inspection needs. The UI renders them separately and labels legacy summaries as
+ancestry-only/unverified. Historical records and source are not rewritten.
+Updated repository/inspection/boundary guides and tracker. Archive/results/setup
+and settings references were reviewed; format-v2 snapshots, commands and settings
+are unchanged, so no edits/navigation changes were needed there.
+
+### Design principle enforced or reconstructed
+
+The agent owns Git meaning and task acceptance projections. An inherited commit,
+source delta, recorded publication, senior acceptance and product completion are
+separate facts. Read-only inspection must preserve that distinction.
+
+### Verification
+
+Five new real-Git cases passed: untouched inherited tip, dirty interrupted source,
+private failed candidate, accepted nonempty change and published empty change.
+Affected repository/UI projection suites: 38 passed in 79.97 seconds. Windows
+Node frontend: 15/15 passed, including cautious legacy rendering. Ruff, scoped
+whitespace and native documentation generation/check passed. No live provider,
+historical-state rewrite or push; concurrent next-iteration edits are excluded.
