@@ -6,11 +6,12 @@ import asyncio
 import json
 import subprocess
 import sys
+from types import SimpleNamespace
 
 import pytest
 from conftest import ScriptedAgent, git
 
-from polyinference.agent.controller import ProjectAgent
+from polyinference.agent.controller import ProjectAgent, tick
 from polyinference.agent.services import AgentServices
 from polyinference.config import AgentConfig
 from polyinference.contracts import CodeRevision
@@ -78,6 +79,36 @@ async def test_no_new_branches_uses_serial_current_checkout(config):
         assert app.worker_limit == 1
         assert (config.repo_path / "b.py").read_text() == "VALUE = 2\n"
     finally:
+        await runtime.close()
+
+
+async def test_serial_policy_waits_for_active_worker_with_another_ready_task(config):
+    runtime, app, engine, scripted = await app_for(
+        config, git_policy={"mode": "current", "task_branches": False, "reason": "Serial project"})
+    entered, release = asyncio.Event(), asyncio.Event()
+
+    async def hold_worker(data):
+        if data.get("assignment", {}).get("task_id") == "a" and data.get("phase") == "development":
+            entered.set()
+            await release.wait()
+
+    scripted.hook = hold_worker
+    try:
+        await engine.initialize()
+        await engine.review()
+        await engine.dispatch()
+        await asyncio.wait_for(entered.wait(), 5)
+        assert app.config.max_workers == 2 and app.worker_limit == 1
+        assert engine.ready() == ["task/b"]
+        context = SimpleNamespace(context=SimpleNamespace(services=app))
+        for _ in range(3):
+            assert (await tick({}, context))["next_transition"] == "wait"
+        release.set()
+        await asyncio.wait_for(engine.run(), 30)
+        assert app.get("app/run")["status"] == "completed"
+        assert (config.repo_path / "b.py").read_text() == "VALUE = 2\n"
+    finally:
+        release.set()
         await runtime.close()
 
 

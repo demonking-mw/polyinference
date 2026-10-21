@@ -132,6 +132,7 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0080](#fix-0080) | 2026-10-20 | Add concise module docs and a complete human/agent navigation tree |
 | [FIX-0081](#fix-0081) | 2026-10-21 | Reassess unfinished older backlog items against current implementation |
 | [FIX-0082](#fix-0082) | 2026-10-21 | Preserve a tested current-version checkpoint and schedule sequential fixes |
+| [FIX-0083](#fix-0083) | 2026-10-21 | Wait at the effective coding-worker capacity |
 
 
 ## Entry template
@@ -3696,3 +3697,46 @@ guides and existing issue/ownership documents. Reviewed adjacent guides; no
 behavior/settings/module documentation update is needed before implementation.
 No live inference, run resume, historical-state migration, push or queued fix
 implementation occurred. Future work must verify its own changes and outcomes.
+
+<a id="fix-0083"></a>
+## FIX-0083 — 2026-10-21 — Wait at the effective coding-worker capacity
+
+Status: implemented; queue item 1.
+Related history: [FIX-0040](#fix-0040), [FIX-0069](#fix-0069), [FIX-0082](#fix-0082).
+
+### Problem
+
+With two configured workers but a no-task-branches policy allowing one editor,
+the controller repeatedly selected dispatch while the dispatcher started nothing.
+The scheduled wakeup actually began at 09:14:29 EDT, not the requested 01:55;
+baseline cb02d02 and a clean tree were verified before implementation.
+
+### What was wrong
+
+Agent controller tick compared active workers with config.max_workers, while
+dispatch used the lower effective app.worker_limit. Existing serial-repository
+coverage established completion, not the wait decision while another task is ready.
+
+### How it was fixed
+
+agent/controller.py now uses app.worker_limit in tick as dispatch already does.
+The real-repository regression holds one worker at a model barrier, leaves another
+task ready, checks repeated wait decisions, then releases the worker and verifies
+both tasks complete on the user's serial checkout. Updated the workflow guide
+and current tracker; the wider OS concurrency audit remains open.
+
+### Design principle enforced or reconstructed
+
+Application scheduling and dispatch must agree on effective capacity. Git policy
+and task readiness belong to the coding agent; no OS scheduler, grant or resource
+limit was changed. Waiting preserves the running worker's finish path.
+
+### Verification
+
+The new regression failed before correction with dispatch instead of wait.
+Afterward tests/test_in_place_repository.py and tests/test_regressions.py passed:
+38 passed in 82.39 seconds. Documentation generation/check, affected-file Ruff
+and patch whitespace checks passed. Reviewed adjacent repository/settings/boundary
+guides; no interface/default/navigation change requires further edits. Earlier
+history is preserved. Tests use disposable repositories and local transports;
+no live provider, historical run mutation, migration or push occurred.

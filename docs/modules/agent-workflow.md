@@ -23,7 +23,7 @@ is serialized by an explicit resource permit; starts close while review drains.
 - Requested work and started work differ; OS slots cannot invent ready tasks.
 - Keep setup/management outside development allocation counts.
 - Preserve user amendments and retained failure evidence across handoffs.
-- Effective-capacity mismatch remains the open FIX-0069 finding.
+- Tick and dispatch use the same effective worker limit, including one-editor Git policy (FIX-0083).
 
 ## Verification and related reading
 

@@ -10,13 +10,17 @@ as current behavior.
 <a id="authorized-implementation-queue"></a>
 ## Authorized implementation queue — 2026-10-21
 
-Status: authorized and queued; implementation must start no earlier than
+Status: implementation in progress; implementation must start no earlier than
 **2026-10-21 01:55:00 America/Toronto (EDT; 05:55:00 UTC)**. This latest start
 time supersedes the earlier requested times. The user requested
 a commit of the current version first, then one fix at a time with a separate
 commit after each verified fix. Earlier planning-only restrictions are superseded
 for these nine scoped items. Queue preparation and baseline checks are not
 implementation of the fixes; record actual start and completion evidence later.
+
+Actual wakeup clock check: **2026-10-21 09:14:29 EDT (13:14:29 UTC)**, after the
+requested 01:55 start. Baseline cb02d02 was verified on codex/simple-os-v1 with a
+clean working tree before editing. Completion records: item 1, [FIX-0083](FIXES.md#fix-0083).
 
 | Order | Item | Owning layer and bounded scope |
 | --- | --- | --- |
@@ -80,11 +84,11 @@ captured wait/ownership/reservation evidence. Cover general agents without Git o
 coding records as well as the bundled coding agent. Existing concurrency tests
 and earlier passes do not establish that this expanded audit has been completed.
 
-Track the confirmed tick/dispatch capacity mismatch from FIX-0069 alongside this
-audit: config.max_workers can exceed the agent's effective worker_limit and cause
-repeated no-op dispatch. Its correction belongs to the coding agent; OS tests
-should not absorb Git policy. Preserve grants, budgets and execution-certainty
-guarantees when addressing any findings.
+The confirmed tick/dispatch capacity mismatch from FIX-0069 is corrected by
+[FIX-0083](FIXES.md#fix-0083): both predicates use the agent's effective worker_limit.
+The wider OS audit remains open; this application correction does not establish
+deadlock freedom. OS tests should not absorb Git policy. Preserve grants, budgets
+and execution-certainty guarantees when addressing any findings.
 
 <a id="run-a1859f8644a5-findings"></a>
 ## First two-slot run: recovery and concurrency findings — 2026-10-20

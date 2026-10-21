@@ -1187,7 +1187,7 @@ async def tick(state, runtime: Runtime[AppContext]):
     ready = engine.ready()
     if run["starts_closed"] or (not ready and not run["active_workers"]):
         return {"next_transition": "review"}
-    if ready and len(run["active_workers"]) < app.config.max_workers:
+    if ready and len(run["active_workers"]) < app.worker_limit:
         return {"next_transition": "dispatch"}
     return {"next_transition": "wait"}
 
