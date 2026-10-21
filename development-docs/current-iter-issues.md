@@ -21,7 +21,7 @@ implementation of the fixes; record actual start and completion evidence later.
 Actual wakeup clock check: **2026-10-21 09:14:29 EDT (13:14:29 UTC)**, after the
 requested 01:55 start. Baseline cb02d02 was verified on codex/simple-os-v1 with a
 clean working tree before editing. Completion records: item 1, [FIX-0083](FIXES.md#fix-0083);
-item 2, [FIX-0084](FIXES.md#fix-0084).
+item 2, [FIX-0084](FIXES.md#fix-0084); item 3, [FIX-0085](FIXES.md#fix-0085).
 
 | Order | Item | Owning layer and bounded scope |
 | --- | --- | --- |

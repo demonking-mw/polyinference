@@ -326,9 +326,9 @@ Confirmed output cutoffs and detectable completed overages use bounded OS
 smaller-response recovery under the declared protocol. Feedback is remeasured;
 new intents are charged without rewriting original failures. Unknown termination
 requires reconciliation; native jobs with brokered effects are not blindly
-replayed. Generic feedback still mentions visible JSON even for raw plain-text
-callers (U05); that application assumption remains a defect, not an approved
-change of grammar. Native hard generation-token limits remain unsupported and can be made
+replayed. Generic feedback preserves the caller's declared protocol and asks for
+smaller visible response content, including for plain-text callers (FIX-0085).
+Native hard generation-token limits remain unsupported and can be made
 a pre-submission rejection through the strict enforcement requirement.
 
 The agent still owns block semantics, canonical memory, grammar correction,

@@ -124,6 +124,37 @@ async def test_empty_response_retries_and_retains_usage_and_immutable_failure(tm
         await rt.close()
 
 
+@pytest.mark.parametrize("binding", ["local", "cloud"])
+@pytest.mark.parametrize("answer", ["A short plain-text answer.", '{"answer":"short"}'])
+async def test_output_recovery_preserves_plain_text_and_structured_grammars(tmp_path, binding, answer):
+    rt, request = await setup(tmp_path, binding=binding)
+    calls = []
+
+    async def handler(http_request):
+        wire = json.loads(http_request.content)
+        calls.append(wire)
+        if len(calls) == 1:
+            partial = body("anthropic", "unusable partial answer")
+            partial["stop_reason"] = "max_tokens"
+            return httpx.Response(200, json=partial)
+        feedback = wire["messages"][-1]["content"]
+        assert "UTF-8 bytes" in feedback and "same declared protocol" in feedback
+        assert "JSON" not in feedback
+        return httpx.Response(200, json=body("anthropic", answer))
+
+    await install(rt, request, handler)
+    try:
+        result = await rt.execute(request)
+        assert result.state == "succeeded"
+        assert json.loads(rt.artifacts.read(result.output_refs[0]))["text"] == answer
+        assert (await rt.execute(request)) == result and len(calls) == 2
+        assert rt.records.get("effect/summary")[1]["result"]["state"] == "failed"
+        assert rt.admission[binding].active == 0 and not rt.uncertain()
+        assert not rt.records.scan("task/") and not rt.config.repo_path.exists()
+    finally:
+        await rt.close()
+
+
 @pytest.mark.parametrize("failure", ["thinking_only", "invalid_json", "invalid_shape", "unexpected_content"])
 async def test_unusable_response_facts_survive_and_thinking_is_not_exported(tmp_path, failure):
     rt, request = await setup(tmp_path)

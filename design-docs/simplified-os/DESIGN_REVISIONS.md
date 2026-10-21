@@ -55,7 +55,7 @@ remove the corresponding requirements merely to agree with current code.
 | U02 | Unsupported hard allocation semantics must be rejected even when the caller omits a feature flag. Current process registration stores such schedules without that semantic rejection. Static routing remains a justified scope choice; silent acceptance does not. | [process registration](../../src/polyinference/runtime/processes.py) |
 | U03 | Registered process limits must match actual execution authority. Current registration accepts a narrower ProcessSpec.limits, while operations require RuntimeConfig.limits and use that global envelope. A uniform-limit profile would be reasonable if incompatible specs were rejected at registration. | [operation validation](../../src/polyinference/runtime/kernel.py) |
 | U04 | The original residency rule keeps paused workers counted until explicit safe hibernation/readmission. Current max_workers counts unfinished driver tasks; a stopped paused driver drops out without that transition. The difference is unresolved, not an approved automatic hibernation policy. | [driver accounting](../../src/polyinference/runtime/processes.py) |
-| U05 | Generic output recovery must preserve the caller's grammar. Current smaller-response feedback mentions visible JSON even for raw plain-text callers. Internal compaction's own JSON protocol is legitimate; imposing it on unrelated callers is not. | [output recovery](../../src/polyinference/runtime/model_retries.py) |
+| U05 — resolved | Generic output recovery preserves caller grammar after [FIX-0085](../../development-docs/FIXES.md#fix-0085). Earlier feedback requested visible JSON even from plain-text callers; generic feedback now requests smaller response content under the same declared protocol. Internal compaction retains its own legitimate JSON contract. | [output recovery](../../src/polyinference/runtime/model_retries.py) |
 
 Until repaired, configuring consistent role bindings and one limits envelope is
 a caller-side precaution, not proof of OS enforcement. Setting
@@ -70,5 +70,6 @@ frozen graph or historical test result. The [I/O completion report](../../develo
 records the existing 327-test full run and the later 73-case verification, their
 ordering and limits; these are historical results, not checks rerun for this edit.
 The four contract issues U01–U04 were reproduced in memory-only probes during
-the preceding audit; U05 is also explicit in current source. No live provider or
+the preceding audit; U05 was subsequently resolved with protocol-preservation
+regressions in FIX-0085. No live provider or
 hardware benchmark is claimed.

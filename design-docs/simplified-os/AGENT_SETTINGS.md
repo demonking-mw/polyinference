@@ -263,9 +263,10 @@ remain failed observations. Their text is never an executed action or concatenat
 result. Safe bounded recovery adds smaller-response feedback under the same
 declared protocol, remeasures input, creates a new durable intent and charges
 normal budgets. Original failures stay immutable; execute/replay projects the
-effective result. Current generic feedback nevertheless mentions visible JSON
-for arbitrary raw callers; U05 tracks that grammar leak. Disable output_recoveries
-when that assistance is unsuitable; incomplete-output rejection still applies. Output-retry records expose lineage; an exhausted cutoff
+effective result. Generic feedback requests smaller visible response content
+under the caller's declared protocol, without imposing JSON (FIX-0085).
+Disable output_recoveries when that assistance is unsuitable; incomplete-output
+rejection still applies. Output-retry records expose lineage; an exhausted cutoff
 exposes polyinference/incomplete-generation.
 
 Missing completion metadata/unusable responses cannot become success; eligible

@@ -70,7 +70,7 @@ class ModelRetries:
             target = max(1, min(rt.config.inference_safety.smaller_response_bytes,
                                 original.limits.max_output_bytes) // (2 ** index))
             text = ("The previous response hit an output limit and was discarded; none of its returned actions executed. "
-                f"Recovery attempt {index + 1}: aim below {target} UTF-8 bytes of visible JSON. "
+                f"Recovery attempt {index + 1}: aim below {target} UTF-8 bytes of visible response content. "
                 "Return a substantially smaller complete response under the same declared protocol. "
                 "Preserve the objective, constraints and phase. Do not concatenate or repeat the partial response. "
                 "Previously completed tool effects remain recorded and must not be repeated.")

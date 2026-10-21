@@ -19,8 +19,8 @@ all failed/successful attempts; replay follows the stored effective outcome.
 - Never blindly retry uncertain execution or native jobs with brokered effects.
 - OS retry allowance is distinct from explicit application recovery allowance.
 - Remeasure feedback; preserve routing, grants, trust, limits and finishing reserves.
-- Grammar repair/task decomposition remain caller policy. Generic JSON-specific
-  recovery wording is the documented open U05 defect.
+- Grammar repair/task decomposition remain caller policy. Generic smaller-output
+  feedback limits visible response bytes while preserving the caller's declared protocol (FIX-0085).
 
 ## Verification and related reading
 

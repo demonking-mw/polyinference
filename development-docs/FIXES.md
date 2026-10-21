@@ -134,6 +134,8 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0082](#fix-0082) | 2026-10-21 | Preserve a tested current-version checkpoint and schedule sequential fixes |
 | [FIX-0083](#fix-0083) | 2026-10-21 | Wait at the effective coding-worker capacity |
 | [FIX-0084](#fix-0084) | 2026-10-21 | Retain cancelled development starts in accounting and allocation |
+| [FIX-0085](#fix-0085) | 2026-10-21 | Preserve caller grammar in generic output recovery |
+| [FIX-0085](#fix-0085) | 2026-10-21 | Record future learned routing and quota-aware task scheduling |
 
 
 ## Entry template
@@ -3787,3 +3789,92 @@ Existing never-started cancellation and setup-exclusion coverage passed.
 Documentation generation/check, changed-file Ruff and patch whitespace passed.
 Reviewed inspection and runtime-boundary guides: interfaces remain unchanged.
 No historical records were rewritten, live providers called or commits pushed.
+
+<a id="fix-0085"></a>
+## FIX-0085 — 2026-10-21 — Preserve caller grammar in generic output recovery
+
+Status: implemented; queue item 3 / U05.
+Related history: [FIX-0058](#fix-0058), [FIX-0072](#fix-0072), [FIX-0081](#fix-0081).
+
+### Problem
+
+An ordinary non-coding plain-text caller received OS cutoff-recovery instructions
+requesting visible JSON despite retaining its own response protocol.
+
+### What was wrong
+
+The generalized OS recovery moved from the coding agent in FIX-0058 but retained
+a JSON-specific phrase. Previous tests covered safety and coding responses, not
+the generic feedback's effect on unrelated response grammars.
+
+### How it was fixed
+
+runtime/model_retries.py now requests bounded visible response content under the
+same declared protocol. Added raw non-coding fixtures for plain text and JSON on
+both bindings, including immutable failed attempts, replay and released admission.
+Updated retry/boundary/settings guides, the revision ledger and current queue.
+
+### Design principle enforced or reconstructed
+
+OS assistance may adapt response size without choosing application grammar.
+Callers retain semantic strategy; existing linked-intent, effect-certainty,
+budget, reserve and context-remeasurement guards remain unchanged.
+
+### Verification
+
+All four new cases failed with the old wording. The final retry/output/context
+run passed 88 tests in 20.91 seconds. Documentation generation/check, affected
+Ruff and patch whitespace checks passed. No API/default/schema/navigation change
+was needed; adjacent provider guides remain accurate. No live inference,
+historical-state mutation, migration or push occurred. An unrelated edit in
+next-iteration.md remains untouched and excluded from this commit.
+
+<a id="fix-0085"></a>
+## FIX-0085 — 2026-10-21 — Record future learned routing and quota-aware task scheduling
+
+Status: investigated; future proposals documented, no implementation changed.
+Related history: [FIX-0054](#fix-0054), [FIX-0061](#fix-0061),
+[FIX-0067](#fix-0067), [FIX-0083](#fix-0083).
+Proposals: [learned routing](next-iteration.md#learned-agent-routing) and
+[quota-aware scheduling](next-iteration.md#quota-aware-task-scheduler).
+
+### Problem
+
+The user requested two ideas be retained for the next version, explicitly outside
+the current version: a fine-tuned agent/settings router and a task scheduler
+that submits or delays tasks according to task settings and cloud quotas.
+
+### What was wrong
+
+The future backlog did not capture these ideas. This was a documentation gap,
+not evidence of a current runtime defect. Application selection and scheduling
+policy must remain distinct from generic OS admission and execution mechanisms.
+
+### How it was fixed
+
+Added two dated proposals to next-iteration.md. Routing takes all agent
+descriptions, available settings and the prompt, then selects an agent and its
+settings. Scheduling considers all tasks, priority, fidelity, time sensitivity
+and provider quota/reset windows, and requests task submission or timed deferral
+through the OS. The user's five-hour/weekly Codex example is recorded as a
+planning example, not a verified account entitlement. No implementation changed;
+training, evaluation, timing, quota and safe interruption contracts remain open.
+
+### Design principle enforced or reconstructed
+
+Future proposals do not expand current-version requirements. Keep task meaning,
+agent selection and scheduling policy above the OS; generic authority, resource
+admission, timing and execution facts belong to OS mechanisms. Preserve support
+for agents with no coding workflow and distinguish deferred starts from stopping
+already-running work.
+
+### Verification
+
+Reviewed the future backlog, navigation, documentation maintenance, runtime
+boundary, revision ledger and adjacent workflow/inference/provider guides.
+Those guides and the current tracker need no edit because current behavior,
+interfaces, settings and implementation scope are unchanged. Existing navigation
+already owns and links the backlog; no file or feature leaf was added or moved.
+Documentation generation/check and scoped whitespace checks passed under WSL.
+No runtime tests or live providers were used for these documentation-only ideas.
+Concurrent current-version fixes and their history entries are separate work.
