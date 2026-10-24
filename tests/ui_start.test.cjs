@@ -46,6 +46,203 @@ const listing = runs => ({
   total_cost: {estimated_usd: 0}, configuration: 'Fixture', browse_root: '/',
 });
 
+function pausedProcess(app) {
+  vm.runInContext(`current="old";hasRunningRun=false;
+    osState={processes:[{process_id:"worker",state:"paused",key:"process-status/worker"},
+      {process_id:"controller",state:"paused",key:"process-status/controller"}],operations:[]};
+    monitorData={id:"old",processes:[],resume:{allowed:true}};showProcess("worker");`, app.context);
+  return vm.runInContext('resumePanel', app.context);
+}
+
+test('paused process sends one resume signal with optional steering to its selected run', async () => {
+  for (const text of ['', 'Preserve <existing> source.']) {
+    const app = await ui(), panel = pausedProcess(app), post = deferred();
+    let requests = 0, submitted;
+    panel.text.value = text; panel.text.oninput();
+    app.setHandler(async (url, options) => {
+      if (options?.method === 'POST') {
+        assert.equal(url, '/api/resume'); requests++; submitted = JSON.parse(options.body); return post.promise;
+      }
+      return response(url === '/api/runs' ? listing([view('old', 'running')]) : view('old', 'running'));
+    });
+    const sending = panel.button.onclick();
+    assert.equal(panel.button.disabled, true);
+    await panel.button.onclick();
+    assert.equal(requests, 1);
+    assert.deepEqual(submitted, {id: 'old', process_id: 'worker', text});
+    assert.equal(panel.text.value, text); // Keep instructions until acknowledgement.
+    post.resolve(response({id: 'old', process_id: 'worker', request_ref: 'resume-request/one'}, 202));
+    await sending; await flush();
+    assert.equal(panel.text.value, '');
+    assert.match(panel.status.textContent, /Resume signal sent/);
+    assert.equal(app.elements.get('runs').value, 'old');
+  }
+});
+
+test('resume errors retain drafts and late replies cannot affect another process drawer', async () => {
+  const app = await ui(), panel = pausedProcess(app);
+  panel.text.value = 'Keep my instructions'; panel.text.oninput();
+  app.setHandler(async (url, options) => options?.method === 'POST'
+    ? response({error: 'Reconcile unsettled operations first'}, 400)
+    : response(url === '/api/runs' ? listing([view('old', 'paused')]) : view('old', 'paused')));
+  await panel.button.onclick(); await flush();
+  assert.equal(panel.text.value, 'Keep my instructions');
+  assert.match(panel.status.textContent, /Reconcile unsettled/);
+  assert.equal(panel.button.disabled, false);
+  const post = deferred();
+  app.setHandler(async (url, options) => options?.method === 'POST' ? post.promise
+    : response(url === '/api/runs' ? listing([view('old', 'paused')]) : view('old', 'paused')));
+  const sending = panel.button.onclick();
+  vm.runInContext('showProcess("controller")', app.context);
+  const next = vm.runInContext('resumePanel', app.context);
+  next.text.value = 'Different process instructions';
+  post.resolve(response({error: 'old request failed'}, 400));
+  await sending; await flush();
+  assert.equal(next.status.textContent, '');
+  assert.equal(next.text.value, 'Different process instructions');
+  vm.runInContext('showProcess("worker")', app.context);
+  assert.equal(vm.runInContext('resumePanel.text.value', app.context), 'Keep my instructions');
+});
+
+test('resume controls respect saved snapshots, blockers, active runs and refreshed process status', async () => {
+  const app = await ui();
+  pausedProcess(app);
+  vm.runInContext('savedDocument={};updateResumePanel()', app.context);
+  assert.equal(vm.runInContext('resumePanel.button.disabled', app.context), true);
+  assert.match(vm.runInContext('resumePanel.hint.textContent', app.context), /read-only/);
+  vm.runInContext('savedDocument=null;monitorData.resume={allowed:false,reason:"Reconcile unknown execution"};updateResumePanel()', app.context);
+  assert.equal(vm.runInContext('resumePanel.button.disabled', app.context), true);
+  assert.match(vm.runInContext('resumePanel.hint.textContent', app.context), /Reconcile/);
+  vm.runInContext('monitorData.resume={allowed:true};hasRunningRun=true;updateResumePanel()', app.context);
+  assert.equal(vm.runInContext('resumePanel.button.disabled', app.context), true);
+  vm.runInContext('hasRunningRun=false;osState.processes[0].state="running";updateResumePanel()', app.context);
+  assert.match(vm.runInContext('resumePanel.hint.textContent', app.context), /no longer paused/);
+});
+
+test('Resume click immediately starts the selected run with optional inline instructions and no process choice', async () => {
+  for (const text of ['', 'Keep my worker changes']) {
+    const app = await ui(), $ = id => app.elements.get(id), post = deferred();
+    let posts = 0, submitted;
+    app.setHandler(async (url, options) => {
+      if (options?.method === 'POST') {posts++; submitted = JSON.parse(options.body); return post.promise;}
+      return response(url === '/api/runs' ? listing([view('old', 'running')]) : view('old', 'running'));
+    });
+    vm.runInContext('render({id:"old",status:"paused",processes:[],cost:{},resume:{allowed:true}})', app.context);
+    assert.equal($('resumeFields').hidden, false);
+    $('resumeText').value=text; $('resumeText').oninput();
+    const sending=$('resumeRun').onclick();
+    assert.equal(posts, 1);
+    assert.equal(submitted.id, 'old'); assert.equal(submitted.text, text);
+    assert.equal(typeof submitted.request_id, 'string'); assert.ok(submitted.request_id.length);
+    assert.equal('process_id' in submitted, false);
+    assert.equal($('osInspector').open, undefined);
+    assert.equal($('resumeRun').disabled, true); assert.equal($('resumeRun').textContent, 'Resuming…');
+    await $('resumeRun').onclick(); assert.equal(posts,1);
+    post.resolve(response({id:'old',request_ref:'resume-request/one'},202));
+    await sending; await flush();
+    assert.equal($('resumeText').value, '');
+  }
+});
+
+test('Resume shows background recovery and respects read-only snapshots', async () => {
+  const app = await ui(), $ = id => app.elements.get(id);
+  app.context.pending={id:'old',status:'running',processes:[],cost:{},resume:{allowed:true,progress:'recovering'}};
+  vm.runInContext('render(pending)',app.context);
+  assert.equal($('resumeRun').hidden,false); assert.equal($('resumeRun').disabled,true);
+  assert.equal($('status').textContent,'resuming');
+  assert.match($('resumeStatus').textContent,/Preparing/);
+  assert.equal($('sendSteering').disabled,true);
+  vm.runInContext('savedDocument={};render({...pending,status:"paused",resume:{}})',app.context);
+  assert.equal($('resumeRun').disabled,true); assert.equal($('resumeText').disabled,true);
+  vm.runInContext('savedDocument=null;render({...pending,status:"completed",resume:{}})',app.context);
+  assert.equal($('resumeRun').hidden,true);
+});
+
+test('Resume retains instructions and request identity after a lost acknowledgement and page restart', async () => {
+  const storage=new Map(), app=await ui({storage}), $=id=>app.elements.get(id);
+  vm.runInContext('render({id:"old",status:"paused",processes:[],cost:{},resume:{allowed:true}})',app.context);
+  $('resumeText').value='Preserve this'; $('resumeText').oninput();
+  let first;
+  app.setHandler(async (url,options)=> {
+    if(options?.method==='POST'){first=JSON.parse(options.body);throw new Error('Connection lost');}
+    return response(url==='/api/runs'?listing([view('old','paused')]):view('old','paused'));
+  });
+  await $('resumeRun').onclick(); await flush();
+  assert.equal($('resumeText').value,'Preserve this'); assert.match($('resumeStatus').textContent,/Connection lost/);
+  const next=await ui({storage}), $next=id=>next.elements.get(id);
+  vm.runInContext('render({id:"old",status:"paused",processes:[],cost:{},resume:{allowed:true}})',next.context);
+  assert.equal($next('resumeText').value,'Preserve this');
+  let retried;
+  next.setHandler(async (url,options)=> {
+    if(options?.method==='POST'){retried=JSON.parse(options.body);return response({id:'old'},202);}
+    return response(url==='/api/runs'?listing([view('old','running')]):view('old','running'));
+  });
+  await $next('resumeRun').onclick(); await flush(); assert.deepEqual(retried,first);
+  assert.equal(storage.size,0);
+});
+
+test('a later poll acknowledges a lost Resume reply and the next pause creates a new request', async () => {
+  const app=await ui(), $=id=>app.elements.get(id);let first,next;
+  vm.runInContext('render({id:"old",status:"paused",processes:[],cost:{}})',app.context);
+  $('resumeText').value='Keep this';$('resumeText').oninput();
+  app.setHandler(async (url,options)=> {
+    if(options?.method==='POST'){first=JSON.parse(options.body);throw new Error('Lost reply');}
+    return response(url==='/api/runs'?listing([view('old','paused')]):view('old','paused'));
+  });
+  await $('resumeRun').onclick();await flush();
+  app.context.ack={...view('old','running'),resume:{request_id:first.request_id,progress:'running'}};
+  vm.runInContext('render(ack)',app.context);
+  assert.equal($('resumeText').value,'');
+  vm.runInContext('hasRunningRun=false;render({...ack,status:"paused"})',app.context);
+  app.setHandler(async (url,options)=> {
+    if(options?.method==='POST'){next=JSON.parse(options.body);return response({id:'old'},202);}
+    return response(url==='/api/runs'?listing([view('old','running')]):view('old','running'));
+  });
+  await $('resumeRun').onclick();await flush();
+  assert.notEqual(next.request_id,first.request_id);assert.equal(next.text,'');
+});
+
+test('simulation controls and launch payload remain absent without the flag', async () => {
+  const app = await ui();
+  assert.equal(app.elements.get('inferenceSetup').hidden, true);
+  assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(simulationOptions())', app.context)), {});
+  assert.equal(app.elements.get('inferenceStatus').hidden, true);
+});
+
+test('enabled simulation exposes three modes and preserves edited settings across polling', async () => {
+  const app = await ui(), $ = id => app.elements.get(id);
+  vm.runInContext('setupSimulation({batch:3})', app.context);
+  assert.equal($('inferenceSetup').hidden, false);
+  assert.equal($('simMode').options.length, 3);
+  const fields = {simTPS:'30',simBatch:'2',simBugRate:'5',simSeed:'123',simPrefill:'1.5',simPromptTPS:'2000',
+    simJitter:'0.2',simStallRate:'5',simStallSeconds:'3',simRestart:'15'};
+  for(const [id,value] of Object.entries(fields))$(id).value=value;
+  vm.runInContext('setupSimulation({batch:9})', app.context);
+  let selected = JSON.parse(vm.runInContext('JSON.stringify(simulationOptions())', app.context));
+  assert.deepEqual(selected.simulation, {mode:'slow-buggy',tps:30,batch:2,bug_rate:5,seed:123,prefill_seconds:1.5,
+    prefill_tps:2000,jitter:0.2,stall_rate:5,stall_seconds:3,restart_seconds:15});
+  $('simMode').value='buggy';$('simMode').onchange();
+  selected = JSON.parse(vm.runInContext('JSON.stringify(simulationOptions())', app.context));
+  assert.deepEqual(selected, {simulation:{mode:'buggy',batch:2,bug_rate:5,restart_seconds:15,seed:123}});
+  assert.equal($('simTPS').disabled, true);
+  $('simMode').value='normal';$('simMode').onchange();
+  assert.deepEqual(JSON.parse(vm.runInContext('JSON.stringify(simulationOptions())', app.context)), {simulation:{mode:'normal'}});
+  assert.equal($('simBatch').disabled, true);
+});
+
+test('simulation inspection renders saved and live facts as plain text', async () => {
+  const app = await ui(), box=app.elements.get('inferenceStatus');
+  vm.runInContext(`savedDocument={configuration:{inference_simulation:{mode:'slow-buggy',tps:30,batch:2,bug_rate:5,seed:7}},records:{
+    'simulation/inference/attempt/a':{process_id:'<img src=x>',phase:'decoding',elapsed_seconds:5,output_tokens:100,simulated_tokens:30,injected:false,incident_started:false},
+    'simulation/inference/attempt/b':{phase:'failed',injected:true,incident_started:true}}};renderSimulation(savedSimulation());`, app.context);
+  assert.equal(box.hidden, false);
+  assert.match(box.children[0].textContent, /30 shared TPS.*seed 7/);
+  assert.match(box.children[1].textContent, /incidents: 1.*affected attempts: 1/);
+  assert.match(box.children[2].textContent, /^<img src=x>.*virtual tokens 30 \/ 100/);
+  vm.runInContext('renderSimulation(null)', app.context);
+  assert.equal(box.hidden, true);
+});
+
 test('agent messages render full plain text across polling and run changes', async () => {
   const app = await ui(), box = app.elements.get('userMessages');
   const text = '<img src=x onerror=alert(1)>\n' + 'Progress. '.repeat(100);
@@ -62,7 +259,7 @@ test('agent messages render full plain text across polling and run changes', asy
   assert.equal(box.children[0].textContent, 'No messages yet.');
 });
 
-async function ui({monitoring = false} = {}) {
+async function ui({monitoring = false, storage = new Map()} = {}) {
   const html = fs.readFileSync(path.join(__dirname, '../src/polyinference/ui.html'), 'utf8');
   const elements = new Map([...html.matchAll(/<(\w+)[^>]*\bid="([^"]+)"/g)]
     .map(([, tag, id]) => [id, new Element(tag)]));
@@ -71,6 +268,7 @@ async function ui({monitoring = false} = {}) {
     document: {getElementById: id => elements.get(id), createElement: tag => new Element(tag),
       createTextNode: text => Object.assign(new Element('#text'), {textContent: text}), querySelectorAll: () => []},
     Node: Element, URL, URLSearchParams, Blob,
+    localStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value),removeItem:key=>storage.delete(key)},
     Option: function(text, value) { const option = new Element('option'); option.textContent = text; option.value = value; return option; },
     fetch: (...args) => handler(...args), setInterval() {}, matchMedia: () => ({matches: false}), TextDecoder, atob,
   });
@@ -488,4 +686,28 @@ test('pending tasks require kept dependencies and model waits use readable opera
   assert.equal(vm.runInContext('processWait(runtime.processes[0])', app.context), 'model response · local endpoint');
   assert.equal(vm.runInContext('pendingReason({assignment:{dependencies:["retry"]}})', app.context), 'Awaiting kept dependencies: retry');
   assert.equal(vm.runInContext('pendingReason({assignment:{dependencies:["kept"]}})', app.context), 'New starts closed for review');
+});
+
+
+test('endpoint testing submits only on click and projects pending probe guards', async () => {
+  const app = await ui(), $ = id => app.elements.get(id);
+  let posts = 0;
+  $('endpointProfile').append(new app.context.Option('Local inference','local-inference'));
+  $('endpointProfile').value = 'local-inference';
+  app.setHandler(async (url, options) => {
+    if (options?.method === 'POST') {
+      assert.equal(url, '/api/endpoint-test');
+      assert.equal(JSON.parse(options.body).endpoint_profile, 'local-inference');
+      posts++;
+      return response({id:'probe'},202);
+    }
+    return response(url === '/api/runs' ? {...listing([]),endpoint_probe:{status:'running',state:'/probe/state',progress:{state:'waiting_first_output',elapsed_seconds:2}}} : view('old'));
+  });
+  await vm.runInContext('refresh()', app.context);
+  assert.equal(posts,0);
+  await $('testEndpoint').onclick();
+  assert.equal(posts,1);
+  assert.equal($('testEndpoint').disabled,true);
+  assert.equal($('start').disabled,true);
+  assert.match($('endpointTestStatus').textContent,/waiting_first_output/);
 });

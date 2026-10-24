@@ -47,7 +47,15 @@ def load_saved_credentials():
 
 def load_config(path, *, context=None):
     source = Path(path).resolve()
-    config = AgentConfig.model_validate_json(source.read_text(), context=context)
+    text = source.read_text()
+    model = AgentConfig
+    document = json.loads(text) if '"inference_simulation"' in text else None
+    if isinstance(document, dict) and "inference_simulation" in document:
+        from .agent.inference_simulation import SimulationAgentConfig
+
+        model = SimulationAgentConfig
+        context = {**(context or {}), "resolve_environment_capacity": False}
+    config = model.model_validate_json(text, context=context)
     return config.model_copy(
         update={
             "repository": str((source.parent / config.repository).resolve()),
@@ -58,7 +66,15 @@ def load_config(path, *, context=None):
     )
 
 
-async def execute(config, *, save_history=True, retry_task=None, retry_reason=None, retry_output_reason=None):
+async def apply_resume(engine, request_ref):
+    """Compatibility entry point; coding policy belongs to the agent."""
+    if engine.app.ports.records.get("resume-outcome/" + request_ref):
+        raise ValueError("This resume request has already been handled")
+    await engine.resume(request_ref)
+
+
+async def execute(config, *, save_history=True, retry_task=None, retry_reason=None, retry_output_reason=None,
+                  resume_request_ref=None):
     metadata = {
         "id": uuid.uuid4().hex[:12],
         "state": str(config.state_path),
@@ -69,8 +85,15 @@ async def execute(config, *, save_history=True, retry_task=None, retry_reason=No
     runtime = KernelRuntime(config)
     try:
         await runtime.open()
+        if getattr(config, "inference_simulation", None) is not None:
+            from .agent.inference_simulation import install_simulation
+
+            await install_simulation(runtime, config.inference_simulation)
         app = AgentServices(runtime, config)
         engine = ProjectAgent(app)
+        if resume_request_ref is not None:
+            await engine.initialize()
+            await engine.resume(resume_request_ref)
         if retry_task is not None:
             await engine.initialize()
             await engine.retry_worker(retry_task, retry_reason or "explicit model recovery")
@@ -175,6 +198,8 @@ def main():
     for name in ("run", "resume", "validate-config"):
         item = sub.add_parser(name)
         item.add_argument("config")
+        if name == "resume":
+            item.add_argument("--text", default="", help="Optional instructions for continuing the run")
     item = sub.add_parser("ui")
     item.add_argument("--port", type=int, default=8765)
     item.add_argument("--config")
@@ -189,6 +214,8 @@ def main():
         return count
     item.add_argument("--sim-batch", type=simulation_slots, metavar="N",
                       help="Invocation-only remote Haiku simulation with N workers/slots (1..16)")
+    item.add_argument("--sim-inference", action="store_true",
+                      help="Show opt-in normal/buggy/slow-buggy inference controls before Start")
     item = sub.add_parser("probe")
     item.add_argument("config")
     item.add_argument("--endpoint", choices=["local", "cloud"], default="cloud")
@@ -259,7 +286,8 @@ def main():
         if args.command == "ui":
             from .ui import serve
 
-            serve(args.port, args.config, args.state, sim_batch=args.sim_batch)
+            serve(args.port, args.config, args.state, sim_batch=args.sim_batch,
+                  **({"sim_inference": True} if args.sim_inference else {}))
             return
         if args.command == "probe":
             print(json.dumps(asyncio.run(probe_endpoint(load_config(args.config), args.endpoint)), indent=2))
@@ -269,7 +297,16 @@ def main():
             if args.command == "validate-config":
                 print("Configuration valid; endpoint availability has not been tested.")
                 return
-            result = asyncio.run(execute(config))
+            request_ref = None
+            if args.command == "resume":
+                from .runtime.processes import request_resume
+
+                records = Records(config.state_path / "records.sqlite")
+                try:
+                    request_ref = request_resume(records, text=args.text)
+                finally:
+                    records.db.close()
+            result = asyncio.run(execute(config, resume_request_ref=request_ref))
             print(json.dumps(result, indent=2))
             if result["status"] != "completed":
                 sys.exit(2)

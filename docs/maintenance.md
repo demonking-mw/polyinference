@@ -25,6 +25,10 @@ Humans and agents follow this contract in the same change:
 6. Include documentation updates/review and actual verification in the handoff.
    Do not leave documentation maintenance to a later task or agent.
 
+When rules, design ownership, setup or automation change, update the
+[contributor onboarding procedure](contributor-onboarding.md) and
+[project memory checklist](project-memory.md), then refresh retained project notes.
+
 `file-tree.json` is the authored navigation source. The script embeds that exact
 JSON in `file-tree.html` and renders working links before JavaScript runs, so the
 tree works from `file://` without a server or fetch. Never edit generated HTML.

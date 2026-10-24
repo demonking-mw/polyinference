@@ -93,7 +93,8 @@ The coding summary distinguishes ancestry, dirty/private source, publication and
 kept nonempty contributions; it never interprets inherited ancestry as new work.
 
 The coding program marker is `agent-5-in-place-repository`, state schema `2.3`.
-New runs require fresh state. Historical runs are not migrated or rewritten.
+New runs require fresh state. Older layouts are not migrated. Updated 2026-10-23:
+the exact graph-only Resume compatibility path below preserves layout and prior outcomes.
 The OS remains `simple-os/2`; an artifact-only or workspace-none process still
 requires no Git, coding task, check or code-writing finalization. MCP and shutdown
 recovery are not expanded by this change. The sections below describe shared
@@ -314,6 +315,40 @@ Role names do not confer OS privileges. Management/reserve treatment is explicit
 `review_token_reserve` spelling as an alias and preserves coding defaults. Bare
 `RuntimeConfig` has no coding phase reserve or predefined senior/worker roles.
 
+## Explicit operator resume signals
+
+> Updated 2026-10-23 (FIX-0111): run-level Resume separates request acceptance
+> from execution readiness; the former process-only frontend flow is superseded.
+
+runtime/processes.request_resume records generic scoped or unscoped operator intent
+and optional text. request_id deduplicates identical input. Explicit process
+signals validate a paused noncancelled principal; unscoped signals need unfinished
+execution. Acceptance can occur with unsettled effects and grants no execution
+permission. It never interprets tasks, Git or coding acceptance.
+
+KernelRuntime.prepare_resume runs under coordinator ownership. runtime/resume.py
+uses existing host receipts, retained completed query artifacts and adapter-specific
+result retrieval. HTTP Responses lookup requires its saved response ID and validates
+identity, terminal state and output. Readiness lives under resume-preparation/;
+unknown effects keep ownership/capacity; the isolated generation-only exception
+is defined below under bounded inference retries. Unsupported
+synchronous/native recovery fails without asserting termination. No generic OS
+Git, task selection, canonical-memory or acceptance policy is introduced.
+
+ProjectAgent.resume in agent/resume.py chooses checkpoint/model recovery, internal
+senior review or accepted-output delivery for the run. All stopped workers and
+retained source remain represented. Instructions have an atomic application receipt;
+plans and activation can recover after a coordinator restart without applying them
+twice. Application resume-progress/ and resume-outcome/ link the original intent,
+while the HTTP layer serializes drivers and projects their progress. CLI Resume
+uses the same service. Offline snapshots cannot signal or execute.
+
+The exact predecessor graph documented in agent/resume.py is compatible only when
+its other program pins match. The agent records the old/new identity and updates
+its current run pointer, preserving original manifests, effects, config, authority,
+budgets, deadlines and cancellation. Unknown graph/prompt/schema versions remain
+rejected; there is no blanket historical migration or allowance reset.
+
 ## Context preparation and output recovery
 
 The OS schema and all exported settings are documented together in
@@ -324,6 +359,19 @@ The coding UI's invocation-only --sim-batch N overlay owns provider selection an
 worker/slot/reservation sizing. Generic validation supports resolving capacity
 without rereading the legacy environment override; the OS receives ordinary
 validated settings. Admission has no Claude-specific scheduling or Git policy.
+
+UI --sim-inference additionally enables an application-installed raw HTTP adapter
+for optional pacing/fault injection, documented in the
+[simulator guide](../../docs/modules/inference-simulation.md). Only explicit
+SimulationAgentConfig runs carry its settings; normal AgentConfig/RuntimeConfig
+pins and default provider paths are unchanged. Trusted HTTPInference subclasses
+may implement generate_operation(request, messages, max_output, prepared=...).
+Generic dispatch retains admission, grants, budgets, completion checks and the
+original deadline; the adapter owns transport timeout and test service latency.
+terminal_call retrieves terminal cancellation evidence before settlement. This
+adds no generic OS simulator setting, GPU scheduler or coding recovery policy.
+Known provider completion may end an artificial wait safely; a live disconnect
+remains uncertain. Diagnostic simulator receipts do not auto-reconcile active work.
 
 `runtime/context.py` measures the known final adapter request. Hard input/output
 bounds, completion checks, effect certainty and receipts always apply. Optional
@@ -356,38 +404,54 @@ base-conflict checks. This does not introduce Git policy into the OS.
 
 ## Bounded inference retries
 
-The OS's `runtime/model_retries.py` retries eligible one-off inference failures on
-either binding. `model_call_retries` defaults to one extra attempt (range 1–3);
-`model_retry_delay_ms` defaults to 100 and `model_retry_max_delay_ms` to 60000.
-Backoff grows exponentially and respects Retry-After. A wait that cannot fit the
-configured allowance or original deadline escalates without resubmitting early.
+Updated 2026-10-23: implementation of the endpoint-testing split, superseding
+blanket unknown-execution wording only for explicitly isolated generation-only work.
+The OS executes generic transport retries and preserves facts; the agent chooses
+semantic correction, decomposition, continuation and permitted extra retries.
 
-Received empty/malformed responses, temporary service/rate-limit rejections,
-known-unsubmitted connection failures and briefly full admission queues qualify.
-Deterministic input/auth/grant failures do not. Submitted disconnects/timeouts
-remain uncertain. Native jobs qualify only after known termination and before
-any brokered effect; permission failures, cancellation and unbrokered mutations
-remain stops. The application owns grammar correction; confirmed output-limit
-adaptation is now OS-owned as described above. This generic OS service does not
-choose coding actions or checks.
+model_call_retries is the native extra-attempt allowance (0–3, bare OS default 1;
+fresh coding agent default 2). A caller may declare InferencePolicy through
+runtime/inference-policy at version 1: additional_retries (0–3, default 0) and
+replace_undelivered (default false). Native attempts precede caller-authorized
+ones. Configured backoff/Retry-After, cancellation, finishing reserves, grants,
+step/call/token/spend limits and the root deadline apply to every new intent.
+Output adaptation shares the native/caller counters and root deadline; it does
+not restart them. Explicit application recovery/grammar correction remain separate.
 
-Retries retain the original context, role routing, deadline, limits and authority.
-Every attempt has a new request/effect identity and its own charged reservation;
-normal dispatch guards, cancellation and finishing reserves still apply. Internal
-requests require the `runtime/model-retries` feature at version `1`.
-`model-retry/<root>/<attempt>` retains the selected intent and absolute delay;
-`model-retry-outcome/<root>` identifies the effective result and recovery reason.
-Original per-attempt results are never rewritten. OS retries do not consume or
-reset the caller's separate explicit/adaptive recovery allowance.
+Received unusable output, transient service/rate-limit failures and proven
+unsubmitted connection/admission failures qualify. Permanent input/auth/grant
+failures do not. Native jobs require known termination and no brokered effects.
+For unknown raw generation, caller consent alone is insufficient: the trusted
+adapter must establish generation-only behavior. One undelivered generation per
+lane may then be isolated. Its effect stays uncertain, holds physical capacity and
+conservative token/spend allocations, and its logical delivery is discarded.
+A replacement needs a free slot/reservation and remaining allowance/deadline;
+a single-slot endpoint cannot manufacture capacity. A second unknown remains a
+blocking barrier. Independent safe work can continue around isolated computation.
+Tool/native/effectful unknowns keep the strict global barrier. Public uncertain()
+returns blockers; include_isolated=True also exposes pending computation.
 
-The permanent-failure circuit includes the pinned request intent so unrelated
-invalid inputs cannot disable healthy requests. Successful explicit correction
-clears the repaired intent's counter. Repeated identical bad inputs remain bounded.
+A late retrieved response or explicit termination evidence can settle physical
+accounting, but never deliver a discarded answer. Resume attempts supported
+receipt/status recovery for isolated queries without requiring it for unrelated
+execution readiness. No partial streamed text or JSON can execute an action.
 
-These added configuration fields change the configuration pin. Use fresh state;
-historical runs are not migrated or automatically resumed. The core wire schemas
-and frozen proposal examples are unchanged. See the
-[pause audit and verification limits](../../development-docs/pause-retry-audit-2026-10-20.md).
+Endpoint.lifecycle explicitly selects SSE/buffered transport and connect, first
+meaningful output, output-idle and total timings. Pings do not count as output.
+The total logical budget includes preparation, queueing, retries and backoff,
+capped by the original process deadline. Without lifecycle, legacy timeout_seconds
+and strict uncertainty behavior remain. Native jobs retain their existing protocol.
+Profiles and bounded on-click warm-up belong to the testing application, with no
+Git/check/coding prerequisite. GPU/token scheduling remains backend-owned.
+
+model-retry/<root>/<attempt> retains its issued intent, absolute delay, source and
+budget root; model-retry-outcome records native/caller counts and effective result.
+inference-progress/<operation> exposes bounded elapsed/last-output/deadline facts.
+Old physical results are never rewritten as proof of termination. Optional settings
+are omitted when absent, preserving old canonical serialization; saved pins and
+old runs are not silently opted into new behavior. See the
+[endpoint testing guide](../../docs/guides/endpoint-testing.md) for profiles,
+configuration, fixture coverage and v1 limits.
 
 ## Diagnosing a boundary failure
 
@@ -418,8 +482,9 @@ The kernel compatibility marker is `simple-os/2`, with coding program
 `agent-5-in-place-repository` and state schema `2.3`. This identifies changed
 registration/grant wiring within the current basic function set. It does not
 introduce the planned next-version integration platform. Use new run/state
-directories with this implementation. Older runs retain their original records
-and require their pinned implementation; this change performs no migration.
+directories for incompatible implementations. Updated 2026-10-23: older runs
+retain their original records; the explicit Resume section documents the sole
+exact graph-only compatibility migration, without broader historical conversion.
 
 The existing function set has the following regression evidence:
 

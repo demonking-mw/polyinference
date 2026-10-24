@@ -18,6 +18,7 @@ ownership and design principles. Closely related Python modules share a guide.
 | [Capability registration and tool ABI](capabilities.md) | capabilities.py, tool_contracts.py |
 | [Persistence, exclusive resources and blocking I/O](storage.md) | storage.py, exclusive.py, blocking.py |
 | [Endpoint admission and provider adapters](inference.md) | inference.py, codex.py |
+| [Optional application inference simulator](inference-simulation.md) | agent/inference_simulation.py |
 | [Optional context preparation](context.md) | context.py |
 | [Bounded OS model retries](retries.md) | model_retries.py |
 | [Optional workspaces and source classification](workspaces.md) | workspace.py, workspace_state.py |

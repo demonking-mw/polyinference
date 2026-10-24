@@ -28,14 +28,25 @@ The execution protocol is:
 5. Independent final checks guard project completion.
 
 Steering follows the drain-before-review behavior described above. It does not
-reset budgets. `resume` restores saved execution; it does not automatically clear
-`paused` or `budget_stopped`, raise allowances, change models or restart a
-completed run. Changed configuration, graph or prompt fingerprints are rejected
-for existing state. Use a fresh state directory for a changed setup or budget.
+reset budgets. UI Resume and CLI `resume CONFIG [--text instructions]` record a
+run-level intent. The agent clears a recoverable pause through checkpoint/model
+recovery, delivery or internal senior review. All stopped workers remain accounted
+for. Existing allowances, deadlines, models and completed-run immutability apply.
+An exact documented predecessor graph has an explicit compatibility migration;
+arbitrary configuration/graph/prompt changes still require a fresh state directory.
+
+The OS accepts intent separately from execution readiness. It automatically settles
+known host receipts and retained query responses, or retrieves a Responses result
+with a surviving response ID. OS resume-preparation/ records stay separate from
+application resume-progress/ and resume-outcome/. Unsupported unknown operations
+produce a plain failure, not a routine user resolution workflow. Clicking Resume
+never proves that unsettled work ended.
 
 A lost HTTP/RPC connection does not prove that an external job stopped. Uncertain
-operations stay recorded, retain ownership/capacity and block new dispatch for
-the whole runtime until reconciled. Status and inspection remain available. The runtime can reconcile verifiable host publication
+native/tool/effectful operations stay recorded, retain ownership/capacity and
+block runtime dispatch until reconciled. Explicitly consenting generation-only
+queries can instead isolate undelivered computation with physical holds retained;
+replacement still needs spare capacity. See [endpoint lifecycle policy](endpoint-testing.md). Status and inspection remain available. The runtime can reconcile verifiable host publication
 receipts; it does not blindly retry remote requests. Inspect `status` and
 `operation`, preserve the state, and establish the provider-side outcome before
 attempting recovery. Use the explicit `reconcile --confirm-stopped --evidence`

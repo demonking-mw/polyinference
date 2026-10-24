@@ -13,6 +13,13 @@ Generic safe inference retry and smaller-output adaptation filter eligible failu
 Each additional submission has a new linked intent and reservation. Backoff and
 Retry-After remain bounded by original deadlines and budgets. The kernel retains
 all failed/successful attempts; replay follows the stored effective outcome.
+The OS-native allowance precedes InferencePolicy.additional_retries. Durable
+source/counters distinguish native from caller permission. Both share the root
+logical deadline and retry allowance across output adaptation. A new application
+recovery still has its separate existing authorization; it cannot alter old intents.
+One consenting generation-only unknown may be isolated with its physical holds;
+replacement requires free capacity and another unknown stops the chain. See
+[profiles and limits](../guides/endpoint-testing.md).
 
 ## Principles to preserve
 

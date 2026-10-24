@@ -473,10 +473,13 @@ Maintain additive agent changes: workspace generation/view refs, explicit verifi
 
 Steering receipt atomically closes new starts and captures started coding workers, including model/shell/verification waiters. Captured workers continue original instructions and required final phases. Pending unstarted tasks remain pending. After the set finishes, the controller applies the captured input range in senior review; later input remains unacknowledged until consumed. Fixed core role bindings make these ordinary local workers; the role-based contract also works for explicitly assigned cloud specialists.
 
-Any uncertain effect conservatively blocks new dispatch for the whole runtime
-until reconciliation. This coarse single-project safety policy retains occupied
-capacity and ownership; status, inspection and steering ingress remain available.
-It is not per-program fault isolation or an automatic remote-cancel guarantee.
+Updated 2026-10-23: unknown native/tool/effectful work blocks runtime dispatch
+until reconciliation. Explicit caller consent and trusted generation-only adapter
+facts permit one undelivered query per lane to be isolated while physical holds
+remain. Its delivery is discarded; replacements require spare capacity and the
+shared native/caller retry allowance/deadline. This narrower exception permits
+independent work, not arbitrary program isolation or automatic remote cancellation.
+See [current boundary/policy](RUNTIME_BOUNDARY.md#bounded-inference-retries).
 
 On crash: stop dispatch; establish the old coordinator/driver cannot keep writing; load journal/owners/checkpoints; reconcile submitted/unknown effects and publication; repair ref/event projections; then resume one driver per compatible process. This is single-coordinator recovery, not distributed failover. Retain resources for unresolved external work until termination/effects are known. Full power-loss snapshots and hidden provider state restoration are not promised.
 

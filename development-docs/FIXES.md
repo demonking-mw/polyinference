@@ -144,6 +144,31 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0092](#fix-0092) | 2026-10-21 | Add an invocation-only remote Haiku simulation preset |
 | [FIX-0093](#fix-0093) | 2026-10-21 | Verify and close the nine-item current-version implementation queue |
 | [FIX-0094](#fix-0094) | 2026-10-21 | Recheck queue documentation and correct missed overview/settings references |
+| [FIX-0095](#fix-0095) | 2026-10-21 | Propose optional local-inference latency and fault simulation |
+| [FIX-0096](#fix-0096) | 2026-10-21 | Add opt-in shared-TPS and fault simulation without changing normal launches |
+| [FIX-0097](#fix-0097) | 2026-10-21 | Recover the exact saved Minecraft test prompt |
+| [FIX-0098](#fix-0098) | 2026-10-21 | Confirm automatic project documentation instructions and their limits |
+| [FIX-0099](#fix-0099) | 2026-10-21 | Create a source-backed illustrated developer onboarding guide |
+| [FIX-0100](#fix-0100) | 2026-10-21 | Diagnose a Haiku timeout boundary after a retained foundation handoff |
+| [FIX-0101](#fix-0101) | 2026-10-21 | Lead developer onboarding with the project vision and impact |
+| [FIX-0102](#fix-0102) | 2026-10-21 | Resume a selected paused process with optional steering from the UI |
+| [FIX-0103](#fix-0103) | 2026-10-21 | Verify the implemented scope of endpoint retries and UI recovery |
+| [FIX-0104](#fix-0104) | 2026-10-21 | Explain the local-cloud Agent OS premise and shorten developer onboarding |
+| [FIX-0105](#fix-0105) | 2026-10-21 | Expose resume beside the selected paused run |
+| [FIX-0106](#fix-0106) | 2026-10-22 | Preserve the agent-router distillation tutorial and link both version trackers |
+| [FIX-0107](#fix-0107) | 2026-10-22 | Add a navigable HTML learning guide for router distillation and RLAIF |
+| [FIX-0108](#fix-0108) | 2026-10-22 | Compare Flash-Next Coder with the earlier coding shortlist |
+| [FIX-0109](#fix-0109) | 2026-10-22 | Estimate Coder memory, speed and batching on the reported laptop |
+| [FIX-0110](#fix-0110) | 2026-10-23 | Design one-click run resume across frontend, agent and OS |
+| [FIX-0111](#fix-0111) | 2026-10-23 | Make Resume run directly through frontend, agent and OS |
+| [FIX-0112](#fix-0112) | 2026-10-23 | Count retries and assess the saved Haiku timeout pause |
+| [FIX-0113](#fix-0113) | 2026-10-23 | Explain recurring Claude pauses against official transport guidance |
+| [FIX-0114](#fix-0114) | 2026-10-23 | Propose portable endpoint resilience and faster failure testing |
+| [FIX-0115](#fix-0115) | 2026-10-23 | Split endpoint resilience into agent policy and independent OS mechanisms |
+| [FIX-0116](#fix-0116) | 2026-10-23 | Establish shared human and agent onboarding with required project memory |
+| [FIX-0117](#fix-0117) | 2026-10-23 | Implement bounded streaming lifecycle and native/caller retry policy |
+| [FIX-0118](#fix-0118) | 2026-10-23 | Add explicit endpoint profiles, generic warm-up and timing inspection |
+| [FIX-0119](#fix-0119) | 2026-10-23 | Move workspace scope errors to the public agent/OS port |
 
 
 ## Entry template
@@ -4369,3 +4394,1880 @@ unchanged and all 94 IDs are unique. No runtime tests or live providers were run
 for these prose-only corrections; FIX-0093 retains the earlier 401-pass
 implementation verification rather than claiming it as new work. The unrelated
 next-iteration.md edit remains outside this commit.
+
+<a id="fix-0095"></a>
+## FIX-0095 — 2026-10-21 — Propose optional local-inference latency and fault simulation
+
+Status: investigated; proposal only, no implementation or configuration changed.
+Related history: [FIX-0061](#fix-0061), [FIX-0063](#fix-0063),
+[FIX-0092](#fix-0092), [FIX-0045](#fix-0045), [FIX-0047](#fix-0047).
+
+### Problem
+
+The user finds the Haiku local-inference stand-in too fast and reliable and asks
+for three selectable modes: normal, normal and buggy, and slow and buggy, with
+TPS, batch capacity and bug rate selected before a run. Implementation is
+explicitly deferred.
+
+### What was wrong
+
+The existing invocation-only preset changes worker/slot/context capacity but does
+not pace inference or inject faults. HTTPInference sends non-streaming generation
+requests and buffers response bytes. Concurrent Haiku calls alone do not model
+shared local decoding throughput, variable latency or an intermittently unavailable
+server. This is a simulation-fidelity limitation, not a newly established defect
+in real local inference or evidence for any particular hardware failure rate.
+
+### How it was fixed
+
+No executable implementation, tests, launch settings or defaults changed. Proposed:
+
+- Normal: preserve the existing provider, latency, concurrency and recovery behavior.
+- Normal and buggy: preserve speed, adding configurable fault injection; suggested
+  initial bug rate 5% per new inference attempt, an illustrative testing preset.
+- Slow and buggy: require positive TPS, batch capacity and a 0..100% bug rate before
+  Start; suggested initial values 30 TPS, batch 2 and 5%. Explain that TPS is total
+  shared output throughput, not TPS multiplied by batch. Reuse the existing batch
+  capacity range/worker-slot-reservation overlay without overriding Git readiness.
+- Add an application-installed opt-in provider decorator or simulator transport,
+  selected by CLI/UI bootstrap. Keep Haiku choices and simulation scheduling out
+  of ordinary OS admission and coding planning. Decorate only the selected local
+  lane; actual inference remains remote, with senior/cloud behavior preserved.
+- Pace completion using actual output-token usage and an explicit estimated fallback,
+  with configurable prefill/startup latency and bounded speed jitter. Target duration
+  has a lower bound of startup/prefill plus output_tokens / assigned_TPS, and can
+  never beat the actual provider. Share aggregate TPS among active generations,
+  reallocating it as requests finish; hold inference capacity until simulated
+  completion. Batch 2 at total 30 TPS means approximately 15 TPS each while both
+  decode, returning to 30 when one finishes. These are model assumptions, not a
+  claim to reproduce GPU continuous batching, KV use or hardware performance.
+- The current buffered path can delay delivery and display synthetic progress;
+  real incremental token display would require a separate streaming change.
+  Use cancellable asynchronous timing, with no sleeping while holding storage locks.
+  Keep provider network timeout separate from simulated completion and original
+  run deadlines. At 30 TPS, 6000 output tokens take about 200 seconds before
+  startup/queuing, exceeding the current 180-second endpoint timeout; merely
+  wrapping the existing timeout with a sleep would create unintended failures.
+- Choose a weighted fault mix: temporary server unavailable/queue rejection,
+  empty or malformed response, and confirmed incomplete output. Add occasional
+  endpoint-wide crash/restart episodes with a bounded cooldown so correlated
+  failures can survive a retry. Define bug rate as the probability that an eligible
+  new attempt starts an incident while healthy; cooldown failures are additional
+  consequences, shown separately. Specify fault stage and scope explicitly.
+- Inject through existing normalized provider/output outcomes so bounded retries,
+  output recovery, budgets and escalation are exercised normally. Do not modify
+  files, grants or successful tool results to fabricate bugs. Never execute partial
+  output or claim unknown remote work has stopped. Default crash simulation can
+  reject before submission; true mid-flight uncertainty is an advanced scenario.
+- Record a seed and each operation/attempt's durable fault decision, timing and
+  simulator version, distinguishing synthetic evidence from real provider facts.
+  Replay uses retained decisions and results; real new retries get new decisions.
+  Keep actual API usage/cost even when a received response is discarded or cut off.
+  Persist run simulation metadata for inspection/pinning without making it a
+  default for later launches or rewriting historical runs.
+
+Reviewed inference/settings/UI/CLI module guides, provider/launch usage, onboarding,
+SIM-01 and the runtime boundary. They describe current behavior correctly and need
+no edit for an unimplemented proposal. No file/feature paths moved or appeared;
+JSON navigation is unchanged. This history entry is the durable design record.
+
+### Design principle enforced or reconstructed
+
+The application selects the test environment; the simulated provider models its
+service behavior. The OS retains generic admission, authority, budgets, immutable
+outcomes, bounded recovery and execution certainty. Simulation must not become
+coding policy or disguise remote inference as measured local performance.
+
+### Verification
+
+Read the existing preset, HTTP buffering/admission/error paths, related fix entries
+and primary documentation. No live provider calls, benchmarks or runtime tests
+were run. Planned implementation checks: normal-mode parity; shared TPS and refill;
+seeded faults with durable replay; retry/cooldown exhaustion; cancellation/deadlines;
+real usage versus simulated output; launch isolation and saved-run compatibility.
+Documentation generation and --check were attempted using Windows Python with
+process-scoped Git safe-directory configuration (no global setting changed). Both
+are blocked by four pre-existing Windows-mapped Zone.Identifier paths reported
+as uncovered inventory. Native WSL execution is unavailable (E_ACCESSDENIED).
+No unrelated files were removed or added to navigation to hide that mismatch.
+Verified prior history byte preservation when appending, unique IDs and the five
+required entry sections; added-entry whitespace verification passed.
+
+<a id="fix-0096"></a>
+## FIX-0096 — 2026-10-21 — Add opt-in shared-TPS and fault simulation without changing normal launches
+
+Status: implemented; final verification results follow below.
+Related: [FIX-0095](#fix-0095), [FIX-0092](#fix-0092), [FIX-0061](#fix-0061),
+[FIX-0045](#fix-0045), [FIX-0047](#fix-0047),
+[SIM-02](current-iter-issues.md#sim-inference-ui).
+
+### Problem
+
+The user authorized implementation of the three-mode proposal, requiring complete
+documentation and unchanged behavior when simulation is not enabled. Existing
+--sim-batch controls concurrency only; Haiku remained too fast and reliable for
+local-serving stress tests.
+
+### What was wrong
+
+The existing application preset deliberately models admission/refill, not latency
+or faults. Pacing inside the ordinary 180-second model timeout would introduce
+unintended timeouts, and treating cancelled artificial waits as lost remote work
+would retain uncertain ownership even after a real response. These are new service
+simulation requirements, not a recurrence of the earlier concurrency defect.
+
+### How it was fixed
+
+Added UI-only --sim-inference with hidden-by-default per-run controls: normal,
+normal and buggy, slow and buggy; TPS, batch, bug percentage, optional seed and
+advanced startup/prompt/jitter/stall/restart timing. Default active selection is
+30 shared TPS, batch 2, 5%. Normal uses the original AgentConfig/client/payload;
+no default schema/settings field, config pin, environment or historic state changes.
+
+agent/inference_simulation.py owns a separate optional SimulationAgentConfig,
+complete Haiku overlay, shared virtual decoder and version/identity-seeded faults.
+Explicit saved simulated configs reload their resolved capacity and reinstall the
+adapter in CLI execute; later ordinary launches do not inherit them. Custom
+Anthropic fields and default cloud seniors survive; roles already bound local
+share that lane. Active selected batch overrides --sim-batch; normal retains it.
+
+The adapter emits existing ProviderError/ModelResponseError/IncompleteGeneration
+outcomes, exercising bounded OS retry/output adaptation. Preflight unavailable/
+restart makes no provider submission. Restart cooldowns affect subsequent attempts,
+while actual in-flight work can complete. Output failures preserve actual usage and
+retain a full diagnostic response artifact; partial output never executes. Durable
+decisions/progress and simulator-version/settings pins distinguish selected/applied
+faults from real provider failures. Replay uses immutable OS outcomes, with no new
+fault draw, delay or remote call. Live/saved UI shows settings/seed, incidents and
+last recorded virtual progress separately from actual cost and generic queue state.
+
+Generic raw HTTP subclasses can implement generate_operation with full request
+identity/prepared input under normal OS guards and the original deadline. Only
+this opt-in path uses terminal_call to retrieve cancellation outcomes; the adapter
+owns the separate network timeout. A focused Python 3.10 cancellation regression
+caught wait_for dropping a child's terminal exception during parent cancellation;
+explicit cancellation/retrieval fixes this for the new path without changing
+ordinary HTTP/native dispatch. Artificial-wait cancellation after terminal evidence
+settles as a known nonretryable failure; live provider interruption remains unknown.
+
+Updated owning simulator/CLI/UI/settings/kernel/inference guides; README, setup,
+tester/launch/UI/CLI/configuration usage; architecture/runtime boundary and central
+settings reference; SIM-02, tests index and JSON/HTML navigation. New concise primary
+module and usage guides cover controls, field bounds, record schema and limits.
+Reviewed provider/auth, budget, recovery/retry, archive/export, agent services,
+context and frozen design docs: existing interfaces/guarantees remain valid, with
+new settings/limits/recovery documented in the linked simulator/current references.
+No edits there were necessary. Earlier proposal/history/SIM-01 text stays historical.
+The unrelated next-iteration.md edit is excluded; no commit or push was requested.
+
+### Design principle enforced or reconstructed
+
+The application chooses the test environment; the provider adapter owns service
+simulation. The OS keeps generic admission, grants, budgets, immutable outcomes,
+completion safety, bounded recovery and execution certainty. No Haiku-specific
+scheduler, Git/task policy or canonical-memory convention enters the kernel.
+Buffered virtual timing is not measured GPU/KV performance or model-quality
+simulation. Coordinator loss stays conservatively uncertain despite diagnostic
+simulator receipts; they do not authorize automatic reconciliation or re-execution.
+
+### Verification
+
+Native WSL affected suites passed 191 tests in 83.58 seconds, including complete
+coding runs with/without the installed simulator. The full suite then passed
+443 tests, two environment skips, in 388.22 seconds. Skips remain the baseline
+native Linux Node/npm housekeeping and Node 18+ frontend wrapper (Linux has older
+Node); Windows Node separately passed all 22 frontend checks, including the final
+progress-panel placement. No ordinary provider/config path was changed afterward.
+
+Final review added one known-terminal-rejection/cancellation race and a narrow
+adapter correction; the final simulator suite passed all 43 cases in 19.32 seconds.
+This focused run follows that correction; the 443-pass full run predates it and is
+not claimed as a second full verification of the final adapter. Coverage includes
+no-flag/normal canonical-config parity, legacy flags, environment/launch isolation,
+field validation, shared TPS/refill, preflight versus received faults, actual usage,
+retry/output-recovery exhaustion, persisted replay across restart, original deadlines,
+known completion/cancellation versus live uncertainty, saved settings/history and
+real coding execute/bootstrap. Original default HTTP/native paths retain the earlier
+full-suite coverage and their source behavior.
+
+Full src/tests/scripts Ruff passed. Five example configs validated. Documentation
+generation and --check passed natively for 261 files and 118 leaves, with no Windows
+Zone.Identifier workaround or inventory changes outside the new feature. Scoped Git
+whitespace and new-file whitespace checks passed; existing history preservation and
+unique stable IDs were checked. The ordinary and flagged launch screens were visually
+inspected in temporary loopback fixtures; the controls were absent in normal launch
+and displayed the three modes/defaults in the flagged launch. No run was started;
+temporary servers and browser tabs were closed. No provider call, hardware benchmark,
+old-state migration, commit or push was performed. Haiku quality, GPU/KV behavior and
+exact concurrent timing remain outside this buffered simulation's claims.
+No live provider request or hardware benchmark is part of this task.
+
+<a id="fix-0097"></a>
+## FIX-0097 — 2026-10-21 — Recover the exact saved Minecraft test prompt
+
+Status: investigated; no implementation changed.
+Related history: [FIX-0077](#fix-0077).
+
+### Problem
+
+The user requested the exact Minecraft test prompt, rather than a summary of
+the game's requirements.
+
+### What was wrong
+
+The run analysis describes the objective but does not reproduce its original
+wording. The authoritative evidence for this lookup is the saved application's
+config.json objective, not a worker's derived assignment or later interpretation.
+No runtime defect was established.
+
+### How it was fixed
+
+Read the saved configurations under .polyinference/ui/runs. All eleven matching
+Minecraft game objectives agree, including v13 run a1859f8644a5. Preserved the
+original capitalization, spelling and punctuation in the answer:
+
+```text
+build me minecraft in 2d. You should implement all features they have until 2020, given that the feature works in 2d. THere should be save/load feature for the world(s) along with your progress. The game itself should have very similiar design to the actual minecraft game, but the menu/other-stuff you should design your own. You are to create a git repo, create a branch called pi-dev, and use that as your working main branch
+```
+
+No implementation, saved run or configuration changed. Reviewed the investigation
+index, v13 analysis, onboarding and documentation-maintenance/module guides;
+their existing behavior descriptions remain accurate and need no edit. No file
+or navigation path was added or moved; JSON navigation remains unchanged.
+
+### Design principle enforced or reconstructed
+
+Quote retained user input exactly and distinguish it from agent interpretations.
+Reading historical evidence does not authorize executing the quoted objective
+or changing the application, OS or saved run.
+
+### Verification
+
+Parsed all twelve saved configurations whose repository names contain minecraft:
+eleven contain the identical game prompt; the remaining v8-labelled configuration
+contains an unrelated fix-history request and was excluded from that comparison.
+No game, provider request or runtime test was run. Exact case-sensitive comparison
+confirmed the recorded quote matches v13's saved objective; all 97 fix IDs are
+unique and this entry contains the five required sections. Windows Python
+documentation generation and --check both failed on the four pre-existing
+Windows-mapped Zone.Identifier inventory paths already recorded in FIX-0095.
+Native WSL execution returned E_ACCESSDENIED. No unrelated metadata or navigation
+was changed to conceal that environment limitation; other working-tree changes
+are not this lookup's work.
+
+<a id="fix-0098"></a>
+## FIX-0098 — 2026-10-21 — Confirm automatic project documentation instructions and their limits
+
+Status: investigated; no implementation changed.
+Related history: [FIX-0004](#fix-0004), [FIX-0080](#fix-0080),
+[FIX-0094](#fix-0094), [FIX-0097](#fix-0097).
+
+### Problem
+
+The user asked whether project agents automatically receive rules specifying
+which documentation to write or update after implementation.
+
+### What was wrong
+
+No missing instruction was established. The distinction needing clarification
+was between automatically supplied project guidance, an agent following it,
+and structural checks proving documentation is complete and accurate.
+
+### How it was fixed
+
+Confirmed root [AGENTS.md](../AGENTS.md) was supplied to this Codex chat as
+project instructions. It requires affected module/setup/usage/configuration/
+design/issue documentation, navigation and this history to be maintained in
+the same task, adjacent-doc review with reasons for no edits, and actual checks
+in the handoff. Delegation must carry the reading/reporting requirements.
+[Maintenance](../docs/maintenance.md) and
+[onboarding](../dev-readme.md) provide the detailed completion rules.
+
+The [official instruction-loading guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
+confirms Codex discovers AGENTS.md guidance at run startup. This is persistent
+project guidance, not a universal system prompt for every agent product.
+Other harnesses need to load or otherwise receive it. Instructions do not
+by themselves prove compliance. The [CI workflow](../.github/workflows/docs.yml)
+runs the navigation check on push/PR; it checks coverage, ownership, paths,
+links, reachability and generated HTML, not semantic accuracy or automatic
+writing of the required prose.
+
+No implementation or instruction changed. Reviewed AGENTS.md, maintenance,
+onboarding, documentation/development indexes, the documentation module guide,
+JSON navigation, checker and CI workflow: their existing descriptions cover
+these rules and need no edit. No file appeared or moved; navigation is unchanged.
+
+### Design principle enforced or reconstructed
+
+Keep maintenance obligations discoverable through persistent project guidance.
+Distinguish instruction delivery, agent compliance and machine-verifiable
+structure; accurate prose still requires review. Repository maintenance belongs
+to developer tooling and does not impose coding workflow on the runtime OS.
+
+### Verification
+
+Read the current project instructions, related history, owning documentation,
+checker/CI paths and fetched official OpenAI documentation. Windows Python
+`python scripts/project_docs.py` and `python scripts/project_docs.py --check`
+both exited 1 on the same four pre-existing Windows-mapped Zone.Identifier
+inventory paths recorded in FIX-0095/FIX-0097. No unrelated metadata or
+navigation was altered to conceal that limitation. Checked unique history IDs,
+the five required sections, added-text whitespace and byte preservation of all
+prior history. No runtime tests, provider calls or alternative-harness startup
+were run; other working-tree changes are not this investigation's work.
+
+<a id="fix-0099"></a>
+## FIX-0099 — 2026-10-21 — Create a source-backed illustrated developer onboarding guide
+
+Status: implemented as documentation only.
+Related history: [FIX-0004](#fix-0004), [FIX-0048](#fix-0048),
+[FIX-0072](#fix-0072), [FIX-0080](#fix-0080), [FIX-0094](#fix-0094),
+[FIX-0096](#fix-0096), [FIX-0098](#fix-0098).
+
+### Problem
+
+New developers had concise setup/module references but no complete HTML learning
+route combining the supplied onboarding recording, its whiteboard, LLM background,
+stack selection and the repository's contribution/documentation obligations.
+The lecture also contains broader scheduling ideas that could be mistaken for
+already implemented behavior when presented without current-code qualification.
+
+### What was wrong
+
+This was a developer-documentation and discoverability gap. The recording and
+handwritten resource sketch were not a navigable repository guide, and the original
+brief/frozen diagrams do not uniformly describe later runtime changes. The owning
+layer is repository onboarding, not the application OS or agent control flow.
+Earlier navigation work in FIX-0080 supplied ownership/checking but did not include
+this lecture-derived learning artifact.
+
+### How it was fixed
+
+Added [docs/onboarding.html](../docs/onboarding.html), a self-contained offline
+field guide with twelve chapters, five accessible SVG diagrams and an interactive
+resource-handoff diagram. It covers LLM/token/context/serving basics, actual
+agent/OS/provider boundaries, six contribution paths, platform/provider setup,
+the greeting fixture, checks and acceptance, security/scope/replay/uncertainty,
+settings, evidence inspection and first-contribution reporting. Documentation
+coverage includes primary-doc ownership, JSON/generated navigation, all five FIX
+sections, recurrence/supersession, investigation-only entries, adjacent-doc review,
+actual verification and persistent AGENTS.md guidance.
+
+Preserved the roughly 22:26 lecture as timestamped editorial notes plus all 187
+automatically transcribed segments, and embedded the supplied whiteboard image.
+Current behavior, teaching examples and proposed scheduler/model-swap/auxiliary
+endpoint ideas are labelled separately. Local lane versus physical location,
+account-dependent quota examples, synthetic inference timing and unresolved U01–U04
+guarantees are explicit. The automated transcript remains labelled source material;
+editorial text qualifies informal capability/cost/privacy/uniqueness claims.
+
+Updated README.md, dev-readme.md and docs/README.md with entry links. The existing
+developer-onboarding leaf owns the HTML under dev-readme.md in file-tree.json;
+regenerated file-tree.html. No new Markdown hub or runtime dependency was added.
+The page provides local checklist persistence, glossary filtering, copy controls,
+responsive layouts and print styling without analytics or network asset loads.
+
+Reviewed maintenance/documentation tooling, setup/install/provider/configuration/
+launch/UI/recovery guides, architecture, agent/OS module guides, current designs,
+settings, issues and future backlog. Their behavior, interfaces, defaults and
+maintenance rules remain unchanged; they need no edits beyond the three navigation
+entry points and primary ownership above. Earlier records and unrelated working-tree
+implementation/simulator/future-backlog changes remain separate work.
+
+### Design principle enforced or reconstructed
+
+Onboarding should connect an author's explanation to current source without turning
+historical vision or a teaching analogy into an implementation promise. Keep coding
+workflow, Git, canonical memory and acceptance in the agent; keep generic authority,
+resource/effect guarantees and optional context services in the OS. Scheduler policy
+and provider GPU scheduling remain separate. Developer navigation/documentation is
+maintained in the same task and does not impose coding prerequisites on general OS
+agents. Preserve original evidence and make transcription uncertainty visible.
+
+### Verification
+
+Native WSL documentation generation and --check passed for 262 files and 118 leaves;
+all 20 tests/test_project_docs.py checks passed in 0.75 seconds. An additional
+HTML-specific standard-library check passed 146 local links/anchors, unique IDs,
+five SVG title/description references, the interactive diagram, all 187 transcript
+segments, embedded JPEG integrity, no unresolved placeholders and one primary owner.
+Extracted inline JavaScript passed Windows Node's node --check.
+
+Browser QA on a temporary loopback server verified desktop (1280 viewport) and
+390-pixel phone layouts without document horizontal overflow. All six stack
+selections, six resource states/reset/end disablement, glossary match/no-match,
+command copy and exact clipboard text, checklist reload persistence/reset, and
+photo/transcript disclosures passed. Photo loading and retained segment count were
+confirmed; the browser reported no warnings/errors. Preview screenshots were saved
+outside source. The initial sandboxed preview could not reach local sockets;
+an authorized WSL loopback server returned HTTP 200 and enabled successful QA.
+Print styling is included, but no exported PDF was independently rendered.
+
+Final navigation generation/check and scoped Git whitespace passed again for
+263 files and 119 leaves after concurrent FIX-0100 added its separate investigation
+and navigation leaf. That work is preserved and excluded from this task. Direct
+comparison preserved all 98 prior FIX bodies/text bytes, confirmed unique IDs,
+the complete source transcript and unchanged adjacent prose/navigation after
+excluding only the explicit onboarding and concurrent investigation additions.
+All 98 implementation/test/example hashes captured for the final handoff remained
+unchanged. New HTML/entry-point whitespace passed; the developer hub stays under
+80 lines. The five required FIX sections are present. Git only reported its
+existing CRLF-to-LF normalization notices, not whitespace errors.
+
+The supplied audio was transcribed with the user-authorized OpenAI API request.
+The transcript is automated, not a manually word-audited recording. No PolyInference
+live coding/provider workload or full runtime suite was run for this documentation
+change. No runtime implementation, retained run, schema, account setting, commit or
+push was changed. Prior history byte preservation and final checks are recorded
+by the task's direct comparison; concurrent FIX-0097/FIX-0098 are preserved and
+are not this onboarding work.
+
+<a id="fix-0100"></a>
+## FIX-0100 — 2026-10-21 — Diagnose a Haiku timeout boundary after a retained foundation handoff
+
+Status: investigated; no implementation changed.
+Related: [FIX-0045](#fix-0045), [FIX-0068](#fix-0068), [FIX-0086](#fix-0086),
+[FIX-0088](#fix-0088), [FIX-0089](#fix-0089), [FIX-0096](#fix-0096).
+Report: [run 7086c575ef94](run-7086c575ef94-analysis.md).
+
+### Problem
+
+Minecraft v14 paused in sprint 2 with Endpoint disconnected; execution requires
+reconciliation. The user requested diagnosis of the supplied export, not a repair
+or execution of the game-building instructions embedded in that evidence.
+
+### What was wrong
+
+A submitted raw Haiku request became uncertain 180.005032 seconds after activation,
+matching its 180-second call timeout. Timeout is the leading explanation, but the
+HTTP adapter maps read timeout, transport disconnect and cancellation to the same
+UnknownExecution message and the saved effect omits the chained cause. Its exact
+original trigger cannot be proven. This is not FIX-0068's native tool-job incident;
+that prior investigation does not establish the cause of this raw HTTP failure.
+Known-ended retry coverage in FIX-0045 intentionally excludes unknown execution.
+
+Earlier, the single foundation owner lacked the four exact tests/acceptance paths
+required by its runner. FIX-0088 covers declared preparation owners/dependencies,
+not mandatory filenames versus one owner's grant. The next plan corrected those
+paths and explicitly restored all eleven retained foundation paths, demonstrating
+FIX-0089's handoff worked. Only setup reached pi-dev; direct private tests passed
+36/36 historically, but neither development task produced an accepted contribution.
+The export has no inference fault/latency simulation configuration or records.
+
+### How it was fixed
+
+No implementation, configuration, game source, Git or retained run state changed.
+Added the linked report, current-version follow-ups, investigation index entry and
+JSON/HTML navigation. Established the failure timeline, source preservation and
+limits; diagnostics and planning improvements remain open. Reviewed adjacent
+inference/retry, worker/workflow, repository, inspection/command, configuration/
+recovery and simulator guides plus boundary/revision references. They still
+accurately describe current behavior and need no interface/settings edits.
+Concurrent FIX-0098/FIX-0099 documentation is preserved as separate work.
+
+### Design principle enforced or reconstructed
+
+The OS/adapter owns accurate transport/timeout facts, immutable evidence and
+execution certainty; the coding agent owns feasible task grants, check contracts,
+source selection and acceptance. Preserve unknown-effect ownership rather than
+silently retrying. A preserved or tested private delta is not an accepted product.
+Distinguish measured timing, likely cause, confirmed findings and proposed repairs.
+
+### Verification
+
+Parsed 659 records, 3,600 unpruned events, 119 effects, 326 artifacts and 148
+checkpoints. All artifact sizes/SHA-256 digests verified; current agent-module
+hash matches the saved graph digest, not a complete historical runtime hash.
+Reconstructed the 180.005032-second interval and 0.001052-second admission delay.
+A three-case source-derived offline probe confirms ReadTimeout, disconnect and
+cancellation share the diagnostic; no network/event loop or live provider was used.
+No game/playtest, runtime suite, reconciliation, resume, migration, commit or push.
+Windows Python documentation generation and --check each exited 1 on the four
+pre-existing Windows-mapped Zone.Identifier paths (FIX-0095). Native WSL execution
+returned E_ACCESSDENIED. An in-memory compatibility wrapper excluding exactly those
+four metadata paths, consistent with the documented inventory boundary, then
+regenerated and checked navigation successfully: 263 files, 119 leaves. Checker
+source and metadata files were unchanged; ordinary native verification remains
+unavailable here. All 98 implementation/test/script/example baseline files retain
+their SHA-256 hashes. All prior history bytes, including concurrent FIX-0099, are
+preserved after removing this entry/index row. IDs/required sections and scoped
+added-text whitespace checks passed. Historical test results are not new tests.
+
+<a id="fix-0101"></a>
+## FIX-0101 — 2026-10-21 — Lead developer onboarding with the project vision and impact
+
+Status: implemented as documentation only.
+Related history: [FIX-0099](#fix-0099), [FIX-0080](#fix-0080).
+
+### Problem
+
+The user found that the onboarding HTML reached stack selection and developer
+instructions before sufficiently pitching the project, its vision, potential
+impact and general background.
+
+### What was wrong
+
+The opening of FIX-0099's guide prioritized contribution mechanics. Its short
+purpose explanation did not first establish why the project should exist or what
+its integration ambition could enable. This is editorial sequencing owned by
+developer onboarding, not a defect in the agent or OS implementation.
+
+### How it was fixed
+
+Rewrote the hero in [docs/onboarding.html](../docs/onboarding.html) around local
+compute, cloud intelligence and one usable system. Added a leading Why PolyInference
+chapter covering the workflow/resource problem, longer-term vision, potential
+economics/control/access benefits, an illustrative coding workflow, systems
+integration as the contribution, measurable success criteria and the current
+prototype's position. Grounded the pitch in the project brief and supplied lecture,
+with aspirations and illustrative uses distinguished from implemented behavior.
+
+Moved the contribution entry cards behind that introduction, added an explicit
+transition into onboarding, updated local chapter navigation/metadata, and removed
+duplicate research/product summaries from the following architecture introduction.
+Updated the primary dev-readme.md description and refreshed the standalone delivery
+copy with links to this checkout. Technical chapters from LLM foundations onward,
+all diagrams, the whiteboard, transcript, CSS and interaction script are preserved.
+
+Reviewed README/docs-index routes, setup, architecture/module guides, maintenance
+and JSON ownership. Their existing links, behavior, interfaces and rules remain
+accurate, so no changes were needed there. No file/feature moved or appeared;
+file-tree.json remains byte-identical. Generated/checkable navigation is current.
+
+### Design principle enforced or reconstructed
+
+Explain purpose and intended impact before asking readers to learn implementation
+details or follow contribution procedures. A stronger project pitch must still
+separate aspiration, research questions and measured/current capabilities. Existing
+agent/OS/provider boundaries and contribution obligations remain intact.
+
+### Verification
+
+Documentation generation and --check passed for 263 files and 119 leaves. The
+HTML-specific check passed 151 local links/anchors, unique IDs, five accessible
+SVGs plus the interactive diagram, all 187 transcript segments, embedded image
+integrity and primary ownership. Extracted JavaScript passed node --check.
+Byte comparison confirmed every technical chapter from foundations onward and
+the CSS/script unchanged from this revision's starting file; JSON ownership is
+unchanged and the developer Markdown hub remains under 80 lines. New/edited HTML
+and primary-guide whitespace checks passed.
+
+Browser QA verified the revised opening at 1280 and 390 pixels, its new navigation
+and the pitch-before-onboarding order, with no page horizontal overflow or browser
+warnings/errors. Updated desktop/phone preview images were saved outside source.
+The delivery copy preserves the same CSS/script and full embedded transcript.
+Earlier FIX-0099 test counts are historical; no runtime suite or provider workload
+was run for this editorial-only change. The append preserves all earlier history
+bytes; unrelated working-tree changes are not this task's work.
+
+<a id="fix-0102"></a>
+## FIX-0102 — 2026-10-21 — Resume a selected paused process with optional steering from the UI
+
+Status: implemented; verification recorded below.
+Related: [FIX-0027](#fix-0027), [FIX-0032](#fix-0032), [FIX-0045](#fix-0045),
+[FIX-0047](#fix-0047), [FIX-0092](#fix-0092), [FIX-0100](#fix-0100).
+Feature: [UI-RESUME-01](current-iter-issues.md#ui-process-resume).
+
+### Problem
+
+The frontend could start fresh runs and steer active runs, but selecting a paused
+process exposed no control to request continuation, optionally with new instructions.
+A plain reopen also cannot clear a paused workflow or safely replay a failed effect.
+
+### What was wrong
+
+There was no frontend/API resume transport or generic durable operator resume
+signal. Existing explicit application recovery was reachable only through coding
+entry points. UI launch configuration overlays must not replace saved settings,
+and starting a new run would discard the user's selected execution identity.
+FIX-0027/0045/0047 intentionally preserve original failed/unknown operations; a
+button that merely toggled status or resubmitted uncertain work would bypass them.
+
+### How it was fixed
+
+runtime/processes.request_resume validates a paused, noncancelled process and
+refuses runtime-wide submitting/active/uncertain effects, then atomically retains
+an immutable resume-request and process-control link. It interprets no coding
+records or Git policy and does not itself change execution state or grants.
+
+The UI's local-origin POST /api/resume selects the existing run/process, reloads
+its exact saved config without new-launch/environment overlays, records the signal
+and serializes the background driver with other launches/resumes. An attached
+--state can use a matching --config. cli.execute's application adapter validates
+program pins and chooses the existing linked model retry, accepted-output recovery
+or senior review; optional text enters normal steering. Outcomes and asynchronous
+pin/thread failures remain durable/visible, preserving paused state and releasing
+the UI's active flag after rejection. Ordinary Start uses the shared driver.
+
+The paused-process drawer supplies optional steering, duplicate-send protection,
+per-run/process drafts, visible errors, live eligibility refresh and stale-response
+guards. Offline JSON snapshots cannot signal. No configuration schema, agent
+module/prompt fingerprint, resource allowance or historical run was changed.
+The FIX-0100 run still requires evidence-based reconciliation of its unknown call.
+
+Updated owning UI/inspection/process/CLI guides, UI/recovery/retrying/CLI usage,
+the runtime boundary, onboarding feature descriptions, tests index and current
+tracker. Reviewed setup, launch, settings, simulator, archive/export, SDK and
+agent-workflow/repository guides: existing interfaces/guarantees still apply and
+need no additional edits. No file/feature path appeared or moved; JSON ownership
+is unchanged and generated navigation is checked below. Concurrent onboarding
+FIX-0101 and pre-existing implementation/simulator changes are separate work.
+
+### Design principle enforced or reconstructed
+
+The OS records generic operator intent and enforces execution certainty; the
+application owns continuation, coding recovery, steering and acceptance. Resuming
+is an explicit new control request, not a change to failed-effect history or proof
+of remote termination. Preserve saved authority, source, configuration/program
+pins and real budgets; viewing a snapshot cannot authorize execution.
+
+### Verification
+
+Initial new regressions: 8 passed (HTTP controller/worker resume with and without
+steering, plus generic non-coding signals). Windows Node passed all 25 frontend
+checks, including duplicate sends, drafts, stale replies, live blockers and offline
+snapshots. A wider first run had 76 passes and one validation-message failure
+caused by Windows default decoding during the UI driver extraction. Restored the
+original Unicode; the pre-existing validation test provides the regression check.
+Additional coverage retains unknown effects without recording a signal and exposes
+program-pin/thread-launch rejection without queuing steering or leaving active UI
+ownership behind. No live provider, original-run resume/reconciliation, commit or
+push was performed.
+
+Final affected suites passed: 78 tests in 124.62 seconds across test_ui,
+test_runtime_general, test_recovery, test_incident_fixes and test_sim_batch.
+The final source/test Ruff check passed. The 25-pass Windows Node run exercises
+the final frontend source; subsequent changes affected backend failure handling
+and documentation only. Native WSL documentation generation and --check passed
+for 263 files and 119 leaves without a Windows metadata workaround. Scoped Git
+whitespace passed, with only the existing FIXES.md CRLF-normalization notice.
+
+Direct comparison confirms the agent-module fingerprint is unchanged, and all
+prior FIX text/bytes (including concurrent FIX-0101) are preserved after removing
+this entry/index row. IDs, required sections and task-added whitespace were checked.
+Onboarding bytes outside the two UI feature descriptions are preserved. This is
+focused recovery/frontend verification, not a full runtime-suite or live-provider
+claim. No generated game, real run or provider operation was resumed by these tests.
+
+<a id="fix-0103"></a>
+## FIX-0103 — 2026-10-21 — Verify the implemented scope of endpoint retries and UI recovery
+
+Status: investigated; no implementation changed.
+Related: [FIX-0045](#fix-0045), [FIX-0047](#fix-0047), [FIX-0058](#fix-0058),
+[FIX-0085](#fix-0085), [FIX-0100](#fix-0100), [FIX-0102](#fix-0102).
+
+### Problem
+
+The user asked whether an implemented feature retries endpoint failure for any
+reason, requesting a check of both fix history and current source after the UI
+resume feature. Automatic retry, explicit recovery and unknown-execution handling
+must not be conflated.
+
+### What was wrong
+
+No new runtime defect was established. FIX-0045 implemented selective, bounded
+known-ended inference retries, not unconditional retry. The current kernel calls
+ModelRetries after a returned operation result; submitted transport failure or
+cancellation instead raises UncertainEffect and bypasses that path. The retry
+filter also rejects unknown effects, nonretryable errors, stopped/cancelled
+processes, native jobs with brokered effects and exhausted safety allowances.
+FIX-0102 preserves these conditions rather than broadening retry eligibility.
+
+### How it was fixed
+
+No implementation, configuration, UI or retained run changed. Traced
+runtime/model_retries.py, inference.py, kernel.py, processes.py, cli.apply_resume,
+settings and existing tests. ProviderError marks rate_limit, service_unavailable,
+connection and admission retryable. HTTP rejection maps 429 and 5xx accordingly;
+400/401/403 and other permanent rejections are not blind-retried. Received empty/
+malformed output uses retryable ModelResponseError. Known-unsubmitted connect/
+pool failures can retry, while other transport errors and cancellation become
+UnknownExecution. Default model_call_retries is one extra attempt (allowed 1..3),
+with 100 ms exponential base delay, Retry-After, a 60-second maximum wait and
+original deadlines/budgets. Output-limit recovery separately asks for smaller
+complete content, default at most two eligible adaptations. FIX-0047 keeps OS
+retries separate from the application's explicit recovery allowance.
+
+Confirmed the UI Resume adapter requests an existing known-model recovery,
+accepted-output recovery or senior review. Its generic OS signal refuses unsettled
+execution; it does not automatically reconcile the FIX-0100 Haiku request.
+Reviewed retry/inference/CLI/process/UI/recovery/settings guides, runtime boundary
+and navigation ownership. They already describe this scope accurately and need
+no edit. No files/features appeared or moved; authored navigation is unchanged.
+Only this required investigation entry and its index row were added.
+
+### Design principle enforced or reconstructed
+
+Adapters retain completion, submission and failure facts; the OS enforces bounded
+recovery and effect certainty. Applications own corrected intents, continuation
+and acceptance. A known failure, a usable retry and unknown remote termination
+are different facts. An operator resume signal cannot erase original outcomes,
+reset budgets or authorize blind replay of uncertain/tool-bearing work.
+
+### Verification
+
+Fresh WSL tests/test_model_retries.py: 43 passed in 9.00 seconds. Coverage includes
+empty/malformed replies, 429/503/connect versus disconnect/400/401/403, backoff,
+restart/replay, budget/cancellation/deadline guards, native-effect restrictions and
+output-adaptation composition. Source inspection additionally confirms the full
+5xx mapping and configured defaults; the matrix is not a live provider outage.
+No provider request, original-run resume/reconciliation, implementation edit,
+full-suite run, commit or push was performed. Native documentation generation
+and --check passed for 263 files and 119 leaves. Scoped Git whitespace passed
+with the existing CRLF-normalization notice only. Unique IDs, required sections,
+added-text whitespace and byte preservation of all prior history were verified.
+
+<a id="fix-0104"></a>
+## FIX-0104 — 2026-10-21 — Explain the local-cloud Agent OS premise and shorten developer onboarding
+
+Status: implemented as documentation only.
+Related: [FIX-0099](#fix-0099), [FIX-0101](#fix-0101),
+[FIX-0102](#fix-0102).
+
+### Problem
+
+The onboarding opening did not directly connect the user's core points: costly
+cloud capability, local inference without per-token fees but weaker/slower results,
+their complementary roles, tools/docs/MCP, and agents running like programs on
+shared resources managed by an OS. The whole guide also felt too long and technical.
+
+### What was wrong
+
+FIX-0101 improved purpose-first sequencing but added a long pitch while retaining
+the dense technical chapters from FIX-0099. Earlier link/layout checks could not
+establish editorial concision or capture this more specific framing. This is an
+onboarding explanation problem, not a runtime or model-routing defect.
+
+### How it was fixed
+
+Rewrote [docs/onboarding.html](../docs/onboarding.html) around local/cloud
+complementarity, agents as programs, high concurrency and the OS resource bridge,
+leading directly into the architecture. Explained the cost premise as no local
+per-token provider fee, with hardware/power still counted; concurrency uses spare
+capacity rather than accelerating each call. Retained the current remote-Haiku
+stand-in and explicit separation of present behavior from the broader vision.
+
+Shortened every main chapter, the lecture recap, stack paths and glossary. Replaced
+technical diagram labels/captions and interactive example wording with plain terms.
+Preserved five diagrams, the resource example, all setup command blocks, required
+reading, safety/ownership restrictions, documentation obligations and FIX rules.
+The original whiteboard and complete 187-segment transcript remain unchanged in
+the folded source archive. Updated dev-readme.md's description and refreshed the
+standalone delivery copy and desktop/phone previews outside tracked source.
+
+Reviewed README, docs index, architecture, setup/provider references, maintenance,
+module ownership and runtime boundary, including FIX-0102's paused-process resume.
+These retain the same routes, interfaces, behavior and rules, so they need no edits.
+No feature/file path appeared or moved; JSON ownership and generated tree HTML
+remain byte-identical. Unrelated working-tree changes are separate work.
+
+### Design principle enforced or reconstructed
+
+Explain the project using concrete resources and agent programs before exposing
+implementation terms. Keep policy and final acceptance in the agent, generic
+execution in the OS and GPU scheduling in the provider. Shortening onboarding must
+preserve the contribution contract and source evidence, not weaken obligations or
+present future capabilities as implemented guarantees.
+
+### Verification
+
+Main-guide text before the source appendix fell from 9,103 to 5,343 words (41.3%),
+using the same counter excluding SVG/style/script content. Documentation generation
+and --check passed for 263 files and 119 leaves. The HTML-specific check passed
+128 local links/anchors, unique IDs, five accessible SVGs, embedded JPEG integrity,
+all 187 transcript segments and one primary owner. Extracted JS passed node --check.
+
+Preservation checks passed for the photo/transcript, seven setup command blocks,
+CSS and interaction logic (only resource-story text changed), JSON/generated tree,
+edited-line whitespace and the primary guide's under-80-line length. Browser QA
+verified desktop (1280px) and phone (390px) openings without horizontal overflow,
+architecture navigation, resource transitions through completion/reset, stack
+selection and glossary filtering. No browser warnings/errors were observed; the
+temporary viewport was reset. Delivery HTML retains the same embedded assets,
+CSS/script and links resolved to the checkout. No runtime suite, provider workload,
+commit or push was performed for this editorial-only change. Earlier test results
+are historical. Appending this entry/index row preserves all prior history bytes.
+
+<a id="fix-0105"></a>
+## FIX-0105 — 2026-10-21 — Expose resume beside the selected paused run
+
+Status: implemented.
+Related: [FIX-0100](#fix-0100), [FIX-0102](#fix-0102),
+[FIX-0103](#fix-0103).
+Feature: [UI-RESUME-01](current-iter-issues.md#ui-process-resume).
+
+### Problem
+
+The user selected a paused run but could not see a resume button beside its
+status. The screenshot showed the run toolbar and steering panel, while the
+ambient tab context named a direct file:// HTML preview rather than the live
+loopback API address.
+
+### What was wrong
+
+FIX-0102 exposed Resume process only after discovering OS > Processes and opening
+a paused process drawer. Its frontend tests opened that drawer directly, leaving
+the run-selection entry point unverified. An old backend without resume metadata
+also produced an unhelpful availability message. This was a frontend discovery
+problem, not evidence that retry or execution-certainty guards should change.
+
+### How it was fixed
+
+src/polyinference/ui.html now shows Resume run beside a paused status and lets the
+run toolbar wrap. src/polyinference/ui-monitor.js opens a paused-process chooser,
+preferring the blocking process, a failed worker or the controller, and reuses the
+existing Resume process form/API. Optional steering drafts survive process
+selection. Opening options sends no signal; submission keeps existing duplicate,
+snapshot, active-run and unsettled-execution guards. Blocked runs retain the entry
+point so the reason is visible. Missing backend support prompts a server restart.
+
+Updated the UI usage guide, UI/inspection module guides, test inventory and current
+feature tracker with the toolbar route and HTTP-versus-file preview distinction.
+Reviewed CLI, recovery, launch/settings and runtime-boundary documents: their
+interfaces, recovery semantics and ownership remain accurate, so no edits were
+needed there. No file or feature path appeared or moved; navigation ownership is
+unchanged. Concurrent onboarding FIX-0104 and other working-tree changes are
+separate work.
+
+### Design principle enforced or reconstructed
+
+Expose continuation where users select and inspect paused execution, and explain
+blocking facts without hiding the action's entry point. Presentation must preserve
+the OS's generic signal and certainty guarantees and the application's recovery
+policy. A visible resume control cannot prove that remote work stopped or make a
+saved snapshot executable.
+
+### Verification
+
+Windows Node tests/ui_start.test.cjs: 27 passed in 3.48 seconds. New coverage opens
+the control from the paused-run toolbar, selects the blocking worker, retains
+per-process steering drafts and submits the selected run/process/text exactly once.
+It also checks visible blocker explanations, missing backend support, read-only
+snapshots and hiding the entry for completed runs. Existing resume error, duplicate
+and late-reply regressions passed in the same run.
+
+Native documentation generation and --check passed for 263 files and 119 leaves.
+Scoped Git whitespace passed with the existing CRLF-normalization notice only.
+Prior history bytes, unique IDs, required sections and task-added whitespace were
+verified. No backend, agent or runtime implementation changed
+in this correction; FIX-0102's backend results are historical. No provider request,
+original-run resume/reconciliation, backend-suite run, commit or push was performed.
+The browser tool rejected file:// acquisition under its URL policy, so no live
+browser visual verification is claimed.
+
+<a id="fix-0106"></a>
+## FIX-0106 — 2026-10-22 — Preserve the agent-router distillation tutorial and link both version trackers
+
+Status: implemented as documentation only.
+Related history: [FIX-0080](#fix-0080), [FIX-0087](#fix-0087), [FIX-0098](#fix-0098).
+Tutorial: [agent-router distillation](router-distillation-tutorial.md).
+
+### Problem
+
+The user's step-by-step tutorial existed only in this chat. They requested a
+reasonable repository home with references from both current- and next-version
+fix records, so future research could find and reproduce the intended workflow.
+
+### What was wrong
+
+FIX-0087 recorded the next-version learned-router idea, but did not include a
+training tutorial. This is a research-documentation/discoverability gap, not a
+recurrence of a runtime defect or evidence that learned routing is implemented.
+
+### How it was fixed
+
+Added development-docs/router-distillation-tutorial.md with isolated WSL setup,
+task/agent/settings contracts, Opus label collection, a 1.5B LoRA student for the
+user's reported 16 GB GPU, saved-adapter inference, held-out evaluation and the
+separate later RLAIF stage. Recorded the user's reported written research
+permission without copying credentials or asserting independent verification.
+Marked starter snippets as unexecuted and explained paid-label interruption,
+provenance, length validation, authority and the current role-binding boundary.
+
+Linked the guide from current-iter-issues.md, next-iteration.md's existing routing
+proposal, both documentation/development indexes and the authored JSON tree.
+Regenerated human navigation. The next-version feature remains proposed; no
+application/OS implementation, installed dependencies, configuration or run state
+changed. Preserved the completed current-version queue and earlier fix history.
+
+Reviewed setup.md, dev-readme.md, docs/guides/providers.md,
+docs/modules/agent-workflow.md, docs/modules/documentation.md, docs/maintenance.md,
+and the runtime boundary/revision ledger. Their current setup, allocation,
+role-binding, OS and navigation contracts remain accurate; they need no edits
+because the new tutorial describes an isolated research experiment, not a shipped
+training command or router integration. Existing unrelated working-tree changes
+are not this task's work.
+
+### Design principle enforced or reconstructed
+
+Keep research instructions discoverable from current records and future plans
+without converting proposals into runtime guarantees. Agent-selection and
+settings policy belongs above the OS; predictions do not grant authority or
+replace generic admission, budgets and execution-certainty guards. Preserve
+traceable experiment inputs and distinguish imitation from measured task success.
+
+### Verification
+
+WSL python3 scripts/project_docs.py and its --check mode both passed for 264
+files and 120 feature/doc leaves, including local links, single primary ownership,
+README reachability and generated navigation. All nine Python blocks parsed with
+ast.parse, and the JSON object plus three JSONL examples parsed successfully;
+these checks validate syntax, not imports, API behavior or training results.
+Reviewed the task's changes against saved pre-edit copies of all seven existing
+documentation files. Earlier fix-history bytes are preserved after removing the
+new index row/entry and its separator; fix IDs are unique. Scoped Git whitespace
+and the new tutorial's whitespace passed, with existing CRLF-normalization
+notices only. Adjacent-document review and reasons for no edits are recorded above.
+No teacher request, model download, package installation, GPU training/benchmark,
+live agent execution or runtime-suite result is claimed for this documentation task.
+
+<a id="fix-0107"></a>
+## FIX-0107 — 2026-10-22 — Add a navigable HTML learning guide for router distillation and RLAIF
+
+Status: implemented as documentation only; verification recorded below.
+Related history: [FIX-0080](#fix-0080), [FIX-0087](#fix-0087),
+[FIX-0099](#fix-0099), [FIX-0106](#fix-0106).
+Guide: [HTML learning guide](router-training-guide.html), owned by the
+[Markdown tutorial](router-distillation-tutorial.md).
+
+### Problem
+
+The saved Markdown tutorial assumed training vocabulary, and later chat discussion
+added model choices, thinking, synthetic prompts and conversation summarization.
+The user requested one HTML teaching document for readers with general AI knowledge
+but no training experience, with skippable sections, practical steps near the end
+and links from the current/next-version trackers and Markdown companion.
+
+### What was wrong
+
+FIX-0106 preserved the original code walkthrough, not a complete learning route
+for newcomers or the subsequent design discussions. This is a teaching and
+discoverability gap; no runtime or model-quality defect was established.
+
+### How it was fixed
+
+Added development-docs/router-training-guide.html with fourteen anchored chapters,
+three reading paths, responsive contents, optional detail/code disclosures,
+semantic process diagrams, an illustrative reward calculator, print support and
+primary-source links. Explained tokens/weights, training/inference, SFT/LoRA,
+distillation, preferences versus online RLAIF, Opus's roles, current agent/OS
+ownership, students/thinking, real/synthetic data, two-pass summaries and evaluation.
+
+Embedded all fourteen code/file-format blocks from Markdown steps 1–7 in Lab A.
+Lab B provides controlled data/summary experiments, preference collection, an
+optional unexecuted DPO starter recipe and a clearly labelled online-RLAIF
+integration procedure/pseudocode. Research status, reported permission, hardware
+estimates, example settings and unperformed training remain explicit.
+
+Updated the Markdown owner with the HTML route/responsibilities; linked the HTML
+directly from both version trackers and documentation indexes. Assigned the HTML
+to the existing primary-doc leaf in docs/file-tree.json and regenerated navigation.
+No external assets, network calls or training are triggered by opening the guide.
+
+Reviewed setup, developer onboarding, provider/workflow/documentation module
+guides, maintenance and runtime boundary/revision records. Their current commands,
+role bindings, allocation, authority and navigation contracts remain accurate;
+no edits are needed because this teaches an isolated research workflow rather
+than adding a production training interface or changing OS/agent behavior.
+Prior fix entries and unrelated working-tree changes are preserved.
+
+### Design principle enforced or reconstructed
+
+Teach prerequisites before procedures while letting experienced readers choose
+their entry point. Distinguish demonstrations, proposed experiments, implemented
+behavior and measured evidence. Keep task/agent selection and acceptance above
+generic OS execution safeguards; a model prediction cannot grant authority.
+Evaluate compression and feedback by downstream task outcomes, not fluent prose
+or a reward proxy alone. Maintain discoverable ownership and current navigation.
+
+### Verification
+
+WSL documentation generation and --check passed for 265 files and 120 feature/doc
+leaves, including ownership, local references, reachability and generated HTML.
+HTML-specific checks passed fourteen chapters, 45 unique IDs, 46 local
+links/anchors, no remote assets and task-added whitespace. All eleven Python
+examples (including labelled architectural pseudocode) parsed with ast.parse;
+four JSON objects and three JSONL records parsed successfully. All fourteen Lab A
+blocks match Markdown steps 1–7 exactly. Extracted JavaScript passed node --check.
+
+Browser QA verified the desktop opening, chapter navigation, phone layout at
+390 x 844, compact/expanding mobile contents with navigation closing it again,
+all fifteen lab-code disclosures expanding/collapsing, and the reward slider's
+preference change. No page horizontal overflow or browser warnings/errors were
+observed; the temporary viewport override was reset. The first preview attempt
+could not reach a sandboxed loopback server; a temporary host loopback preview
+then succeeded. Printing is supported by styles/events, not a verified PDF export.
+
+Comparison with saved pre-edit copies confirmed all earlier fix-history bytes
+are preserved after removing the new index row/entry and separator. IDs remain
+unique, and the original Markdown walkthrough is unchanged below its added HTML
+reading/ownership route. Task-added whitespace and scoped Git diff --check passed,
+with the existing CRLF-normalization notices only. These checks establish
+documentation structure, syntax and browser behavior, not model/library execution
+or research performance.
+No package installation, teacher request, model download, GPU training, agent-run
+experiment or production deployment was performed for this documentation change.
+
+<a id="fix-0108"></a>
+## FIX-0108 — 2026-10-22 — Compare Flash-Next Coder with the earlier coding shortlist
+
+Status: investigated; published evidence only, no implementation changed.
+Related: [chat provenance](CHAT_HISTORY.md), [FIX-0041](#fix-0041).
+
+### Problem
+
+The user requested a coding-only Hugging Face comparison of Qwen3.8 Flash Next
+Coder against models previously considered for PolyInference.
+
+### What was wrong
+
+The earlier comparison chat included full Flash-Next but had not assessed the
+new compressed Coder build. General intelligence composites do not answer coding
+quality, and base-model scores cannot be assigned to arbitrary GGUF files.
+This is research evidence maintenance, not a runtime defect.
+
+### How it was fixed
+
+Recovered the shortlist from chat 01a15f3f-2d24-76c1-a62f-398fb2718c05,
+"Compare models in inference report", and checked current primary model cards.
+The likely requested artifact is [ISTA-DASLab Coder](https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF).
+Its October 17 update reports SWE-bench Verified 79.20 versus its BF16 baseline
+82.80, and LiveCodeBench v6 87.43 for both, at xhigh. It removes half of routed
+experts and stores retained weights at 3.5 bpw; effective 1.89 bpw is not a literal
+precision for every weight. Total files are 58.4 GB; transformer 29.6 GB plus
+28.8 GB disk-offloadable n-gram table. This does not fit wholly in 16 GB VRAM.
+
+[Full Flash-Next](https://huggingface.co/Qwen/Qwen3.8-Flash-Next) versus
+[27B](https://huggingface.co/Qwen/Qwen3.8-27B), in Qwen's comparison:
+DeepSWE 58.7/42.2; SWE Pro 62.5/61.7; multilingual SWE 81.0/73.8;
+NL2Repo 48.1/42.3; LCB v6 91.9/90.3. These full-model numbers do not establish
+the pruned Coder's ranking against 27B. Pro uses a corrected benchmark and DeepSWE
+uses best-of-harness reporting, so older results cannot form a controlled league.
+
+[Qwen3.6-35B](https://huggingface.co/Qwen/Qwen3.6-35B-A3B) reports Verified 73.4,
+Terminal 2.0 51.5; [Coder-Next](https://huggingface.co/Qwen/Qwen3-Coder-Next)
+reports 70.6/36.2. [Qwen3.5's table](https://huggingface.co/Qwen/Qwen3.5-122B-A10B)
+reports Verified/Terminal 2/LCB v6: 122B 72.0/49.4/78.9;
+35B 69.2/40.5/74.6; gpt-oss-120b 62.0/18.7/82.7.
+Qwen3.6's later table re-evaluates 3.5-35B at 70.0 Verified; retain provenance.
+[Next-Instruct](https://huggingface.co/Qwen/Qwen3-Next-80B-A3B-Instruct)
+reports LCB v6 56.6 and Aider 49.8.
+[NVIDIA](https://huggingface.co/nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-BF16)
+reports Nemotron Super Verified 60.47 (OpenHands), compared with 66.40 for
+Qwen3.5-122B and 41.9 for gpt-oss in that setup. Those differences illustrate
+harness effects. [GLM-Air](https://huggingface.co/zai-org/GLM-4.5-Air) remains
+lower-priority without a matched evaluation; its 59.8 aggregate is not SWE.
+
+Inference: Coder deserves the quality-focused trial against 27B and 3.6; no
+controlled exact-quant comparison establishes a universal winner or parity with
+the previous chat's proprietary models. No TPS or 64K-input/32K-output result
+was measured. Reviewed provider usage, onboarding, maintenance and documentation
+module/index/navigation: current bindings/interfaces are unchanged and need no
+edit. Only this existing history leaf changes; no new files or navigation paths.
+
+### Design principle enforced or reconstructed
+
+Compare coding task outcomes with evaluation/version/harness provenance.
+Distinguish published measurements from deployment inference and unverified
+hypotheses. Research recommendations do not change role bindings or OS policy.
+
+### Verification
+
+Read the earlier comparison chat and current Hugging Face primary cards.
+No model download, inference, coding benchmark, runtime test, configuration,
+retained-run change, commit or push occurred. Windows generation and --check were blocked by Git dubious ownership; no global
+Git exception was added. Authorized native WSL generation then passed for 265
+files and 120 leaves. Final native --check and prior-history preservation are
+verified in the task handoff.
+
+<a id="fix-0109"></a>
+## FIX-0109 — 2026-10-22 — Estimate Coder memory, speed and batching on the reported laptop
+
+Status: research and theoretical sizing only; no implementation changed.
+Related: [FIX-0108](#fix-0108), [FIX-0061](#fix-0061).
+
+### Problem
+
+The user requested fit, token speed, context and continuous-batching analysis
+for Coder on RTX 3080 Laptop 16 GB plus 64 GB DDR4, with 32K input and 16K output.
+
+### What was wrong
+
+FIX-0108 established artifact size, not runtime placement or measured laptop
+performance. Adding RAM and VRAM or multiplying single-stream TPS by slots would
+misrepresent offloading and shared resources. CPU model, power limit, PCIe link,
+RAM channels/speed and SSD remain unspecified. No local defect was established.
+
+### How it was fixed
+
+Checked the [artifact card](https://huggingface.co/ISTA-DASLab/Qwen3.8-Flash-Next-GSQ-RCO-Coder-GGUF),
+[Strata memory guide](https://github.com/Niko1221/Strata/blob/main/docs/MODELS.md),
+[engine details](https://github.com/Niko1221/Strata/blob/main/docs/DETAILS.md),
+[batching](https://github.com/Niko1221/Strata/blob/main/docs/BATCHING.md) and
+[model configuration](https://huggingface.co/Qwen/Qwen3.8-Flash-Next/blob/main/config.json).
+Coder has 29.6 GB transformer and 28.8 GB disk-backed lookup shards; Strata says
+about 23 GB of experts live in RAM, dense weights and expert cache in VRAM.
+64 GB RAM is sufficient in principle without repeatedly paging expert weights.
+Estimate 30-45 GiB total system usage including OS/runtime and variable file cache,
+not a reservation or measured working set. Allow about 80 GB free NVMe storage
+for files, MTP and installation headroom. File cache is reclaimable, not extra
+mandatory resident weights. Text-only, one resident engine; no per-worker copy.
+
+32768+16384=49152 tokens per request; use 65536 configured per-sequence context
+for templates and growth. Thinking consumes the output allowance. Native context
+is 262144. Strata documents 13.7 KB/token INT8 KV and a 0.56 GiB session at 32K:
+approximate state at actual 48K is 0.8 GiB/slot, around 1 GiB at configured 64K,
+plus draft/graph/checkpoint/prefill state. GDN recurrence is not dense KV per token;
+QSA sparse reads do not erase retained KV. Two/four/eight live 48K requests hold
+96K/192K/384K total tokens, without violating the per-sequence native limit.
+Memory-only extrapolation permits several slots; 8 is a single-GPU implementation
+ceiling in the cited docs, not a guaranteed allocatable count on this laptop.
+
+Planning inference with optimized Strata, resident RAM experts, warmed NVMe,
+MTP and laptop plugged in: 20-40 generated tokens/s (use 25 as conservative
+budget), 300-1000 prompt tokens/s (33-109 seconds for 32K); broad uncertainty,
+roughly 10-50 output TPS plausible outside central assumptions. Full 16K generation
+at 20-40 TPS is 6.8-13.7 minutes plus prompt processing. These are estimates,
+not a measured 16K completion. Engine reference: RTX5070/Ryzen7600/DDR5,
+Coder 54.9 TPS at32K, 53.2 at64K, 2177 prompt TPS at32K, only256 generated tokens.
+A first-person [3080 Laptop report](https://www.reddit.com/r/LocalLLaMA/comments/1wwwmy1/running_qwen38_flash_next_176b_on_a_16gb_rtx_3080/)
+uses 32GB RAM and a different full-model/runtime setup at about10 TPS; it is
+not an exact Coder benchmark and illustrates power/offload uncertainty only.
+
+Strata supports shared-weight slots, new-request admission, chunk-interleaved
+prefill/decode and slot refill. Single16GB setups default to serial: private
+session memory displaces GPU experts and unrelated requests share little expert
+work. Batch MTP is opt-in; default slots lose solo speculative drafts. Recommend
+one slot for throughput, test two for overlap, four experimental, eight only a
+memory/implementation experiment. No laptop multi-stream TPS claim is established.
+Illustrative arithmetic at25TPS aggregate with no batching gain and20% overhead:
+two/four streams receive10/5TPS each (27.3/54.6 minutes for16K each); further cache
+loss can be worse. This is a planning scenario, not a forecast or observed scaling.
+Native Windows or Linux is the clearer first test; docs have mixed WSL KV-streaming
+notes. No production deployment or change to default bindings is implied.
+
+Reviewed provider/inference module, runtime boundary, maintenance and navigation.
+No interfaces, current setup commands or policy changed, so no adjacent guide edits
+or new navigation paths are needed. Only this required investigation entry changes.
+
+### Design principle enforced or reconstructed
+
+Provider owns GPU scheduling/batching; application owns worker readiness and
+admission requests. Separate per-sequence context, aggregate cache, disk file size,
+resident memory, per-stream speed and aggregate throughput. Preserve measurement
+provenance and distinguish estimates from hardware validation.
+
+### Verification
+
+Arithmetic and primary-source review only. No download, install, GPU inspection,
+model request, runtime test, configuration or saved-run change, commit or push.
+Documentation generation/check and prior-history preservation checked in handoff.
+
+<a id="fix-0110"></a>
+## FIX-0110 — 2026-10-23 — Design one-click run resume across frontend, agent and OS
+
+Status: design/investigation only; no implementation changed.
+Related: [FIX-0100](#fix-0100), [FIX-0102](#fix-0102),
+[FIX-0103](#fix-0103), [FIX-0105](#fix-0105).
+Proposal: [run-level Resume redesign](current-iter-issues.md#ui-run-resume-design).
+
+### Problem
+
+The user wants optional instructions followed by a simple Resume click, without
+having to select internal processes or resolve technical recovery state. They
+explicitly requested a design first, split across frontend, agent and OS.
+
+### What was wrong
+
+The frontend currently opens a process chooser; TestUI.resume_options and the
+generic request_resume reject unsettled effects before accepting user intent.
+cli.apply_resume owns coding continuation choices outside the agent. Earlier
+FIX-0102/0105 verified a guarded process-level signal and its discoverability,
+not autonomous run-level recovery. This is a broader product requirement, not
+evidence that uncertainty can be erased. HTTP remote-status/cancel support and
+agent program compatibility are real implementation gaps, not established fixes.
+
+### How it was fixed
+
+No implementation changed. Added a clearly proposed design below UI-RESUME-01:
+frontend optional text plus direct run request; agent-owned all-worker continuation
+and disposition; OS-owned durable intent and evidence-based effect preparation;
+restart/idempotency, provider capability and program migration requirements.
+The design separates request acceptance from actual execution and specifies
+plain failures rather than a mandatory reconciliation workflow. It does not claim
+that every historical/provider interruption is currently recoverable.
+
+Reviewed UI/inspection, agent workflow/services/workers, CLI, process/kernel and
+inference module guides, UI/recovery usage, runtime boundary/revision ledger,
+runbook, onboarding/setup routes and documentation maintenance/navigation.
+These describe unchanged current behavior and need no edits in a design-only
+task. The current-iteration proposal and this history record distinguish the
+future contract from that behavior. No file/feature appeared or moved, so authored
+JSON navigation ownership is unchanged. Pre-existing working-tree edits remain
+separate work.
+
+### Design principle enforced or reconstructed
+
+User intent is to continue the objective. The frontend submits and displays it;
+the agent chooses continuation and task/source policy; the OS establishes effect
+certainty and enforces generic authority/resource guarantees. Accepting intent is
+not evidence that an old operation ended. Internal recovery should not become a
+routine user task. Preserve prior evidence, saved work and explicit compatibility
+rather than silently restarting the objective or weakening execution checks.
+
+### Verification
+
+Source/document review only; no application/OS code, tests, configuration or saved
+run was changed. No provider request, reconciliation or resume was executed.
+Planned regression cases are listed in the proposal; none are claimed as run.
+WSL python3 scripts/project_docs.py and --check both passed: 265 files and
+120 feature/doc leaves, including links and README reachability. Byte comparisons
+confirmed that removing only the added proposal/index row/entry reproduces the
+pre-edit issue/history content exactly. Fix IDs and the new anchors are unique.
+
+<a id="fix-0111"></a>
+## FIX-0111 — 2026-10-23 — Make Resume run directly through frontend, agent and OS
+
+Status: implemented; verification below.
+Related: [FIX-0027](#fix-0027), [FIX-0100](#fix-0100), [FIX-0102](#fix-0102),
+[FIX-0103](#fix-0103), [FIX-0105](#fix-0105), [FIX-0110](#fix-0110).
+Feature: [UI-RESUME-01](current-iter-issues.md#ui-process-resume).
+
+### Problem
+
+The user wants optional instructions followed by one Resume click. The process
+chooser and requirement to resolve internal recovery state made the UI control
+an operator procedure instead of continuation. They approved implementation of
+the three-layer design in FIX-0110.
+
+### What was wrong
+
+The frontend chose a paused process. UI and OS validation refused unsettled work
+before accepting intent, and cli.apply_resume mixed coding continuation with
+transport. Prior FIX-0102/0105 correctly protected execution certainty but tested
+process-level submission/discovery, not automatic run-level preparation, durable
+request replay or agent continuation across restart. New agent source also changes
+graph_digest, requiring a precise compatibility decision for retained runs.
+
+### How it was fixed
+
+Frontend: ui.html/ui-monitor.js expose inline optional instructions and direct
+Resume, Resuming progress, persistent drafts/client request identity, replay after
+lost acknowledgement and stale-response protection. No mandatory process chooser
+or reconciliation form remains. The advanced process drawer stays available.
+
+HTTP/CLI: ui.py accepts run-level requests with optional legacy process_id and
+idempotent request_id, reloads saved settings, retains background failures and
+restores pending requests after restart, including journal/metadata and activation
+crash gaps. CLI resume accepts --text and calls the same agent service;
+apply_resume is now only a compatibility wrapper.
+
+Agent: agent/resume.py and controller.py own all-worker continuation, interrupted
+source/review, eligible checkpoint reattachment, linked model retry and accepted
+output recovery. Plans, steering receipts and outcomes survive interrupted
+activation. Ordinary errors leave durable failed progress and a paused run.
+Only the exact documented predecessor graph is migrated, with all other program
+pins equal; the old/new identity is separately recorded and original manifests,
+effects, authority, configuration, budgets, deadlines and cancellation are retained.
+
+OS: runtime/processes.py accepts scoped/unscoped intent independently of unresolved
+effects. runtime/resume.py and kernel.py prepare execution under coordinator
+ownership, using host receipts, artifact-backed completed raw responses and a
+bounded adapter lookup. inference.py retrieves saved HTTP Responses IDs, verifies
+identity and terminal status and applies normal completion validation. OS readiness
+is separate from application progress; accounting, reservations and callbacks are
+restartable. Unknown outcomes remain uncertain and block new dispatch. No native
+remote-cancel or host-descendant termination guarantee is claimed, and old
+synchronous requests without recovery handles can still fail automatically.
+
+Updated UI/inspection, agent workflow, process/kernel/inference, CLI and SDK module
+guides and settings compatibility; UI/CLI/recovery/retrying/results usage; runtime
+boundary/revision ledger/runbook and settings reference; onboarding;
+current tracker; test inventory and JSON/generated navigation. Reviewed setup,
+launch/configuration, provider installation, architecture, agent-service/
+worker/repository, archive/export/history and maintenance guides. Their setup,
+settings schema, policy, evidence and storage contracts remain unchanged and need
+no additional edits. Pre-existing working-tree changes are separate work.
+
+### Design principle enforced or reconstructed
+
+The frontend submits user intent; the agent owns continuation/task/source policy;
+the OS owns generic effect certainty and execution authority. Accepting Resume is
+not proof of termination. Internal recovery/disposition should be automatic where
+evidence permits, with a clear failure where it does not. Preserve immutable
+outcomes and saved work, avoid duplicate effects/instructions, and use explicit
+compatible-state migration instead of bypassing program pins or resetting limits.
+
+### Verification
+
+WSL integrated suites passed 159 tests with one frontend-wrapper skip in 158.55s
+across test_resume, test_ui, test_runtime_general, test_recovery, test_model_retries,
+test_inference_simulation, test_saved_credentials, test_ui_frontend, test_endpoints
+and test_http_integration. After the final acknowledgement/request-ID changes,
+the affected Resume/UI/general-OS suites passed 47 tests in 104.48s. The additional
+settlement-crash regression exposed float wire usage being treated conservatively
+as unknown integer accounting; integral counts are now restored without rounding.
+The final test_resume suite passed all 14 cases after that correction.
+
+Windows Node passed all 29 frontend checks on the final script. The WSL wrapper
+skip is because its Node version is below 18; it is not counted as a frontend pass.
+Coverage includes direct empty/nonempty-text Resume over real loopback HTTP in
+both isolated and actual-project worktree modes, unchanged private edits and saved
+settings, duplicate IDs, delayed/lost acknowledgement, post-activation restart,
+multi-worker source accounting, atomic steering, exact predecessor/unknown graph
+pins, provider/receipt recovery, unsupported/unknown status, bounded waits,
+coordinator ownership and recovery accounting after a settlement crash.
+
+Scoped Ruff and Python compilation passed. Documentation generation and --check
+passed for 268 files and 120 feature/doc leaves. Prior-history byte preservation,
+unique fix IDs/anchors, navigation ownership and task-added whitespace were checked.
+Scoped Git whitespace passed with the existing CRLF-normalization notices only.
+No browser visual QA, full repository suite or live-provider readiness is claimed.
+No live provider, user saved-run execution/reconciliation, commit or push occurred.
+
+<a id="fix-0112"></a>
+## FIX-0112 — 2026-10-23 — Count retries and assess the saved Haiku timeout pause
+
+Status: investigated; no implementation changed.
+Related: [FIX-0045](#fix-0045), [FIX-0047](#fix-0047), [FIX-0100](#fix-0100),
+[FIX-0103](#fix-0103), [FIX-0111](#fix-0111).
+Evidence: [run 7086c575ef94 retry audit](run-7086c575ef94-analysis.md#retry-count-audit--2026-10-23).
+
+### Problem
+
+The user asked how many retries preceded the supplied run's pause, whether enough
+recovery had been attempted and whether retry logic was faulty. FIX-0100 diagnosed
+the same export but did not explicitly separate all retry/correction counts.
+
+### What was wrong
+
+No retry-counter defect was established. The final submitted Haiku call became
+uncertain after 180.005032 seconds and bypassed automatic retry by design. The
+one-extra-attempt allowance was unused, not exhausted. Across the run there were
+zero endpoint retries, output adaptations or explicit linked model recoveries;
+six application format corrections (five plus one), and one replacement foundation
+task. These are different mechanisms. FIX-0100's confirmed diagnostic conflation
+still prevents proving the exact timeout/disconnect/cancellation cause. Current
+Resume cannot recover this saved synchronous Anthropic request without a completed
+response or supported provider handle. This is an existing recovery-policy/
+capability limit, not evidence that all approaches failed.
+
+### How it was fixed
+
+No implementation, configuration, project source or saved run changed. Appended
+counts and the assessment to the existing report. Reviewed retry/inference/kernel
+and worker/workflow module guides, recovery/retrying usage, runtime boundary and
+current issue findings: they describe these guards and outstanding diagnostic/grant
+issues accurately, so need no interface/settings/tracker edits. No file or feature
+appeared or moved; authored JSON navigation is unchanged. Pre-existing working-tree
+changes are separate work.
+
+### Design principle enforced or reconstructed
+
+Count actual durable submissions separately from grammar correction and task
+replacement. The OS owns execution certainty, transport evidence, bounded retries
+and accounting; the agent owns response grammar, task scope and acceptance. An
+intentional uncertainty stop does not establish retry exhaustion or objective
+impossibility. Preserve pending effects and original budgets/deadlines in recovery.
+
+### Verification
+
+Fresh export assertions passed: matching whole-file SHA-256, 119 effect outcomes,
+absence of retry identities/extensions, five-plus-one correction node outputs,
+180.005032-second interval and all 326 artifact sizes/digests. Inspected current
+dispatch/classification/retry/Resume source and the existing one-submission
+disconnect regression; no runtime suite was rerun. Windows Python lacks pytest;
+native WSL returned E_ACCESSDENIED. A supplemental offline async probe was stopped
+without a result and supplies no evidence. No provider request, original-run
+resume/reconciliation, implementation fix, commit or push occurred.
+
+Ordinary Windows documentation generation and --check each failed on exactly four
+pre-existing Windows-mapped Zone.Identifier paths, as in FIX-0100. An in-memory
+compatibility wrapper excluding only those four metadata paths then passed both
+generation and check: 268 files, 120 feature/doc leaves, links and README
+reachability verified. Checker source and metadata files were not edited. Authored
+JSON and generated HTML navigation match their pre-task hashes. All prior history
+and report bytes are preserved after removing only this task's additions; unique
+fix IDs, required sections and added-text whitespace passed. The five inspected
+runtime/worker source files retain their pre-task hashes. Historical verification
+above remains unchanged.
+
+<a id="fix-0113"></a>
+## FIX-0113 — 2026-10-23 — Explain recurring Claude pauses against official transport guidance
+
+Status: investigated; no implementation changed.
+Related: [FIX-0068](#fix-0068), [FIX-0100](#fix-0100), [FIX-0103](#fix-0103),
+[FIX-0111](#fix-0111), [FIX-0112](#fix-0112).
+Evidence and sources: [Anthropic follow-up](run-7086c575ef94-analysis.md#anthropic-documentation-follow-up--2026-10-23).
+
+### Problem
+
+The user requested official Claude documentation research to explain recurring
+pauses after the retry-count audit. An intentional uncertainty stop alone does
+not explain why the integration repeatedly reaches that state.
+
+### What was wrong
+
+Current Anthropic preparation uses stream=false with a 32,000-token output ceiling
+in this run, while the UI Haiku factory selects 180 seconds. The ordinary kernel
+also applies that endpoint setting to the whole generation. The HTTP stream context
+only buffers response bytes; it does not enable provider SSE. This is a concrete
+integration mismatch with Anthropic's long-request/idle-connection guidance.
+The application uses custom httpx, so the official SDK's ten-minute default and
+two transient/timeout retries are not inherited. Any submitted uncertainty still
+halts dispatch before the retry service; raising its counter or enabling SSE alone
+would leave other parts of the failure mechanism intact.
+
+All 37 completed Haiku requests took at most 16.470116 seconds and emitted at most
+4,582 output tokens; the final request ran 180.005032 seconds without a retained
+result. The exact underlying slow generation/provider/network/cancellation cause
+is still unproved. A large output allowance does not establish actual output size.
+This explains a credible recurring mechanism, not every historical pause or the
+separate native Codex incident in FIX-0068.
+
+### How it was fixed
+
+No implementation, configuration or retained run changed. Added the sourced
+follow-up to the existing run report, documented current buffering/total-timeout
+semantics in the owning inference module guide, and expanded open run14 findings
+with the combined transport/deadline/diagnostic repair. Reviewed retry/kernel/
+settings/workflow guides, provider/recovery/retrying usage, runtime boundary and
+settings reference. They accurately describe unchanged grants, defaults and
+uncertainty rules, so need no additional interface or setup edits. No file or
+feature appeared or moved; authored navigation ownership is unchanged.
+
+### Design principle enforced or reconstructed
+
+The application chooses generation allowances and task/response sizes. The OS and
+adapter provide accurate transport/progress/termination facts and distinct bounded
+execution controls. Internal streaming need not expose partial actions to an
+agent: require a complete validated response before execution. Each provider
+submission remains a charged durable intent. SDK retry convenience does not prove
+remote termination or authorize replay of uncertain tool-bearing work.
+
+### Verification
+
+Read current official Anthropic API error/long-request, Python SDK timeout/retry
+and streaming/final-message documentation. Two source-derived probes executed the
+live prepare method and UI Haiku factory with inert stubs, confirming stream=false,
+max_tokens=32000 and timeout_seconds=180. A third executed live KernelRuntime.execute
+without an event loop, confirming uncertainty bypasses retries and a returned
+known failure reaches the filter. Fresh export measurements established all 37
+completed request intervals/output counts. No live inference, outage reproduction,
+full runtime suite, source/configuration edit, saved-run resume, commit or push.
+
+Documentation generation and check passed for 268 files and 120 feature/doc
+leaves, including new links/anchors and README reachability. Used the previously
+verified in-memory Windows compatibility filter for exactly four pre-existing
+mapped Zone.Identifier paths; checker source and metadata files were unchanged.
+Authored JSON and generated HTML navigation retain their pre-task hashes. Prior
+history/report bytes and existing module/tracker text outside the additions are
+preserved; unique IDs, required sections and added-text whitespace passed. The
+four inspected source/default files retain their pre-task hashes. Existing
+working-tree changes and historical test results are not claimed as this work.
+
+<a id="fix-0114"></a>
+## FIX-0114 — 2026-10-23 — Propose portable endpoint resilience and faster failure testing
+
+Status: design/proposal only; no implementation changed.
+Related: [FIX-0045](#fix-0045), [FIX-0047](#fix-0047), [FIX-0054](#fix-0054),
+[FIX-0096](#fix-0096), [FIX-0111](#fix-0111), [FIX-0113](#fix-0113).
+Proposal: [portable endpoint lifecycle and testing](current-iter-issues.md#portable-endpoint-testing).
+
+### Problem
+
+The user requested an implementation suggestion for a better testing experience,
+with the local lane supporting both small cloud models and actual local inference.
+A Claude-only timeout patch or a uniform faster-response assumption would not meet
+that requirement.
+
+### What was wrong
+
+The current raw adapter/kernel share one broad endpoint timeout, while submitted
+uncertainty blocks all dispatch. Lane names do not encode actual speed, streaming,
+retrieval, cancellation or possible effects. The existing optional simulator paces
+buffered real responses; that is useful but does not by itself test missing-terminal
+SSE and real transport-stall handling. These are established design limits, not a
+new runtime reproduction or evidence that local hardware inherently needs a fixed
+latency. Unknown compute must remain accounted for even if its output is abandoned.
+
+### How it was fixed
+
+No implementation, saved configuration, launch default or retained run changed.
+Added the proposed staged design to current-iter-issues.md: common lifecycle/SSE
+normalization, separate editable timing profiles, modest caller response targets,
+generation-only recovery with late-output fencing and retained capacity/accounting,
+strict effectful uncertainty, tester progress/probes and offline/fixture/live tests.
+The proposed narrower query barrier explicitly refines R13 only if implemented;
+current boundary/revision guarantees remain unchanged. A one-slot local server
+without verified cancellation cannot silently gain spare retry capacity.
+
+Reviewed inference/retry/kernel/settings/inspection and simulator module guides,
+simulator/provider/recovery usage, navigation, boundary and revision references.
+They remain accurate for unchanged current behavior and need no proposed APIs
+presented as implemented. Future stages list their required settings, usage, module,
+revision and navigation updates. No files or feature leaves appeared or moved.
+Existing working-tree changes remain separate work.
+
+### Design principle enforced or reconstructed
+
+Treat local/cloud as bindings, and configure behavior using trusted adapter facts
+and explicit resource preferences. The OS owns transport, deadlines, evidence,
+capacity, immutable attempts and safe delivery; the application owns response size,
+profile selection, tasks and acceptance; the server owns GPU scheduling. A pure
+query's logically abandoned response is not proof that its remote compute ended.
+Keep testing fast and deterministic without weakening real-world effect certainty.
+
+### Verification
+
+Reviewed current adapter/admission/kernel/settings/simulator paths and official
+Anthropic streaming, llama.cpp server and vLLM serving documentation. Audited the
+proposal against no-spare-slot, second-unknown-retry, partial/late output, heartbeat,
+restart/replay and original-budget cases. Listed regression cases are requirements,
+not tests executed. No runtime test suite, live endpoint, generation, benchmark,
+implementation edit, saved-run resume, commit or push occurred.
+
+Documentation generation and check passed for 268 files and 120 feature/doc
+leaves, including links/anchors and README reachability. Used the existing
+in-memory compatibility filter for exactly four Windows-mapped Zone.Identifier
+metadata paths; checker source and metadata files were not changed. Authored JSON
+and generated HTML navigation retain their pre-task hashes. Prior tracker/history
+bytes are preserved after removing only this task's proposal/entry/index row.
+Stable fix IDs, required sections and added-text whitespace passed. Six inspected
+implementation/settings files and current boundary/revision guides retain their
+pre-task hashes. The 32k-at-5-TPS example was checked arithmetically (106.67 minutes),
+not benchmarked. No proposed interface or behavior is claimed as implemented.
+
+<a id="fix-0115"></a>
+## FIX-0115 — 2026-10-23 — Split endpoint resilience into agent policy and independent OS mechanisms
+
+Status: design review/investigation only; no implementation changed.
+Related: [FIX-0022](#fix-0022), [FIX-0032](#fix-0032), [FIX-0045](#fix-0045),
+[FIX-0047](#fix-0047), [FIX-0054](#fix-0054), [FIX-0058](#fix-0058),
+[FIX-0085](#fix-0085), [FIX-0114](#fix-0114).
+Clarification: [agent/OS separation review](current-iter-issues.md#endpoint-agent-os-split).
+
+### Problem
+
+The user asked to split the endpoint/testing proposal into agent and OS design,
+check it against the project's definitions and ensure OS independence.
+
+### What was wrong
+
+The earlier proposal correctly placed transport, limits and durable recovery in
+generic services, but left replacement permission and run-level continuation too
+implicit. Generation-only execution does not decide whether the caller permits
+an answer to be discarded. Similarly, generic resource blocking does not authorize
+the OS to choose coding task continuation or application pause policy. These are
+design wording/authorization gaps, not implemented regressions. A separate existing
+portability dependency was observed: agent/worker.py imports WriteScopeError from
+a concrete runtime module. No resulting runtime failure was established.
+
+### How it was fixed
+
+No code, configuration, runtime boundary or saved run changed. Added an explicit
+review after the existing proposal, preserving its earlier text and history.
+Agent design owns preferences, replacement consent, response semantics and work
+continuation. OS design owns provider normalization, generic timer/retry schemas,
+admission/accounting, immutable outcomes and delivery fencing. Replacement requires
+both caller consent and OS-verified absence of possible effects, plus isolated
+delivery/capacity/budget guarantees. It cannot turn uncertain writes into queries.
+Preserved existing generic OS output adaptation and the deferred shared library.
+Listed separate generic OS conformance and agent/fake-runtime acceptance tests,
+and the SDK-owned exception cleanup for future implementation.
+
+Reviewed the primary agent/OS designs, current responsibilities/revisions,
+architecture, RuntimePorts, affected service/kernel/inference/retry/process/settings
+and SDK guides, and simulator/maintenance references. Their current definitions
+remain accurate, so no current interfaces, accepted guarantees or setup/usage need
+editing. The new section is explicitly a proposed refinement, including R13;
+no file/feature appeared or moved and authored navigation is unchanged.
+
+### Design principle enforced or reconstructed
+
+The agent supplies program meaning and permitted flexibility; an independent OS
+provides generic mechanisms and non-waivable guarantees through replaceable ports.
+Provider protocols stay inside adapters and GPU scheduling stays in the server.
+Automatic runtime assistance can execute declared policy without knowing tasks,
+Git, coding grammar or acceptance. Caller permission is necessary but cannot
+establish remote termination or weaken grants/resource/effect guards.
+
+### Verification
+
+Cross-read agent/runtime boundary, OS modules/processes and current responsibilities
+against the proposed ownership split. A fresh AST import scan of 24 runtime/
+settings/ports Python files found no direct imports of polyinference.agent. Four
+agent graph/service modules were inspected and the worker exception dependency
+was confirmed at worker.py:22 and its catch site. This is static source evidence,
+not a dynamic isolation proof or newly executed general-agent runtime suite.
+No provider, inference, runtime tests, implementation fix, resume, commit or push.
+Proposed conformance cases are requirements, not test results.
+
+Documentation generation and check passed for 268 files and 120 feature/doc
+leaves, with links/anchors and README reachability verified. Used the existing
+in-memory compatibility filter for exactly four Windows-mapped Zone.Identifier
+metadata paths; checker source and metadata files were unchanged. Authored JSON
+and generated HTML navigation retain their pre-task hashes. Prior proposal/history
+bytes are preserved outside this task's added clarification/entry/index row. Unique
+fix IDs, required sections and added-text whitespace passed. Six inspected source/
+SDK/settings files and all four primary design/boundary/revision documents retain
+their pre-task hashes. This does not claim runtime isolation or implementation.
+
+<a id="fix-0116"></a>
+## FIX-0116 — 2026-10-23 — Establish shared human and agent onboarding with required project memory
+
+Status: implemented as documentation only; no application/OS implementation changed.
+Related: [FIX-0004](#fix-0004), [FIX-0072](#fix-0072), [FIX-0080](#fix-0080),
+[FIX-0098](#fix-0098), [FIX-0099](#fix-0099), [FIX-0104](#fix-0104).
+Entry point: [contributor onboarding](../docs/contributor-onboarding.md);
+retained knowledge: [project memory checklist](../docs/project-memory.md).
+
+### Problem
+
+The user wants other humans and agents to acquire the same project-rule, design,
+preservation and automation awareness by following documentation from README.
+They explicitly require an agent to add that information to its memory, project
+rules or project-specific content.md, so it informs subsequent requests.
+
+### What was wrong
+
+Existing instructions and the illustrated guide expose maintenance and design
+rules, but no shared cross-harness procedure specifies how to initialize retained
+contributor knowledge, verify a persistent save and refresh after context loss.
+FIX-0098 established Codex instruction delivery and its limits; it did not provide
+this broader setup procedure. Reading a page alone cannot establish another
+platform's access, persistent memory or automatic compliance. This is a contributor
+onboarding gap owned by developer documentation, not an OS memory-service defect.
+
+### How it was fixed
+
+Added docs/contributor-onboarding.md with human setup, required reading through
+the tree, agent memory initialization, an every-request/restart/handoff routine
+and a reusable onboarding prompt. Added docs/project-memory.md with project
+purpose, explicit agent/OS/provider ownership, source/effect/history preservation,
+documentation/FIX obligations, real automation and its limits. Both pages and root
+AGENTS.md explicitly require agents to add this knowledge to available memory,
+project rules or project-specific content.md, verify/report its location and
+refresh it. Unavailable persistence must be reported with session-context/reload
+fallback; no platform memory capability or background automation is invented.
+
+Linked the procedure directly from README, dev-readme and docs/README, and from
+AGENTS. Added maintenance rules for keeping both guides and retained notes current.
+Registered two primary-doc leaves in JSON navigation and regenerated HTML.
+Reviewed setup/testing, architecture, documentation tooling, the illustrated guide,
+agent/OS boundary and revision/design routes, current/future issue indexes:
+their environment, behavior, interfaces and existing teaching remain accurate.
+They need no further edits because this adds contributor setup, not runtime
+features or settings; the field guide already leads through developer onboarding.
+No unrelated existing/staged work is claimed, reset, staged, committed or pushed.
+
+### Design principle enforced or reconstructed
+
+Make shared project knowledge inspectable, versioned and reloadable across people
+and harnesses. The agent owns canonical memory, workflow, Git and acceptance; the
+OS supplies generic execution/resource/effect guarantees. Contributor onboarding
+must not impose coding prerequisites on OS programs. Distinguish source guidance,
+loaded session context, verified persistent memory and automated structural checks;
+preserve history, original evidence, current design status and user work.
+
+### Verification
+
+Native WSL documentation generation and --check passed: 270 maintained files and
+122 feature/doc leaves, with links/anchors, primary ownership, README reachability
+and current generated HTML. All 20 existing documentation-tool regressions passed
+in 0.21 seconds. Both new guides are at most 80 lines; explicit MUST memory/rules/
+content.md wording, fallback, task-start source hashes and new-guide whitespace
+checks passed. All 109 source/test/tool/example files retain task-start hashes.
+Scoped native Git whitespace passed before this entry; final history-preservation,
+route/requirement checks and documentation generation/check are recorded at handoff.
+
+Windows sandbox writes were unavailable and ordinary WSL launch returned access
+denied; authorized WSL access enabled native authoring/checks without changing
+checker source, inventory exclusions or download metadata. No Windows metadata
+workaround was needed. Earlier history is preserved with a new stable ID/index.
+No runtime suite, browser visual QA, live provider, saved-run execution, platform
+memory write, credential change, commit or push occurred. These checks establish
+repository guidance/navigation, not another assistant's future compliance.
+
+
+<a id="fix-0117"></a>
+## FIX-0117 — 2026-10-23 — Implement bounded streaming lifecycle and native/caller retry policy
+
+Status: implemented v1; offline checks only, no live provider/local inference validation.
+Related: [FIX-0047](#fix-0047), [FIX-0085](#fix-0085), [FIX-0111](#fix-0111),
+[FIX-0114](#fix-0114), [FIX-0115](#fix-0115).
+Details: [implementation status](current-iter-issues.md#endpoint-testing-v1) and
+[current behavior/configuration](../docs/guides/endpoint-testing.md).
+
+### Problem
+
+The exported run stopped after its raw Haiku call exhausted a fixed 180-second
+invocation timer. It had no endpoint retry before the uncertainty barrier. The
+user requested the proposed repair with more OS-native retry followed by optional
+agent policy, supporting small cloud models and actual local serving alike.
+
+### What was wrong
+
+The HTTP adapter requested buffered output and collapsed timeouts/disconnects
+into an undifferentiated unknown. Its kernel timer ignored output progress.
+FIX-0047 correctly refused blind replay of unknown effects, but lacked explicit
+raw-generation delivery consent and physical/logical separation. Output adaptation
+also started another transport loop, resetting its allowance. FIX-0085 covered
+feedback semantics rather than shared transport counters. These are OS transport,
+accounting and retry-composition defects; coding grammar remains agent-owned.
+
+### How it was fixed
+
+Added optional InferenceLifecycle endpoint settings and negotiated InferencePolicy
+caller declarations. runtime/inference_stream.py performs bounded incremental
+UTF-8/SSE framing and Anthropic/chat/Responses terminal assembly; inference.py
+uses first-output/idle/total watchdogs and retains transport cause/stage. Pings
+and lifecycle events do not extend meaningful-output deadlines. Hidden reasoning
+is not retained; partial JSON/text cannot become an action. Gemini explicitly uses
+buffered mode. There is no silent streaming-to-buffered resend.
+
+ModelRetries executes native allowance first, then declared caller retries, records
+separate counters/source, and shares root deadline/counters across output adaptation.
+Fresh coding configs choose two native retries; bare OS default remains one (now
+configurable 0–3). Compaction helper deadlines inherit the parent's effective
+logical cutoff. Each new submission retains normal grants, cancellation, budgets,
+capacity, finishing reserves and original per-attempt evidence.
+
+Kernel isolation requires explicit consent, built-in raw adapter/tool-free wire
+facts and remaining allowance/time. One undelivered generation per lane can be
+isolated; its effect stays uncertain and its physical reservations stay held.
+A replacement requires spare capacity. Single-slot callers receive an uncertain
+logical result without submitting a duplicate; another unknown remains a barrier.
+Independent work is permitted without weakening unknown native/tool/effect guards.
+Retained delivery_result fences late physical results across replay/restart.
+Resume may retrieve isolated status/receipts without requiring their resolution
+for unrelated readiness. Native/simulator adapters do not claim this new safety fact.
+Optional absent settings preserve old canonical serialization; saved explicit
+configurations do not silently acquire the new profile/consent.
+
+Updated inference/retry/kernel/services/settings/SDK guides, complete settings,
+boundary/revisions/runbook, investigation status, test inventory and navigation.
+Reviewed provider setup, architecture, deployment/implementation, task/acceptance
+and repository guides: their provider credentials, broad ownership, host setup and
+coding source/acceptance rules remain valid and need no additional edits.
+
+### Design principle enforced or reconstructed
+
+The OS owns generic execution facts, bounded native assistance, accounting and
+non-waivable authority/capacity guards. The agent declares additional retry consent,
+output targets and semantic recovery. Lost delivery does not prove execution stopped;
+logical replacement never fabricates physical capacity or delivers discarded output.
+No Git, task graph, reply grammar or acceptance policy is added to generic runtime.
+
+### Verification
+
+Offline lifecycle, retry, resume, simulator and frontend-wrapper selection passed
+120 tests with one Linux Node-wrapper skip before final additions; independent
+Windows Node checks passed all 30 browser-logic cases. The expanded lifecycle and
+probe selection passed 21 cases, and small/large UI output-target cases passed.
+Final related Python selection: 270 passed in 174.62 seconds. After final safety
+changes, lifecycle/context/retry/resume selection: 113 passed in 32.03 seconds.
+All 30 Windows Node browser-logic cases passed; package/affected-test Ruff passed.
+All five example configurations validated. The attached historical configuration
+retains its exact canonical serialization, native allowance 1 and absent opt-ins.
+Documentation generation and --check passed for 274 files / 123 feature/doc leaves.
+Initial failures exposed feature negotiation wiring, changed fixture expectations
+and nonboolean UI disabled state; these were corrected. No live Claude, local GPU,
+production fault injection, browser visual QA or historical-run execution occurred.
+The commit is labelled v1 untested as requested; fixture results are not readiness.
+
+<a id="fix-0118"></a>
+## FIX-0118 — 2026-10-23 — Add explicit endpoint profiles, generic warm-up and timing inspection
+
+Status: implemented v1; bring-up tooling with offline fixture coverage.
+Related: [FIX-0115](#fix-0115), [FIX-0117](#fix-0117).
+
+### Problem
+
+Testing small cloud stand-ins and cold local inference required different timing
+budgets and an explicit inexpensive warm-up, with enough diagnostics to distinguish
+queueing, first output, active output, backoff and physical uncertainty.
+
+### What was wrong
+
+The local lane name described a routing slot, not endpoint latency/safety. The UI
+had no explicit deployment timing choice or bounded generic probe. A separate probe
+without serialization/preserved uncertainty could ignore surviving compute and
+undercount capacity. This testing workflow belongs to the application, not the OS.
+
+### How it was fixed
+
+agent/system_settings.py owns explicit small-cloud/local-inference/buffered timing
+overlays; providers, physical capacity and saved configurations stay explicit.
+agent/endpoint_probe.py registers an ordinary artifact-only OS process and submits
+one 64-token query, with no tools, Git, workspace, retries or coding services.
+It saves its actual RuntimeConfig alongside the journal. UI clicks alone submit
+probes; opening/polling/snapshot viewing never warms a model. Probe state serializes
+with launches/resumes and remains blocking after uncertainty/server restart until
+actual retained terminal reconciliation is observed. There is no cross-runtime
+admission claim. UI OS inspection/export retains progress, deadline, transport
+cause/stage, caller policy and isolated-computation facts. Fresh UI selects 4096
+raw output tokens inside the unchanged hard cap and one additional caller retry.
+
+Added the endpoint-testing guide and updated UI/config/settings/simulator/test
+routes and file ownership. Adjacent project selection, credential loading and
+accepted-output delivery guides need no change: probes do not select/edit projects,
+change credential sources or deliver coding products. The TPS simulator still
+paces completed real responses; it does not simulate actual streaming/GPU decoding.
+
+### Design principle enforced or reconstructed
+
+Profiles, warm-up and testing preferences are caller application policy. Generic
+OS processes provide grants, admission, budgets, durable facts and termination
+rules without requiring coding services. Test convenience cannot waive physical
+uncertainty, turn lane names into safety guarantees or claim measured hardware.
+
+### Verification
+
+Generic probe fixtures establish one submitted query, 64-token bound, retained
+usage and no repository/workspace/task creation. UI manager fixtures establish
+explicit submission, serialization and restart retention. All 30 Node browser-logic
+checks passed, including on-click-only probe submission and pending guards.
+The final related Python selection passed 270 cases; the final focused safety
+selection passed 113. Documentation generation/check passed (274 files, 123 leaves). No live warm-up was submitted.
+
+<a id="fix-0119"></a>
+## FIX-0119 — 2026-10-23 — Move workspace scope errors to the public agent/OS port
+
+Status: implemented; backward-compatible exception identity.
+Related: [FIX-0054](#fix-0054), [FIX-0115](#fix-0115).
+
+### Problem
+
+The worker imported WriteScopeError from concrete runtime.workspace_state, binding
+an otherwise replaceable agent graph to one OS implementation for exception handling.
+
+### What was wrong
+
+The shared boundary omitted a structured failure type that the worker must inspect.
+The class was owned by an internal workspace implementation rather than public
+ports, contrary to the established agent/OS split. FIX-0054 removed broader policy
+coupling but did not cover this remaining exception dependency.
+
+### How it was fixed
+
+Defined WriteScopeError in ports.py; worker.py imports it there. workspace_state.py
+re-exports the identical class for existing runtime callers. Structured detail,
+message, catch behavior and workspace enforcement remain intact. Updated public
+SDK, worker and workspace primary guides. No extra shared strategy library or
+OS coding dependency was introduced.
+
+### Design principle enforced or reconstructed
+
+Agents depend on public contracts/ports and own workflow responses to failures.
+An OS implementation can be replaced without importing its storage/workspace
+internals into the agent graph. Compatibility does not require duplicate classes.
+
+### Verification
+
+The lifecycle fixture confirms public and compatibility imports are identical.
+Focused Ruff checks passed after import cleanup. The related 270-case selection included general-agent, capability-boundary,
+context, retry, resume, provider and UI suites; all passed. Final focused safety
+selection passed 113 cases. Documentation generation/check passed (274 files,
+123 leaves), and Git whitespace checks passed.
+This changes exception ownership, not scope grants or source mutation semantics.

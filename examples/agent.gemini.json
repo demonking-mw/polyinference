@@ -26,14 +26,28 @@
       "base_url": "https://generativelanguage.googleapis.com/v1beta",
       "model": "YOUR_WORKER_MODEL",
       "api_key_env": "GEMINI_API_KEY",
-      "max_inflight": 2
+      "max_inflight": 2,
+      "lifecycle": {
+        "transport": "buffered",
+        "connect_seconds": 10,
+        "first_output_seconds": 180,
+        "idle_seconds": 90,
+        "total_seconds": 600
+      }
     },
     "cloud": {
       "protocol": "gemini",
       "base_url": "https://generativelanguage.googleapis.com/v1beta",
       "model": "YOUR_SENIOR_MODEL",
       "api_key_env": "GEMINI_API_KEY",
-      "max_inflight": 1
+      "max_inflight": 1,
+      "lifecycle": {
+        "transport": "buffered",
+        "connect_seconds": 10,
+        "first_output_seconds": 180,
+        "idle_seconds": 90,
+        "total_seconds": 600
+      }
     },
     "check_execution": "trusted",
     "context_policy": {
@@ -41,5 +55,10 @@
       "auto_compaction": false
     }
   },
-  "objective": "Describe the bounded coding objective here."
+  "objective": "Describe the bounded coding objective here.",
+  "inference_policy": {
+    "additional_retries": 1,
+    "replace_undelivered": true
+  },
+  "model_output_target_tokens": 4096
 }

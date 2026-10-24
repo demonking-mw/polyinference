@@ -30,6 +30,10 @@ The coding agent decides tasks, Git workflow, check selection, canonical memory
 and acceptance. The OS supplies generic process/effect, resource, capability,
 storage and optional workspace/context services. General agents can finish
 without Git, source edits or checks. Provider token/GPU scheduling is external.
+The optional [inference simulator](modules/inference-simulation.md) is installed
+by application bootstrap only for explicitly simulated configs. It supplies test
+provider pacing/faults through a generic raw-adapter hook; it does not move task,
+Git or recovery policy into OS admission. Ordinary adapter/config paths remain.
 
 Use the [module index](modules/README.md) for source responsibilities and
 the [tree](file-tree.html) for every file. Update the owning guides whenever

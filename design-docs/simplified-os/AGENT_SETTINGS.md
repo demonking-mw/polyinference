@@ -68,6 +68,38 @@ values, while imported history is unchanged. RuntimeConfig.system is a validated
 view of resolved values and never rereads ambient capacity. See
 [tester scope and recovery](../../codex-haiku-setup.md).
 
+### Optional application inference simulation
+
+UI --sim-inference exposes per-run modes. This is application test policy,
+implemented by [inference_simulation.py](../../src/polyinference/agent/inference_simulation.py),
+not a RuntimeConfig/Endpoint setting. Normal mode uses ordinary AgentConfig with
+no new field or client. Buggy/slow runs use SimulationAgentConfig with this
+top-level inference_simulation block, outside system:
+
+| Field | Default | Meaning / accepted range |
+| --- | --- | --- |
+| mode | slow-buggy | normal, buggy or slow-buggy in launch controls; persisted simulated configs require buggy/slow-buggy. |
+| tps | 30 | Nominal aggregate output TPS shared across active decoders; positive, at most 100000. Used only in slow mode. |
+| batch | 2 | Worker/local slot capacity, integer 1–16; full-context reservation scales with it. |
+| bug_rate | 5 | Percent chance of an incident per admitted attempt while healthy, 0–100; cooldown failures are additional. |
+| seed | generated per run | Integer 0–9007199254740991; decisions hash simulator version, seed and operation identity. |
+| prefill_seconds | 1.5 | Startup delay, 0–60 seconds. |
+| prefill_tps | 2000 | Estimated prompt processing TPS, positive, at most 1000000; UTF-8 bytes / 4 estimate. |
+| jitter | 0.2 | Relative speed variation, 0–0.5. Average active factors vary total capacity within this band. |
+| stall_rate | 5 | Percent chance of a per-call predecode stall in slow mode, 0–100; independent of incident rate. |
+| stall_seconds | 3 | Per-call stall duration in slow mode, 0–60 seconds. |
+| restart_seconds | 15 | Server cooldown duration when a restart incident is selected, positive, at most 300 seconds. |
+
+Selected simulation batch overrides --sim-batch and ambient capacity for that run;
+normal retains the existing invocation configuration. The complete Haiku overlay
+preserves custom Anthropic fields. Other local protocols select the full Haiku
+preset; custom roles already bound local share its simulation. Explicit saved
+simulation configs reinstate the adapter/resolved capacities on resume; old/plain
+configs keep their original pins. No defaults, environment or historical state is
+rewritten. The simulator version/settings are pinned in an immutable application
+record. See [usage, fault mix, timing and limitations](../../docs/guides/sim-inference.md)
+and [module ownership](../../docs/modules/inference-simulation.md).
+
 Nested settings objects are validated with their own defaults: an explicit object replaces the
 application's default object rather than recursively merging its preferences.
 
@@ -78,7 +110,9 @@ and output paths relative to the JSON file's parent; direct Python callers use
 their working directory.
 
 Configuration, programs and prompts are pinned for a run. Use fresh state for
-these changes; historical runs are not migrated by this implementation.
+incompatible changes; configuration schemas are not migrated. Updated 2026-10-23:
+Resume permits one exact predecessor graph with identical other pins, recorded
+by the agent as described in the [runtime boundary](RUNTIME_BOUNDARY.md#explicit-operator-resume-signals).
 
 ## RuntimeConfig: complete OS field inventory
 
@@ -116,7 +150,7 @@ Counts and capacities are positive unless stated otherwise.
 | inference_safety | defaults below | Output recovery and capability requirements. |
 | max_repeated_model_failures | 2 | Permanent-failure circuit threshold for the same pinned model intent. |
 | max_model_recoveries | 2 | Nonnegative upper bound for caller recovery and, independently, OS output adaptation; separate counters. |
-| model_call_retries | 1 | Extra settled transient-response/transport attempts, 1–3; excludes output cutoffs and uncertain work. |
+| model_call_retries | 1 (bare OS); coding default 2 | Native extra attempts, 0–3. Caller additional retries follow separately; unchanged and output-adapted queries share the allowance. Unknown generation replacement requires explicit consent and retained capacity. |
 | model_retry_delay_ms | 100 | Initial exponential retry delay, 0–60000 milliseconds. |
 | model_retry_max_delay_ms | 60000 | Maximum retry wait, 0–3600000 milliseconds; original deadline also applies. |
 | check_execution | disabled | Independently enables checks with trusted or bubblewrap. |
@@ -141,7 +175,8 @@ Linux sandbox. Neither backend grants additional source paths.
 | readonly_snapshot_root | null | Proxy's separately configured exact read-only snapshot root. |
 | brokered_tools | false | Native endpoint supports explicitly granted host callbacks. |
 | inference_location | null | Explicit local/cloud physical location. Otherwise localhost chat/Responses is inferred local; other cases cloud. |
-| timeout_seconds | 180 | Provider/job timeout, at most 1800 seconds and bounded by operation deadline. |
+| timeout_seconds | 180 | Legacy HTTP/native job timeout, at most 1800 seconds and bounded by original deadline. Raw lifecycle mode uses its shared total instead. |
+| lifecycle | omitted | Optional InferenceLifecycle: transport sse/buffered; connect_seconds=10 (0–1800], first_output_seconds=180 (0–3600], idle_seconds=90 (0–3600], total_seconds=600 (0–7200]. Original logical/process deadline still wins. |
 | estimated_microusd_per_token | null | Nonnegative token-price estimate for cloud spend admission; required for a configured spend bound on that cloud lane. |
 
 Packing and compaction never reroute to another lane. Native app-server and proxy
@@ -313,7 +348,14 @@ Examples override these choices in their single system block.
 Coding-only fields remain outside system: objective, repository_mode, git_policy,
 dependency_prepare, prerequisite_checks, acceptance_checks,
 senior_development_fraction, max_sprints, max_senior_corrections and
-max_protocol_corrections. The last defaults to 3
+max_protocol_corrections, inference_policy and model_output_target_tokens.
+The two new optional fields are omitted when absent. inference_policy declares
+additional_retries (0–3, default 0) and replace_undelivered (default false), carried
+on model requests through the negotiated runtime/inference-policy extension.
+model_output_target_tokens selects a smaller raw-query target within the hard cap.
+Fresh UI chooses one caller retry, replacement consent and 4096 output tokens;
+custom/saved configs retain explicit choices. See [endpoint lifecycle/testing](../../docs/guides/endpoint-testing.md).
+max_protocol_corrections defaults to 3
 consecutive malformed-reply corrections (0–16); valid replies reset the count.
 The agent owns full evidence inspection, canonical memory and repository-aware
 reuse of interrupted work through preserved_source_ref / resume_from.

@@ -4,6 +4,7 @@ from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
+from .contracts import InferencePolicy
 from .execution_contracts import Check
 from .system_settings import Endpoint, RuntimeConfig
 from .workspace_contracts import RelativePath
@@ -14,6 +15,9 @@ __all__ = ["AgentConfig", "Endpoint", "RuntimeConfig"]
 class AgentConfig(RuntimeConfig):
     """Policy of the bundled coding agent, separate from the runtime's contract."""
 
+    inference_policy: InferencePolicy | None = Field(default=None, exclude_if=lambda value: value is None)
+    model_output_target_tokens: Annotated[int, Field(gt=0)] | None = Field(
+        default=None, exclude_if=lambda value: value is None)
     objective: Annotated[str, Field(min_length=1)]
     repository_mode: Literal["in_place", "isolated"] = "in_place"
     git_policy: dict | None = None

@@ -19,6 +19,33 @@ from polyinference.contracts import (
 )
 from polyinference.domain import digest, now, operation_fingerprint
 from polyinference.runtime.kernel import KernelRuntime
+from polyinference.runtime.processes import request_resume
+from polyinference.runtime.storage import Records
+
+
+@pytest.mark.parametrize("effect_state", [None, "uncertain", "active", "submitting"])
+def test_operator_resume_signal_is_generic_and_preserves_execution_certainty(tmp_path, effect_state):
+    records = Records(tmp_path / "records.sqlite")
+    try:
+        records.put_once("process/researcher", {"state": "paused", "role": "researcher", "capabilities": []})
+        if effect_state:
+            records.put_once("effect/other-process", {"state": effect_state})
+        key = request_resume(records, "researcher", "  Inspect the retained facts.  ", request_id="same-click")
+        assert records.get(key)[1]["text"] == "Inspect the retained facts."
+        assert records.get("process-control/researcher")[1]["resume_request_ref"] == key
+        assert request_resume(records, "researcher", "Inspect the retained facts.", request_id="same-click") == key
+        with pytest.raises(ValueError, match="different instructions"):
+            request_resume(records, "researcher", "Something else", request_id="same-click")
+        if effect_state:
+            assert records.get("effect/other-process")[1] == {"state": effect_state}
+        assert not records.get("app/run") and not (tmp_path / ".git").exists()
+        assert records.get("process/researcher")[1] == {"state": "paused", "role": "researcher", "capabilities": []}
+        records.put_once("process-control/cancelled", {"cancel_requested": True})
+        records.put_once("process/cancelled", {"state": "paused"})
+        with pytest.raises(ValueError, match="cancelled"):
+            request_resume(records, "cancelled")
+    finally:
+        records.db.close()
 
 
 @pytest.mark.parametrize("native", [False, True])

@@ -16,6 +16,9 @@ permits eligible summaries. Hard bounds always apply, including manual mode.
 The OS Memory / context inspector exposes retained originals, prepared views,
 receipts and helper provenance without changing this service or canonical memory.
 
+Summary helpers inherit the effective parent lifecycle cutoff, including queue/
+preparation time; they cannot extend a logical call by receiving a fresh timer.
+
 ## Principles to preserve
 
 - Preserve required inputs, trust, whole tool groups and immutable originals.

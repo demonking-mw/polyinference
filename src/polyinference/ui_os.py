@@ -132,6 +132,10 @@ def runtime_view(snapshot, configuration, running=False):
             "created_at": request.get("created_at"), "deadline": request.get("deadline"),
             "parent_operation_id": request.get("causal_parent_ref"),
             "conflict_keys": request.get("conflict_keys", []), "diagnostic": row.get("diagnostic"),
+            "inference_progress": records.get("inference-progress/" + str(request.get("operation_id"))),
+            "isolated_generation": row.get("isolated_generation"),
+            "transport_failure": row.get("failure"),
+            "inference_policy": request.get("extensions", {}).get("runtime/inference-policy"),
             "native_diagnostics": row.get("native_diagnostics") or
             (row.get("result") or {}).get("extensions", {}).get("polyinference/native-diagnostics"),
             **context_metadata(request, row, records),
@@ -145,6 +149,7 @@ def runtime_view(snapshot, configuration, running=False):
         waiting = [r for r in retained if r.get("state") == "waiting"]
         lanes.append({
             "name": name, "model": endpoint.get("model"), "protocol": endpoint.get("protocol"),
+            "lifecycle": endpoint.get("lifecycle"),
             "limit": endpoint.get("max_inflight"), "token_limit": endpoint.get("reserved_context_tokens"),
             "held": len(held), "reserved_tokens": sum(r.get("tokens", 0) for r in held),
             "ordinary_waiters": sum(r.get("lane") == "ordinary" for r in waiting),

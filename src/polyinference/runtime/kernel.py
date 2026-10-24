@@ -36,6 +36,7 @@ from .inference import (
     ModelResponseError,
     ProviderError,
     UnknownExecution,
+    terminal_call,
 )
 from .messages import Messages, UserNotification
 from .model_retries import ModelRetries
@@ -182,6 +183,7 @@ class KernelRuntime:
                 "output-delivery",
                 "model-recovery",
                 "model-retries",
+                "inference-policy",
                 "generic-processes",
                 "artifact-snapshots",
                 "user-messages",
@@ -327,8 +329,45 @@ class KernelRuntime:
         self.records.db.close()
         self.driver.close()
 
-    def uncertain(self):
-        return [key[7:] for key, _, body in self.records.scan("effect/") if body["state"] == "uncertain"]
+    def uncertain(self, *, include_isolated=False):
+        return [key[7:] for key, _, body in self.records.scan("effect/")
+                if body["state"] == "uncertain" and (include_isolated or not body.get("isolated_generation"))]
+
+    def _isolate_generation(self, request, exc, started, prepared):
+        """Quarantine one undelivered raw generation, retaining all physical holds."""
+        if not isinstance(request.payload, ModelQuery) or not self.model_retries.policy(request).replace_undelivered:
+            return None
+        name = self.config.role_bindings[request.payload.role]
+        endpoint = getattr(self.config, name)
+        # Trusted raw adapter only: never infer safety from a URL or binding name.
+        if type(self.clients[name]) is not HTTPInference or not endpoint.lifecycle:
+            return None
+        wire = prepared.get("payload") if isinstance(prepared, dict) else None
+        if not isinstance(wire, dict) or any(field in wire for field in (
+                "tools", "functions", "tool_choice", "function_call")):
+            return None
+        if getattr(exc, "diagnostics", {}).get("cause") not in {
+                "ReadTimeout", "ReadError", "RemoteProtocolError", "TimeoutError", "missing_terminal"}:
+            return None
+        pending = [body for _, _, body in self.records.scan("effect/")
+                   if body.get("isolated_generation") and body["isolated_generation"]["binding"] == name
+                   and body["state"] == "uncertain"]
+        counts = self.model_retries.counts(request)
+        if (pending or sum(counts.values()) >= self.config.model_call_retries + self.model_retries.policy(request).additional_retries
+                or self.model_retries.deadline(request) <= now() or self.closing):
+            return None
+        marker = {"binding": name, "root_operation_id": self.model_retries.root(request),
+                  "delivery": "discarded", "execution_termination": "unknown",
+                  "execution_class": "generation_only", "basis": "builtin_raw_adapter_and_tool_free_wire"}
+        result = OperationResult(record_id="result/" + request.operation_id, revision=1,
+            scope=request.scope, created_at=now(), operation_id=request.operation_id,
+            logical_step_id=request.logical_step_id, state="uncertain", output_refs=[],
+            paired_call_id=None, binding_ref=name, binding_generation=1, actual_backend=None,
+            usage=[], execution_termination="unknown", effects="none", started_at=started,
+            finished_at=now(), error=ErrorDetail(code="UndeliveredGeneration", message=str(exc)[:4000],
+                retryable_after_reconciliation=False, retry_after_ms=None), continuation_ref=None,
+            extensions={"runtime/undelivered-generation": marker})
+        return marker, result
 
     def _update(self, key, body):
         current = self.records.get(key)
@@ -343,6 +382,11 @@ class KernelRuntime:
         saved = self.records.get(key)
         expected_digest = operation_fingerprint(request)
         self.negotiate(request.required_features)
+        if isinstance(request.payload, (ModelQuery, AgentJob)):
+            self.model_retries.policy(request)
+            if request.extensions.get("runtime/inference-root") and not (
+                    request.extensions.get("runtime/model-retry") or request.extensions.get("runtime/output-retry")):
+                raise ValueError("Inference retry root requires an OS-issued intent")
         if request.intent_digest != expected_digest:
             raise ValueError("Intent fingerprint mismatch")
         if request.scope.run_id != self.run_id or request.scope.project_id != self.scope.project_id:
@@ -350,6 +394,8 @@ class KernelRuntime:
         if saved:
             if saved[1]["fingerprint"] != expected_digest:
                 raise ValueError("Operation ID reused with changed intent")
+            if saved[1].get("delivery_result"):
+                return OperationResult.model_validate(saved[1]["delivery_result"])
             if saved[1].get("result"):
                 return OperationResult.model_validate(saved[1]["result"])
             if request.operation_id in self.inflight:
@@ -582,7 +628,9 @@ class KernelRuntime:
         dispatched = False
         extensions = {}
         try:
-            if request.deadline <= now():
+            model_deadline = (self.model_retries.deadline(request)
+                              if isinstance(payload, (ModelQuery, AgentJob)) else request.deadline)
+            if model_deadline <= now():
                 raise EndpointError("Operation deadline expired before dispatch")
             requirement = request.extensions.get("polyinference/workspace-view")
             if requirement:
@@ -655,10 +703,10 @@ class KernelRuntime:
                     reserved,
                     finishing,
                     request.operation_id,
-                    max(0, (request.deadline - now()).total_seconds()),
+                    max(0, (model_deadline - now()).total_seconds()),
                     process_id=request.scope.process_id,
                 ):
-                    if request.deadline <= now():
+                    if model_deadline <= now():
                         raise EndpointError("Deadline expired before provider submission")
                     self._reserve_budget(request, reserved)
                     self._reserve_spend(request, reserved, endpoint)
@@ -667,7 +715,9 @@ class KernelRuntime:
                     if control and control[1].get("cancel_requested"):
                         raise ProcessCancelled("Cancellation requested before model submission")
                     self._update(key, {**saved, "state": "active"})
-                    timeout = min(endpoint.timeout_seconds, (request.deadline - now()).total_seconds())
+                    timeout = min(endpoint.timeout_seconds, (model_deadline - now()).total_seconds())
+                    if isinstance(payload, ModelQuery) and endpoint.lifecycle:
+                        timeout = max(0, (model_deadline - now()).total_seconds())
                     if isinstance(payload, ModelQuery):
                         if endpoint.protocol not in {"chat", "responses", "gemini", "anthropic"}:
                             raise EndpointError("Native backend requires AgentJob")
@@ -675,11 +725,36 @@ class KernelRuntime:
                             self.clients[name].validate_messages(messages)
                         dispatched = True
                         attempted["submitted"] = True
-                        result = await asyncio.wait_for(
-                            self.clients[name].generate(messages, output_tokens,
-                                **({"prepared": prepared} if isinstance(self.clients[name], HTTPInference) else {})),
-                            timeout,
-                        )
+                        client = self.clients[name]
+                        if isinstance(client, HTTPInference) and hasattr(client, "generate_operation"):
+                            # Trusted raw adapters may own service latency separately
+                            # from network timeouts. All OS guards still surround the
+                            # invocation, including the original deadline/reservation.
+                            result = await terminal_call(
+                                client.generate_operation(request, messages, output_tokens, prepared=prepared),
+                                max(0, (model_deadline - now()).total_seconds()),
+                            )
+                        else:
+                            async def remember_response(provider):
+                                current = self.records.get(key)[1]
+                                self._update(key, {**current, "provider": provider})
+
+                            async def remember_progress(facts):
+                                self._update("inference-progress/" + request.operation_id, {
+                                    **facts, "at": now().isoformat(), "operation_id": request.operation_id,
+                                    "deadline": model_deadline.isoformat(),
+                                    "retry": request.extensions.get("runtime/model-retry"),
+                                    "binding": name})
+
+                            result = await asyncio.wait_for(
+                                client.generate(messages, output_tokens,
+                                    **({"prepared": prepared, "observer": remember_response, "progress": remember_progress}
+                                       if type(client) is HTTPInference else
+                                       {"prepared": prepared} if isinstance(client, HTTPInference) else {})),
+                                timeout,
+                            )
+                        self.records.put_once("model-response/" + request.operation_id, {
+                            "response_ref": self.artifacts.put(canonical(result), request.scope).model_dump(mode="json")})
                     else:
                         callback = None
                         protocol = self.agent_protocols.get(payload.required_phase_protocol)
@@ -888,9 +963,17 @@ class KernelRuntime:
                 self._effect_status(request, False)
                 raise
             self._update(key, {**self.records.get(key)[1], "state": "uncertain", "diagnostic": str(exc),
-                               "failure": {"category": "unknown_execution", "error_type": type(exc).__name__},
+                               "failure": {"category": "unknown_execution", "error_type": type(exc).__name__,
+                                           **getattr(exc, "diagnostics", {})},
                                "native_diagnostics": getattr(exc, "native_diagnostics", None),
                                "attempted_backend": extensions.get("polyinference/attempted-backend")})
+            isolated = self._isolate_generation(request, exc, started, prepared if isinstance(payload, ModelQuery) else None)
+            if isolated:
+                marker, result = isolated
+                self._update(key, {**self.records.get(key)[1], "isolated_generation": marker,
+                                   "delivery_result": result.model_dump(mode="json")})
+                self._effect_status(request, False)
+                return result
             raise UncertainEffect(request.operation_id) from exc
         except Exception as exc:
             if isinstance(exc, InputOverflow):
@@ -1171,6 +1254,52 @@ class KernelRuntime:
             "budgets": {key: value for key, _, value in self.records.scan("budget/")},
             "spend": {key: value for key, _, value in self.records.scan("spend/")},
         }
+
+    async def prepare_resume(self, request_ref):
+        from .resume import prepare
+
+        await prepare(self, request_ref)
+
+    async def settle_recovered_model(self, request, response, *, failure=None):
+        """Settle a retained completed raw response; never execute its text here."""
+        if not isinstance(request.payload, ModelQuery) or not isinstance(response.get("text"), str):
+            raise ValueError("Recovery requires a completed query-only response")
+        key = "effect/" + request.operation_id
+        old = self.records.get(key)
+        if old[1]["state"] != "uncertain":
+            return
+        name = self.config.role_bindings[request.payload.role]
+        endpoint = getattr(self.config, name)
+        total = (response.get("usage") or {}).get("total_tokens")
+        total = total if type(total) is int and total >= 0 else None
+        result = OperationResult(
+            record_id="result/" + request.operation_id, revision=1, scope=request.scope,
+            created_at=now(), operation_id=request.operation_id, logical_step_id=request.logical_step_id,
+            state="failed" if failure else "succeeded", output_refs=[self.artifacts.put(canonical(response), request.scope)],
+            paired_call_id=None, binding_ref=None, binding_generation=0,
+            actual_backend=ActualBackend(
+                catalog_ref="static/1", backend_id=name, model_version=response["model"],
+                harness_version=endpoint.protocol, inference_location=endpoint.physical_location,
+                harness_location="local", provider_session_ref=response.get("session_id")),
+            usage=[UsageMeasure(metric="tokens", unit="tokens", value=total,
+                                provenance="provider_reported" if total is not None else "unknown",
+                                account_scope_ref=request.budget_account_ref)],
+            execution_termination="confirmed_stopped", effects="known",
+            started_at=request.created_at, finished_at=now(),
+            error=ErrorDetail(code=type(failure).__name__, message=str(failure)[:4000],
+                              retryable_after_reconciliation=False, retry_after_ms=None) if failure else None,
+            continuation_ref=None,
+        )
+        self.records.compare_and_publish({key: old[0]}, {key: {
+            **old[1], "state": result.state, "result": result.model_dump(mode="json"),
+            "reconciliation": "retained_completed_response",
+        }})
+        total = (response.get("usage") or {}).get("total_tokens")
+        self._settle_budget(request, total if type(total) is int and total >= 0 else None)
+        self._effect_status(request, False)
+        for admission in self.admission.values():
+            admission.restore()
+        return result
 
     async def reconcile_stopped(self, operation_id, evidence):
         """Operator attestation, never an inference from connection loss or timeout.

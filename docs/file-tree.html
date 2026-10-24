@@ -16,18 +16,20 @@
       <p class="eyebrow">POLYINFERENCE / REPOSITORY GUIDE</p>
       <h1>Project map</h1>
       <p class="intro">Browse by responsibility. Each feature ends at one primary guide, with its code and supporting files alongside it.</p>
-      <div class="stats"><span><strong>116</strong> feature &amp; document guides</span><span><strong>257</strong> maintained files</span><a href="file-tree.json">JSON tree for agents ↗</a></div>
+      <div class="stats"><span><strong>123</strong> feature &amp; document guides</span><span><strong>274</strong> maintained files</span><a href="file-tree.json">JSON tree for agents ↗</a></div>
     </header>
     <aside class="reminder">Changing code? Update every affected guide, setting reference and navigation entry in the same change. <a href="maintenance.md">Maintenance contract ↗</a></aside>
     <section class="toolbar" aria-label="Filter the project tree">
       <div><label for="search">Find a feature, document or file</label><input id="search" type="search" placeholder="Try context, repository, ui.py…" autocomplete="off"></div>
       <div class="buttons"><button id="expand" type="button">Expand all</button><button id="collapse" type="button">Collapse all</button></div>
-      <p id="matches" role="status" aria-live="polite">116 guides · browse or search</p>
+      <p id="matches" role="status" aria-live="polite">123 guides · browse or search</p>
     </section>
     <noscript><p>All links work without JavaScript. Search and bulk expansion require JavaScript.</p></noscript>
     <p id="empty" hidden>No matching feature. Try a filename or a broader term.</p>
     <section id="tree" aria-label="Project feature tree"><ul class="tree"><li class="branch"><details open><summary>PolyInference</summary><ul><li class="branch"><details open><summary>Start here</summary><ul><li class="feature" id="doc-readme" data-search="PolyInference README.md"><article><a class="primary-doc" href="../README.md">PolyInference</a><p class="path">README.md</p></article></li>
-<li class="feature" id="doc-dev-readme" data-search="Developer onboarding dev-readme.md"><article><a class="primary-doc" href="../dev-readme.md">Developer onboarding</a><p class="path">dev-readme.md</p></article></li>
+<li class="feature" id="doc-dev-readme" data-search="Developer onboarding dev-readme.md docs/onboarding.html"><article><a class="primary-doc" href="../dev-readme.md">Developer onboarding</a><p class="path">dev-readme.md</p><details class="files"><summary>1 related files</summary><ul><li><a href="onboarding.html">docs/onboarding.html</a></li></ul></details></article></li>
+<li class="feature" id="doc-contributor-onboarding" data-search="Onboard a human or development agent docs/contributor-onboarding.md"><article><a class="primary-doc" href="contributor-onboarding.md">Onboard a human or development agent</a><p class="path">docs/contributor-onboarding.md</p></article></li>
+<li class="feature" id="doc-project-memory" data-search="Project knowledge to retain docs/project-memory.md"><article><a class="primary-doc" href="project-memory.md">Project knowledge to retain</a><p class="path">docs/project-memory.md</p></article></li>
 <li class="feature" id="doc-docs-readme" data-search="Documentation docs/README.md"><article><a class="primary-doc" href="README.md">Documentation</a><p class="path">docs/README.md</p></article></li>
 <li class="feature" id="doc-setup" data-search="Setup setup.md"><article><a class="primary-doc" href="../setup.md">Setup</a><p class="path">setup.md</p></article></li>
 <li class="feature" id="doc-codex-haiku-setup" data-search="Tester checklist: Codex + serial Haiku codex-haiku-setup.md"><article><a class="primary-doc" href="../codex-haiku-setup.md">Tester checklist: Codex + serial Haiku</a><p class="path">codex-haiku-setup.md</p></article></li></ul></details></li>
@@ -48,20 +50,23 @@
 <li class="feature" id="doc-docs-guides-projects" data-search="Run on your project docs/guides/projects.md"><article><a class="primary-doc" href="guides/projects.md">Run on your project</a><p class="path">docs/guides/projects.md</p></article></li>
 <li class="feature" id="guide-state-layout" data-search="Runtime state layout docs/guides/state-layout.md"><article><a class="primary-doc" href="guides/state-layout.md">Runtime state layout</a><p class="path">docs/guides/state-layout.md</p></article></li>
 <li class="feature" id="doc-docs-guides-troubleshooting" data-search="Troubleshooting docs/guides/troubleshooting.md"><article><a class="primary-doc" href="guides/troubleshooting.md">Troubleshooting</a><p class="path">docs/guides/troubleshooting.md</p></article></li>
-<li class="feature" id="doc-docs-guides-ui" data-search="Use the UI docs/guides/ui.md"><article><a class="primary-doc" href="guides/ui.md">Use the UI</a><p class="path">docs/guides/ui.md</p></article></li></ul></details></li>
+<li class="feature" id="doc-docs-guides-ui" data-search="Use the UI docs/guides/ui.md"><article><a class="primary-doc" href="guides/ui.md">Use the UI</a><p class="path">docs/guides/ui.md</p></article></li>
+<li class="feature" id="doc-docs-guides-sim-inference" data-search="Simulate slower, less reliable inference docs/guides/sim-inference.md"><article><a class="primary-doc" href="guides/sim-inference.md">Simulate slower, less reliable inference</a><p class="path">docs/guides/sim-inference.md</p></article></li>
+<li class="feature" id="endpoint-testing" data-search="Endpoint lifecycle and testing docs/guides/endpoint-testing.md"><article><a class="primary-doc" href="guides/endpoint-testing.md">Endpoint lifecycle and testing</a><p class="path">docs/guides/endpoint-testing.md</p></article></li></ul></details></li>
 <li class="branch"><details><summary>Application and OS modules</summary><ul><li class="feature" id="agent-services" data-search="Application services and runtime policy installation docs/modules/agent-services.md src/polyinference/agent/__init__.py src/polyinference/agent/services.py src/polyinference/agent/runtime_policy.py src/polyinference/agent/design_basis.py"><article><a class="primary-doc" href="modules/agent-services.md">Application services and runtime policy installation</a><p class="path">docs/modules/agent-services.md</p><details class="files"><summary>4 related files</summary><ul><li><a href="../src/polyinference/agent/__init__.py">src/polyinference/agent/__init__.py</a></li><li><a href="../src/polyinference/agent/services.py">src/polyinference/agent/services.py</a></li><li><a href="../src/polyinference/agent/runtime_policy.py">src/polyinference/agent/runtime_policy.py</a></li><li><a href="../src/polyinference/agent/design_basis.py">src/polyinference/agent/design_basis.py</a></li></ul></details></article></li>
 <li class="feature" id="delivery" data-search="Artifact delivery and user messages docs/modules/delivery.md src/polyinference/runtime/outputs.py src/polyinference/runtime/messages.py"><article><a class="primary-doc" href="modules/delivery.md">Artifact delivery and user messages</a><p class="path">docs/modules/delivery.md</p><details class="files"><summary>2 related files</summary><ul><li><a href="../src/polyinference/runtime/outputs.py">src/polyinference/runtime/outputs.py</a></li><li><a href="../src/polyinference/runtime/messages.py">src/polyinference/runtime/messages.py</a></li></ul></details></article></li>
 <li class="feature" id="retries" data-search="Bounded OS model retries docs/modules/retries.md src/polyinference/runtime/model_retries.py"><article><a class="primary-doc" href="modules/retries.md">Bounded OS model retries</a><p class="path">docs/modules/retries.md</p><details class="files"><summary>1 related files</summary><ul><li><a href="../src/polyinference/runtime/model_retries.py">src/polyinference/runtime/model_retries.py</a></li></ul></details></article></li>
 <li class="feature" id="capabilities" data-search="Capability registration and tool ABI docs/modules/capabilities.md src/polyinference/runtime/capabilities.py src/polyinference/runtime/tool_contracts.py"><article><a class="primary-doc" href="modules/capabilities.md">Capability registration and tool ABI</a><p class="path">docs/modules/capabilities.md</p><details class="files"><summary>2 related files</summary><ul><li><a href="../src/polyinference/runtime/capabilities.py">src/polyinference/runtime/capabilities.py</a></li><li><a href="../src/polyinference/runtime/tool_contracts.py">src/polyinference/runtime/tool_contracts.py</a></li></ul></details></article></li>
-<li class="feature" id="agent-workflow" data-search="Coding controller, setup and task allocation docs/modules/agent-workflow.md src/polyinference/agent/controller.py src/polyinference/agent/setup.py src/polyinference/agent/tasks.py src/polyinference/agent/routing.py"><article><a class="primary-doc" href="modules/agent-workflow.md">Coding controller, setup and task allocation</a><p class="path">docs/modules/agent-workflow.md</p><details class="files"><summary>4 related files</summary><ul><li><a href="../src/polyinference/agent/controller.py">src/polyinference/agent/controller.py</a></li><li><a href="../src/polyinference/agent/setup.py">src/polyinference/agent/setup.py</a></li><li><a href="../src/polyinference/agent/tasks.py">src/polyinference/agent/tasks.py</a></li><li><a href="../src/polyinference/agent/routing.py">src/polyinference/agent/routing.py</a></li></ul></details></article></li>
+<li class="feature" id="agent-workflow" data-search="Coding controller, setup and task allocation docs/modules/agent-workflow.md src/polyinference/agent/controller.py src/polyinference/agent/resume.py src/polyinference/agent/setup.py src/polyinference/agent/tasks.py src/polyinference/agent/routing.py"><article><a class="primary-doc" href="modules/agent-workflow.md">Coding controller, setup and task allocation</a><p class="path">docs/modules/agent-workflow.md</p><details class="files"><summary>5 related files</summary><ul><li><a href="../src/polyinference/agent/controller.py">src/polyinference/agent/controller.py</a></li><li><a href="../src/polyinference/agent/resume.py">src/polyinference/agent/resume.py</a></li><li><a href="../src/polyinference/agent/setup.py">src/polyinference/agent/setup.py</a></li><li><a href="../src/polyinference/agent/tasks.py">src/polyinference/agent/tasks.py</a></li><li><a href="../src/polyinference/agent/routing.py">src/polyinference/agent/routing.py</a></li></ul></details></article></li>
 <li class="feature" id="repository" data-search="Coding repository policy and retained source docs/modules/repository.md src/polyinference/agent/repository.py src/polyinference/agent/reports.py src/polyinference/os_contracts.py"><article><a class="primary-doc" href="modules/repository.md">Coding repository policy and retained source</a><p class="path">docs/modules/repository.md</p><details class="files"><summary>3 related files</summary><ul><li><a href="../src/polyinference/agent/repository.py">src/polyinference/agent/repository.py</a></li><li><a href="../src/polyinference/agent/reports.py">src/polyinference/agent/reports.py</a></li><li><a href="../src/polyinference/os_contracts.py">src/polyinference/os_contracts.py</a></li></ul></details></article></li>
 <li class="feature" id="cli" data-search="Command line and saved credentials docs/modules/cli.md src/polyinference/cli.py"><article><a class="primary-doc" href="modules/cli.md">Command line and saved credentials</a><p class="path">docs/modules/cli.md</p><details class="files"><summary>1 related files</summary><ul><li><a href="../src/polyinference/cli.py">src/polyinference/cli.py</a></li></ul></details></article></li>
 <li class="feature" id="sdk" data-search="Contracts and runtime ports docs/modules/sdk.md src/polyinference/__init__.py src/polyinference/contracts.py src/polyinference/workspace_contracts.py src/polyinference/execution_contracts.py src/polyinference/ports.py src/polyinference/primitives.py"><article><a class="primary-doc" href="modules/sdk.md">Contracts and runtime ports</a><p class="path">docs/modules/sdk.md</p><details class="files"><summary>6 related files</summary><ul><li><a href="../src/polyinference/__init__.py">src/polyinference/__init__.py</a></li><li><a href="../src/polyinference/contracts.py">src/polyinference/contracts.py</a></li><li><a href="../src/polyinference/workspace_contracts.py">src/polyinference/workspace_contracts.py</a></li><li><a href="../src/polyinference/execution_contracts.py">src/polyinference/execution_contracts.py</a></li><li><a href="../src/polyinference/ports.py">src/polyinference/ports.py</a></li><li><a href="../src/polyinference/primitives.py">src/polyinference/primitives.py</a></li></ul></details></article></li>
-<li class="feature" id="inference" data-search="Endpoint admission and provider adapters docs/modules/inference.md src/polyinference/runtime/inference.py src/polyinference/runtime/codex.py"><article><a class="primary-doc" href="modules/inference.md">Endpoint admission and provider adapters</a><p class="path">docs/modules/inference.md</p><details class="files"><summary>2 related files</summary><ul><li><a href="../src/polyinference/runtime/inference.py">src/polyinference/runtime/inference.py</a></li><li><a href="../src/polyinference/runtime/codex.py">src/polyinference/runtime/codex.py</a></li></ul></details></article></li>
+<li class="feature" id="inference" data-search="Endpoint admission and provider adapters docs/modules/inference.md src/polyinference/runtime/inference.py src/polyinference/runtime/codex.py src/polyinference/runtime/inference_stream.py"><article><a class="primary-doc" href="modules/inference.md">Endpoint admission and provider adapters</a><p class="path">docs/modules/inference.md</p><details class="files"><summary>3 related files</summary><ul><li><a href="../src/polyinference/runtime/inference.py">src/polyinference/runtime/inference.py</a></li><li><a href="../src/polyinference/runtime/codex.py">src/polyinference/runtime/codex.py</a></li><li><a href="../src/polyinference/runtime/inference_stream.py">src/polyinference/runtime/inference_stream.py</a></li></ul></details></article></li>
+<li class="feature" id="inference-simulation" data-search="Optional application inference simulator docs/modules/inference-simulation.md src/polyinference/agent/inference_simulation.py"><article><a class="primary-doc" href="modules/inference-simulation.md">Optional application inference simulator</a><p class="path">docs/modules/inference-simulation.md</p><details class="files"><summary>1 related files</summary><ul><li><a href="../src/polyinference/agent/inference_simulation.py">src/polyinference/agent/inference_simulation.py</a></li></ul></details></article></li>
 <li class="feature" id="commands" data-search="File tools, checks and foreground commands docs/modules/commands.md src/polyinference/runtime/tools.py src/polyinference/runtime/shell.py src/polyinference/runtime/commands.py src/polyinference/runtime/tool_environment.py"><article><a class="primary-doc" href="modules/commands.md">File tools, checks and foreground commands</a><p class="path">docs/modules/commands.md</p><details class="files"><summary>4 related files</summary><ul><li><a href="../src/polyinference/runtime/tools.py">src/polyinference/runtime/tools.py</a></li><li><a href="../src/polyinference/runtime/shell.py">src/polyinference/runtime/shell.py</a></li><li><a href="../src/polyinference/runtime/commands.py">src/polyinference/runtime/commands.py</a></li><li><a href="../src/polyinference/runtime/tool_environment.py">src/polyinference/runtime/tool_environment.py</a></li></ul></details></article></li>
 <li class="feature" id="inspection" data-search="Inspection, snapshots, history and costs docs/modules/inspection.md src/polyinference/snapshots.py src/polyinference/history.py src/polyinference/ui_os.py src/polyinference/ui_agents.py src/polyinference/ui-monitor.js src/polyinference/costs.py"><article><a class="primary-doc" href="modules/inspection.md">Inspection, snapshots, history and costs</a><p class="path">docs/modules/inspection.md</p><details class="files"><summary>6 related files</summary><ul><li><a href="../src/polyinference/snapshots.py">src/polyinference/snapshots.py</a></li><li><a href="../src/polyinference/history.py">src/polyinference/history.py</a></li><li><a href="../src/polyinference/ui_os.py">src/polyinference/ui_os.py</a></li><li><a href="../src/polyinference/ui_agents.py">src/polyinference/ui_agents.py</a></li><li><a href="../src/polyinference/ui-monitor.js">src/polyinference/ui-monitor.js</a></li><li><a href="../src/polyinference/costs.py">src/polyinference/costs.py</a></li></ul></details></article></li>
-<li class="feature" id="kernel" data-search="Kernel and durable effect execution docs/modules/kernel.md src/polyinference/runtime/kernel.py src/polyinference/runtime/adapter.py src/polyinference/runtime/__init__.py"><article><a class="primary-doc" href="modules/kernel.md">Kernel and durable effect execution</a><p class="path">docs/modules/kernel.md</p><details class="files"><summary>3 related files</summary><ul><li><a href="../src/polyinference/runtime/kernel.py">src/polyinference/runtime/kernel.py</a></li><li><a href="../src/polyinference/runtime/adapter.py">src/polyinference/runtime/adapter.py</a></li><li><a href="../src/polyinference/runtime/__init__.py">src/polyinference/runtime/__init__.py</a></li></ul></details></article></li>
-<li class="feature" id="ui" data-search="Loopback UI and project selection docs/modules/ui.md src/polyinference/ui.py src/polyinference/ui.html src/polyinference/ui_repository.py"><article><a class="primary-doc" href="modules/ui.md">Loopback UI and project selection</a><p class="path">docs/modules/ui.md</p><details class="files"><summary>3 related files</summary><ul><li><a href="../src/polyinference/ui.py">src/polyinference/ui.py</a></li><li><a href="../src/polyinference/ui.html">src/polyinference/ui.html</a></li><li><a href="../src/polyinference/ui_repository.py">src/polyinference/ui_repository.py</a></li></ul></details></article></li>
+<li class="feature" id="kernel" data-search="Kernel and durable effect execution docs/modules/kernel.md src/polyinference/runtime/kernel.py src/polyinference/runtime/resume.py src/polyinference/runtime/adapter.py src/polyinference/runtime/__init__.py"><article><a class="primary-doc" href="modules/kernel.md">Kernel and durable effect execution</a><p class="path">docs/modules/kernel.md</p><details class="files"><summary>4 related files</summary><ul><li><a href="../src/polyinference/runtime/kernel.py">src/polyinference/runtime/kernel.py</a></li><li><a href="../src/polyinference/runtime/resume.py">src/polyinference/runtime/resume.py</a></li><li><a href="../src/polyinference/runtime/adapter.py">src/polyinference/runtime/adapter.py</a></li><li><a href="../src/polyinference/runtime/__init__.py">src/polyinference/runtime/__init__.py</a></li></ul></details></article></li>
+<li class="feature" id="ui" data-search="Loopback UI and project selection docs/modules/ui.md src/polyinference/ui.py src/polyinference/ui.html src/polyinference/ui_repository.py src/polyinference/agent/endpoint_probe.py"><article><a class="primary-doc" href="modules/ui.md">Loopback UI and project selection</a><p class="path">docs/modules/ui.md</p><details class="files"><summary>4 related files</summary><ul><li><a href="../src/polyinference/ui.py">src/polyinference/ui.py</a></li><li><a href="../src/polyinference/ui.html">src/polyinference/ui.html</a></li><li><a href="../src/polyinference/ui_repository.py">src/polyinference/ui_repository.py</a></li><li><a href="../src/polyinference/agent/endpoint_probe.py">src/polyinference/agent/endpoint_probe.py</a></li></ul></details></article></li>
 <li class="feature" id="context" data-search="Optional context preparation docs/modules/context.md src/polyinference/runtime/context.py"><article><a class="primary-doc" href="modules/context.md">Optional context preparation</a><p class="path">docs/modules/context.md</p><details class="files"><summary>1 related files</summary><ul><li><a href="../src/polyinference/runtime/context.py">src/polyinference/runtime/context.py</a></li></ul></details></article></li>
 <li class="feature" id="workspaces" data-search="Optional workspaces and source classification docs/modules/workspaces.md src/polyinference/runtime/workspace.py src/polyinference/runtime/workspace_state.py"><article><a class="primary-doc" href="modules/workspaces.md">Optional workspaces and source classification</a><p class="path">docs/modules/workspaces.md</p><details class="files"><summary>2 related files</summary><ul><li><a href="../src/polyinference/runtime/workspace.py">src/polyinference/runtime/workspace.py</a></li><li><a href="../src/polyinference/runtime/workspace_state.py">src/polyinference/runtime/workspace_state.py</a></li></ul></details></article></li>
 <li class="feature" id="storage" data-search="Persistence, exclusive resources and blocking I/O docs/modules/storage.md src/polyinference/runtime/storage.py src/polyinference/runtime/exclusive.py src/polyinference/runtime/blocking.py"><article><a class="primary-doc" href="modules/storage.md">Persistence, exclusive resources and blocking I/O</a><p class="path">docs/modules/storage.md</p><details class="files"><summary>3 related files</summary><ul><li><a href="../src/polyinference/runtime/storage.py">src/polyinference/runtime/storage.py</a></li><li><a href="../src/polyinference/runtime/exclusive.py">src/polyinference/runtime/exclusive.py</a></li><li><a href="../src/polyinference/runtime/blocking.py">src/polyinference/runtime/blocking.py</a></li></ul></details></article></li>
@@ -72,7 +77,7 @@
 <li class="feature" id="doc-design-docs-polyinference-design-agent-suggestion" data-search="Agent suggestions design-docs/polyinference-design/agent_suggestion.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/agent_suggestion.md">Agent suggestions</a><p class="path">design-docs/polyinference-design/agent_suggestion.md</p></article></li>
 <li class="feature" id="doc-design-docs-polyinference-design-concurrent-coding-protocol" data-search="Concurrent coding protocol design-docs/polyinference-design/concurrent_coding_protocol.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/concurrent_coding_protocol.md">Concurrent coding protocol</a><p class="path">design-docs/polyinference-design/concurrent_coding_protocol.md</p></article></li>
 <li class="feature" id="doc-design-docs-polyinference-design-os-research-concurrent-coding-protocol" data-search="Concurrent coding protocol design-docs/polyinference-design/os-research/concurrent_coding_protocol.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/os-research/concurrent_coding_protocol.md">Concurrent coding protocol</a><p class="path">design-docs/polyinference-design/os-research/concurrent_coding_protocol.md</p></article></li>
-<li class="feature" id="doc-design-docs-simplified-os-design-revisions" data-search="Current design revisions — 2026-10-20 design-docs/simplified-os/DESIGN_REVISIONS.md"><article><a class="primary-doc" href="../design-docs/simplified-os/DESIGN_REVISIONS.md">Current design revisions — 2026-10-20</a><p class="path">design-docs/simplified-os/DESIGN_REVISIONS.md</p></article></li>
+<li class="feature" id="doc-design-docs-simplified-os-design-revisions" data-search="Current design revisions â€” 2026-10-20 design-docs/simplified-os/DESIGN_REVISIONS.md"><article><a class="primary-doc" href="../design-docs/simplified-os/DESIGN_REVISIONS.md">Current design revisions â€” 2026-10-20</a><p class="path">design-docs/simplified-os/DESIGN_REVISIONS.md</p></article></li>
 <li class="feature" id="doc-design-docs-simplified-os-runtime-boundary" data-search="Current runtime and agent wiring design-docs/simplified-os/RUNTIME_BOUNDARY.md"><article><a class="primary-doc" href="../design-docs/simplified-os/RUNTIME_BOUNDARY.md">Current runtime and agent wiring</a><p class="path">design-docs/simplified-os/RUNTIME_BOUNDARY.md</p></article></li>
 <li class="feature" id="feature-design-docs-polyinference-design-readme" data-search="Design provenance design-docs/polyinference-design/README.md design-docs/polyinference-design/ai-modified_agent_graph.html design-docs/polyinference-design/modified_agent_graph.json design-docs/polyinference-design/polyinference-agent-design-merged.html design-docs/polyinference-design/polyinference-agent-design-merged.json design-docs/polyinference-design/polyinference-agent-graph.html"><article><a class="primary-doc" href="../design-docs/polyinference-design/README.md">Design provenance</a><p class="path">design-docs/polyinference-design/README.md</p><details class="files"><summary>5 related files</summary><ul><li><a href="../design-docs/polyinference-design/ai-modified_agent_graph.html">design-docs/polyinference-design/ai-modified_agent_graph.html</a></li><li><a href="../design-docs/polyinference-design/modified_agent_graph.json">design-docs/polyinference-design/modified_agent_graph.json</a></li><li><a href="../design-docs/polyinference-design/polyinference-agent-design-merged.html">design-docs/polyinference-design/polyinference-agent-design-merged.html</a></li><li><a href="../design-docs/polyinference-design/polyinference-agent-design-merged.json">design-docs/polyinference-design/polyinference-agent-design-merged.json</a></li><li><a href="../design-docs/polyinference-design/polyinference-agent-graph.html">design-docs/polyinference-design/polyinference-agent-graph.html</a></li></ul></details></article></li>
 <li class="feature" id="feature-design-docs-visuals-readme" data-search="Historical visual design readers design-docs/visuals/README.md design-docs/visuals/agent-design.html design-docs/visuals/os-design.html"><article><a class="primary-doc" href="../design-docs/visuals/README.md">Historical visual design readers</a><p class="path">design-docs/visuals/README.md</p><details class="files"><summary>2 related files</summary><ul><li><a href="../design-docs/visuals/agent-design.html">design-docs/visuals/agent-design.html</a></li><li><a href="../design-docs/visuals/os-design.html">design-docs/visuals/os-design.html</a></li></ul></details></article></li>
@@ -83,40 +88,42 @@
 <li class="feature" id="doc-design-docs-simplified-os-agent-settings" data-search="OS settings for agent developers design-docs/simplified-os/AGENT_SETTINGS.md"><article><a class="primary-doc" href="../design-docs/simplified-os/AGENT_SETTINGS.md">OS settings for agent developers</a><p class="path">design-docs/simplified-os/AGENT_SETTINGS.md</p></article></li>
 <li class="feature" id="doc-design-docs-os-v1-prompt" data-search="os-v1-prompt design-docs/os-v1-prompt.md"><article><a class="primary-doc" href="../design-docs/os-v1-prompt.md">os-v1-prompt</a><p class="path">design-docs/os-v1-prompt.md</p></article></li>
 <li class="feature" id="doc-design-docs-readme" data-search="PolyInference design reading route design-docs/README.md"><article><a class="primary-doc" href="../design-docs/README.md">PolyInference design reading route</a><p class="path">design-docs/README.md</p></article></li>
-<li class="feature" id="doc-design-docs-polyinference-design-os-research-01-cs350-1-foundations" data-search="Polyinference OS design — 1. Kernel boundary and the two-tier agent design-docs/polyinference-design/os-research/01-CS350-1-foundations.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/os-research/01-CS350-1-foundations.md">Polyinference OS design — 1. Kernel boundary and the two-tier agent</a><p class="path">design-docs/polyinference-design/os-research/01-CS350-1-foundations.md</p></article></li>
-<li class="feature" id="doc-design-docs-polyinference-design-os-research-02-cs350-2-processes" data-search="Polyinference OS design — 2. Processes, requests and tier handoffs design-docs/polyinference-design/os-research/02-CS350-2-processes.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/os-research/02-CS350-2-processes.md">Polyinference OS design — 2. Processes, requests and tier handoffs</a><p class="path">design-docs/polyinference-design/os-research/02-CS350-2-processes.md</p></article></li>
-<li class="feature" id="doc-design-docs-polyinference-design-os-research-03-cs350-3-threads" data-search="Polyinference OS design — 3. LangGraph execution and bounded host tasks design-docs/polyinference-design/os-research/03-CS350-3-threads.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/os-research/03-CS350-3-threads.md">Polyinference OS design — 3. LangGraph execution and bounded host tasks</a><p class="path">design-docs/polyinference-design/os-research/03-CS350-3-threads.md</p></article></li>
-<li class="feature" id="doc-design-docs-polyinference-design-os-research-04-cs350-4-concurrency" data-search="Polyinference OS design — 4. Synchronizing plans, work, memory and results design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md">Polyinference OS design — 4. Synchronizing plans, work, memory and results</a><p class="path">design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md</p></article></li>
-<li class="feature" id="doc-design-docs-polyinference-design-os-research-05-cs350-5-scalability-and-deadlocks" data-search="Polyinference OS design — 5. Scaling the two-tier pipeline and preventing deadlocks design-docs/polyinference-design/os-research/05-CS350-5-scalability-and-deadlocks.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/os-research/05-CS350-5-scalability-and-deadlocks.md">Polyinference OS design — 5. Scaling the two-tier pipeline and preventing deadlocks</a><p class="path">design-docs/polyinference-design/os-research/05-CS350-5-scalability-and-deadlocks.md</p></article></li>
+<li class="feature" id="doc-design-docs-polyinference-design-os-research-01-cs350-1-foundations" data-search="Polyinference OS design â€” 1. Kernel boundary and the two-tier agent design-docs/polyinference-design/os-research/01-CS350-1-foundations.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/os-research/01-CS350-1-foundations.md">Polyinference OS design â€” 1. Kernel boundary and the two-tier agent</a><p class="path">design-docs/polyinference-design/os-research/01-CS350-1-foundations.md</p></article></li>
+<li class="feature" id="doc-design-docs-polyinference-design-os-research-02-cs350-2-processes" data-search="Polyinference OS design â€” 2. Processes, requests and tier handoffs design-docs/polyinference-design/os-research/02-CS350-2-processes.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/os-research/02-CS350-2-processes.md">Polyinference OS design â€” 2. Processes, requests and tier handoffs</a><p class="path">design-docs/polyinference-design/os-research/02-CS350-2-processes.md</p></article></li>
+<li class="feature" id="doc-design-docs-polyinference-design-os-research-03-cs350-3-threads" data-search="Polyinference OS design â€” 3. LangGraph execution and bounded host tasks design-docs/polyinference-design/os-research/03-CS350-3-threads.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/os-research/03-CS350-3-threads.md">Polyinference OS design â€” 3. LangGraph execution and bounded host tasks</a><p class="path">design-docs/polyinference-design/os-research/03-CS350-3-threads.md</p></article></li>
+<li class="feature" id="doc-design-docs-polyinference-design-os-research-04-cs350-4-concurrency" data-search="Polyinference OS design â€” 4. Synchronizing plans, work, memory and results design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md">Polyinference OS design â€” 4. Synchronizing plans, work, memory and results</a><p class="path">design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md</p></article></li>
+<li class="feature" id="doc-design-docs-polyinference-design-os-research-05-cs350-5-scalability-and-deadlocks" data-search="Polyinference OS design â€” 5. Scaling the two-tier pipeline and preventing deadlocks design-docs/polyinference-design/os-research/05-CS350-5-scalability-and-deadlocks.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/os-research/05-CS350-5-scalability-and-deadlocks.md">Polyinference OS design â€” 5. Scaling the two-tier pipeline and preventing deadlocks</a><p class="path">design-docs/polyinference-design/os-research/05-CS350-5-scalability-and-deadlocks.md</p></article></li>
 <li class="feature" id="doc-design-docs-polyinference-design-os-research-readme" data-search="Polyinference OS research notes design-docs/polyinference-design/os-research/README.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/os-research/README.md">Polyinference OS research notes</a><p class="path">design-docs/polyinference-design/os-research/README.md</p></article></li>
 <li class="feature" id="doc-design-docs-polyinference-design-project-design" data-search="Polyinference OS: project design design-docs/polyinference-design/project_design.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/project_design.md">Polyinference OS: project design</a><p class="path">design-docs/polyinference-design/project_design.md</p></article></li>
-<li class="feature" id="doc-project-brief" data-search="Polyinference — project brief PROJECT_BRIEF.md"><article><a class="primary-doc" href="../PROJECT_BRIEF.md">Polyinference — project brief</a><p class="path">PROJECT_BRIEF.md</p></article></li>
-<li class="feature" id="doc-design-docs-polyinference-design-project-brief" data-search="Polyinference — project brief design-docs/polyinference-design/PROJECT_BRIEF.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/PROJECT_BRIEF.md">Polyinference — project brief</a><p class="path">design-docs/polyinference-design/PROJECT_BRIEF.md</p></article></li>
+<li class="feature" id="doc-project-brief" data-search="Polyinference â€” project brief PROJECT_BRIEF.md"><article><a class="primary-doc" href="../PROJECT_BRIEF.md">Polyinference â€” project brief</a><p class="path">PROJECT_BRIEF.md</p></article></li>
+<li class="feature" id="doc-design-docs-polyinference-design-project-brief" data-search="Polyinference â€” project brief design-docs/polyinference-design/PROJECT_BRIEF.md"><article><a class="primary-doc" href="../design-docs/polyinference-design/PROJECT_BRIEF.md">Polyinference â€” project brief</a><p class="path">design-docs/polyinference-design/PROJECT_BRIEF.md</p></article></li>
 <li class="feature" id="doc-design-docs-implementation-provider-setup" data-search="Provider setup on this machine design-docs/implementation/PROVIDER_SETUP.md"><article><a class="primary-doc" href="../design-docs/implementation/PROVIDER_SETUP.md">Provider setup on this machine</a><p class="path">design-docs/implementation/PROVIDER_SETUP.md</p></article></li>
 <li class="feature" id="doc-design-docs-simplified-os-implementation" data-search="Simple OS v1 implementation design-docs/simplified-os/IMPLEMENTATION.md"><article><a class="primary-doc" href="../design-docs/simplified-os/IMPLEMENTATION.md">Simple OS v1 implementation</a><p class="path">design-docs/simplified-os/IMPLEMENTATION.md</p></article></li>
-<li class="feature" id="doc-design-docs-simplified-os-validation" data-search="Simple OS v1 validation — 17 October 2026 design-docs/simplified-os/VALIDATION.md"><article><a class="primary-doc" href="../design-docs/simplified-os/VALIDATION.md">Simple OS v1 validation — 17 October 2026</a><p class="path">design-docs/simplified-os/VALIDATION.md</p></article></li>
+<li class="feature" id="doc-design-docs-simplified-os-validation" data-search="Simple OS v1 validation â€” 17 October 2026 design-docs/simplified-os/VALIDATION.md"><article><a class="primary-doc" href="../design-docs/simplified-os/VALIDATION.md">Simple OS v1 validation â€” 17 October 2026</a><p class="path">design-docs/simplified-os/VALIDATION.md</p></article></li>
 <li class="feature" id="doc-design-docs-simplified-os-runbook" data-search="Simple OS v1: deployment and recovery design-docs/simplified-os/RUNBOOK.md"><article><a class="primary-doc" href="../design-docs/simplified-os/RUNBOOK.md">Simple OS v1: deployment and recovery</a><p class="path">design-docs/simplified-os/RUNBOOK.md</p></article></li>
 <li class="feature" id="feature-design-docs-simplified-os-readme" data-search="Simplified OS design design-docs/simplified-os/README.md design-docs/simplified-os/core.schema.json design-docs/simplified-os/core-examples.json design-docs/simplified-os/polyinference-os-review.json"><article><a class="primary-doc" href="../design-docs/simplified-os/README.md">Simplified OS design</a><p class="path">design-docs/simplified-os/README.md</p><details class="files"><summary>3 related files</summary><ul><li><a href="../design-docs/simplified-os/core.schema.json">design-docs/simplified-os/core.schema.json</a></li><li><a href="../design-docs/simplified-os/core-examples.json">design-docs/simplified-os/core-examples.json</a></li><li><a href="../design-docs/simplified-os/polyinference-os-review.json">design-docs/simplified-os/polyinference-os-review.json</a></li></ul></details></article></li>
 <li class="feature" id="doc-design-docs-simplified-os-sources" data-search="Source consolidation and decisions design-docs/simplified-os/SOURCES.md"><article><a class="primary-doc" href="../design-docs/simplified-os/SOURCES.md">Source consolidation and decisions</a><p class="path">design-docs/simplified-os/SOURCES.md</p></article></li>
-<li class="feature" id="doc-design-docs-implementation-validation" data-search="Validation record — 17 October 2026 design-docs/implementation/VALIDATION.md"><article><a class="primary-doc" href="../design-docs/implementation/VALIDATION.md">Validation record — 17 October 2026</a><p class="path">design-docs/implementation/VALIDATION.md</p></article></li></ul></details></li>
-<li class="branch"><details><summary>Development records and investigations</summary><ul><li class="feature" id="doc-development-docs-workspace-output-and-native-boundary" data-search="Build outputs and native harness boundary — 19 October 2026 development-docs/workspace-output-and-native-boundary.md"><article><a class="primary-doc" href="../development-docs/workspace-output-and-native-boundary.md">Build outputs and native harness boundary — 19 October 2026</a><p class="path">development-docs/workspace-output-and-native-boundary.md</p></article></li>
+<li class="feature" id="doc-design-docs-implementation-validation" data-search="Validation record â€” 17 October 2026 design-docs/implementation/VALIDATION.md"><article><a class="primary-doc" href="../design-docs/implementation/VALIDATION.md">Validation record â€” 17 October 2026</a><p class="path">design-docs/implementation/VALIDATION.md</p></article></li></ul></details></li>
+<li class="branch"><details><summary>Development records and investigations</summary><ul><li class="feature" id="doc-development-docs-workspace-output-and-native-boundary" data-search="Build outputs and native harness boundary â€” 19 October 2026 development-docs/workspace-output-and-native-boundary.md"><article><a class="primary-doc" href="../development-docs/workspace-output-and-native-boundary.md">Build outputs and native harness boundary â€” 19 October 2026</a><p class="path">development-docs/workspace-output-and-native-boundary.md</p></article></li>
 <li class="feature" id="doc-development-docs-current-iter-issues" data-search="Current iteration issues development-docs/current-iter-issues.md"><article><a class="primary-doc" href="../development-docs/current-iter-issues.md">Current iteration issues</a><p class="path">development-docs/current-iter-issues.md</p></article></li>
-<li class="feature" id="doc-development-docs-memory-implementation-report-2026-10-20" data-search="Current memory implementation — 2026-10-20 development-docs/memory-implementation-report-2026-10-20.md"><article><a class="primary-doc" href="../development-docs/memory-implementation-report-2026-10-20.md">Current memory implementation — 2026-10-20</a><p class="path">development-docs/memory-implementation-report-2026-10-20.md</p></article></li>
+<li class="feature" id="doc-development-docs-memory-implementation-report-2026-10-20" data-search="Current memory implementation â€” 2026-10-20 development-docs/memory-implementation-report-2026-10-20.md"><article><a class="primary-doc" href="../development-docs/memory-implementation-report-2026-10-20.md">Current memory implementation â€” 2026-10-20</a><p class="path">development-docs/memory-implementation-report-2026-10-20.md</p></article></li>
 <li class="feature" id="doc-development-docs-readme" data-search="Development records development-docs/README.md"><article><a class="primary-doc" href="../development-docs/README.md">Development records</a><p class="path">development-docs/README.md</p></article></li>
+<li class="feature" id="doc-development-docs-run-7086c575ef94-analysis" data-search="Haiku timeout boundary and foundation test grants development-docs/run-7086c575ef94-analysis.md"><article><a class="primary-doc" href="../development-docs/run-7086c575ef94-analysis.md">Haiku timeout boundary and foundation test grants</a><p class="path">development-docs/run-7086c575ef94-analysis.md</p></article></li>
 <li class="feature" id="doc-development-docs-run-d434799ad8e4-analysis" data-search="Empty model response in run d434799ad8e4 development-docs/run-d434799ad8e4-analysis.md"><article><a class="primary-doc" href="../development-docs/run-d434799ad8e4-analysis.md">Empty model response in run d434799ad8e4</a><p class="path">development-docs/run-d434799ad8e4-analysis.md</p></article></li>
 <li class="feature" id="feature-development-docs-run-a1859f8644a5-analysis" data-search="First two-slot run analysis development-docs/run-a1859f8644a5-analysis.md development-docs/run-a1859f8644a5-evidence.json"><article><a class="primary-doc" href="../development-docs/run-a1859f8644a5-analysis.md">First two-slot run analysis</a><p class="path">development-docs/run-a1859f8644a5-analysis.md</p><details class="files"><summary>1 related files</summary><ul><li><a href="../development-docs/run-a1859f8644a5-evidence.json">development-docs/run-a1859f8644a5-evidence.json</a></li></ul></details></article></li>
 <li class="feature" id="doc-development-docs-fixes" data-search="Fix history and design principles development-docs/FIXES.md"><article><a class="primary-doc" href="../development-docs/FIXES.md">Fix history and design principles</a><p class="path">development-docs/FIXES.md</p></article></li>
 <li class="feature" id="doc-development-docs-general-issues" data-search="general-issues development-docs/general-issues.md"><article><a class="primary-doc" href="../development-docs/general-issues.md">general-issues</a><p class="path">development-docs/general-issues.md</p></article></li>
-<li class="feature" id="doc-development-docs-handoff-2026-10-20" data-search="Handoff — 2026-10-20 — OS retries and pause audit development-docs/HANDOFF-2026-10-20.md"><article><a class="primary-doc" href="../development-docs/HANDOFF-2026-10-20.md">Handoff — 2026-10-20 — OS retries and pause audit</a><p class="path">development-docs/HANDOFF-2026-10-20.md</p></article></li>
+<li class="feature" id="doc-development-docs-handoff-2026-10-20" data-search="Handoff â€” 2026-10-20 â€” OS retries and pause audit development-docs/HANDOFF-2026-10-20.md"><article><a class="primary-doc" href="../development-docs/HANDOFF-2026-10-20.md">Handoff â€” 2026-10-20 â€” OS retries and pause audit</a><p class="path">development-docs/HANDOFF-2026-10-20.md</p></article></li>
 <li class="feature" id="feature-development-docs-memory-records-audit-2026-10-20" data-search="Historical memory audit development-docs/memory-records-audit-2026-10-20.md development-docs/memory-records-audit-2026-10-20.json"><article><a class="primary-doc" href="../development-docs/memory-records-audit-2026-10-20.md">Historical memory audit</a><p class="path">development-docs/memory-records-audit-2026-10-20.md</p><details class="files"><summary>1 related files</summary><ul><li><a href="../development-docs/memory-records-audit-2026-10-20.json">development-docs/memory-records-audit-2026-10-20.json</a></li></ul></details></article></li>
-<li class="feature" id="doc-development-docs-handoff-2026-10-20-io" data-search="I/O safety implementation handoff — 2026-10-20 development-docs/HANDOFF-2026-10-20-IO.md"><article><a class="primary-doc" href="../development-docs/HANDOFF-2026-10-20-IO.md">I/O safety implementation handoff — 2026-10-20</a><p class="path">development-docs/HANDOFF-2026-10-20-IO.md</p></article></li>
-<li class="feature" id="doc-development-docs-io-safety-verification-2026-10-20" data-search="I/O safety implementation verification — 2026-10-20 development-docs/io-safety-verification-2026-10-20.md"><article><a class="primary-doc" href="../development-docs/io-safety-verification-2026-10-20.md">I/O safety implementation verification — 2026-10-20</a><p class="path">development-docs/io-safety-verification-2026-10-20.md</p></article></li>
+<li class="feature" id="doc-development-docs-handoff-2026-10-20-io" data-search="I/O safety implementation handoff â€” 2026-10-20 development-docs/HANDOFF-2026-10-20-IO.md"><article><a class="primary-doc" href="../development-docs/HANDOFF-2026-10-20-IO.md">I/O safety implementation handoff â€” 2026-10-20</a><p class="path">development-docs/HANDOFF-2026-10-20-IO.md</p></article></li>
+<li class="feature" id="doc-development-docs-io-safety-verification-2026-10-20" data-search="I/O safety implementation verification â€” 2026-10-20 development-docs/io-safety-verification-2026-10-20.md"><article><a class="primary-doc" href="../development-docs/io-safety-verification-2026-10-20.md">I/O safety implementation verification â€” 2026-10-20</a><p class="path">development-docs/io-safety-verification-2026-10-20.md</p></article></li>
 <li class="feature" id="doc-development-docs-inference-cap-safeguards-audit-2026-10-20" data-search="Input and output cap safeguards: current behavior development-docs/inference-cap-safeguards-audit-2026-10-20.md"><article><a class="primary-doc" href="../development-docs/inference-cap-safeguards-audit-2026-10-20.md">Input and output cap safeguards: current behavior</a><p class="path">development-docs/inference-cap-safeguards-audit-2026-10-20.md</p></article></li>
 <li class="feature" id="doc-development-docs-investigations" data-search="Investigations and verification evidence development-docs/investigations.md"><article><a class="primary-doc" href="../development-docs/investigations.md">Investigations and verification evidence</a><p class="path">development-docs/investigations.md</p></article></li>
 <li class="feature" id="doc-development-docs-next-iteration" data-search="Next iteration backlog development-docs/next-iteration.md"><article><a class="primary-doc" href="../development-docs/next-iteration.md">Next iteration backlog</a><p class="path">development-docs/next-iteration.md</p></article></li>
+<li class="feature" id="doc-development-docs-router-distillation-tutorial" data-search="Distill an agent-selection model from Opus development-docs/router-distillation-tutorial.md development-docs/router-training-guide.html"><article><a class="primary-doc" href="../development-docs/router-distillation-tutorial.md">Distill an agent-selection model from Opus</a><p class="path">development-docs/router-distillation-tutorial.md</p><details class="files"><summary>1 related files</summary><ul><li><a href="../development-docs/router-training-guide.html">development-docs/router-training-guide.html</a></li></ul></details></article></li>
 <li class="feature" id="doc-development-docs-optional-os-context-management-proposal-2026-10-20" data-search="Optional OS context handling and memory compaction development-docs/optional-os-context-management-proposal-2026-10-20.md"><article><a class="primary-doc" href="../development-docs/optional-os-context-management-proposal-2026-10-20.md">Optional OS context handling and memory compaction</a><p class="path">development-docs/optional-os-context-management-proposal-2026-10-20.md</p></article></li>
 <li class="feature" id="doc-development-docs-chat-history" data-search="Past chat audit and fix-history sources development-docs/CHAT_HISTORY.md"><article><a class="primary-doc" href="../development-docs/CHAT_HISTORY.md">Past chat audit and fix-history sources</a><p class="path">development-docs/CHAT_HISTORY.md</p></article></li>
-<li class="feature" id="doc-development-docs-pause-retry-audit-2026-10-20" data-search="Pause and retry audit — 2026-10-20 development-docs/pause-retry-audit-2026-10-20.md"><article><a class="primary-doc" href="../development-docs/pause-retry-audit-2026-10-20.md">Pause and retry audit — 2026-10-20</a><p class="path">development-docs/pause-retry-audit-2026-10-20.md</p></article></li>
+<li class="feature" id="doc-development-docs-pause-retry-audit-2026-10-20" data-search="Pause and retry audit â€” 2026-10-20 development-docs/pause-retry-audit-2026-10-20.md"><article><a class="primary-doc" href="../development-docs/pause-retry-audit-2026-10-20.md">Pause and retry audit â€” 2026-10-20</a><p class="path">development-docs/pause-retry-audit-2026-10-20.md</p></article></li>
 <li class="feature" id="doc-development-docs-in-place-repository-plan" data-search="Plan: develop in the user&#x27;s actual repository development-docs/in-place-repository-plan.md"><article><a class="primary-doc" href="../development-docs/in-place-repository-plan.md">Plan: develop in the user&#x27;s actual repository</a><p class="path">development-docs/in-place-repository-plan.md</p></article></li>
 <li class="feature" id="doc-development-docs-proposals" data-search="Proposals and handoff archive development-docs/proposals.md"><article><a class="primary-doc" href="../development-docs/proposals.md">Proposals and handoff archive</a><p class="path">development-docs/proposals.md</p></article></li>
 <li class="feature" id="doc-development-docs-inference-overflow-safety-proposal-2026-10-20" data-search="Proposed OS input/output overflow safety development-docs/inference-overflow-safety-proposal-2026-10-20.md"><article><a class="primary-doc" href="../development-docs/inference-overflow-safety-proposal-2026-10-20.md">Proposed OS input/output overflow safety</a><p class="path">development-docs/inference-overflow-safety-proposal-2026-10-20.md</p></article></li>
@@ -141,7 +148,7 @@
 <li class="feature" id="feature-docs-modules-live-smoke" data-search="Opt-in live smoke runner docs/modules/live-smoke.md scripts/smoke_os_codex.py"><article><a class="primary-doc" href="modules/live-smoke.md">Opt-in live smoke runner</a><p class="path">docs/modules/live-smoke.md</p><details class="files"><summary>1 related files</summary><ul><li><a href="../scripts/smoke_os_codex.py">scripts/smoke_os_codex.py</a></li></ul></details></article></li>
 <li class="feature" id="feature-docs-modules-packaging" data-search="Packaging and repository hygiene docs/modules/packaging.md .gitignore pyproject.toml requirements.lock"><article><a class="primary-doc" href="modules/packaging.md">Packaging and repository hygiene</a><p class="path">docs/modules/packaging.md</p><details class="files"><summary>3 related files</summary><ul><li><a href="../.gitignore">.gitignore</a></li><li><a href="../pyproject.toml">pyproject.toml</a></li><li><a href="../requirements.lock">requirements.lock</a></li></ul></details></article></li>
 <li class="feature" id="doc-agents" data-search="Repository instructions for agents AGENTS.md"><article><a class="primary-doc" href="../AGENTS.md">Repository instructions for agents</a><p class="path">AGENTS.md</p></article></li>
-<li class="feature" id="feature-tests-readme" data-search="Test suite tests/README.md tests/conftest.py tests/test_agent.py tests/test_agent_transitions.py tests/test_anthropic.py tests/test_capability_boundary.py tests/test_context_safety.py tests/test_contracts.py tests/test_costs.py tests/test_endpoints.py tests/test_history.py tests/test_http_integration.py tests/test_in_place_repository.py tests/test_incident_fixes.py tests/test_model_retries.py tests/test_native_events.py tests/test_native_worker.py tests/test_os.py tests/test_output_limits.py tests/test_outputs.py tests/test_recovery.py tests/test_regressions.py tests/test_runtime.py tests/test_runtime_general.py tests/test_saved_credentials.py tests/test_setup_tools.py tests/test_sim_batch.py tests/test_tool_environment.py tests/test_ui.py tests/test_ui_agents.py tests/test_ui_frontend.py tests/test_ui_os.py tests/test_user_briefs.py tests/test_workspace_outputs.py tests/ui_start.test.cjs"><article><a class="primary-doc" href="../tests/README.md">Test suite</a><p class="path">tests/README.md</p><details class="files"><summary>34 related files</summary><ul><li><a href="../tests/conftest.py">tests/conftest.py</a></li><li><a href="../tests/test_agent.py">tests/test_agent.py</a></li><li><a href="../tests/test_agent_transitions.py">tests/test_agent_transitions.py</a></li><li><a href="../tests/test_anthropic.py">tests/test_anthropic.py</a></li><li><a href="../tests/test_capability_boundary.py">tests/test_capability_boundary.py</a></li><li><a href="../tests/test_context_safety.py">tests/test_context_safety.py</a></li><li><a href="../tests/test_contracts.py">tests/test_contracts.py</a></li><li><a href="../tests/test_costs.py">tests/test_costs.py</a></li><li><a href="../tests/test_endpoints.py">tests/test_endpoints.py</a></li><li><a href="../tests/test_history.py">tests/test_history.py</a></li><li><a href="../tests/test_http_integration.py">tests/test_http_integration.py</a></li><li><a href="../tests/test_in_place_repository.py">tests/test_in_place_repository.py</a></li><li><a href="../tests/test_incident_fixes.py">tests/test_incident_fixes.py</a></li><li><a href="../tests/test_model_retries.py">tests/test_model_retries.py</a></li><li><a href="../tests/test_native_events.py">tests/test_native_events.py</a></li><li><a href="../tests/test_native_worker.py">tests/test_native_worker.py</a></li><li><a href="../tests/test_os.py">tests/test_os.py</a></li><li><a href="../tests/test_output_limits.py">tests/test_output_limits.py</a></li><li><a href="../tests/test_outputs.py">tests/test_outputs.py</a></li><li><a href="../tests/test_recovery.py">tests/test_recovery.py</a></li><li><a href="../tests/test_regressions.py">tests/test_regressions.py</a></li><li><a href="../tests/test_runtime.py">tests/test_runtime.py</a></li><li><a href="../tests/test_runtime_general.py">tests/test_runtime_general.py</a></li><li><a href="../tests/test_saved_credentials.py">tests/test_saved_credentials.py</a></li><li><a href="../tests/test_setup_tools.py">tests/test_setup_tools.py</a></li><li><a href="../tests/test_sim_batch.py">tests/test_sim_batch.py</a></li><li><a href="../tests/test_tool_environment.py">tests/test_tool_environment.py</a></li><li><a href="../tests/test_ui.py">tests/test_ui.py</a></li><li><a href="../tests/test_ui_agents.py">tests/test_ui_agents.py</a></li><li><a href="../tests/test_ui_frontend.py">tests/test_ui_frontend.py</a></li><li><a href="../tests/test_ui_os.py">tests/test_ui_os.py</a></li><li><a href="../tests/test_user_briefs.py">tests/test_user_briefs.py</a></li><li><a href="../tests/test_workspace_outputs.py">tests/test_workspace_outputs.py</a></li><li><a href="../tests/ui_start.test.cjs">tests/ui_start.test.cjs</a></li></ul></details></article></li></ul></details></li></ul></details></li></ul></section>
+<li class="feature" id="feature-tests-readme" data-search="Test suite tests/README.md tests/conftest.py tests/test_agent.py tests/test_agent_transitions.py tests/test_anthropic.py tests/test_capability_boundary.py tests/test_context_safety.py tests/test_contracts.py tests/test_costs.py tests/test_endpoints.py tests/test_history.py tests/test_http_integration.py tests/test_in_place_repository.py tests/test_incident_fixes.py tests/test_model_retries.py tests/test_native_events.py tests/test_native_worker.py tests/test_os.py tests/test_output_limits.py tests/test_outputs.py tests/test_recovery.py tests/test_resume.py tests/test_regressions.py tests/test_runtime.py tests/test_runtime_general.py tests/test_saved_credentials.py tests/test_setup_tools.py tests/test_sim_batch.py tests/test_inference_simulation.py tests/test_tool_environment.py tests/test_ui.py tests/test_ui_agents.py tests/test_ui_frontend.py tests/test_ui_os.py tests/test_user_briefs.py tests/test_workspace_outputs.py tests/ui_start.test.cjs tests/test_inference_lifecycle.py"><article><a class="primary-doc" href="../tests/README.md">Test suite</a><p class="path">tests/README.md</p><details class="files"><summary>37 related files</summary><ul><li><a href="../tests/conftest.py">tests/conftest.py</a></li><li><a href="../tests/test_agent.py">tests/test_agent.py</a></li><li><a href="../tests/test_agent_transitions.py">tests/test_agent_transitions.py</a></li><li><a href="../tests/test_anthropic.py">tests/test_anthropic.py</a></li><li><a href="../tests/test_capability_boundary.py">tests/test_capability_boundary.py</a></li><li><a href="../tests/test_context_safety.py">tests/test_context_safety.py</a></li><li><a href="../tests/test_contracts.py">tests/test_contracts.py</a></li><li><a href="../tests/test_costs.py">tests/test_costs.py</a></li><li><a href="../tests/test_endpoints.py">tests/test_endpoints.py</a></li><li><a href="../tests/test_history.py">tests/test_history.py</a></li><li><a href="../tests/test_http_integration.py">tests/test_http_integration.py</a></li><li><a href="../tests/test_in_place_repository.py">tests/test_in_place_repository.py</a></li><li><a href="../tests/test_incident_fixes.py">tests/test_incident_fixes.py</a></li><li><a href="../tests/test_model_retries.py">tests/test_model_retries.py</a></li><li><a href="../tests/test_native_events.py">tests/test_native_events.py</a></li><li><a href="../tests/test_native_worker.py">tests/test_native_worker.py</a></li><li><a href="../tests/test_os.py">tests/test_os.py</a></li><li><a href="../tests/test_output_limits.py">tests/test_output_limits.py</a></li><li><a href="../tests/test_outputs.py">tests/test_outputs.py</a></li><li><a href="../tests/test_recovery.py">tests/test_recovery.py</a></li><li><a href="../tests/test_resume.py">tests/test_resume.py</a></li><li><a href="../tests/test_regressions.py">tests/test_regressions.py</a></li><li><a href="../tests/test_runtime.py">tests/test_runtime.py</a></li><li><a href="../tests/test_runtime_general.py">tests/test_runtime_general.py</a></li><li><a href="../tests/test_saved_credentials.py">tests/test_saved_credentials.py</a></li><li><a href="../tests/test_setup_tools.py">tests/test_setup_tools.py</a></li><li><a href="../tests/test_sim_batch.py">tests/test_sim_batch.py</a></li><li><a href="../tests/test_inference_simulation.py">tests/test_inference_simulation.py</a></li><li><a href="../tests/test_tool_environment.py">tests/test_tool_environment.py</a></li><li><a href="../tests/test_ui.py">tests/test_ui.py</a></li><li><a href="../tests/test_ui_agents.py">tests/test_ui_agents.py</a></li><li><a href="../tests/test_ui_frontend.py">tests/test_ui_frontend.py</a></li><li><a href="../tests/test_ui_os.py">tests/test_ui_os.py</a></li><li><a href="../tests/test_user_briefs.py">tests/test_user_briefs.py</a></li><li><a href="../tests/test_workspace_outputs.py">tests/test_workspace_outputs.py</a></li><li><a href="../tests/ui_start.test.cjs">tests/ui_start.test.cjs</a></li><li><a href="../tests/test_inference_lifecycle.py">tests/test_inference_lifecycle.py</a></li></ul></details></article></li></ul></details></li></ul></details></li></ul></section>
     <details class="json"><summary>Inspect the JSON behind this tree</summary><pre id="json-view"></pre><p><a href="file-tree.json">Open the complete agent JSON</a></p></details>
     <footer><p>Upstream checkouts and transient state have separate ownership. See <a href="../references/README.md">reference boundaries</a> and <a href="maintenance.md">inventory rules</a>.</p><p>Generated offline from <a href="file-tree.json">file-tree.json</a> · <a href="modules/documentation.md">Tooling guide</a></p></footer>
   </main>
@@ -176,6 +183,20 @@
             "id": "doc-dev-readme",
             "title": "Developer onboarding",
             "doc": "dev-readme.md",
+            "files": [
+              "docs/onboarding.html"
+            ]
+          },
+          {
+            "id": "doc-contributor-onboarding",
+            "title": "Onboard a human or development agent",
+            "doc": "docs/contributor-onboarding.md",
+            "files": []
+          },
+          {
+            "id": "doc-project-memory",
+            "title": "Project knowledge to retain",
+            "doc": "docs/project-memory.md",
             "files": []
           },
           {
@@ -309,6 +330,18 @@
             "title": "Use the UI",
             "doc": "docs/guides/ui.md",
             "files": []
+          },
+          {
+            "id": "doc-docs-guides-sim-inference",
+            "title": "Simulate slower, less reliable inference",
+            "doc": "docs/guides/sim-inference.md",
+            "files": []
+          },
+          {
+            "id": "endpoint-testing",
+            "title": "Endpoint lifecycle and testing",
+            "doc": "docs/guides/endpoint-testing.md",
+            "files": []
           }
         ]
       },
@@ -359,6 +392,7 @@
             "doc": "docs/modules/agent-workflow.md",
             "files": [
               "src/polyinference/agent/controller.py",
+              "src/polyinference/agent/resume.py",
               "src/polyinference/agent/setup.py",
               "src/polyinference/agent/tasks.py",
               "src/polyinference/agent/routing.py"
@@ -401,7 +435,16 @@
             "doc": "docs/modules/inference.md",
             "files": [
               "src/polyinference/runtime/inference.py",
-              "src/polyinference/runtime/codex.py"
+              "src/polyinference/runtime/codex.py",
+              "src/polyinference/runtime/inference_stream.py"
+            ]
+          },
+          {
+            "id": "inference-simulation",
+            "title": "Optional application inference simulator",
+            "doc": "docs/modules/inference-simulation.md",
+            "files": [
+              "src/polyinference/agent/inference_simulation.py"
             ]
           },
           {
@@ -434,6 +477,7 @@
             "doc": "docs/modules/kernel.md",
             "files": [
               "src/polyinference/runtime/kernel.py",
+              "src/polyinference/runtime/resume.py",
               "src/polyinference/runtime/adapter.py",
               "src/polyinference/runtime/__init__.py"
             ]
@@ -445,7 +489,8 @@
             "files": [
               "src/polyinference/ui.py",
               "src/polyinference/ui.html",
-              "src/polyinference/ui_repository.py"
+              "src/polyinference/ui_repository.py",
+              "src/polyinference/agent/endpoint_probe.py"
             ]
           },
           {
@@ -541,7 +586,7 @@
           },
           {
             "id": "doc-design-docs-simplified-os-design-revisions",
-            "title": "Current design revisions — 2026-10-20",
+            "title": "Current design revisions â€” 2026-10-20",
             "doc": "design-docs/simplified-os/DESIGN_REVISIONS.md",
             "files": []
           },
@@ -621,31 +666,31 @@
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-01-cs350-1-foundations",
-            "title": "Polyinference OS design — 1. Kernel boundary and the two-tier agent",
+            "title": "Polyinference OS design â€” 1. Kernel boundary and the two-tier agent",
             "doc": "design-docs/polyinference-design/os-research/01-CS350-1-foundations.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-02-cs350-2-processes",
-            "title": "Polyinference OS design — 2. Processes, requests and tier handoffs",
+            "title": "Polyinference OS design â€” 2. Processes, requests and tier handoffs",
             "doc": "design-docs/polyinference-design/os-research/02-CS350-2-processes.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-03-cs350-3-threads",
-            "title": "Polyinference OS design — 3. LangGraph execution and bounded host tasks",
+            "title": "Polyinference OS design â€” 3. LangGraph execution and bounded host tasks",
             "doc": "design-docs/polyinference-design/os-research/03-CS350-3-threads.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-04-cs350-4-concurrency",
-            "title": "Polyinference OS design — 4. Synchronizing plans, work, memory and results",
+            "title": "Polyinference OS design â€” 4. Synchronizing plans, work, memory and results",
             "doc": "design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-05-cs350-5-scalability-and-deadlocks",
-            "title": "Polyinference OS design — 5. Scaling the two-tier pipeline and preventing deadlocks",
+            "title": "Polyinference OS design â€” 5. Scaling the two-tier pipeline and preventing deadlocks",
             "doc": "design-docs/polyinference-design/os-research/05-CS350-5-scalability-and-deadlocks.md",
             "files": []
           },
@@ -663,13 +708,13 @@
           },
           {
             "id": "doc-project-brief",
-            "title": "Polyinference — project brief",
+            "title": "Polyinference â€” project brief",
             "doc": "PROJECT_BRIEF.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-project-brief",
-            "title": "Polyinference — project brief",
+            "title": "Polyinference â€” project brief",
             "doc": "design-docs/polyinference-design/PROJECT_BRIEF.md",
             "files": []
           },
@@ -687,7 +732,7 @@
           },
           {
             "id": "doc-design-docs-simplified-os-validation",
-            "title": "Simple OS v1 validation — 17 October 2026",
+            "title": "Simple OS v1 validation â€” 17 October 2026",
             "doc": "design-docs/simplified-os/VALIDATION.md",
             "files": []
           },
@@ -715,7 +760,7 @@
           },
           {
             "id": "doc-design-docs-implementation-validation",
-            "title": "Validation record — 17 October 2026",
+            "title": "Validation record â€” 17 October 2026",
             "doc": "design-docs/implementation/VALIDATION.md",
             "files": []
           }
@@ -727,7 +772,7 @@
         "children": [
           {
             "id": "doc-development-docs-workspace-output-and-native-boundary",
-            "title": "Build outputs and native harness boundary — 19 October 2026",
+            "title": "Build outputs and native harness boundary â€” 19 October 2026",
             "doc": "development-docs/workspace-output-and-native-boundary.md",
             "files": []
           },
@@ -739,7 +784,7 @@
           },
           {
             "id": "doc-development-docs-memory-implementation-report-2026-10-20",
-            "title": "Current memory implementation — 2026-10-20",
+            "title": "Current memory implementation â€” 2026-10-20",
             "doc": "development-docs/memory-implementation-report-2026-10-20.md",
             "files": []
           },
@@ -747,6 +792,12 @@
             "id": "doc-development-docs-readme",
             "title": "Development records",
             "doc": "development-docs/README.md",
+            "files": []
+          },
+          {
+            "id": "doc-development-docs-run-7086c575ef94-analysis",
+            "title": "Haiku timeout boundary and foundation test grants",
+            "doc": "development-docs/run-7086c575ef94-analysis.md",
             "files": []
           },
           {
@@ -777,7 +828,7 @@
           },
           {
             "id": "doc-development-docs-handoff-2026-10-20",
-            "title": "Handoff — 2026-10-20 — OS retries and pause audit",
+            "title": "Handoff â€” 2026-10-20 â€” OS retries and pause audit",
             "doc": "development-docs/HANDOFF-2026-10-20.md",
             "files": []
           },
@@ -791,13 +842,13 @@
           },
           {
             "id": "doc-development-docs-handoff-2026-10-20-io",
-            "title": "I/O safety implementation handoff — 2026-10-20",
+            "title": "I/O safety implementation handoff â€” 2026-10-20",
             "doc": "development-docs/HANDOFF-2026-10-20-IO.md",
             "files": []
           },
           {
             "id": "doc-development-docs-io-safety-verification-2026-10-20",
-            "title": "I/O safety implementation verification — 2026-10-20",
+            "title": "I/O safety implementation verification â€” 2026-10-20",
             "doc": "development-docs/io-safety-verification-2026-10-20.md",
             "files": []
           },
@@ -820,6 +871,14 @@
             "files": []
           },
           {
+            "id": "doc-development-docs-router-distillation-tutorial",
+            "title": "Distill an agent-selection model from Opus",
+            "doc": "development-docs/router-distillation-tutorial.md",
+            "files": [
+              "development-docs/router-training-guide.html"
+            ]
+          },
+          {
             "id": "doc-development-docs-optional-os-context-management-proposal-2026-10-20",
             "title": "Optional OS context handling and memory compaction",
             "doc": "development-docs/optional-os-context-management-proposal-2026-10-20.md",
@@ -833,7 +892,7 @@
           },
           {
             "id": "doc-development-docs-pause-retry-audit-2026-10-20",
-            "title": "Pause and retry audit — 2026-10-20",
+            "title": "Pause and retry audit â€” 2026-10-20",
             "doc": "development-docs/pause-retry-audit-2026-10-20.md",
             "files": []
           },
@@ -1055,12 +1114,14 @@
               "tests/test_output_limits.py",
               "tests/test_outputs.py",
               "tests/test_recovery.py",
+              "tests/test_resume.py",
               "tests/test_regressions.py",
               "tests/test_runtime.py",
               "tests/test_runtime_general.py",
               "tests/test_saved_credentials.py",
               "tests/test_setup_tools.py",
               "tests/test_sim_batch.py",
+              "tests/test_inference_simulation.py",
               "tests/test_tool_environment.py",
               "tests/test_ui.py",
               "tests/test_ui_agents.py",
@@ -1068,7 +1129,8 @@
               "tests/test_ui_os.py",
               "tests/test_user_briefs.py",
               "tests/test_workspace_outputs.py",
-              "tests/ui_start.test.cjs"
+              "tests/ui_start.test.cjs",
+              "tests/test_inference_lifecycle.py"
             ]
           }
         ]

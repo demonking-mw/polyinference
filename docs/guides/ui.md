@@ -5,8 +5,11 @@
 | Control or display | Behavior |
 | --- | --- |
 | Start run | Shows startup progress and selects the new run immediately. Rejected starts receive a run ID and startup process ID, remain selected as failed runs, and retain their error across polling. |
+| Inference mode (only with --sim-inference) | Choose normal, normal and buggy, or slow and buggy before Start. Set shared TPS, batch, bug rate and optional seed; inspect synthetic progress separately from actual provider costs. [Simulation guide](sim-inference.md). |
+| Endpoint testing | Choose configured, small-cloud, local-inference or buffered timings for the local lane; click Test endpoint / warm up for one bounded query. No call on page open. [Policy and limits](endpoint-testing.md). |
 | Run selector | Reopen saved runs, including failed or interrupted runs. |
 | Process/node list | Inspect the recorded execution order and individual node details. |
+| Resume | Select a paused/interrupted run, optionally type instructions beside Resume, then click once. Recovery and process selection happen internally. Resuming shows preparation; Running shows activation. The advanced process drawer remains available for inspection. |
 | Blue model node | Read the model's prompt and response. |
 | Other nodes | Inspect state transitions, inputs, outputs and recorded operations. |
 | Steering | Send new instructions while the selected run is active. |
@@ -53,6 +56,29 @@ Steering closes new task starts immediately. Workers that have already started,
 including workers waiting for a gate or model slot, finish their original
 assignment before the senior consumes the update. The panel shows received and
 pending instructions. Steering is not an immediate worker interrupt.
+
+To continue a paused or interrupted run, select it, optionally fill in
+**Instructions for continuing**, then click **Resume**. There is no required
+process chooser or reconciliation form. The agent handles checkpoint continuation,
+known-failure retries, interrupted-task review and accepted-output delivery.
+Instructions enter its normal drain/review boundary once. Drafts and request
+identity survive lost acknowledgements and page restart; repeated submission of
+the same request does not start another run.
+
+**Resuming** means the request was accepted and execution is being prepared.
+Pending requests restore after server restart. Resume retains the run ID, private
+work, authority, configuration, budgets and deadlines. Launch-form/simulation
+changes apply only to new runs. An exact supported predecessor program can migrate
+with recorded provenance; other incompatible programs are rejected.
+
+The OS automatically uses retained host/completed-response evidence and retrieves
+supported provider results. If a provider cannot recover an unknown operation,
+the UI shows a plain failure while preserving it. This is not a request to edit
+journals or assert that remote work stopped. Old synchronous HTTP requests without
+a saved response handle and unknown native jobs may remain unrecoverable.
+Saved JSON snapshots are read-only. An external --state needs its saved config.json
+or matching --config. Restart the UI server after updating Python code, then reload
+its HTTP URL (default http://127.0.0.1:8765); opening ui.html with file:// has no API.
 
 Development allocation targets **10% senior / 90% junior by task count** over the
 run. Setup, sprint planning and management calls do not count toward that split.

@@ -26,14 +26,28 @@
       "base_url": "https://api.openai.com/v1",
       "model": "YOUR_WORKER_MODEL",
       "api_key_env": "OPENAI_API_KEY",
-      "max_inflight": 2
+      "max_inflight": 2,
+      "lifecycle": {
+        "transport": "sse",
+        "connect_seconds": 10,
+        "first_output_seconds": 900,
+        "idle_seconds": 300,
+        "total_seconds": 1800
+      }
     },
     "cloud": {
       "protocol": "responses",
       "base_url": "https://api.openai.com/v1",
       "model": "YOUR_SENIOR_MODEL",
       "api_key_env": "OPENAI_API_KEY",
-      "max_inflight": 1
+      "max_inflight": 1,
+      "lifecycle": {
+        "transport": "sse",
+        "connect_seconds": 10,
+        "first_output_seconds": 180,
+        "idle_seconds": 90,
+        "total_seconds": 600
+      }
     },
     "role_bindings": {
       "worker": "local",
@@ -47,5 +61,10 @@
       "auto_compaction": false
     }
   },
-  "objective": "Describe the bounded coding objective here."
+  "objective": "Describe the bounded coding objective here.",
+  "inference_policy": {
+    "additional_retries": 1,
+    "replace_undelivered": true
+  },
+  "model_output_target_tokens": 4096
 }

@@ -38,6 +38,8 @@ needed if your target project uses them.
 For serial Codex/Haiku or invocation-only `ui --sim-batch N` experiments, use the
 [tester checklist](codex-haiku-setup.md). Simulation uses paid remote requests;
 opening the UI does not send a generation request.
+Optional `ui --sim-inference` exposes slow/faulty modes before Start; ordinary
+launches remain unchanged. See [inference simulation](docs/guides/sim-inference.md).
 For remote host recovery and OS deployment details, use the
 [OS runbook](design-docs/simplified-os/RUNBOOK.md).
 

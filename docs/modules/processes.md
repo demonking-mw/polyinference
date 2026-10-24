@@ -3,6 +3,15 @@
 [Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
 
 Generic explicitly started process continuations run under durable identities and bounded admission.
+request_resume(records, process_id=None, text=None, request_id=None) records an
+immutable operator intent under resume-request/. Explicit process signals validate
+a paused, noncancelled process and link process-control/. Unscoped signals require
+unfinished execution and link resume-control/run. request_id deduplicates accepted
+input, including retries after acknowledgement loss. Acceptance is independent of
+unsettled effects; KernelRuntime.prepare_resume and ordinary dispatch enforce
+certainty before execution. No grants, budgets or coding records are interpreted.
+Requests, OS resume-preparation/ and application resume-progress/ and
+resume-outcome/ remain exportable.
 
 | File | Responsibility |
 | --- | --- |

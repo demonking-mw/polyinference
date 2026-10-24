@@ -29,6 +29,20 @@
             "id": "doc-dev-readme",
             "title": "Developer onboarding",
             "doc": "dev-readme.md",
+            "files": [
+              "docs/onboarding.html"
+            ]
+          },
+          {
+            "id": "doc-contributor-onboarding",
+            "title": "Onboard a human or development agent",
+            "doc": "docs/contributor-onboarding.md",
+            "files": []
+          },
+          {
+            "id": "doc-project-memory",
+            "title": "Project knowledge to retain",
+            "doc": "docs/project-memory.md",
             "files": []
           },
           {
@@ -162,6 +176,18 @@
             "title": "Use the UI",
             "doc": "docs/guides/ui.md",
             "files": []
+          },
+          {
+            "id": "doc-docs-guides-sim-inference",
+            "title": "Simulate slower, less reliable inference",
+            "doc": "docs/guides/sim-inference.md",
+            "files": []
+          },
+          {
+            "id": "endpoint-testing",
+            "title": "Endpoint lifecycle and testing",
+            "doc": "docs/guides/endpoint-testing.md",
+            "files": []
           }
         ]
       },
@@ -212,6 +238,7 @@
             "doc": "docs/modules/agent-workflow.md",
             "files": [
               "src/polyinference/agent/controller.py",
+              "src/polyinference/agent/resume.py",
               "src/polyinference/agent/setup.py",
               "src/polyinference/agent/tasks.py",
               "src/polyinference/agent/routing.py"
@@ -254,7 +281,16 @@
             "doc": "docs/modules/inference.md",
             "files": [
               "src/polyinference/runtime/inference.py",
-              "src/polyinference/runtime/codex.py"
+              "src/polyinference/runtime/codex.py",
+              "src/polyinference/runtime/inference_stream.py"
+            ]
+          },
+          {
+            "id": "inference-simulation",
+            "title": "Optional application inference simulator",
+            "doc": "docs/modules/inference-simulation.md",
+            "files": [
+              "src/polyinference/agent/inference_simulation.py"
             ]
           },
           {
@@ -287,6 +323,7 @@
             "doc": "docs/modules/kernel.md",
             "files": [
               "src/polyinference/runtime/kernel.py",
+              "src/polyinference/runtime/resume.py",
               "src/polyinference/runtime/adapter.py",
               "src/polyinference/runtime/__init__.py"
             ]
@@ -298,7 +335,8 @@
             "files": [
               "src/polyinference/ui.py",
               "src/polyinference/ui.html",
-              "src/polyinference/ui_repository.py"
+              "src/polyinference/ui_repository.py",
+              "src/polyinference/agent/endpoint_probe.py"
             ]
           },
           {
@@ -394,7 +432,7 @@
           },
           {
             "id": "doc-design-docs-simplified-os-design-revisions",
-            "title": "Current design revisions — 2026-10-20",
+            "title": "Current design revisions â€” 2026-10-20",
             "doc": "design-docs/simplified-os/DESIGN_REVISIONS.md",
             "files": []
           },
@@ -474,31 +512,31 @@
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-01-cs350-1-foundations",
-            "title": "Polyinference OS design — 1. Kernel boundary and the two-tier agent",
+            "title": "Polyinference OS design â€” 1. Kernel boundary and the two-tier agent",
             "doc": "design-docs/polyinference-design/os-research/01-CS350-1-foundations.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-02-cs350-2-processes",
-            "title": "Polyinference OS design — 2. Processes, requests and tier handoffs",
+            "title": "Polyinference OS design â€” 2. Processes, requests and tier handoffs",
             "doc": "design-docs/polyinference-design/os-research/02-CS350-2-processes.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-03-cs350-3-threads",
-            "title": "Polyinference OS design — 3. LangGraph execution and bounded host tasks",
+            "title": "Polyinference OS design â€” 3. LangGraph execution and bounded host tasks",
             "doc": "design-docs/polyinference-design/os-research/03-CS350-3-threads.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-04-cs350-4-concurrency",
-            "title": "Polyinference OS design — 4. Synchronizing plans, work, memory and results",
+            "title": "Polyinference OS design â€” 4. Synchronizing plans, work, memory and results",
             "doc": "design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-05-cs350-5-scalability-and-deadlocks",
-            "title": "Polyinference OS design — 5. Scaling the two-tier pipeline and preventing deadlocks",
+            "title": "Polyinference OS design â€” 5. Scaling the two-tier pipeline and preventing deadlocks",
             "doc": "design-docs/polyinference-design/os-research/05-CS350-5-scalability-and-deadlocks.md",
             "files": []
           },
@@ -516,13 +554,13 @@
           },
           {
             "id": "doc-project-brief",
-            "title": "Polyinference — project brief",
+            "title": "Polyinference â€” project brief",
             "doc": "PROJECT_BRIEF.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-project-brief",
-            "title": "Polyinference — project brief",
+            "title": "Polyinference â€” project brief",
             "doc": "design-docs/polyinference-design/PROJECT_BRIEF.md",
             "files": []
           },
@@ -540,7 +578,7 @@
           },
           {
             "id": "doc-design-docs-simplified-os-validation",
-            "title": "Simple OS v1 validation — 17 October 2026",
+            "title": "Simple OS v1 validation â€” 17 October 2026",
             "doc": "design-docs/simplified-os/VALIDATION.md",
             "files": []
           },
@@ -568,7 +606,7 @@
           },
           {
             "id": "doc-design-docs-implementation-validation",
-            "title": "Validation record — 17 October 2026",
+            "title": "Validation record â€” 17 October 2026",
             "doc": "design-docs/implementation/VALIDATION.md",
             "files": []
           }
@@ -580,7 +618,7 @@
         "children": [
           {
             "id": "doc-development-docs-workspace-output-and-native-boundary",
-            "title": "Build outputs and native harness boundary — 19 October 2026",
+            "title": "Build outputs and native harness boundary â€” 19 October 2026",
             "doc": "development-docs/workspace-output-and-native-boundary.md",
             "files": []
           },
@@ -592,7 +630,7 @@
           },
           {
             "id": "doc-development-docs-memory-implementation-report-2026-10-20",
-            "title": "Current memory implementation — 2026-10-20",
+            "title": "Current memory implementation â€” 2026-10-20",
             "doc": "development-docs/memory-implementation-report-2026-10-20.md",
             "files": []
           },
@@ -600,6 +638,12 @@
             "id": "doc-development-docs-readme",
             "title": "Development records",
             "doc": "development-docs/README.md",
+            "files": []
+          },
+          {
+            "id": "doc-development-docs-run-7086c575ef94-analysis",
+            "title": "Haiku timeout boundary and foundation test grants",
+            "doc": "development-docs/run-7086c575ef94-analysis.md",
             "files": []
           },
           {
@@ -630,7 +674,7 @@
           },
           {
             "id": "doc-development-docs-handoff-2026-10-20",
-            "title": "Handoff — 2026-10-20 — OS retries and pause audit",
+            "title": "Handoff â€” 2026-10-20 â€” OS retries and pause audit",
             "doc": "development-docs/HANDOFF-2026-10-20.md",
             "files": []
           },
@@ -644,13 +688,13 @@
           },
           {
             "id": "doc-development-docs-handoff-2026-10-20-io",
-            "title": "I/O safety implementation handoff — 2026-10-20",
+            "title": "I/O safety implementation handoff â€” 2026-10-20",
             "doc": "development-docs/HANDOFF-2026-10-20-IO.md",
             "files": []
           },
           {
             "id": "doc-development-docs-io-safety-verification-2026-10-20",
-            "title": "I/O safety implementation verification — 2026-10-20",
+            "title": "I/O safety implementation verification â€” 2026-10-20",
             "doc": "development-docs/io-safety-verification-2026-10-20.md",
             "files": []
           },
@@ -673,6 +717,14 @@
             "files": []
           },
           {
+            "id": "doc-development-docs-router-distillation-tutorial",
+            "title": "Distill an agent-selection model from Opus",
+            "doc": "development-docs/router-distillation-tutorial.md",
+            "files": [
+              "development-docs/router-training-guide.html"
+            ]
+          },
+          {
             "id": "doc-development-docs-optional-os-context-management-proposal-2026-10-20",
             "title": "Optional OS context handling and memory compaction",
             "doc": "development-docs/optional-os-context-management-proposal-2026-10-20.md",
@@ -686,7 +738,7 @@
           },
           {
             "id": "doc-development-docs-pause-retry-audit-2026-10-20",
-            "title": "Pause and retry audit — 2026-10-20",
+            "title": "Pause and retry audit â€” 2026-10-20",
             "doc": "development-docs/pause-retry-audit-2026-10-20.md",
             "files": []
           },
@@ -908,12 +960,14 @@
               "tests/test_output_limits.py",
               "tests/test_outputs.py",
               "tests/test_recovery.py",
+              "tests/test_resume.py",
               "tests/test_regressions.py",
               "tests/test_runtime.py",
               "tests/test_runtime_general.py",
               "tests/test_saved_credentials.py",
               "tests/test_setup_tools.py",
               "tests/test_sim_batch.py",
+              "tests/test_inference_simulation.py",
               "tests/test_tool_environment.py",
               "tests/test_ui.py",
               "tests/test_ui_agents.py",
@@ -921,7 +975,8 @@
               "tests/test_ui_os.py",
               "tests/test_user_briefs.py",
               "tests/test_workspace_outputs.py",
-              "tests/ui_start.test.cjs"
+              "tests/ui_start.test.cjs",
+              "tests/test_inference_lifecycle.py"
             ]
           }
         ]

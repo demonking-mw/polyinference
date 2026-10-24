@@ -51,10 +51,9 @@ class ProjectAgent:
     async def initialize(self):
         app = self.app
         if app.ports.records.get("app/run"):
-            if app.get("app/run")["program"] != app.program.model_dump(mode="json"):
-                raise RuntimeError(
-                    "Program/graph/prompt version changed; resume requires the pinned implementation"
-                )
+            from .resume import migrate_program
+
+            migrate_program(app)
             if app.repository:
                 await app.repository.initialize()
             return
@@ -362,8 +361,26 @@ class ProjectAgent:
         )
         await self.launch(key, resume=True)
 
-    def steer(self, text):
+    async def resume(self, request_ref):
+        from .resume import resume_run
+
+        try:
+            await resume_run(self, request_ref)
+        except Exception as exc:
+            run = self.app.get("app/run")
+            if run["status"] != "completed":
+                self.app.update("app/run", {**run, "status": "paused", "starts_closed": True})
+            key = "resume-outcome/" + request_ref
+            if not self.app.ports.records.get(key):
+                self.app.update(key, {"state": "rejected", "error": str(exc)[:2000]})
+            self.app.update("resume-progress/" + request_ref, {"state": "failed", "error": str(exc)[:2000]})
+            raise
+
+    def steer(self, text, *, request_ref=None):
         app = self.app
+        receipt_key = "coding/resume-steering/" + request_ref if request_ref else None
+        if receipt_key and app.ports.records.get(receipt_key):
+            return app.get(receipt_key)["sequence"]
         process = app.get("process/controller")
         app.update("process/controller", {**process, "state": "ready"})
         app.process_status("controller", state="ready")
@@ -387,7 +404,8 @@ class ProjectAgent:
                     "sequence": sequence,
                     "text": text,
                     "received_at": now().isoformat(),
-                }
+                },
+                **({receipt_key: {"sequence": sequence}} if receipt_key else {}),
             },
         )
         return sequence

@@ -3,8 +3,55 @@
 from __future__ import annotations
 
 import asyncio
+import uuid
 
 from ..primitives import now
+
+
+def request_resume(records, process_id=None, text=None, *, request_id=None):
+    """Record an operator signal; the owning application supplies continuation policy."""
+    if text is not None and (not isinstance(text, str) or len(text) > 16000):
+        raise ValueError("Steering instructions must be at most 16000 characters")
+    if request_id is not None and (not isinstance(request_id, str) or not 1 <= len(request_id) <= 128):
+        raise ValueError("Resume request ID must be a nonempty string of at most 128 characters")
+    from ..primitives import digest
+
+    request_id = request_id if request_id is not None else uuid.uuid4().hex
+    key = "resume-request/" + digest(request_id.encode())[7:]
+    content = {"process_id": process_id, "text": (text or "").strip(), "request_id": request_id}
+    previous = records.get(key)
+    if previous:
+        if any(previous[1].get(field) != value for field, value in content.items()):
+            raise ValueError("Resume request ID was already used for different instructions")
+        return key
+    if process_id is None:
+        if not any(body.get("state") in {"paused", "running", "ready"} for _, _, body in records.scan("process/")):
+            raise ValueError("This execution has no paused process")
+        control_key = "resume-control/run"
+        control = records.get(control_key)
+        records.compare_and_publish(
+            {control_key: control[0] if control else 0},
+            {control_key: {"resume_request_ref": key}},
+            {key: {**content, "requested_at": now().isoformat()}},
+        )
+        return key
+    if not isinstance(process_id, str):
+        raise ValueError("Invalid process ID")
+    process = records.get("process/" + process_id)
+    if not process or process[1].get("state") != "paused":
+        raise ValueError("Select a paused process to resume")
+    control_key = "process-control/" + process_id
+    control = records.get(control_key)
+    if control and control[1].get("cancel_requested"):
+        raise ValueError("A cancelled process cannot be resumed")
+    # Acceptance records intent only. Preparation and dispatch still enforce
+    # effect certainty before allowing any new execution.
+    records.compare_and_publish(
+        {"process/" + process_id: process[0], control_key: control[0] if control else 0},
+        {control_key: {**(control[1] if control else {}), "resume_request_ref": key}},
+        {key: {**content, "requested_at": now().isoformat()}},
+    )
+    return key
 
 
 def request_cancel(records, process_id, reason):

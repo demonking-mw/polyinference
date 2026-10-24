@@ -54,6 +54,194 @@ async def finished(client, run_id):
     pytest.fail("UI test run did not finish")
 
 
+@pytest.mark.parametrize("pause_kind", ["controller", "worker"])
+@pytest.mark.parametrize("text", ["", "Keep the public signature."])
+@pytest.mark.parametrize("repository_mode", ["isolated", "in_place"])
+async def test_resume_run_over_http_preserves_run_and_private_work(
+    config, tmp_path, monkeypatch, pause_kind, text, repository_mode
+):
+    config = config.model_copy(update={"repository_mode": repository_mode, "git_policy": {}})
+    from polyinference.cli import apply_resume
+    from polyinference.runtime.inference import ProviderError
+
+    scripted = ScriptedAgent(two=False)
+    failed = False
+    release = threading.Event()
+    received_configs = []
+
+    class Provider:
+        async def generate(self, messages, max_output):
+            nonlocal failed
+            data = json.loads(next(m["content"] for m in messages if "Pinned application inputs:" in m["content"])
+                              .split("Pinned application inputs:\n", 1)[1])
+            if pause_kind == "worker" and data.get("phase") == "reconciliation" and not failed:
+                failed = True
+                raise ProviderError("fixture invalid request", category="invalid_request", status=400)
+            return await scripted.generate(messages, max_output)
+
+        async def close(self):
+            pass
+
+    async def runner(selected, *, resume_request_ref=None):
+        received_configs.append(selected.model_dump(mode="json"))
+        if resume_request_ref:
+            await asyncio.to_thread(release.wait)
+        runtime = await StandaloneRuntime(selected).open()
+        try:
+            for name in runtime.clients:
+                await runtime.clients[name].close()
+                runtime.clients[name] = Provider()
+            app = AgentServices(runtime, selected)
+            engine = ProjectAgent(app)
+            if resume_request_ref:
+                await engine.initialize()
+                await apply_resume(engine, resume_request_ref)
+                with pytest.raises(ValueError, match="already been handled"):
+                    await apply_resume(engine, resume_request_ref)
+            elif pause_kind == "controller":
+                await engine.initialize()
+                app.update("app/run", {**app.get("app/run"), "status": "paused", "blocker": "User review"})
+                runtime.processes.finish("controller", state="paused")
+                return {"outcome": "paused"}
+            return await engine.run()
+        finally:
+            await runtime.close()
+
+    path = tmp_path / "config.json"
+    path.write_text(config.model_dump_json())
+    manager = TestUI(tmp_path / "ui", config_path=path, runner=runner)
+    server = make_server(manager, 0)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    origin = f"http://127.0.0.1:{server.server_port}"
+    try:
+        async with httpx.AsyncClient(base_url=origin, headers={"Origin": origin}) as client:
+            run_id = (await client.post("/api/run", json={})).json()["id"]
+            paused = await finished(client, run_id)
+            assert paused["status"] == "paused", paused
+            pid = "controller" if pause_kind == "controller" else "worker-1-a"
+            assert paused["resume"]["allowed"] and pid in paused["resume"]["process_ids"]
+            records_before = read_records(manager.runs[run_id]["state"])
+            saved_config = (__import__("pathlib").Path(manager.runs[run_id]["state"]).parent / "config.json").read_bytes()
+            assert (await client.post("/api/resume", json={"id": run_id, "process_id": "missing"})).status_code == 400
+            assert (await client.post("/api/resume", json={"id": run_id, "process_id": pid, "text": "x" * 16001})).status_code == 400
+            assert (await client.post("/api/resume", json={"id": run_id, "process_id": pid},
+                                      headers={"Origin": "https://unrelated.test"})).status_code == 403
+            # New-launch settings and environment must not change an old run's pin.
+            manager.sim_batch = 3
+            monkeypatch.setenv("POLYINFERENCE_LOCAL_BATCH_SIZE", "1")
+            reply = await client.post("/api/resume", json={"id": run_id, "text": text, "request_id": "one-click"})
+            assert reply.status_code == 202, reply.text
+            request_ref = reply.json()["request_ref"]
+            assert reply.json()["id"] == run_id and reply.json()["process_id"] is None
+            duplicate = await client.post("/api/resume", json={"id": run_id, "text": text, "request_id": "one-click"})
+            assert duplicate.status_code == 202 and duplicate.json()["request_ref"] == request_ref
+            conflicting = await client.post("/api/resume", json={"id": run_id, "request_id": "another-click"})
+            assert conflicting.status_code == 400 and "active run" in conflicting.json()["error"]
+            release.set()
+            completed = await finished(client, run_id)
+            assert completed["status"] == "completed", completed
+            assert len(manager.runs) == 1 and received_configs[0] == received_configs[1]
+            state = __import__("pathlib").Path(manager.runs[run_id]["state"])
+            assert (state.parent / "config.json").read_bytes() == saved_config
+            records = read_records(state)
+            assert records[request_ref]["text"] == text
+            assert records["resume-outcome/" + request_ref]["state"] == "applied"
+            assert records["app/run"]["steering_received"] == records["app/run"]["steering_applied"] == bool(text)
+            result_path = config.repo_path / "a.py" if repository_mode == "in_place" else state / "result/a.py"
+            assert result_path.read_text() == "VALUE = 2\n"
+            writes = [v for k, v in records.items() if k.startswith("effect/")
+                      and v["request"]["payload"].get("capability_id") == "files.write"]
+            assert len(writes) == 1, "Resume must not repeat the completed private edit"
+            for key, value in records_before.items():
+                if key.startswith("effect/") and value["state"] == "failed":
+                    assert records[key] == value
+            assert (await client.post("/api/resume", json={"id": run_id, "process_id": pid})).status_code == 400
+    finally:
+        release.set()
+        for _ in range(200):
+            if not manager.active:
+                break
+            await asyncio.sleep(0.02)
+        await asyncio.to_thread(server.shutdown)
+        server.server_close()
+        thread.join(timeout=2)
+
+
+@pytest.mark.parametrize("failure", ["unknown", "pin", "thread"])
+async def test_ui_resume_preserves_unknown_effects_and_exposes_rejection(config, tmp_path, monkeypatch, failure):
+    runtime = await StandaloneRuntime(config).open()
+    try:
+        app = AgentServices(runtime, config)
+        await ProjectAgent(app).initialize()
+        run = app.get("app/run")
+        program = {**run["program"], "program_version": "incompatible-fixture"} if failure == "pin" else run["program"]
+        app.update("app/run", {**run, "status": "paused", "program": program})
+        runtime.processes.finish("controller", state="paused")
+        if failure == "unknown":
+            from polyinference.contracts import ModelQuery
+
+            payload = ModelQuery(role="senior", phase="review", prompt_template_ref="prompt/1",
+                                 context=app.context("Review", {}, [], "controller", {}),
+                                 response_schema_ref="senior/1", capability_requirements=[], temperature=0, session_ref=None)
+            unknown = app.ensure_request("controller", "unknown", payload)
+            runtime.records.put_once("effect/" + unknown.operation_id,
+                                     {"state": "uncertain", "result": None, "request": unknown.model_dump(mode="json")})
+    finally:
+        await runtime.close()
+    path = tmp_path / "config.json"
+    path.write_text(config.model_dump_json())
+    manager = TestUI(tmp_path / "ui", config_path=path, state=config.state_path)
+    run_id = next(iter(manager.runs))
+    server = make_server(manager, 0)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    if failure == "thread":
+        original = threading.Thread.start
+
+        def fail_start(selected):
+            if selected.name == "polyinference-test":
+                raise RuntimeError("fixture thread launch failed")
+            return original(selected)
+
+        monkeypatch.setattr(threading.Thread, "start", fail_start)
+    origin = f"http://127.0.0.1:{server.server_port}"
+    try:
+        async with httpx.AsyncClient(base_url=origin, headers={"Origin": origin}) as client:
+            response = await client.post("/api/resume", json={"id": run_id, "process_id": "controller",
+                                                             "text": "Preserve the source."})
+            if failure == "unknown":
+                assert response.status_code == 202
+                view = await finished(client, run_id)
+                assert "does not support automatic recovery" in view["resume"]["error"]
+                records = read_records(config.state_path)
+                assert records["effect/" + unknown.operation_id]["state"] == "uncertain"
+                assert records["effect/" + unknown.operation_id]["result"] is None
+                assert records["resume-progress/" + response.json()["request_ref"]]["state"] == "failed"
+            elif failure == "pin":
+                assert response.status_code == 202, response.text
+                view = await finished(client, run_id)
+                assert view["status"] == "paused"
+                assert "pinned implementation" in view["resume"]["error"]
+                request_ref = response.json()["request_ref"]
+                records = read_records(config.state_path)
+                assert records["resume-outcome/" + request_ref]["state"] == "rejected"
+                assert records["app/run"]["steering_received"] == 0
+                assert (tmp_path / "ui/runs" / run_id / "ui-run.json").is_file()
+            else:
+                assert response.status_code == 400 and "thread launch failed" in response.json()["error"]
+                assert manager.active is None
+                records = read_records(config.state_path)
+                key = manager.runs[run_id]["last_resume_request"]
+                assert records["resume-outcome/" + key]["state"] == "rejected"
+                assert records["app/run"]["status"] == "paused"
+                assert records["app/run"]["steering_received"] == 0
+    finally:
+        await asyncio.to_thread(server.shutdown)
+        server.server_close()
+        thread.join(timeout=2)
+
+
 @pytest.mark.parametrize("logging_failure", [False, True])
 @pytest.mark.parametrize("runner_failure", [False, True])
 async def test_terminal_reporting_never_replaces_runner_result(config, monkeypatch, logging_failure, runner_failure):
@@ -549,9 +737,10 @@ def test_repository_picker_rejects_subdirectories_and_non_repositories(config, t
         repository(str(subdir))
 
 
+@pytest.mark.parametrize("output_target", [4096, 12000])
 async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_sprint_cap(
     config, tmp_path, monkeypatch
-):
+, output_target):
     import shlex
     from pathlib import Path
 
@@ -626,22 +815,25 @@ async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_spri
         assert request.headers["anthropic-version"] == "2023-06-01"
         body = json.loads(request.content)
         assert body["model"] == "claude-haiku-5-5"
-        assert body["max_tokens"] == 32000
+        assert body["max_tokens"] == output_target
+        assert body["stream"] is True
         messages = [{"role": "system", "content": body["system"]}, *body["messages"]]
         assert '"assignment"' in messages[1]["content"]
         worker_requests.append(body)
         result = await worker.generate(messages, body["max_tokens"])
-        return httpx.Response(
-            200,
-            json={
-                "id": "fixture-" + str(len(worker_requests)),
-                "model": "claude-haiku-5-5",
-                "stop_reason": "end_turn",
-                "content": [{"type": "text", "text": result["text"]}],
-                # Exercise a completed response above the former 8,000-token OS cap.
-                "usage": {"input_tokens": 100, "output_tokens": 9000},
-            },
-        )
+        # Both the small fresh-UI target and an explicit >8k response remain valid.
+        frames = [
+            {"type": "message_start", "message": {"id": "fixture-" + str(len(worker_requests)),
+                "model": "claude-haiku-5-5", "usage": {"input_tokens": 100}}},
+            {"type": "content_block_start", "index": 0,
+                "content_block": {"type": "text", "text": result["text"]}},
+            {"type": "message_delta", "delta": {"stop_reason": "end_turn"},
+                "usage": {"output_tokens": min(9000, output_target - 100)}},
+            {"type": "message_stop"},
+        ]
+        return httpx.Response(200, headers={"content-type": "text/event-stream"},
+            content="".join("data: " + json.dumps(frame) + "\n\n" for frame in frames))
+
 
     async def mixed_run(selected):
         runtime = await StandaloneRuntime(selected).open()
@@ -658,6 +850,10 @@ async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_spri
             await runtime.close()
 
     manager = TestUI(tmp_path / "ui", runner=mixed_run)
+    if output_target != 4096:
+        default_configuration = manager.configuration
+        manager.configuration = lambda: default_configuration().model_copy(
+            update={"model_output_target_tokens": output_target})
     server = make_server(manager, 0)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -702,3 +898,51 @@ async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_spri
         await asyncio.to_thread(server.shutdown)
         server.server_close()
         thread.join(timeout=2)
+
+
+async def test_endpoint_probe_is_explicit_serialized_and_retained(config, tmp_path, monkeypatch):
+    from polyinference.runtime.kernel import UncertainEffect
+    from polyinference.ui import RunStartError
+    path = tmp_path / "agent.json"
+    path.write_text(config.model_dump_json())
+    calls = []
+    release = threading.Event()
+    async def probe(selected, state):
+        calls.append(selected.local.lifecycle)
+        await asyncio.to_thread(release.wait)
+        return {"status": "succeeded", "error": None}
+    monkeypatch.setattr("polyinference.agent.endpoint_probe.probe_endpoint", probe)
+    manager = TestUI(tmp_path / "ui", path)
+    assert manager.probe_view() is None and calls == []
+    manager.test_endpoint("local-inference")
+    with pytest.raises(ValueError, match="active work"):
+        manager.test_endpoint()
+    with pytest.raises(RunStartError, match="endpoint probe"):
+        manager.start()
+    release.set()
+    for _ in range(100):
+        if manager.probe_view()["status"] != "running":
+            break
+        await asyncio.sleep(.01)
+    assert manager.probe_view()["status"] == "succeeded"
+    assert len(calls) == 1 and calls[0].first_output_seconds == 900
+    async def unknown(selected, state):
+        from pathlib import Path
+        Path(state).mkdir(parents=True, exist_ok=True)
+        records = Records(Path(state) / "records.sqlite")
+        try:
+            records.put_once("effect/probe", {"state": "uncertain"})
+        finally:
+            records.db.close()
+        raise UncertainEffect("probe")
+    monkeypatch.setattr("polyinference.agent.endpoint_probe.probe_endpoint", unknown)
+    manager.test_endpoint()
+    for _ in range(100):
+        if manager.probe_view()["status"] != "running":
+            break
+        await asyncio.sleep(.01)
+    assert manager.probe_view()["status"] == "uncertain"
+    restored = TestUI(tmp_path / "ui", path)
+    assert restored.probe_view()["status"] == "uncertain"
+    with pytest.raises(ValueError, match="uncertain endpoint probe"):
+        restored.test_endpoint()

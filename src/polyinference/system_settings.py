@@ -40,6 +40,16 @@ class InferenceSafety(Wire):
     require_completion_metadata: Literal[True] = True
 
 
+class InferenceLifecycle(Wire):
+    """Explicit deployment timings; binding names and URLs imply no safety facts."""
+
+    transport: Literal["sse", "buffered"] = "sse"
+    connect_seconds: Annotated[float, Field(gt=0, le=1800)] = 10
+    first_output_seconds: Annotated[float, Field(gt=0, le=3600)] = 180
+    idle_seconds: Annotated[float, Field(gt=0, le=3600)] = 90
+    total_seconds: Annotated[float, Field(gt=0, le=7200)] = 600
+
+
 class Endpoint(Wire):
     protocol: Literal["chat", "responses", "gemini", "anthropic", "codex_app_server", "codex_proxy"] = "chat"
     base_url: str = "http://127.0.0.1:8000/v1"
@@ -53,6 +63,7 @@ class Endpoint(Wire):
     brokered_tools: bool = False
     inference_location: Literal["local", "cloud"] | None = None
     timeout_seconds: Annotated[float, Field(gt=0, le=1800)] = 180
+    lifecycle: InferenceLifecycle | None = Field(default=None, exclude_if=lambda value: value is None)
     estimated_microusd_per_token: Annotated[float, Field(ge=0)] | None = None
 
     @property
@@ -104,7 +115,7 @@ class RuntimeConfig(Wire):
     inference_safety: InferenceSafety = Field(default_factory=InferenceSafety)
     max_repeated_model_failures: Annotated[int, Field(gt=0)] = 2
     max_model_recoveries: Annotated[int, Field(ge=0)] = 2
-    model_call_retries: Annotated[int, Field(ge=1, le=3)] = 1
+    model_call_retries: Annotated[int, Field(ge=0, le=3)] = 1
     model_retry_delay_ms: Annotated[int, Field(ge=0, le=60000)] = 100
     model_retry_max_delay_ms: Annotated[int, Field(ge=0, le=3600000)] = 60000
     check_execution: Literal["disabled", "trusted", "bubblewrap"] = "disabled"

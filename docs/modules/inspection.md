@@ -2,7 +2,14 @@
 
 [Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
 
-Read-only projections expose OS facts and coding history, sharing one diagnostic snapshot format.
+Projections expose OS facts and coding history, sharing one diagnostic snapshot format.
+The run toolbar exposes Resume and an optional instructions field for paused or
+interrupted execution. Clicking submits a run-level request immediately; internal
+process choice stays in the agent. Drafts and stable request IDs survive a lost
+acknowledgement and page restart. Progress shows Resuming during preparation and
+plain failures when recovery is unavailable. The advanced process drawer retains
+its explicit process control. Duplicate sends and stale replies are guarded;
+refresh preserves typed text. Offline snapshots cannot submit operator signals.
 
 | File | Responsibility |
 | --- | --- |

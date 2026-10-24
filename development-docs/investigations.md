@@ -12,6 +12,7 @@ actually run. Their historical counts are not current verification.
 | Serialized input overflow | [2de3d5c5ab9b](run-2de3d5c5ab9b-analysis.md) |
 | Native inventory interruption | [eb66fc618354](run-eb66fc618354-analysis.md) |
 | First two-slot run | [a1859f8644a5](run-a1859f8644a5-analysis.md), [measurements](run-a1859f8644a5-evidence.json) |
+| Haiku timeout boundary and foundation test grants | [7086c575ef94](run-7086c575ef94-analysis.md) |
 | Provider/retry pause audit | [Pause/retry audit](pause-retry-audit-2026-10-20.md) |
 | Input/output cap inventory | [Safeguards audit](inference-cap-safeguards-audit-2026-10-20.md) |
 | Completed I/O/settings/handoff checks | [Verification report](io-safety-verification-2026-10-20.md) |

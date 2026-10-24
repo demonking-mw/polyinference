@@ -11,6 +11,7 @@ design and issue docs in the same change; follow [maintenance](../docs/maintenan
 | Durable fixes and design principles | [Fix history](FIXES.md) |
 | Work/defects for this version | [Current iteration](current-iter-issues.md) |
 | Next-stage features | [Next iteration](next-iteration.md) |
+| Learn to train an agent/settings router | [HTML learning guide](router-training-guide.html), [Markdown walkthrough](router-distillation-tutorial.md) |
 | Questions awaiting triage | [General issues](general-issues.md) |
 | Past-run evidence and audits | [Investigations](investigations.md) |
 | Proposals and historical handoffs | [Planning archive](proposals.md) |

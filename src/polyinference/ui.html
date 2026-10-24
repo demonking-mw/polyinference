@@ -14,7 +14,7 @@ button,select,input{font:inherit}input{width:100%;padding:10px;border:1px solid 
 button,select{font:inherit}button{cursor:pointer;border:1px solid #cbd3dd;border-radius:6px;padding:10px 15px;background:white;color:#24313e}
 button:hover{border-color:#687a93}button:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #b0c9ff;outline-offset:2px}
 button:disabled{opacity:.55;cursor:wait}#start{background:#295fe9;border-color:#295fe9;color:white;font-weight:600;white-space:nowrap;height:42px}
-.runbar{display:flex;align-items:center;gap:12px;margin:20px 0}select{max-width:380px;padding:8px;border:1px solid #cbd3dd;background:white;border-radius:6px}
+.runbar{display:flex;align-items:center;flex-wrap:wrap;gap:12px;margin:20px 0}select{max-width:380px;padding:8px;border:1px solid #cbd3dd;background:white;border-radius:6px}
 .badge{font-size:12px;border-radius:20px;background:#e5eaf1;padding:4px 9px;text-transform:capitalize}
 .badge.completed{background:#e1f2e9;color:#246547}.badge.failed,.badge.interrupted{background:#fbe8e6;color:#9d302b}.badge.running{background:#e8efff;color:#295fe9}
 #message{font-size:13px;color:#667481}#error{color:#9d302b;margin:12px 0;white-space:pre-wrap}#launchStatus{margin-top:12px;font-size:13px;color:#295fe9}#launchError{margin-top:12px;padding:12px;border:1px solid #d96c64;border-radius:6px;background:#fff2f0;color:#9d302b;white-space:pre-wrap}
@@ -50,15 +50,40 @@ footer{padding-top:15px;font-size:11px;color:#86919c;overflow-wrap:anywhere}
 <div class="fieldrow"><input id="repository" placeholder="/home/mawa/projects/my-project" spellcheck="false"><button id="browse" type="button">Browse…</button></div>
 <p class="hint" id="repoInfo" style="margin:7px 0 0">Enter an existing or new project path. Setup creates missing folders and initializes private Git.</p>
 <details class="check-settings" id="checkSettings"><summary>Check command (optional)</summary><input id="checkCommand" aria-label="Check command" placeholder="Automatic — inferred from your objective and project" spellcheck="false"><label for="baseBranch" style="margin-top:12px">Base branch (optional)</label><input id="baseBranch" placeholder="Current branch, or name the branch in your objective" spellcheck="false"></details>
+<details class="check-settings"><summary>Endpoint testing</summary>
+<label for="endpointProfile">Local lane deployment profile</label><select id="endpointProfile"><option value="configured">Configured timings</option><option value="small-cloud">Small cloud model · streaming · 10 minute total</option><option value="local-inference">Local inference · streaming · 30 minute total</option><option value="buffered">Buffered compatibility · 10 minute total</option></select>
+<p class="hint">Profiles change transport timings, not the provider or its capacity. The local lane can use cloud or local inference.</p>
+<button id="testEndpoint" type="button">Test endpoint / warm up</button><p id="endpointTestStatus" role="status" aria-live="polite">Runs one bounded 64-token query only when clicked.</p>
+</details>
+<section id="inferenceSetup" hidden style="margin-top:16px" aria-label="Inference simulation">
+<label for="simMode">Inference mode</label><select id="simMode"></select>
+<div class="toolbar">
+<label>Shared output TPS<input id="simTPS" type="number" min="0.01" max="100000" step="any" value="30"></label>
+<label>Batch capacity<input id="simBatch" type="number" min="1" max="16" step="1" value="2"></label>
+<label>Bug rate (%)<input id="simBugRate" type="number" min="0" max="100" step="any" value="5"></label>
+<label>Seed (optional)<input id="simSeed" type="number" min="0" step="1" placeholder="Generate for this run"></label>
+</div>
+<p class="subtle">TPS is shared across the batch. Bug rate is per new attempt while healthy; restart outages can affect additional attempts. Haiku still runs remotely and retains its actual API costs. Applies to the local lane only.</p>
+<details><summary>Timing options for slow mode</summary><div class="toolbar">
+<label>Startup seconds<input id="simPrefill" type="number" min="0" max="60" step="any" value="1.5"></label>
+<label>Prompt TPS (estimated)<input id="simPromptTPS" type="number" min="1" max="1000000" step="any" value="2000"></label>
+<label>Speed variation (0–0.5)<input id="simJitter" type="number" min="0" max="0.5" step="any" value="0.2"></label>
+<label>Stall chance (%)<input id="simStallRate" type="number" min="0" max="100" step="any" value="5"></label>
+<label>Stall seconds<input id="simStallSeconds" type="number" min="0" max="60" step="any" value="3"></label>
+<label>Restart seconds<input id="simRestart" type="number" min="0.01" max="300" step="any" value="15"></label>
+</div></details>
+</section>
 <div class="launch">
 <div class="objective"><label for="objective">Run objective</label><textarea id="objective" rows="2"></textarea></div>
 <button id="start" type="button">Start run</button>
 </div><p id="launchStatus" role="status" aria-live="polite" hidden></p><div id="launchError" role="alert" hidden></div></div>
-<div class="runbar"><select id="runs" aria-label="Choose a run"><option value="">No runs yet</option></select><a id="export" class="button" aria-disabled="true" download>Save run · JSON</a><button id="openSnapshot" type="button">Open snapshot</button><input id="snapshotFile" type="file" accept=".json,application/json" hidden><button id="returnLive" type="button" hidden>Live runs</button><span id="status" class="badge">Ready</span><span id="message">Ready to start the configured workload.</span><button id="inspectIssue" class="quiet" type="button" hidden>Inspect issue</button></div>
+<div class="runbar"><select id="runs" aria-label="Choose a run"><option value="">No runs yet</option></select><a id="export" class="button" aria-disabled="true" download>Save run · JSON</a><button id="openSnapshot" type="button">Open snapshot</button><input id="snapshotFile" type="file" accept=".json,application/json" hidden><button id="returnLive" type="button" hidden>Live runs</button><span id="status" class="badge">Ready</span><button id="resumeRun" type="button" hidden>Resume</button><span id="message">Ready to start the configured workload.</span><button id="inspectIssue" class="quiet" type="button" hidden>Inspect issue</button></div>
+<div id="resumeFields" class="steering" hidden><label for="resumeText">Instructions for continuing (optional)</label><textarea id="resumeText" rows="2" maxlength="16000" placeholder="Add instructions, or leave empty and click Resume"></textarea><p id="resumeStatus" class="hint" role="status"></p></div>
 <div class="costbar"><strong id="runCost">Run ≈ $0.0000</strong><span id="codexCost">Codex ≈ $0.0000</span><span id="haikuCost">Haiku ≈ $0.0000</span><span id="allCost"></span></div>
 <details style="margin:-3px 0 16px"><summary>About cost estimates</summary><p class="hint" id="costNote">Standard USD API estimates. Codex is shown as an API-equivalent value, not a subscription charge.</p></details>
 <details class="steering" id="steeringPanel"><summary>Steering · update this run's instructions</summary><textarea id="steeringText" aria-label="Steering instructions" rows="2" placeholder="Describe a correction or new instruction for this run…"></textarea><button id="sendSteering" type="button" disabled>Send update</button><small id="steeringStatus">Start a run to send instructions.</small></details>
 <div id="error" role="alert"></div>
+<section id="inferenceStatus" hidden class="console-note" aria-live="polite"></section>
 <section class="panel" aria-labelledby="userMessagesTitle"><h2 id="userMessagesTitle">Messages from agents</h2><div id="userMessages" role="log" aria-live="polite" style="max-height:360px;overflow:auto"><p>No messages yet.</p></div></section>
 <div class="monitor-nav"><div class="console-tabs" role="tablist" aria-label="Run inspection"><button id="tab-os" role="tab" aria-selected="false" aria-controls="view-os">OS</button><button id="tab-agent" role="tab" aria-selected="true" aria-controls="view-agent">Agents</button></div><button id="openRecords" class="quiet" type="button">Inspect records</button></div>
 <section id="view-os" role="tabpanel" aria-labelledby="tab-os" hidden>
@@ -200,14 +225,58 @@ async function selectNode(id){
  document.querySelectorAll(".node").forEach(node=>node.classList.toggle("selected",node.dataset.id===id));
  try{const run=current,request=inspection;const data=savedDocument?savedDocument.processes.flatMap(process=>process.nodes).find(node=>node.id===id):await api("/api/node?"+new URLSearchParams({run,id}));if(data&&current===run&&selectedNode===id&&request===inspection)inspect(data)}catch(exc){error(exc.message)}
 }
+function setupSimulation(options){
+ const box=$("inferenceSetup");box.hidden=!options;
+ if(!options)return;
+ if(!box.dataset.loaded){
+  $("simMode").replaceChildren(new Option("1. Normal","normal"),new Option("2. Normal and buggy","buggy"),new Option("3. Slow and buggy","slow-buggy"));
+  $("simMode").value="slow-buggy";$("simBatch").value=String(options.batch);box.dataset.loaded="true";
+ }
+ const mode=$("simMode").value;
+ for(const id of ["simTPS","simPrefill","simPromptTPS","simJitter","simStallRate","simStallSeconds"])$(id).disabled=mode!=="slow-buggy";
+ for(const id of ["simBatch","simBugRate","simSeed","simRestart"])$(id).disabled=mode==="normal";
+}
+$("simMode").onchange=()=>setupSimulation({});
+function simulationOptions(){
+ if($("inferenceSetup").hidden||!$("inferenceSetup").dataset.loaded)return {};
+ const mode=$("simMode").value,simulation={mode};
+ const fields={tps:"simTPS",batch:"simBatch",bug_rate:"simBugRate",prefill_seconds:"simPrefill",prefill_tps:"simPromptTPS",jitter:"simJitter",stall_rate:"simStallRate",stall_seconds:"simStallSeconds",restart_seconds:"simRestart"};
+ if(mode!=="normal")for(const [key,id] of Object.entries(fields))if(!$(id).disabled)simulation[key]=$(id).value.trim()===""?null:Number($(id).value);
+ if(mode!=="normal"&&$("simSeed").value.trim()!=="")simulation.seed=Number($("simSeed").value);
+ return {simulation};
+}
+function savedSimulation(){
+ const settings=savedDocument?.configuration?.inference_simulation;if(!settings)return null;
+ const attempts=Object.entries(savedDocument.records||{}).filter(([key])=>key.startsWith("simulation/inference/attempt/")).map(([,value])=>value);
+ return {settings,incidents:attempts.filter(row=>row.incident_started&&row.injected).length,affected_attempts:attempts.filter(row=>row.injected).length,attempts};
+}
+function renderSimulation(value){
+ const box=$("inferenceStatus");box.hidden=!value;box.replaceChildren();if(!value)return;
+ const settings=value.settings,slow=settings.mode==="slow-buggy";
+ box.append(element("strong",(slow?"Slow and buggy · "+settings.tps+" shared TPS":"Normal and buggy")+" · batch "+settings.batch+" · bug rate "+settings.bug_rate+"% · seed "+settings.seed));
+ box.append(element("p","Simulated incidents: "+value.incidents+" · affected attempts: "+value.affected_attempts+". API usage and cost remain actual provider values."));
+ const active=(value.attempts||[]).filter(row=>!["completed","failed","uncertain","interrupted"].includes(row.phase));
+ for(const row of active.slice(0,8))box.append(element("p",row.process_id+" · "+row.phase+" · "+row.elapsed_seconds+"s"+(row.output_tokens!=null?" · virtual tokens "+row.simulated_tokens+" / "+row.output_tokens:"")));
+}
 function render(data){
- $("status").textContent=data.status;$("status").className="badge "+data.status;
- const running=data.status==="running"&&!savedDocument;
+ const resumePending=["accepted","recovering","ready","continuing"].includes(data.resume?.progress)||(resuming&&current===data.id);
+ const canResume=["paused","interrupted","budget_stopped"].includes(data.status);
+ $("resumeRun").hidden=!canResume&&!resumePending;
+ $("resumeFields").hidden=!canResume&&!resumePending;
+ $("resumeRun").disabled=!!savedDocument||resuming||starting||resumePending;
+ $("resumeRun").textContent=resumePending?"Resuming…":"Resume";
+ $("resumeRun").title=savedDocument?"Saved snapshots are read-only. Select the retained live run to resume.":"Continue this run.";
+ renderResumeDraft(data);
+ $("resumeStatus").textContent=data.resume?.error||(resumePending?"Preparing your run to continue…":runResumeDraft(data.id).error||"");
+ renderSimulation(data.inference_simulation||savedSimulation());
+ $("status").textContent=resumePending?"resuming":data.status;$("status").className="badge "+data.status;
+ const running=data.status==="running"&&!savedDocument&&!resumePending;
  $("message").textContent=running?"Running · select a task to inspect its progress.":data.status==="completed"?(data.output?.directory?"Finished. Output files: "+data.output.directory:"Finished · inspect tasks and project acceptance below."):(data.blocker?"Stopped: "+compactText(data.blocker_detail||data.blocker,180):"Select a task to inspect the recorded run.");
  $("message").title=data.blocker_detail||data.blocker||"";$("inspectIssue").hidden=!data.blocker&&!data.error;
  if(data.failure_stage==="startup")$("message").textContent="Startup failed · process "+data.process_id+". Save run includes the exact error.";
  if(savedDocument)$("message").textContent="Saved snapshot · "+stamp(savedDocument.exported_at);
- error(data.error);$("statePath").textContent=(data.repository?data.repository+" · ":"")+data.state;
+ if(data.resume?.error)$("message").textContent=data.resume.error;
+ error(data.resume?.error||data.error);$("statePath").textContent=(data.repository?data.repository+" · ":"")+data.state;
  const repo=data.repository_summary,setup=data.repository_setup;
  if(setup?.isolated===false){
   const head=repo?.head||data.agents?.records?.["head/provisional"]?.code?.commit_id||setup.base_commit;
@@ -224,7 +293,7 @@ function render(data){
  renderAgents(data);
 }
 async function refresh(){
- if(savedDocument||starting)return;
+ if(savedDocument||starting||resuming)return;
  if(polling){refreshPending=true;return}polling=true;
  const version=viewVersion;
  try{
@@ -236,17 +305,22 @@ async function refresh(){
   }
   $("allCost").textContent="All saved runs ≈ $"+dollars(data.total_cost.estimated_usd)+(data.total_cost.partial?"+":"");
   $("configuration").textContent="Launch configuration: "+data.configuration;
+  setupSimulation(data.inference_simulation);
   const select=$("runs");select.replaceChildren();
   if(!data.runs.length)select.append(new Option("No runs yet",""));
   for(const run of data.runs)select.append(new Option(run.id+" · "+run.status,run.id));
   if(!current&&data.runs.length)current=data.runs[0].id;
   select.value=current||"";
-  hasRunningRun=data.runs.some(run=>run.status==="running");$("start").disabled=hasRunningRun;
+  hasRunningRun=data.runs.some(run=>run.status==="running");
+   const probe=data.endpoint_probe,probeBusy=!!probe&&["running","uncertain"].includes(probe.status);
+   $("start").disabled=hasRunningRun||probeBusy;$("testEndpoint").disabled=hasRunningRun||probeBusy;
+   if(probe)$("endpointTestStatus").textContent="Endpoint test: "+probe.status+(probe.progress?" · "+probe.progress.state+" · "+probe.progress.elapsed_seconds+"s":"")+(probe.error?" · "+probe.error:"")+" · records: "+probe.state;
   if(current){const id=current;const view=await api("/api/run?"+new URLSearchParams({id}));if(current===id&&!savedDocument&&!starting&&version===viewVersion)render(view)}
  }catch(exc){if(!starting&&version===viewVersion)error(exc.message)}finally{polling=false;if(refreshPending){refreshPending=false;refresh()}}
 }
-$("runs").onchange=()=>{++viewVersion;current=$("runs").value;selectedNode=null;renderOS({id:current,os:null});renderAgents({id:current,agents:{records:{},texts:{}},processes:[]});$("message").textContent="Loading selected run…";$("inspectIssue").hidden=true;error("");refresh()};
+$("runs").onchange=()=>{++viewVersion;current=$("runs").value;selectedNode=null;$("resumeRun").hidden=true;renderOS({id:current,os:null});renderAgents({id:current,agents:{records:{},texts:{}},processes:[]});$("message").textContent="Loading selected run…";$("inspectIssue").hidden=true;error("");refresh()};
 function showStartedRun(id,status){
+ renderSimulation(null);
  leaveSnapshot();++viewVersion;current=id;selectedNode=null;
  const select=$("runs"),previous=Array.from(select.options).filter(option=>option.value&&option.value!==current&&!option.value.startsWith("snapshot:"));
  select.replaceChildren(new Option(current+" · "+status,current),...previous);select.value=current;
@@ -258,18 +332,23 @@ function showStartedRun(id,status){
  $("statePath").textContent="";$("export").href="/api/export?"+new URLSearchParams({id:current});$("export").setAttribute("aria-disabled","false");
 }
 $("start").onclick=async()=>{
- if(starting)return;starting=true;++viewVersion;
+ if(starting||resuming)return;starting=true;++viewVersion;
  $("start").disabled=true;$("start").textContent="Starting…";error("");
  $("launchError").hidden=true;$("launchError").textContent="";
  $("launchStatus").hidden=false;$("launchStatus").textContent="Starting run…";
  try{
-  const data=await api("/api/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({objective:$("objective").value,repository:$("repository").value,check_command:$("checkCommand").value,base_branch:$("baseBranch").value})});
+  const data=await api("/api/run",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({objective:$("objective").value,repository:$("repository").value,check_command:$("checkCommand").value,base_branch:$("baseBranch").value,endpoint_profile:$("endpointProfile").value,...simulationOptions()})});
   hasRunningRun=true;showStartedRun(data.id,"running");
   $("launchStatus").textContent="Started run "+current+".";
  }catch(exc){
   if(exc.data?.id)showStartedRun(exc.data.id,"failed");
   $("launchStatus").hidden=true;$("launchError").hidden=false;$("launchError").textContent=(exc.data?"Could not start run"+(exc.data.id?" "+exc.data.id:""):"Could not confirm run startup")+": "+exc.message;
  }finally{starting=false;$("start").textContent="Start run";$("start").disabled=hasRunningRun;refresh()}
+};
+$("testEndpoint").onclick=async()=>{
+ $("testEndpoint").disabled=true;$("endpointTestStatus").textContent="Starting endpoint test…";
+ try{await api("/api/endpoint-test",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({endpoint_profile:$("endpointProfile").value})});await refresh()}
+ catch(exc){$("endpointTestStatus").textContent=exc.message;$("testEndpoint").disabled=false}
 };
 $("browse").onclick=()=>{$("folderDialog").showModal();folders(browseRoot)};
 $("closeFolders").onclick=()=>$("folderDialog").close();
@@ -294,6 +373,8 @@ for(const name of ["os","agent"]){
 }
 $("openRecords").onclick=showRecords;
 $("inspectIssue").onclick=showRunIssue;
+$("resumeRun").onclick=showRunResume;
+$("resumeText").oninput=()=>saveRunResumeDraft();
 $("taskSearch").oninput=renderTasks;
 $("inspectController").onclick=()=>showProcess("controller");
 $("closeOSInspector").onclick=()=>{++inspection;$("osInspector").close()};

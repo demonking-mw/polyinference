@@ -16,7 +16,8 @@ otherwise a read-only senior policy step resolves the user's objective before
 repository mutation. Contradictory or unsupported actions stop setup with a
 diagnostic. `repository_mode: "isolated"` retains the old private-copy workflow
 for explicit use and legacy fixtures; only that mode uses end-of-run delivery and
-`output_directory`. Existing historical runs require their pinned implementation.
+`output_directory`. Historical runs need a compatible implementation; Resume has
+one exact graph-only migration documented in the [workflow guide](../modules/agent-workflow.md).
 
 Choose [export procedures](exports.md) for patches and archive extraction, or
 [state layout](state-layout.md) for database/artifact locations. See

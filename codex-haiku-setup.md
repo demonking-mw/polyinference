@@ -68,6 +68,15 @@ quotas still apply. Model availability was rechecked against the
 [official Haiku overview](https://platform.claude.com/docs/en/models/haiku-5-5/overview);
 account access requires its own readiness evidence.
 
+For paced and unreliable inference experiments, launch `polyinference ui
+--sim-inference` and select normal, normal and buggy, or slow and buggy before
+Start. Initial values are 30 shared output TPS, batch 2 and 5% incident rate.
+This is separate from the unchanged --sim-batch concurrency-only preset; with both
+flags, an active simulation's selected batch takes precedence, while normal mode
+retains --sim-batch. Seeded decisions, restart cooldowns and synthetic progress are
+saved per run; actual Haiku usage/cost remains recorded. See the complete
+[simulation guide](docs/guides/sim-inference.md) for scope, timing and recovery.
+
 [Launch controls](docs/guides/launching.md) cover ports and stopping the idle server.
 Snapshots are diagnostic evidence, not complete Git backups or resumable state.
 See [provider distinctions](docs/guides/providers.md) before selecting `codex_proxy`.

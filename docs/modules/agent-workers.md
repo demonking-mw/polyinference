@@ -16,6 +16,8 @@ Reusable application graphs turn model replies into development, reconciliation 
 WorkerReply accepts actions, candidates, assessments or review requests. The
 application validates it and issues explicit brokered operations. Native and raw
 models receive application-owned schemas/instructions through the same OS boundary.
+Worker scope recovery catches the public ports.WriteScopeError; it imports no
+concrete workspace-state implementation merely to recognize the typed error.
 Senior inputs include immutable check commands and bounded manifest/runner previews.
 When a shared check needs preparation, check_preparations names its new owner;
 every other assignment using that check must explicitly depend on that owner.

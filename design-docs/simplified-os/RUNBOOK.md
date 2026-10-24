@@ -58,23 +58,21 @@ conflicts and interrupted-write recovery.
 
 ### Automatic inference retry
 
-The OS now makes one extra safe attempt by default for transient/unusable model
-responses on either binding. Each attempt is journaled separately; replay of the
-original invocation returns its effective retained result. Inspect
-`model-retry/` and `model-retry-outcome/` alongside the immutable effect records.
-`model_call_retries` permits 1–3 extra attempts, `model_retry_delay_ms` defaults
-to 100, and `model_retry_max_delay_ms` defaults to 60000. Retry-After, deadlines,
-budgets, finishing reserves, cancellation and authority checks remain binding.
+The bare OS has one native extra attempt; fresh coding-agent configs choose two.
+model_call_retries accepts 0–3; InferencePolicy.additional_retries (0–3) follows
+that allowance with separate counters. Backoff/Retry-After, the root deadline,
+budgets, finishing reserves, cancellation and grants remain binding. Output
+adaptation cannot reset the shared counters/deadline. Grammar and semantic
+correction remain application policy. Inspect model-retry/, its outcomes and
+inference-progress/ alongside immutable effect records.
 
-Unknown execution, deterministic input/auth/grant failures, and native jobs that
-already ran brokered tools do not get a blind retry. Confirmed cutoff/completed-
-overage adaptation now belongs to the OS; context feedback is remeasured and
-charged with new durable identities. Agents own grammar and semantic decomposition.
-See [the settings reference](AGENT_SETTINGS.md),
-[boundary guide](RUNTIME_BOUNDARY.md#context-preparation-and-output-recovery) and
-[I/O completion report](../../development-docs/io-safety-verification-2026-10-20.md)
-for policy, exact historical verification and remaining limits. The new configuration pin requires fresh state; do not migrate/resume an
-old run using this implementation.
+Optional endpoint.lifecycle enables explicit SSE timings and generation-only
+replacement consent. A missing terminal never proves remote termination. An
+isolated generation keeps capacity/budget and discards delivery; replacing it
+requires spare capacity. Native jobs/tools/external writes remain strict. Old
+saved endpoints without lifecycle preserve their legacy policy. See
+[endpoint testing](../../docs/guides/endpoint-testing.md) and the
+[settings reference](AGENT_SETTINGS.md) for current configuration and v1 limits.
 
 ## Deployment
 
@@ -218,15 +216,29 @@ capability and publication-policy registration order. New runs use kernel ABI
 the owning application's handlers and policy before issuing new effects after a
 supported restart. Generic processes do not require the coding application.
 
-One coordinator holds each state directory. The effective configuration and
-agent/program version are pinned; older placeholder runs require their original
-implementation. There is no state migration in v1.
+One coordinator holds each state directory. Configuration and agent/program
+identity remain pinned. The coding agent now has one exact predecessor migration
+for run-level Resume, recorded under coding/resume-program-migration/; original
+manifests/effects are preserved. This is not general historical-state migration.
+
+Ordinary UI Resume or CLI resume CONFIG [--text instructions] first accepts a
+durable intent, then automatically prepares recoverable execution under that
+coordinator lease. Host receipts and completed query artifacts settle known work;
+HTTP Responses can retrieve a result when its response ID survived. Native unknown
+effects and synchronous HTTP work without recovery handles remain unsupported.
+OS resume-preparation/ and application resume-progress/outcome records are separate.
+Requests restore across server restart and instructions are applied once. A plain
+failure is retained when automatic recovery cannot establish an outcome. The expert
+procedure below remains for externally established termination evidence.
 
 On restart, settled effects replay before checking transient workspace/permit
 state. Durable publication and commit receipts settle recognized host outcomes.
 Other submitted effects become `uncertain`; they retain reservations and logical
-ownership. Any uncertain effect conservatively blocks new runtime dispatch until
-reconciled, even for another process; status and inspection remain usable. This
+ownership. Unknown effectful/native/tool work blocks runtime dispatch until
+reconciled. Explicitly isolated generation-only work instead retains physical
+holds with discarded delivery; independent work can proceed within capacity.
+Use uncertain(include_isolated=True) to include it in generic inspection.
+Status and inspection remain usable. This
 single-project safety boundary does not promise isolation between arbitrary hosted
 programs or automatic remote cancellation. A disconnect or elapsed deadline alone never proves termination.
 

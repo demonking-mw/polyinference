@@ -199,6 +199,7 @@ class ContextService:
                 request = parent.model_copy(update={"record_id": "request/" + step,
                     "operation_id": digest(step.encode()), "logical_step_id": step, "created_at": now(),
                     "causal_parent_ref": parent.operation_id, "payload": query,
+                    "deadline": rt.model_retries.deadline(parent),
                     "extensions": {"runtime/context-compaction": True,
                         "runtime/context-policy": {"auto_deal_context": False, "auto_compaction": False},
                         "runtime/output-tokens": min(policy.compaction_output_tokens,

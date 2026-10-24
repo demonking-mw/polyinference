@@ -1,5 +1,7 @@
-/* Read-only monitoring: OS mechanisms and application task semantics stay separate. */
+/* OS inspection and explicit operator controls; application recovery stays with its owner. */
 let monitorData=null,agentRecords={},agentTexts={},agentTasks=[],taskFilter="all",drawerRestore=null;
+let resuming=false,resumePanel=null;
+const resumeDrafts=new Map();
 const terminalProcess=state=>["completed","failed","cancelled"].includes(state);
 const settledOperation=state=>["succeeded","failed","cancelled"].includes(state);
 const actionLabel=action=>({keep:"Kept · resolved",revert:"Reverted · resolved",retry:"Retry requested",defer:"Deferred · unresolved"}[action]||"Awaiting review");
@@ -56,6 +58,14 @@ function pendingReason(task){
  if(osState?.policy?.max_workers&&(osState.control.active_workers||[]).length>=osState.policy.max_workers)return "Waiting for worker capacity";
  return "Prerequisites satisfied · awaiting dispatch";
 }
+function inferenceActivity(row){
+ const p=row.inference_progress;if(!p)return "model response";
+ const labels={waiting_first_output:"waiting for first model output",waiting_buffered_response:"waiting for buffered response",receiving:"receiving model output",terminal:"validating completed output",uncertain:"transport outcome unknown"};
+ const elapsed=Math.max(0,Math.round((Date.now()-Date.parse(p.at))/1000+(p.elapsed_seconds||0)));
+ const last=p.last_output_seconds==null?"":" · last output "+Math.max(0,Math.round(elapsed-p.last_output_seconds))+"s ago";
+ const retry=p.retry?" · "+(p.retry.source||"native")+" retry "+p.retry.attempt:" · initial attempt";
+ return (labels[p.state]||p.state)+" · "+elapsed+"s"+last+retry+" · deadline "+stamp(p.deadline);
+}
 function processWait(process){
  if(!osState)return "";
  const pid=process.process_id,waits=[];
@@ -68,7 +78,7 @@ function processWait(process){
   const wait=process.status.wait;
   if(wait.wait_kind==="operation"){
    const targets=(wait.target_refs||[]).map(ref=>osState.operations.find(row=>row.operation_id===ref||row.key===ref)).filter(Boolean);
-   waits.push(targets.length?targets.map(row=>row.state==="uncertain"?"execution outcome unknown":row.kind==="model_query"?"model response · "+(process.endpoint||process.status.binding_ref||"configured")+" endpoint":row.kind==="agent_job"?"native agent job":row.capability||"tool result").join("; "):"operation result");
+   waits.push(targets.length?targets.map(row=>row.state==="uncertain"?"execution outcome unknown":row.kind==="model_query"?inferenceActivity(row)+" · "+(process.endpoint||process.status.binding_ref||"configured")+" endpoint":row.kind==="agent_job"?"native agent job":row.capability||"tool result").join("; "):"operation result");
   }else waits.push(wait.wait_kind.replace(/_/g," ")+(wait.target_refs?.length?": "+wait.target_refs.map(resourceName).join(", "):""));
  }
  return waits.join("; ");
@@ -80,7 +90,7 @@ function processActivity(process){
  return process.status?.phase||"No outstanding operation recorded";
 }
 function openDrawer(title,meta,refresh=null,back=null){
- ++inspection;drawerRestore=refresh;
+ ++inspection;drawerRestore=refresh;resumePanel=null;
  $("osInspectorTitle").textContent=title;$("osInspectorMeta").textContent=meta||"";
  $("osInspectorBody").replaceChildren();$("recordBrowser").hidden=true;$("executionDetails").hidden=true;
  $("drawerRefresh").hidden=!refresh||!!savedDocument;$("drawerRefresh").onclick=()=>refresh?.();
@@ -254,11 +264,96 @@ function renderExecution(pid){
  }
  $("executionDetails").hidden=false;
 }
+function updateResumePanel(){
+ $("resumeRun").disabled=!!savedDocument||resuming||starting;
+ const panel=resumePanel;
+ if(!panel||panel.run!==current||panel.inspection!==inspection)return;
+ const process=osState?.processes.find(row=>row.process_id===panel.pid),options=monitorData?.resume;
+ const reason=savedDocument?"Saved snapshots are read-only. Select the retained run to resume.":
+  process?.state!=="paused"?"This process is no longer paused.":
+  resuming?"Sending resume request…":hasRunningRun?"Wait for the active run to stop before resuming.":
+  !options?.allowed?(options?.reason||"Restart the UI server to load resume support, then refresh this page."):null;
+ panel.button.disabled=!!reason;panel.text.disabled=resuming||!!savedDocument;
+ if(panel.processSelect)panel.processSelect.disabled=resuming;
+ panel.hint.textContent=reason||"Optional steering follows the agent's normal review boundary. Existing budgets and saved configuration apply.";
+ if(options?.error)panel.status.textContent=options.error;
+}
+function processResumeControls(box,pid){
+ const key=JSON.stringify([current,pid]),section=element("section",undefined,"steering");
+ const text=element("textarea"),button=element("button","Resume process"),hint=element("p",undefined,"hint"),status=element("p",undefined,"hint");
+ text.rows=3;text.maxLength=16000;text.setAttribute("aria-label","Optional steering for resumed process");
+ text.placeholder="Add instructions for the agent (optional)…";text.value=resumeDrafts.get(key)||"";
+ text.oninput=()=>resumeDrafts.set(key,text.value);button.type="button";status.setAttribute("role","status");
+ section.append(element("h3","Resume paused process"),text,button,hint,status);box.append(section);
+ const panel={run:current,pid,inspection,key,text,button,hint,status};resumePanel=panel;updateResumePanel();
+ button.onclick=async()=>{
+  if(button.disabled||resuming||savedDocument||panel.run!==current||panel.inspection!==inspection)return;
+  if(text.value.length>16000){status.textContent="Steering instructions must be at most 16000 characters.";return}
+  const run=current,document=savedDocument,version=++viewVersion;resuming=true;updateResumePanel();$("start").disabled=true;
+  try{
+   await api("/api/resume",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:run,process_id:pid,text:text.value})});
+   resumeDrafts.delete(key);hasRunningRun=true;
+   if(current===run&&savedDocument===document&&panel.inspection===inspection&&version===viewVersion){
+    text.value="";status.textContent="Resume signal sent. Waiting for the agent to continue.";
+   }
+  }catch(exc){
+   if(current===run&&savedDocument===document&&panel.inspection===inspection&&version===viewVersion)status.textContent=exc.message;
+  }finally{
+   resuming=false;$("start").disabled=hasRunningRun;updateResumePanel();refresh();
+  }
+ };
+}
+function resumeStorage(key,value){
+ try{if(typeof localStorage==="undefined")return null;if(value===undefined)return localStorage.getItem(key);
+  if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value)}catch{}return null;
+}
+function runResumeKey(run=current){return "polyinference.resume."+run}
+function runResumeDraft(run=current){
+ const key=runResumeKey(run);if(resumeDrafts.has(key))return resumeDrafts.get(key);
+ try{const draft=JSON.parse(resumeStorage(key)||"null");if(draft){resumeDrafts.set(key,draft);return draft}}catch{}
+ return {text:"",request_id:null};
+}
+function saveRunResumeDraft(){
+ const draft={text:$("resumeText").value,request_id:null},key=runResumeKey();
+ resumeDrafts.set(key,draft);resumeStorage(key,JSON.stringify(draft));
+}
+function renderResumeDraft(data){
+ const text=$("resumeText"),draft=runResumeDraft(data.id),key=runResumeKey(data.id);
+ // A later poll can acknowledge a POST whose HTTP reply was lost. Retire its
+ // identity so the next pause gets a fresh request instead of replaying this one.
+ if(draft.request_id&&draft.request_id===data.resume?.request_id){
+  resumeDrafts.delete(key);resumeStorage(key,null);if(text.dataset.run===data.id)text.value="";
+ }
+ if(text.dataset.run!==data.id){text.dataset.run=data.id;text.value=runResumeDraft(data.id).text}
+ text.disabled=!!savedDocument||resuming||["accepted","recovering","ready","continuing"].includes(data.resume?.progress);
+}
+async function showRunResume(){
+ if(savedDocument||resuming||starting||hasRunningRun||!current)return;
+ const run=current,document=savedDocument,draft=runResumeDraft(run),text=$("resumeText").value;
+ if(text.length>16000){$("resumeStatus").textContent="Instructions must be at most 16000 characters.";return}
+ if(draft.text!==text){draft.text=text;draft.request_id=null}
+ if(!draft.request_id)draft.request_id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
+ const key=runResumeKey(run);resumeDrafts.set(key,draft);resumeStorage(key,JSON.stringify(draft));
+ const version=++viewVersion;resuming=true;$("start").disabled=true;$("resumeRun").disabled=true;
+ $("resumeRun").textContent="Resuming…";$("resumeText").disabled=true;$("resumeStatus").textContent="Preparing your run to continue…";
+ try{
+  await api("/api/resume",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:run,text,request_id:draft.request_id})});
+  resumeDrafts.delete(key);resumeStorage(key,null);hasRunningRun=true;
+  if(current===run&&savedDocument===document&&version===viewVersion){$("resumeText").value="";$("resumeStatus").textContent="Resume requested. Preparing your run…"}
+ }catch(exc){
+  draft.error=exc.message;resumeDrafts.set(key,draft);resumeStorage(key,JSON.stringify(draft));
+  if(current===run&&savedDocument===document&&version===viewVersion)$("resumeStatus").textContent=exc.message;
+ }finally{
+  resuming=false;$("start").disabled=hasRunningRun;$("resumeRun").disabled=!!savedDocument||starting||hasRunningRun;
+  $("resumeText").disabled=!!savedDocument||hasRunningRun;if(!hasRunningRun)$("resumeRun").textContent="Resume";refresh();
+ }
+}
 function showProcess(pid){
  const process=osState?.processes.find(row=>row.process_id===pid);
  const box=openDrawer(pid+" · "+(pid==="controller"?"controller":process?.role||"process"),"Runtime state captured "+stamp(osState?.captured_at),()=>showProcess(pid));
  if(process){
   paragraph(box,"Activity",processActivity(process));const facts=element("div",undefined,"detail-facts");facts.append(stateBadge(process.state),element("span",process.status?.phase||""));box.append(facts);
+  if(process.state==="paused")processResumeControls(box,pid);
   const links=element("div",undefined,"record-links");links.append(recordLink(process.key,"Status"),recordLink("process-spec/"+pid,"Specification & limits"),buttonLink("Memory / context",()=>showMemory(pid,null,null,()=>showProcess(pid))));box.append(links);
   const task=agentTasks.find(row=>row.process_id===pid);if(task)box.append(buttonLink("Open task: "+task.id,()=>showTask(task.key)));
   const effects=(osState.operations||[]).filter(row=>row.process_id===pid&&!settledOperation(row.state));for(const effect of effects)box.append(buttonLink((effect.capability||effect.kind)+" · "+effect.state,()=>showOperation(effect)));
@@ -270,6 +365,10 @@ function showOperation(row,back=drawerRestore){
  const box=openDrawer(row.capability||row.kind||"Operation",row.operation_id,()=>showOperation(row,back),back);
  paragraph(box,"State",row.state==="uncertain"?"Execution outcome unknown. Reservations and conflicting ownership remain retained until the original operation is reconciled.":row.state);
  paragraph(box,"Diagnostic",row.diagnostic||"No failure diagnostic recorded.");
+ if(row.isolated_generation)paragraph(box,"Discarded delivery","This generation remains physically uncertain and holds capacity/budget. Its answer cannot be delivered. Independent work may continue; a replacement needs spare capacity.");
+ if(row.inference_progress)disclosure(box,"Inference timing and progress",row.inference_progress);
+ if(row.transport_failure)disclosure(box,"Transport cause and stage",row.transport_failure);
+ if(row.inference_policy)disclosure(box,"Caller retry policy",row.inference_policy);
  if(row.state==="uncertain")paragraph(box,"Recovery","Inspect the original operation, provider/host termination evidence and publication receipts before reconciliation. A timeout or disconnect does not prove termination. Do not remove lock or journal records to force a retry.");
  box.append(buttonLink("Inspect full operation record",()=>inspectRecord(row.key)),element("span"," · "),buttonLink("Open process",()=>showProcess(row.process_id)));
  if(row.parent_operation_id){const parent=osState?.operations.find(item=>item.operation_id===row.parent_operation_id);if(parent)box.append(element("span"," · "),buttonLink("Parent native job",()=>showOperation(parent)))}
@@ -326,7 +425,7 @@ function acceptanceFacts(records,operations=[]){
   ["Task reports resolved",!!records["app/run"]&&!unresolved,unresolved+" awaiting disposition"],
   ["Reviewed revision matches provisional",matching,matching?"Same accepted content":head?"Review has not caught up":"No project revision recorded"],
   ["Required project checks",passed,passed?"Passing on current content & environment":checks.length?"Failed, inconclusive or stale evidence":"No final check evidence recorded"],
-  ["Steering & uncertain execution cleared",run.steering_received!==undefined&&run.steering_received===run.steering_applied&&!operations.some(row=>row.state==="uncertain"),(run.steering_received||0)-(run.steering_applied||0)+" pending updates · "+operations.filter(row=>row.state==="uncertain").length+" unknown operations"]
+  ["Steering & blocking effects cleared",run.steering_received!==undefined&&run.steering_received===run.steering_applied&&!operations.some(row=>row.state==="uncertain"&&!row.isolated_generation),(run.steering_received||0)-(run.steering_applied||0)+" pending updates · "+operations.filter(row=>row.state==="uncertain").length+" unknown operations"]
  ]};
 }
 function workflowState(records,processes=[]){
@@ -443,6 +542,7 @@ function renderUserMessages(messages){
 function renderOS(data){
  monitorData=data;if(activityRun!==data.id){activityRun=data.id;activityPage=null;taskFilter="all";$("taskSearch").value="";++inspection;if($("osInspector").open)$("osInspector").close()}
  osState=data.os||null;
+ updateResumePanel();
  const targets=["osProcesses","finishedProcesses","admissionLanes","criticalSections","reservationTable","osBudgets","osLimits","osWorkspaces","retainedWorkspaces","osOperations","settledOperations","osActivity","osRecords"];
  if(!osState){$("osCapture").textContent="OS telemetry is unavailable in this snapshot.";for(const id of targets)$(id).replaceChildren();$("snapshotNote").hidden=true;$("osBlocker").hidden=true;return}
  const runtime=osState,run=runtime.control||{},journal=runtime.journal;

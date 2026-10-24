@@ -28,7 +28,14 @@
       "api_key_env": "ANTHROPIC_API_KEY",
       "max_inflight": 2,
       "max_context_tokens": 128000,
-      "reserved_context_tokens": 256000
+      "reserved_context_tokens": 256000,
+      "lifecycle": {
+        "transport": "sse",
+        "connect_seconds": 10,
+        "first_output_seconds": 180,
+        "idle_seconds": 90,
+        "total_seconds": 600
+      }
     },
     "cloud": {
       "protocol": "anthropic",
@@ -37,7 +44,14 @@
       "api_key_env": "ANTHROPIC_API_KEY",
       "max_inflight": 1,
       "max_context_tokens": 128000,
-      "reserved_context_tokens": 256000
+      "reserved_context_tokens": 256000,
+      "lifecycle": {
+        "transport": "sse",
+        "connect_seconds": 10,
+        "first_output_seconds": 180,
+        "idle_seconds": 90,
+        "total_seconds": 600
+      }
     },
     "limits": {
       "max_steps": 2048,
@@ -63,5 +77,10 @@
       "auto_compaction": false
     }
   },
-  "objective": "Describe the bounded coding objective here."
+  "objective": "Describe the bounded coding objective here.",
+  "inference_policy": {
+    "additional_retries": 1,
+    "replace_undelivered": true
+  },
+  "model_output_target_tokens": 4096
 }

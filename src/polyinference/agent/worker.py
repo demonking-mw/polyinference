@@ -19,7 +19,7 @@ from ..contracts import (
     UsageMeasure,
 )
 from ..domain import Action, Assessment, Candidate, NeedsReview, WorkerReply, digest
-from ..runtime.workspace_state import WriteScopeError
+from ..ports import WriteScopeError
 from .reports import PrivateCommitReceipt, PrivateTaskReport, task_report
 
 

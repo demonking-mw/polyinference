@@ -2,6 +2,17 @@
 
 [Project](README.md) · [Documentation](docs/README.md) · [HTML tree](docs/file-tree.html) · [JSON tree](docs/file-tree.json)
 
+New human or AI collaborator: follow [contributor onboarding](docs/contributor-onboarding.md)
+for required reading, human setup, retained project knowledge and the every-task routine.
+
+For a guided introduction, open the [developer field guide](docs/onboarding.html):
+A plain-language introduction to the local/cloud idea, agents as programs,
+architecture, stack selection, setup and contribution/documentation rules.
+The offline page embeds the supplied
+whiteboard and full timestamped automated transcript; it makes no provider calls.
+This guide owns `docs/onboarding.html`; keep its current-behavior labels, source
+links and setup/rules aligned when those areas change.
+
 **Update all affected documentation after implementing any fix or feature, in the
 same change.** This applies to humans and agents; documentation is part of completion.
 

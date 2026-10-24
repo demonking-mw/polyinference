@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 
-from ..contracts import AgentJob, ContextPart, Feature, ModelQuery, OperationRequest
+from ..contracts import AgentJob, ContextPart, Feature, InferencePolicy, ModelQuery, OperationRequest
 from ..primitives import canonical, digest, now, operation_fingerprint
 from .context import context_with_parts
 
@@ -14,6 +14,33 @@ class ModelRetries:
     def __init__(self, runtime):
         self.runtime = runtime
         self.tasks = {}
+
+    def policy(self, request):
+        value = request.extensions.get("runtime/inference-policy")
+        if value is not None and not any(f.feature_id == "runtime/inference-policy" and f.version == "1"
+                                         for f in request.required_features):
+            raise ValueError("Inference policy requires runtime/inference-policy version 1")
+        return InferencePolicy.model_validate(value if value is not None else {})
+
+    def root(self, request):
+        return request.extensions.get("runtime/inference-root", request.operation_id)
+
+    def deadline(self, request):
+        root = self.runtime.records.get("effect/" + self.root(request))
+        original = OperationRequest.model_validate(root[1]["request"]) if root else request
+        endpoint = getattr(self.runtime.config, self.runtime.config.role_bindings[request.payload.role])
+        if not endpoint.lifecycle:
+            return original.deadline
+        return min(original.deadline, original.created_at + timedelta(seconds=endpoint.lifecycle.total_seconds))
+
+    def counts(self, request):
+        root = self.root(request)
+        counts = {"native": 0, "caller": 0}
+        for _, _, body in self.runtime.records.scan("model-retry/"):
+            retry = body["request"]["extensions"]["runtime/model-retry"]
+            if retry.get("budget_root_operation_id", retry["root_operation_id"]) == root:
+                counts[retry.get("source", "native")] += 1
+        return counts
 
     async def close(self):
         tasks = list(self.tasks.values())
@@ -52,9 +79,11 @@ class ModelRetries:
         outcome = rt.records.get("output-retry-outcome/" + original.operation_id)
         if outcome:
             retained = rt.records.get("effect/" + outcome[1]["operation_id"])
-            if retained and retained[1].get("result"):
+            if retained and (retained[1].get("delivery_result") or retained[1].get("result")):
                 from ..contracts import OperationResult
-                return OperationResult.model_validate(retained[1]["result"])
+                effective = OperationResult.model_validate(retained[1].get("delivery_result") or retained[1]["result"])
+                if effective.state != "uncertain":
+                    return effective
         if original.extensions.get("runtime/context-compaction"):
             return result
         result = await self._run(original, result)
@@ -89,7 +118,7 @@ class ModelRetries:
                 request = original.model_copy(update={"record_id": "request/" + step,
                     "created_at": now(), "logical_step_id": step, "operation_id": operation_id,
                     "payload": original.payload.model_copy(update={"context": context}),
-                    "extensions": {**original.extensions, "runtime/output-retry": {
+                    "extensions": {**original.extensions, "runtime/inference-root": self.root(original), "runtime/output-retry": {
                         "root_operation_id": original.operation_id,
                         "previous_operation_id": result.operation_id, "attempt": index + 1}}})
                 request = request.model_copy(update={"intent_digest": operation_fingerprint(request)})
@@ -109,7 +138,8 @@ class ModelRetries:
     def complete(self, original, result, reason):
         key = "model-retry-outcome/" + original.operation_id
         body = {"root_operation_id": original.operation_id, "result_operation_id": result.operation_id,
-                "state": result.state, "reason": reason}
+                "state": result.state, "reason": reason, "retry_counts": self.counts(original),
+                "deadline": self.deadline(original).isoformat()}
         retained = self.runtime.records.get(key)
         if not retained or retained[1] != body:
             self.runtime._update(key, body)
@@ -117,13 +147,20 @@ class ModelRetries:
 
     def _blocked(self, request, result):
         rt = self.runtime
-        if (result.state != "failed" or result.effects != "known"
+        replaceable = result.extensions.get("runtime/undelivered-generation") and self.policy(request).replace_undelivered
+        if not replaceable and (result.state != "failed" or result.effects != "known"
                 or result.execution_termination != "confirmed_stopped"
                 or not result.error or not result.error.retryable_after_reconciliation):
             return "failure is not safely retryable"
+        if replaceable:
+            name = result.extensions["runtime/undelivered-generation"]["binding"]
+            if rt.admission[name].active >= getattr(rt.config, name).max_inflight:
+                return "pending generation occupies endpoint capacity"
         # Adaptation is a distinct OS-issued intent, not an unchanged transport retry.
         if result.extensions.get("polyinference/incomplete-generation"):
             return "output limit requires response adaptation"
+        if self.deadline(request) <= now():
+            return "logical request deadline expired"
         if rt.closing or rt.uncertain():
             return "runtime closing or effects uncertain"
         control = rt.records.get("process-control/" + request.scope.process_id)
@@ -154,7 +191,9 @@ class ModelRetries:
 
     async def _run(self, original, result):
         rt = self.runtime
-        for attempt in range(1, rt.config.model_call_retries + 1):
+        policy = self.policy(original)
+        allowance = rt.config.model_call_retries + policy.additional_retries
+        for attempt in range(1, allowance + 1):
             key = f"model-retry/{original.operation_id}/{attempt}"
             retained = rt.records.get(key)
             if retained:
@@ -162,13 +201,17 @@ class ModelRetries:
                 # unfinished retry still passes every normal dispatch guard.
                 body = retained[1]
             else:
+                counts = self.counts(original)
+                used = sum(counts.values())
+                if used >= allowance:
+                    return self.complete(original, result, "shared retry allowance exhausted")
                 blocked = self._blocked(original, result)
                 if blocked:
                     return self.complete(original, result, blocked)
                 delay = max(rt.config.model_retry_delay_ms * 2 ** (attempt - 1),
                             result.error.retry_after_ms or 0)
                 not_before = now() + timedelta(milliseconds=delay)
-                if delay > rt.config.model_retry_max_delay_ms or not_before >= original.deadline:
+                if delay > rt.config.model_retry_max_delay_ms or not_before >= self.deadline(original):
                     return self.complete(original, result, "retry-after or backoff exceeds wait/deadline allowance")
                 step = "model-retry-" + digest(canonical([original.operation_id, attempt]))[7:]
                 request_key = "request/" + step
@@ -177,9 +220,11 @@ class ModelRetries:
                     "operation_id": digest(canonical(["model-retry", original.operation_id, attempt])),
                     "required_features": [*original.required_features,
                                           Feature(feature_id="runtime/model-retries", version="1")],
-                    "extensions": {**original.extensions, "runtime/model-retry": {
+                    "extensions": {**original.extensions, "runtime/inference-root": self.root(original), "runtime/model-retry": {
                         "root_operation_id": original.operation_id,
                         "previous_operation_id": result.operation_id, "attempt": attempt,
+                        "budget_root_operation_id": self.root(original),
+                        "source": "native" if counts["native"] < rt.config.model_call_retries else "caller",
                     }},
                 })
                 request = request.model_copy(update={"intent_digest": operation_fingerprint(request)})

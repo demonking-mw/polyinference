@@ -14,6 +14,8 @@ Generic source views, grants and private execution state support attached direct
 A registered process receives an explicit narrower workspace grant. Attached
 views are not copied over user source; coding RepositoryWorkspaces supplies Git
 policy. General processes may use no workspace. Compatibility task refs are opaque.
+WriteScopeError is defined in public ports; workspace_state re-exports the same
+class for existing callers, preserving structured details and catch identity.
 
 ## Principles to preserve
 

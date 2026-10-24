@@ -16,7 +16,14 @@ The packaged boundary between agent programs and replaceable OS implementations.
 ## Interface and ownership
 
 Applications call `RuntimePorts`; `KernelRuntime` is one implementation. Bootstrap
-registers explicit capabilities/protocols. Some shared wire types retain coding
+registers explicit capabilities/protocols. OperationPorts.prepare_resume(request_ref)
+is the generic asynchronous execution-preparation boundary; caller-owned workflow
+policy consumes its ready state and retained results. InferencePolicy is a generic caller declaration in runtime/inference-policy
+(version 1): additional_retries and replace_undelivered. It grants no capacity or
+termination proof. OperationPorts.uncertain() reports blocking effects; explicit
+include_isolated=True also reports pending generation-only computation. WriteScopeError
+belongs to ports; runtime.workspace_state retains a compatibility re-export.
+Some shared wire types retain coding
 records for compatibility; their presence does not make coding mandatory.
 
 ## Principles to preserve

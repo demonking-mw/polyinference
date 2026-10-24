@@ -8,6 +8,13 @@ from typing import Any, Protocol
 from .contracts import ArtifactRef, OperationRequest, OperationResult, ProcessSpec, Scope
 
 
+class WriteScopeError(ValueError):
+    def __init__(self, workspace_id, phase, paths, allowed):
+        self.detail = {"code": "write_scope_exceeded", "workspace_id": workspace_id,
+                       "phase": phase, "paths": sorted(paths), "allowed_write_paths": sorted(allowed)}
+        super().__init__(f"Private changes exceed write scope ({phase}): " + ", ".join(sorted(paths)))
+
+
 class RecordConflict(RuntimeError):
     """A compare-and-publish precondition changed; no partial update was applied."""
 
@@ -28,7 +35,8 @@ class ArtifactPorts(Protocol):
 
 class OperationPorts(Protocol):
     async def execute(self, request: OperationRequest) -> OperationResult: ...
-    def uncertain(self) -> list[str]: ...
+    def uncertain(self, *, include_isolated: bool = False) -> list[str]: ...
+    async def prepare_resume(self, request_ref: str) -> None: ...
     def recovery_allowed(self, failed_id: str, scope: Scope, *, operation_id: str | None = None) -> str: ...
     async def recover_model(self, failed_id: str, request: OperationRequest, reason: str) -> OperationResult: ...
 

@@ -23,6 +23,9 @@ acceptance_check_definitions select phase policy without changing OS check execu
 Senior context includes shared check commands/source previews and read-only
 retained-source offers; these guide explicit dependencies and resume_from grants.
 Mode-specific prompts distinguish in-place private uncertainty from legacy publication.
+The agent optionally pins InferencePolicy as runtime/inference-policy version 1
+on model requests. It owns additional retry consent and smaller raw-query output
+targets; the OS executes bounded retries without reading coding task/grammar policy.
 
 ## Principles to preserve
 

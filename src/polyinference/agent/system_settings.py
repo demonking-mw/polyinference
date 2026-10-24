@@ -8,12 +8,13 @@ library is required; this module belongs to the coding application.
 import sys
 
 from ..domain import Check, default_limits
-from ..system_settings import ContextPolicy, Endpoint
+from ..system_settings import ContextPolicy, Endpoint, InferenceLifecycle
 
 
 def coding_system_defaults():
     return {
         "limits": default_limits(),
+        "model_call_retries": 2,
         "control_token_reserve": 32000,
         "role_bindings": {"senior": "cloud", "worker": "local", "specialist": "cloud"},
         "prepare_repository": True,
@@ -28,7 +29,8 @@ def haiku_endpoint():
     return Endpoint(protocol="anthropic", base_url="https://api.anthropic.com/v1",
                     model="claude-haiku-5-5", api_key_env="ANTHROPIC_API_KEY",
                     max_context_tokens=128000, reserved_context_tokens=256000,
-                    max_inflight=1, timeout_seconds=180, inference_location="cloud")
+                    max_inflight=1, timeout_seconds=180, inference_location="cloud",
+                    lifecycle=InferenceLifecycle())
 
 
 def simulation_config(config, slots):
@@ -69,3 +71,22 @@ def ui_system_settings(source):
             update={"max_input_tokens_per_call": 96000, "max_output_tokens_per_call": 32000}
         ),
     )}
+
+
+def endpoint_profile(config, profile=None):
+    """Testing application's explicit deployment choice, never inferred from URL."""
+    if profile in {None, "configured"}:
+        return config
+    if profile not in {"small-cloud", "local-inference", "buffered"}:
+        raise ValueError("Unknown endpoint profile")
+    if config.local.protocol not in {"chat", "responses", "anthropic", "gemini"}:
+        raise ValueError("Endpoint profiles require a raw generation endpoint on the local lane")
+    values = ({"first_output_seconds": 900, "idle_seconds": 300, "total_seconds": 1800}
+              if profile == "local-inference" else {})
+    if profile == "buffered":
+        values["transport"] = "buffered"
+    if config.local.protocol == "gemini" and profile != "buffered":
+        raise ValueError("Gemini currently requires the explicit buffered profile")
+    return config.model_copy(update={
+        "local": config.local.model_copy(update={"lifecycle": InferenceLifecycle(**values)}),
+    })

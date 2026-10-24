@@ -43,6 +43,13 @@ class Wire(BaseModel):
     )
 
 
+class InferencePolicy(Wire):
+    """Caller consent, independent of OS-native retries and application recovery."""
+
+    additional_retries: Annotated[int, Field(ge=0, le=3)] = 0
+    replace_undelivered: bool = False
+
+
 class Scope(Wire):
     tenant_id: Identifier
     project_id: Identifier

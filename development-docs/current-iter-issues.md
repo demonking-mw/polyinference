@@ -7,6 +7,22 @@ subsequent corrections, including recoverable startup failures and the required
 agent/OS boundary; consult it before treating an older implementation note below
 as current behavior.
 
+<a id="router-distillation-tutorial"></a>
+## Agent-router distillation research tutorial — 2026-10-22
+
+Status: documented; research instructions only, outside the current runtime fixes.
+The [HTML learning guide](router-training-guide.html) explains training fundamentals,
+distillation, RLAIF, model/thinking choices, synthetic data and two-pass summaries;
+its labs include the step-by-step distillation walkthrough and later feedback work.
+The [Markdown tutorial](router-distillation-tutorial.md) covers Opus labels,
+a small LoRA student on the user's reported 16 GB GPU, validation, inference and
+evaluation, with RLAIF as a later stage. The user reports written Anthropic
+permission for this research project. Recording the tutorial does not implement
+a learned router, change process settings or reopen the completed fix queue.
+Next-version work remains in the [routing proposal](next-iteration.md#learned-agent-routing).
+Documentation verification and limits: [FIX-0106](FIXES.md#fix-0106).
+Expanded learning-guide verification: [FIX-0107](FIXES.md#fix-0107).
+
 <a id="authorized-implementation-queue"></a>
 ## Authorized implementation queue — 2026-10-21
 
@@ -57,6 +73,442 @@ and optional context mechanisms in the OS. Do not weaken existing safeguards to
 make progress. Preserve user edits and retained run state; do not push commits.
 MEM-02, RUN13-04's optimization/audit, the wider CONC-01 audit and the remaining
 broad lifecycle/fault/diagnostic proposals are not part of this ready-only queue.
+
+<a id="run14-findings"></a>
+## Run 7086c575ef94 findings — 2026-10-21
+
+Status: investigated; follow-ups open, no implementation changed.
+[Evidence and limits](run-7086c575ef94-analysis.md) · [FIX-0100](FIXES.md#fix-0100).
+
+- OS/adapter diagnostics: a submitted Haiku call became uncertain after 180.005
+  seconds with a 180-second timeout. Preserve timeout origin and chained transport/
+  cancellation facts so these causes are distinguishable. The actual trigger is
+  strongly consistent with timeout but not conclusively retained. Keep unknown
+  execution out of blind retry; timeout tuning alone does not reconcile this call.
+- Transport/deadline follow-up (2026-10-23): [official Anthropic guidance and
+  fresh source probes](run-7086c575ef94-analysis.md#anthropic-documentation-follow-up--2026-10-23)
+  establish non-streaming large-output requests plus a UI-selected 180-second
+  whole-generation limit. Implement internal SSE accumulation and distinguish
+  inactivity from total deadlines; SSE alone leaves the kernel cutoff intact.
+  Retain typed cause/request/progress diagnostics and explicit durable retry
+  accounting. This is an open integration repair, not an implemented change or
+  proof that every earlier pause had the same cause.
+- Coding planning: one preparation owner received four top-level tests while its
+  required runner demanded four different tests/acceptance paths. Check exact
+  mandatory-path ownership/grants before dispatch without weakening assertions.
+  FIX-0088's owner/dependency validation does not validate this single-owner case.
+  The next plan corrected the grant and used an explicit retained-source handoff;
+  that handoff worked, but the replacement paused before writing or verification.
+
+Only setup reached pi-dev. Direct 36/36 foundation tests are historical private
+worktree evidence; no development contribution or final product was accepted.
+This is not a reproduced OS deadlock, context overflow or simulation fault.
+
+<a id="portable-endpoint-testing"></a>
+## Portable endpoint lifecycle and testing — proposal, 2026-10-23
+
+Status: proposed; no implementation, configuration or retained run changed.
+Related: [run14 transport findings](#run14-findings), [FIX-0113](FIXES.md#fix-0113),
+[FIX-0114](FIXES.md#fix-0114), [current simulator](../docs/modules/inference-simulation.md).
+The user requires the local lane to support both small cloud models and actual
+local inference. Local/cloud remain logical binding IDs; URL, model size and
+physical location never determine timeout, authority or effect certainty.
+
+### Common inference lifecycle
+
+Extend the existing adapters and OS services; do not add a shared agent library.
+Raw Anthropic, OpenAI-compatible chat and Responses adapters emit common lifecycle
+facts: submitted, response headers/IDs, optional prefill progress, output progress,
+terminal completion or typed failure. Use internal SSE where supported, accumulating
+one complete response under the existing byte/token/completion guards. The caller
+still owns reply grammar; plain-text agents remain valid. Partial JSON or a stream
+EOF without the protocol's terminal evidence cannot execute. HTTP 200 and heartbeat
+traffic are not completion. Keep hidden reasoning private; progress can count
+bytes/events without retaining reasoning text. Aggregate progress updates (for
+example, once per second), persist terminal/cause evidence promptly, and prevent
+observer failures from changing execution outcomes.
+
+Trusted adapters declare streaming, result-retrieval and confirmed-cancel support,
+and whether a request is strictly generation-only. Disable provider/server tools
+for that classification. Never infer these guarantees from localhost, a lane name,
+a model's claim or generic OpenAI compatibility. Unknown capability stays strict.
+A non-streaming fallback is explicit/visible and uses its total deadline without
+pretending intermediate progress is observable. A rejected streaming negotiation
+can fall back only as a new recorded attempt after a known rejection.
+Native tool-using jobs keep their separate broker/continuation protocol.
+
+### Timers and response budgets
+
+Add optional structured timing preferences in system_settings.Endpoint. Names below
+are proposed, not fields accepted by the current configuration schema. Replace the
+ordinary raw-call blanket wait_for(endpoint.timeout_seconds) with a common lifecycle
+watchdog. Keep one absolute hard deadline for the logical request, including OS
+admission, retry backoff and all attempts, also capped by its original operation/
+process deadline. First-output waiting begins at provider submission, excluding OS
+admission; remote queue/prefill remains part of that observed wait.
+
+| Proposed setting | Small-cloud starting profile | Slow local-server starting profile |
+| --- | --- | --- |
+| connect_seconds | 10 | 10 |
+| first_output_seconds | 180 | 900 |
+| output_idle_seconds | 90 | 300 |
+| total_seconds, all attempts included | 600 | 1800 |
+
+These are editable starting assumptions, not provider requirements or measured
+hardware guarantees. Keep transport read/liveness observation distinct from model
+progress. Pings show a live connection but do not reset output-stall or hard-total
+limits. Verified prefill progress can update the displayed phase; it cannot extend
+the absolute deadline. Providers without intermediate events get the explicit
+non-streaming policy. Long silent reasoning needs a suitably configured profile.
+Normal and simulated paths use the same watchdog; artificial pacing must remain
+separate from actual provider completion/cancellation evidence.
+
+The coding agent should choose modest per-request output targets (for example,
+4k tokens for interactive testing) through the existing runtime/output-tokens path,
+while retaining the 32k hard ceiling for assignments that need it. Do not silently
+lower existing saved limits. A 32k response at 5 tokens/s takes about 107 minutes
+before prefill; raising every timeout cannot make that fit a one-hour process.
+Use smaller complete actions/tasks when the chosen throughput/time budget requires
+it. Learn/display observed time-to-first-output and per-stream speed at the selected
+concurrency; do not multiply single-stream speed by slots or claim GPU admission.
+Profile selection and response sizing belong to the application.
+
+### Recovery by possible effects
+
+Phase 1 preserves today's unknown-effect barrier while fixing transport/timers.
+Phase 2 is an explicit proposed refinement of the current global uncertainty rule
+(R13), not a description of present behavior:
+
+- Known unsubmitted or confirmed failed transient requests use linked OS retries,
+  bounded backoff/Retry-After and a suggested two extra attempts for new profiles.
+  Every attempt has its own immutable intent, reservation and accounting. Adapter/
+  SDK internal retries stay disabled so submissions cannot escape OS accounting.
+- For a trusted generation-only request with no delivered host/provider tool effects,
+  an unavailable result can be logically superseded under an explicit bounded-recovery
+  policy. Preserve the old uncertain effect and outstanding provider-work record;
+  never label it confirmed stopped. The old attempt loses delivery authority through
+  a durable generation identity, so late output cannot execute actions. Only the
+  selected complete validated result wins the logical request through an atomic
+  outcome record; restart/replay cannot create another submission or winner.
+- Keep the old token/spend reservation conservatively charged and its endpoint slot
+  held until actual terminal or verified cancel evidence. A new attempt needs spare
+  capacity and remaining budgets/deadline. Allow at most one overlapping replacement
+  per endpoint; if it also becomes unknown, issue no further replacement until
+  pending work is reconciled. Normal slot/token reservations still bound all pending
+  generations. This avoids hidden duplicate GPU work or billing.
+- With a one-slot local server and no cancellation/status support, automatic retry
+  must wait; show the endpoint as unavailable rather than silently exceed capacity.
+  An optional adapter may abort an individual request when it can verify completion.
+  Restart is automatic only for an explicitly app-owned exclusive service under a
+  service-control lease, never an arbitrary shared local server.
+- A generation-only uncertainty can block its worker/endpoint while independent
+  work continues within unaffected capacity. Unknown writes, native jobs, provider
+  tools and unverified execution modes retain the strict runtime barrier. Running
+  out of retry/capacity/time budget produces a precise durable reason, not a loop.
+
+This distinction changes dispatch semantics and requires its own feature/schema
+version, crash/replay tests and an explicit boundary/revision update when implemented.
+Old runs retain strict semantics and exact pins; do not retrofit the unresolved
+7086c575ef94 request or reset its already elapsed deadline. New profiles apply to
+new runs. Selecting another model/provider automatically is outside this proposal.
+
+### Testing and UI
+
+Use three layers: deterministic offline lifecycle tests with an injectable clock;
+local fixture HTTP/SSE servers exercising the real parsers/cancellation paths; and
+explicitly requested live cloud/local smoke tests. Existing seeded live fault/TPS
+simulation stays application-owned. It must be labelled as buffered provider-output
+pacing, not evidence that missing-terminal streams or real hardware were tested.
+Extend fixtures to inject failures before headers, between deltas and at completion,
+so real Haiku generation is unnecessary for fast recovery tests.
+
+Required cases include:
+
+- A healthy generation beyond 180 seconds completes under the new budget; slow
+  prefill and two-slot shared throughput do not trigger the wrong watchdog.
+- Only heartbeats, a genuine output stall, malformed/truncated SSE, missing terminal,
+  a mid-stream error after HTTP 200 and a non-streaming server follow distinct paths.
+- Retry-After, permanent 4xx, token/output limits, cancellation, overall deadline,
+  queue saturation and final-phase reserves compose without allowance resets.
+- A timeout after partial JSON executes no action; a late superseded result cannot
+  write files or become a second winner, including after coordinator restart.
+- Unknown generation holds accounting/slot capacity; a one-slot server cannot gain
+  an extra active request. Verified cancellation releases once; repeated resume,
+  crash during publication and late usage settlement cannot double-charge/release.
+- An unknown tool-bearing operation still blocks dispatch; an independent permitted
+  request can continue only for the new audited generation-only classification.
+
+UI status should show Queued, Waiting for model, Generating, Recovering attempt 2/3,
+Waiting for endpoint, or Paused with a useful reason. Display last progress, elapsed
+and remaining hard budget and the effective timing/profile before Start. Advanced
+inspection/export includes original exception cause, timeout stage, provider request
+ID, attempt chain, terminal/cancel evidence and outstanding work. Distinguish actual
+provider token usage from estimated progress. Optional Test endpoint/Warm up runs a
+small bounded probe only when clicked, never on page open, and does not promise to
+cancel or control a server it does not own.
+
+### Implementation order and ownership
+
+1. OS/adapter: typed progress/failure facts, internal SSE accumulation, complete
+   response receipts, separate watchdogs and compatibility mapping. Update inference,
+   kernel and system_settings; keep coding preferences out of generic services.
+2. OS recovery: bounded generation-only supersession, outstanding-work accounting,
+   delivery fencing and restart-safe logical outcomes in model_retries, admission,
+   kernel/resume. Preserve strict native/effectful behavior. Application defaults
+   select timing/retry/response targets; no OS Git or coding acceptance policy.
+3. UI/tests: progress and a bounded endpoint probe, fixture scenarios, saved/live
+   parity and explicit live smoke runs. Keep the existing simulator opt-in; share
+   lifecycle rules without turning artificial completion into remote-stop proof.
+
+Before each stage is considered implemented, update its owning module guides,
+settings/examples, usage/recovery references, runtime boundary/revision ledger,
+test inventory and navigation in the same change. This proposal adds no current
+API, changes no launch defaults and claims none of the listed tests as executed.
+Official grounding: [Anthropic streaming](https://platform.claude.com/docs/en/build-with-claude/streaming),
+[llama.cpp server](https://github.com/ggml-org/llama.cpp/blob/master/tools/server/README.md)
+and [vLLM serving](https://docs.vllm.ai/en/latest/serving/online_serving/).
+
+<a id="endpoint-agent-os-split"></a>
+### Agent/OS separation review — 2026-10-23
+
+Status: design clarification only; no runtime, configuration or current boundary
+changed. [FIX-0115](FIXES.md#fix-0115) records the review. This section refines
+policy ownership and generation-replacement authorization in the proposal above;
+the earlier broad wording is not permission for the OS to decide coding workflow.
+
+The project defines the agent as a portable application supplying its objective,
+workflow, context, reply grammar and semantic decisions through RuntimePorts. The
+OS supplies generic execution, admission, authority, persistence and recovery
+mechanisms; a process needs no coding tasks, repository, tests or commits. The
+inference server owns token/GPU scheduling. Sources:
+[agent/runtime contract](../design-docs/langgraph-agent/README.md#3-agentruntime-boundary),
+[OS modules/processes](../design-docs/simplified-os/README.md#3-four-implementation-modules),
+[current responsibilities](../design-docs/simplified-os/RUNTIME_BOUNDARY.md#responsibilities)
+and [SDK ports](../docs/modules/sdk.md).
+
+#### Agent design
+
+- Choose timing profiles, requested response size, retry tolerance and whether an
+  undelivered result may be discarded and replaced. The example small-cloud/local
+  presets and 4k testing target are application/deployment preferences, not OS
+  meanings attached to the local binding or a coding-worker role.
+- Supply objective, context, output grammar, canonical memory and permitted
+  flexibility. Interpret a returned answer; choose smaller actions/tasks, repair,
+  replan, wait or stop when generic recovery is exhausted. Registered application
+  handlers still own coding Git, check selection, review and acceptance.
+- Decide how an affected operation changes the application: keep other independent
+  tasks running, await an endpoint, or pause the run. The OS reports operation/
+  resource readiness and enforces admission; it never traverses the task DAG,
+  creates a replacement foundation task or changes app/run.status on its own.
+- Express recovery permission declaratively at process/request registration. An
+  agent author should not implement Anthropic SSE, HTTP error classification or
+  backoff. Runtime services execute the authorized generic policy automatically.
+- Own tester scenarios and simulator installation through bootstrap, and issue any
+  clicked endpoint probe as an ordinary bounded query. The UI projects execution
+  facts and application choices; it cannot authorize weaker recovery on its own.
+
+#### OS design
+
+- Normalize raw provider transport and stream/terminal/error/usage facts behind
+  adapter contracts. Provider-specific SSE decoding stays inside adapters; kernel
+  dispatch sees generic operations. Bound response bytes/tokens and withhold
+  incomplete output, without requiring JSON, WorkerReply or coding phases.
+- Define generic timing/recovery preference schemas and enforce effective grants,
+  absolute deadlines, capacity, reservations, budgets and final reserves. Measure
+  queue/prefill/output timing and distinguish heartbeat traffic from output.
+  Fixed coding profiles and physical hardware performance policy stay outside.
+- Implement known-safe transient retries, cancellation/result lookup when supported,
+  durable attempt identities, resource quarantine and late-result delivery fencing.
+  Preserve every original result and charge every real submission. The caller's
+  requested policy narrows what is permitted; it cannot waive an OS safety guard.
+- Expose typed operational status/results through SDK/RuntimePorts, so another
+  application or another runtime can implement the same contract. Do not inspect
+  task/report/setup/coding memory records to decide whether a request may execute.
+- Retain outstanding compute and capacity until verified terminal/cancel evidence.
+  Return blocked resource facts when a one-slot server cannot safely accept a
+  replacement. Any optional server control requires an explicitly registered,
+  authorized service and lease; never restart an arbitrary local daemon.
+
+#### Required correction to generation-only replacement
+
+The previous proposal's phrase generation-only was necessary but insufficient.
+Technical absence of tool effects does not decide whether discarding an answer is
+acceptable. Replacement requires all of the following:
+
+1. The caller explicitly permits replacement of an undelivered response; default
+   compatibility behavior remains strict. A caller that already exposed streamed
+   content needs an explicit delivery policy, not an inference of replaceability.
+2. The trusted adapter and actual granted execution path establish that no provider
+   or host tools/external effects can run for that attempt. A caller-supplied label,
+   localhost URL or model claim is not evidence of this property.
+3. The OS can isolate old response delivery and preserve original pending-work
+   reservations, limits, data/routing policy and identity. A replacement needs its
+   own capacity/budget; an unavailable slot cannot be manufactured by abandonment.
+
+Only then can the generic OS service carry out an authorized replacement, without
+asserting that the original remote work ended. Keep separate facts for remote
+execution certainty, logical delivery eligibility and application continuation.
+For unknown effects that fail these conditions, preserve the strict barrier.
+This remains a proposed, versioned refinement to R13; current guarantees do not
+change. Application consent cannot turn an uncertain write into a safe query.
+Existing generic output-limit adaptation remains OS-owned within its declared
+protocol and allowance (FIX-0058/0085); semantic task decomposition remains agent-owned.
+
+An example portable exchange is: an application requests text with a declared
+budget and replacement policy; the OS validates it, streams internally and applies
+only the permitted recovery; it returns a complete result or typed failure/pending
+resource facts; the application decides what to do next. No Git or coding outcome
+appears in this exchange. OS monitoring can show provider progress while the agent
+view separately shows task/sprint state. GPU batching remains a provider mechanism.
+
+#### Independence checks and source observation
+
+For implementation acceptance, require a bare RuntimeConfig summarization process
+with arbitrary role names and no workspace/Git/TaskSpec/checks to exercise streaming,
+retry, cancellation and exhaustion. Run the coding agent against a fake/replacement
+RuntimePorts implementation to test wait/replan/pause decisions. Contract tests
+must reject unauthorized replacement, unsupported mandatory features and attempted
+replay of uncertain writes, while preserving ordinary plain-text callers.
+Keep optional simulation installed outside the kernel, and test that runtime paths
+neither import agent modules nor read coding record namespaces for these decisions.
+
+Fresh static import inspection found no direct imports of polyinference.agent in
+24 runtime/settings/ports Python files. This is limited evidence, not proof against
+dynamic coupling or an executed general-agent conformance suite. One existing
+agent-side portability dependency remains: agent/worker.py imports WriteScopeError
+from runtime/workspace_state.py. Put that shared exception/result contract in the
+SDK/ports layer, retaining a compatibility re-export, when implementing the boundary
+cleanup. The observation does not establish a current runtime failure, and no
+source changed. Keep future protocol preference/result types in the existing SDK;
+no additional shared-agent-library layer is needed (FIX-0054).
+
+<a id="ui-process-resume"></a>
+## UI-RESUME-01 — Resume a selected paused process — 2026-10-21
+
+Status: implemented; run-level continuation supersedes the original process-only
+entry point. Current implementation: [FIX-0111](FIXES.md#fix-0111).
+Original process-level implementation: [FIX-0102](FIXES.md#fix-0102); the historical
+paragraphs below describe that earlier behavior.
+
+The paused-run toolbar offers Resume run with a paused-process chooser and optional
+steering; the process drawer retains Resume process. The visibility correction is
+[FIX-0105](FIXES.md#fix-0105). Blocked submissions expose their reason instead of
+hiding the toolbar entry. Use the HTTP UI, not a direct file:// preview. The local
+API records a generic OS resume-request, then reopens the same saved configuration
+and routes continuation through the application's existing known-model retry,
+accepted-output recovery or senior review. Prompt/config pins, budgets, deadlines,
+source provenance and cancellation remain enforced. The agent module fingerprint
+is unchanged, so the UI feature itself does not invalidate retained program pins.
+Unsettled remote execution is refused pending reconciliation; the
+[run 7086c575ef94 timeout diagnosis](run-7086c575ef94-analysis.md) is not repaired or
+automatically reconciled by this feature. JSON snapshots remain read-only.
+
+Frontend guards cover duplicate sends, stale responses and draft preservation;
+backend guards cover concurrent runs, state/config identity, unknown execution,
+version mismatch and launch failures. Requests/outcomes remain inspectable and
+exportable. No UI reconciliation assertion or automatic budget reset was added.
+
+### Run-level Resume implementation — 2026-10-23
+
+The paused/interrupted-run toolbar now has optional instructions and one Resume
+button; it submits immediately without a chooser. Stable request IDs and local
+drafts survive acknowledgement loss/page restart. Polling can acknowledge a lost
+reply so a later pause receives a new request. Recovery progress is visible and
+unsupported recovery produces a plain failure rather than a resolution form.
+
+The HTTP layer loads exact saved settings and serializes drivers. Generic OS
+intent acceptance is independent of execution certainty. OS-owned preparation
+recovers host receipts, artifact-backed completed query responses and retrievable
+HTTP Responses by saved response ID, with bounded lookup and retained accounting.
+Unknown/native/synchronous operations without recovery evidence remain protected;
+no automatic remote-cancel or host-descendant termination guarantee was added.
+
+Agent-owned continuation handles all stopped workers, resumes eligible checkpoints,
+uses linked model retries or senior review with retained source, and recovers
+accepted-output delivery. Atomic steering receipts and durable continuation plans
+cover interrupted activation. CLI resume CONFIG [--text instructions] uses the same
+service. Server restart restores pending accepted/activated requests, including the
+journal-to-metadata gap. An exact predecessor graph has an audited migration;
+other pins, grants, budgets, deadlines and cancellation remain enforced. Original
+manifests/effects remain evidence. See [FIX-0111](FIXES.md#fix-0111) for fresh checks.
+
+<a id="ui-run-resume-design"></a>
+### Proposed run-level Resume redesign — 2026-10-23
+
+Status: historical proposal, implemented with the explicit provider/compatibility
+limits described above in [FIX-0111](FIXES.md#fix-0111). The original design-only
+record is [FIX-0110](FIXES.md#fix-0110). The following preserves that proposal. The user wants optional instructions followed
+by one Resume click, with continuation/recovery decisions handled internally.
+
+**Frontend and HTTP adapter.** Place an optional instructions field beside the
+paused run's Resume button. Clicking Resume submits the run ID, text and a stable
+request ID immediately. Remove the required drawer, process chooser and
+reconciliation tasks from this path. Show Resuming, then Running when the agent
+actually continues. Show a plain failure if continuation fails; keep technical
+details in inspection. Retain text until durable acknowledgement, deduplicate
+clicks/retries across reconnects, and restore progress after page/server restart.
+POST /api/resume accepts a run-level request without process_id and returns 202
+with its request reference; acceptance means the request was saved, not that work
+has started. The server owns saved-config loading, one-driver exclusion and
+status projection, not coding recovery decisions. Offline exports remain viewers.
+
+**Agent.** A run-level continuation handler owns resuming the objective. Move
+coding decisions currently in cli.apply_resume behind this agent interface;
+CLI/UI call the same entry point. Inspect the whole run rather than guessing one
+process in JavaScript. Resume an eligible checkpoint, request a linked recovery
+for a known failed model step, send interrupted work through senior review with
+its retained source, or recover accepted-output delivery as appropriate. Account
+for every stopped worker so one selected process cannot leave others stranded.
+Record optional instructions once before choosing new work; apply them at the
+existing drain/review boundary. Routine task disposition and repair belong to the
+agent. Preserve objective, amendments, workspaces, task/attempt provenance and
+acceptance checks. Use bounded recovery and record an actionable failure when
+progress is impossible. An ordinary task report must not become a user resolution
+form.
+
+**OS.** Separate durable acceptance of a resume intent from permission to execute.
+A paused runtime with unsettled effects may accept the intent, while new effects
+remain gated on execution certainty. Add a generic, restartable preparation step
+that resolves host receipts, restores saved operation identity and asks the
+appropriate execution adapter for status/result or confirmed cancellation. Join
+host descendants before marking their work ended. Retain evidence and release
+ownership/reservations only after settlement. Recovered successful results replay;
+known failed results permit a distinct linked retry chosen by the caller. The OS
+returns typed ready/waiting/failed facts, with no Git, coding task or acceptance
+policy. Unknown execution is never rewritten as confirmed termination merely
+because Resume was clicked. Bound recovery waits and retain a specific failure
+instead of polling forever or instructing the user to reconcile journal rows.
+
+**Coordination.** One durable request progresses through accepted, recovering,
+continuing and running, or failed. OS recovery progress and the agent's workflow
+outcome remain separate records linked to that request. A crash at any stage
+resumes the pending request without duplicating effects or applying text twice.
+Acquire the runtime's state ownership before effect preparation; HTTP locking
+alone is insufficient against an external coordinator. Preserve saved grants,
+configuration, budgets, cancellation and deadlines. A limit/configuration failure
+is an explicit outcome, not a silent allowance reset or a fresh replacement run.
+
+**Provider and saved-run compatibility.** Current raw HTTP adapters have no general
+remote status/cancel contract; existing records may lack a recoverable handle.
+Native thread/turn IDs are useful evidence, not proof of reconnect/cancel support.
+Implement and verify capability-specific recovery before claiming that interrupted
+provider jobs resume automatically. Unsupported unknown execution must produce a
+plain, specific failure; hiding its old message alone does not meet the goal.
+Changing agent modules changes graph_digest, so existing runs also need an
+explicitly tested compatibility/migration path. Never ignore the saved program
+pin. Preserve original manifests and effects; migrate only documented compatible
+state. Arbitrary historical versions cannot be promised safe continuation.
+
+**Implementation and verification split.** First establish generic OS intent,
+recovery, restart and execution-gate contracts using a non-coding fixture. Next
+implement agent run continuation and all-worker recovery against those ports.
+Then connect the frontend/HTTP adapter to that service. Verify empty/nonempty
+instructions, task review, known model failure, interrupted source, output recovery,
+multiple workers, duplicate requests, restart at each stage, external ownership,
+unknown provider work and unsupported recovery, limits and program compatibility.
+End-to-end success means one click reaches actual useful agent execution without
+a process/reconciliation choice, with no duplicate effects or lost work. Tests and
+provider recovery are planned, not performed by this design task.
 
 <a id="os-concurrency-audit"></a>
 ## CONC-01 — Audit OS concurrency for deadlocks and stalled progress — 2026-10-20
@@ -594,6 +1046,41 @@ Only this current-version design and its required FIXES.md record changed.
 No implementation, settings, new tests, live provider/UI inspection or run
 resume was performed. Validate the acceptance matrix when implementing MEM-01.
 
+
+<a id="sim-inference-ui"></a>
+## SIM-02 — Opt-in inference pacing and fault modes — 2026-10-21
+
+Status: implemented; verification recorded in [FIX-0096](FIXES.md#fix-0096).
+Implements [FIX-0095's proposal](FIXES.md#fix-0095) under the user's later explicit
+implementation request. SIM-01 below remains the concurrency-only launch preset.
+
+UI --sim-inference reveals normal, normal and buggy, and slow and buggy modes before
+Start. The default selection is 30 shared output TPS, batch 2, bug rate 5%, with an
+optional seed and advanced timing controls. Normal/no flag retain the original
+AgentConfig/client path. Buggy/slow configs explicitly pin settings in the optional
+application config subclass and reinstall only the local-lane adapter on recovery.
+The selected batch beats legacy/environment capacity without altering defaults,
+later launches, custom Anthropic fields, old state or ordinary default config pins.
+
+The application adapter supplies virtual shared decoding, startup/prompt latency,
+seeded speed/stalls, normalized transient/output failures and endpoint restart
+cooldowns. The OS retains admission, budgets, grants, completion bounds, recovery
+and uncertainty; its only addition is a generic operation-aware HTTP adapter hook
+and cancellation-safe terminal invocation. Actual usage survives discarded output;
+diagnostics distinguish decisions, applied faults, real provider facts and progress.
+
+This is a buffered service approximation, not a GPU/KV/model-quality emulator.
+Only new calls during cooldown fail; already submitted calls can finish. A seed
+repeats decisions for the same operation IDs, not all concurrent wall timing. A
+coordinator crash stays conservatively uncertain even if a simulator diagnostic
+receipt exists. Full provider responses are retained as diagnostic artifacts with
+the existing snapshot/storage limits; partial actions never execute.
+
+Ownership/record schema: [module guide](../docs/modules/inference-simulation.md).
+Controls/limits/recovery: [usage](../docs/guides/sim-inference.md) and
+[settings reference](../design-docs/simplified-os/AGENT_SETTINGS.md#optional-application-inference-simulation).
+Regression checks are in test_inference_simulation.py and the real UI script tests;
+actual final counts and environment limits belong in FIX-0096.
 
 <a id="sim-batch-ui"></a>
 ## SIM-01 — Launch-scoped Claude batch simulation — 2026-10-20
@@ -1823,3 +2310,33 @@ See [FIX-0058 through FIX-0060](FIXES.md#fix-0058) and the
 limits and fresh-state requirements. The shared agent library remains deferred.
 All exported settings are documented in the
 [central OS reference](../design-docs/simplified-os/AGENT_SETTINGS.md).
+
+
+<a id="endpoint-testing-v1"></a>
+## Endpoint lifecycle implementation v1 — 2026-10-23
+
+The earlier [portable testing proposal](#portable-endpoint-testing) and
+[agent/OS split](#endpoint-agent-os-split) now have an initial implementation.
+The [current usage/settings guide](../docs/guides/endpoint-testing.md) is the
+behavioral reference; earlier design paragraphs remain evidence of the proposal.
+OS-native retries now precede optional caller-authorized retries, with separate
+durable counters and one shared original logical deadline. Output adaptation
+cannot reset them. The fresh coding agent selects two native retries; the UI adds
+one caller retry and a smaller 4096-token raw target inside the 32000 hard ceiling.
+
+SSE Anthropic/chat/Responses assembly, meaningful-output watchdogs, explicit local
+and small-cloud timings, cause/stage diagnostics, retained physical holds,
+discarded-delivery fencing and a bounded on-click generic probe are implemented.
+One-slot endpoints can expose isolated pending computation but cannot submit a
+replacement while it holds the slot. A second unknown remains blocking. No native
+or tool uncertainty is relabelled safe. New settings are opt-in for old/custom
+configurations; saved runs are not automatically migrated.
+
+V1 limits: Gemini has explicit buffered transport; unsupported SSE is not silently
+resent. Raw query isolation trusts the built-in adapter only, excluding native
+jobs and simulator subclasses. The existing TPS simulator still paces completed
+responses and does not prove actual provider streaming/GPU behavior. Probe
+admission serializes within one UI manager, not across independent runtimes.
+Unsupported status/cancel APIs cannot resolve or reclaim pending computation.
+See [FIX-0117](FIXES.md#fix-0117), [FIX-0118](FIXES.md#fix-0118) and
+[FIX-0119](FIXES.md#fix-0119) for actual verification and boundaries.

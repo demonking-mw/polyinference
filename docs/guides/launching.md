@@ -18,6 +18,9 @@ It overrides the legacy capacity environment variable for this invocation only.
 The launch/UI label names the effective model and limits; Start run still requires
 an objective/project and a nonempty referenced credential. See
 [simulation details](../../codex-haiku-setup.md) before interpreting concurrency.
+To add opt-in latency/fault controls before Start, use `polyinference ui
+--sim-inference`; see [the three modes and their limits](sim-inference.md).
+Without this flag, ordinary launches retain their existing behavior and UI.
 
 For later launches:
 

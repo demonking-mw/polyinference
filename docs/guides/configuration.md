@@ -25,6 +25,11 @@ overriding the legacy capacity environment variable. It preserves complete custo
 Anthropic endpoint fields; other local protocols select the full remote Haiku
 preset. New-run config.json records effective values, not a future preference.
 See [scope/precedence and recovery](../../codex-haiku-setup.md).
+UI --sim-inference additionally reveals per-run fault/pacing controls. Only an
+explicitly buggy/slow run saves an application-level inference_simulation block
+outside system; absent lifecycle/policy fields preserve legacy serialization.
+Saved explicit blocks restore simulation during CLI recovery and keep resolved
+capacity. See [settings, precedence and limitations](sim-inference.md).
 
 Edit `.polyinference/agent.json` before running it. The example's repository,
 objective and file names are placeholders. At minimum, update these fields:
@@ -90,5 +95,9 @@ the runtime retains its work and never expands source authority merely because a
 check produced files.
 
 
+
+For streaming timings, OS-native versus caller retries and a bounded endpoint
+warm-up, see [endpoint lifecycle/testing](endpoint-testing.md). New fields are
+opt-in for custom configs; preserve saved configuration pins.
 
 Next: [Budgets and execution settings](budgets.md) includes validation, probes and launch commands. Update configuration docs and module guides after changing settings.

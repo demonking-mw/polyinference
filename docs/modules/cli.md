@@ -12,9 +12,21 @@ The CLI loads configuration/environment and invokes application/runtime services
 
 The installed `polyinference` entry point calls main(). Paths in configuration
 resolve from its parent directory. CLI and UI share application/snapshot paths.
+execute(..., resume_request_ref=...) calls ProjectAgent.resume after loading the
+saved configuration and validating program compatibility. Coding recovery policy
+lives in agent/resume.py; apply_resume remains a compatibility wrapper. CLI resume
+CONFIG [--text instructions] records a run-level intent and uses this same service.
+Successful activation records resume-outcome/; preparation/failure remains durable.
+The agent permits its exact documented predecessor through an audited migration;
+arbitrary historical programs/configurations remain incompatible.
 Probes make real requests; schema validation does not establish provider readiness.
 UI-only --sim-batch N validates 1..16 and passes invocation policy to TestUI;
 it does not modify saved credentials or ordinary run/resume configuration.
+UI-only --sim-inference reveals opt-in controls. execute installs an application
+adapter only for SimulationAgentConfig; load_config recognizes that explicit saved
+block for exact recovery without reapplying ambient batch overrides. Plain configs
+retain AgentConfig and their original pins. Probes contact the actual provider.
+See [simulation ownership](inference-simulation.md) and [usage](../guides/sim-inference.md).
 
 ## Principles to preserve
 

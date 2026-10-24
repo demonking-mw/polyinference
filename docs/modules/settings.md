@@ -9,8 +9,8 @@ One OS settings schema, adjacent coding defaults, and explicit application workf
 | [src/polyinference/system_settings.py](../../src/polyinference/system_settings.py) | Generic RuntimeConfig, endpoint, context and inference safety settings. |
 | [src/polyinference/config.py](../../src/polyinference/config.py) | AgentConfig workflow policy plus compatibility exports of OS settings. |
 | [src/polyinference/agent/system_settings.py](../../src/polyinference/agent/system_settings.py) | Coding OS defaults and UI provider/resource preset. |
-| [examples/agent.mixed.json](../../examples/agent.mixed.json) | Codex senior + Haiku worker sample; 27 sprints and 32k output. |
-| [examples/agent.anthropic.json](../../examples/agent.anthropic.json) | Anthropic-only sample with 32k output allowance. |
+| [examples/agent.mixed.json](../../examples/agent.mixed.json) | Codex senior + Haiku worker sample; 27 sprints, streaming and a 4096 target inside the 32k output ceiling. |
+| [examples/agent.anthropic.json](../../examples/agent.anthropic.json) | Anthropic-only streaming sample with a smaller target inside its 32k ceiling. |
 | [examples/agent.codex.json](../../examples/agent.codex.json) | Brokered Codex sample. |
 | [examples/agent.openai.json](../../examples/agent.openai.json) | Raw OpenAI endpoint sample. |
 | [examples/agent.gemini.json](../../examples/agent.gemini.json) | Raw Gemini endpoint sample. |
@@ -28,13 +28,25 @@ values without rereading ambient overrides. No simulation flag is serialized.
 The coding settings module owns the complete Haiku factory and pure simulation
 overlay (worker binding/cap, slots, full-context reservations), preserving custom
 Anthropic fields and other providers/bindings. OS admission remains generic.
+The optional [application simulator](inference-simulation.md) adds a separate
+SimulationAgentConfig only for explicitly enabled buggy/slow runs. Its saved
+inference_simulation block pins settings/seed for recovery; normal AgentConfig,
+RuntimeConfig remains generic; new optional Endpoint.lifecycle and agent inference
+policy fields are omitted when absent to preserve legacy serialization. --sim-inference
+itself is a UI invocation permission, not a persisted preference.
+
+Optional Endpoint.lifecycle selects explicit transport/connect/first-output/idle/
+total timing. The coding application chooses profiles; bare runtime fields contain
+no cloud/local presets. AgentConfig.inference_policy and model_output_target_tokens
+are top-level application preferences. See [testing profiles and defaults](../guides/endpoint-testing.md).
 
 ## Principles to preserve
 
 - Generic runtime defaults must not acquire coding role/phase assumptions.
 - Lane names do not prove physical inference location.
 - Context reservation must fit input plus output; workers and inflight slots differ.
-- Changed configuration/program pins require fresh state; secrets stay external.
+- Changed configuration or incompatible program pins require fresh state; the
+  exact graph-only Resume migration preserves the configuration. Secrets stay external.
 
 ## Verification and related reading
 

@@ -7,6 +7,7 @@ The application chooses ready work, starts independent workers, drains before re
 | File | Responsibility |
 | --- | --- |
 | [src/polyinference/agent/controller.py](../../src/polyinference/agent/controller.py) | ProjectAgent lifecycle, dispatch, review, steering, recovery, delivery and controller graph. |
+| [src/polyinference/agent/resume.py](../../src/polyinference/agent/resume.py) | Run continuation, all-worker disposition, checkpoint/model/output recovery and exact predecessor compatibility. |
 | [src/polyinference/agent/setup.py](../../src/polyinference/agent/setup.py) | Initial specialist setup using the normal worker protocol. |
 | [src/polyinference/agent/tasks.py](../../src/polyinference/agent/tasks.py) | Task/attempt envelopes and explicit coding capability grants. |
 | [src/polyinference/agent/routing.py](../../src/polyinference/agent/routing.py) | Stable senior/junior development allocation by task count. |
@@ -14,6 +15,15 @@ The application chooses ready work, starts independent workers, drains before re
 ## Interface and ownership
 
 ProjectAgent uses AgentServices/RuntimePorts and LangGraph continuations.
+ProjectAgent.resume consumes UI/CLI intents after generic OS preparation. It
+reattaches eligible checkpoints, retries a known model failure or reopens senior
+review/output delivery. Every stopped worker remains represented; retained source
+and interrupted tasks reach review. Instructions have an atomic steering receipt,
+so interrupted activation cannot apply them twice. Plans/outcomes survive restart;
+ordinary failures leave a paused run with a durable error. Exact prior graph
+50fa4c43...dc9b2ca8 is migrated only when all other program pins match; old manifests
+and effects remain unchanged, with a separate migration record. Unknown graph or
+prompt/schema changes are rejected. Grants, budgets and deadlines are preserved.
 Dependencies become ready after senior keep resolutions. Verification/integration
 is serialized by an explicit resource permit; starts close while review drains.
 Shared runner preparation has one declared owner and explicit dependent tasks;

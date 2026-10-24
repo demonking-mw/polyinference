@@ -419,10 +419,17 @@ class AgentServices:
             replay_policy="reconcile_before_retry",
             payload=payload,
             required_features=[
+                *([Feature(feature_id="runtime/inference-policy", version="1")]
+                  if isinstance(payload, (ModelQuery, AgentJob)) and self.config.inference_policy else []),
                 *([Feature(feature_id="runtime/workspace-view", version="1")] if view else []),
                 *([Feature(feature_id="runtime/model-recovery", version="1")] if recovery else []),
             ],
             extensions={
+                **({"runtime/inference-policy": self.config.inference_policy.model_dump(mode="json")}
+                   if isinstance(payload, (ModelQuery, AgentJob)) and self.config.inference_policy else {}),
+                **({"runtime/output-tokens": min(self.config.model_output_target_tokens,
+                                                limits.max_output_tokens_per_call)}
+                   if isinstance(payload, ModelQuery) and self.config.model_output_target_tokens else {}),
                 **({"polyinference/workspace-view": view} if view else {}),
                 **({"polyinference/recovery-of": recovery["operation_id"],
                     "polyinference/recovery-reason": recovery["reason"]} if recovery else {}),
@@ -688,8 +695,12 @@ class AgentServices:
             data["startup_notes"] = notes[1]["notes"] if notes else []
             data["preparation_issues"] = self.repository.preparation_issues(
                 None if senior else state["workspace_id"])
+        endpoint = getattr(self.config, self.config.role_bindings[role])
         data["response_budget"] = {
-            "max_output_tokens": self.config.limits.max_output_tokens_per_call,
+            "max_output_tokens": min(self.config.model_output_target_tokens or self.config.limits.max_output_tokens_per_call,
+                                     self.config.limits.max_output_tokens_per_call)
+                if endpoint.protocol in {"chat", "responses", "anthropic", "gemini"}
+                else self.config.limits.max_output_tokens_per_call,
             "max_output_bytes": self.config.limits.max_output_bytes,
             "recommended_response_bytes": min(4096, self.config.limits.max_output_bytes),
             "policy": "Includes thinking. Use small complete responses and incremental edits across turns.",

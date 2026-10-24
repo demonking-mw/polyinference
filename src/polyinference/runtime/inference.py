@@ -6,12 +6,33 @@ import asyncio
 import json
 import os
 import re
+import time
 from collections import deque
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from email.utils import parsedate_to_datetime
 
 import httpx
+
+from .inference_stream import CompletionStream, SSEDecoder, StreamFault
+
+
+async def terminal_call(awaitable, timeout):
+    """Cancel a trusted adapter and retrieve its terminal evidence before settling.
+
+    Unlike cancelling wait_for's child implicitly, this also retrieves an adapter
+    exception raised while handling cancellation (including on Python 3.10).
+    Ordinary HTTP/native dispatch keeps its existing invocation path.
+    """
+    task = asyncio.create_task(awaitable)
+    try:
+        return await asyncio.wait_for(asyncio.shield(task), timeout)
+    except (asyncio.CancelledError, asyncio.TimeoutError) as interrupted:
+        task.cancel()
+        try:
+            return await task
+        except asyncio.CancelledError:
+            raise interrupted
 
 
 class EndpointError(RuntimeError):
@@ -49,6 +70,12 @@ class ModelResponseError(EndpointError):
 
 class UnknownExecution(EndpointError):
     """The transport ended without proof the provider stopped."""
+
+    def __init__(self, message, *, cause=None, stage=None):
+        super().__init__(message)
+        self.diagnostics = {"category": "unknown_execution", "cause": cause or "unknown",
+                            "stage": stage or "unknown", "submitted": True}
+
 
 
 class IncompleteGeneration(EndpointError):
@@ -311,37 +338,177 @@ class HTTPInference:
                 "max_tokens": max_output,
                 "stream": False,
             }
+        lifecycle = endpoint.lifecycle
+        if lifecycle and lifecycle.transport == "sse":
+            if endpoint.protocol not in {"anthropic", "chat", "responses"}:
+                raise ProviderError("This adapter has no SSE support; select buffered transport explicitly",
+                                    category="invalid_request", submitted=False)
+            payload["stream"] = True
+            if endpoint.protocol == "chat":
+                payload["stream_options"] = {"include_usage": True}
         return {"path": path, "payload": payload}
 
-    async def generate(self, messages, max_output, response_schema=None, *, prepared=None):
-        endpoint = self.endpoint
-        wire = prepared or self.prepare(messages, max_output, response_schema)
-        path, payload = wire["path"], wire["payload"]
-        # Compatibility endpoints may not implement response_format. The typed grammar
-        # is in the instruction; host validation is always authoritative.
-        try:
-            async with self.client.stream(
-                "POST", endpoint.base_url.rstrip("/") + path, json=payload
-            ) as response:
+    async def recover_operation(self, request, retained):
+        """Retrieve a Responses operation only when its actual response ID survived."""
+        provider = retained.get("provider") or {}
+        response_id = provider.get("response_id")
+        if self.endpoint.protocol != "responses" or not isinstance(response_id, str):
+            return None
+        from urllib.parse import quote
+
+        url = self.endpoint.base_url.rstrip("/") + "/responses/" + quote(response_id, safe="")
+        while True:
+            async with self.client.stream("GET", url) as response:
                 if response.status_code >= 400:
-                    raise await self.rejected(response)
+                    # A failed status lookup says nothing about the original work.
+                    raise EndpointError("The provider could not retrieve the previous response")
                 chunks, size = [], 0
                 async for chunk in response.aiter_bytes():
                     size += len(chunk)
                     if size > self.output_cap:
-                        raise UnknownExecution("Endpoint response exceeded transport output cap")
+                        raise EndpointError("The recovered response exceeds the transport limit")
                     chunks.append(chunk)
+            body = json.loads(b"".join(chunks))
+            if not isinstance(body, dict) or body.get("id") != response_id:
+                raise EndpointError("The recovered response identity does not match")
+            if body.get("status") in {"queued", "in_progress"}:
+                await asyncio.sleep(0.25)
+                continue
+            if body.get("status") not in {"completed", "failed", "cancelled", "incomplete"}:
+                raise EndpointError("The provider did not establish the previous response's final state")
+            return self.normalize(body, request.limits.max_output_tokens_per_call, response)
+
+    async def generate(self, messages, max_output, response_schema=None, *, prepared=None,
+                       observer=None, progress=None):
+        endpoint = self.endpoint
+        wire = prepared or self.prepare(messages, max_output, response_schema)
+        lifecycle = endpoint.lifecycle
+        streaming = bool(wire["payload"].get("stream"))
+        started = time.monotonic()
+        last_output = None
+        last_report = None
+        observed_id = None
+        stage = "first_output" if streaming else "buffered"
+        stream = CompletionStream(endpoint.protocol) if streaming else None
+
+        async def report(state, **facts):
+            nonlocal last_report
+            current = time.monotonic()
+            if state == "receiving" and last_report is not None and current - last_report < .25:
+                return
+            last_report = current
+            if progress:
+                try:
+                    await progress({"state": state, "elapsed_seconds": round(time.monotonic() - started, 3),
+                                    "last_output_seconds": round(last_output - started, 3) if last_output else None,
+                                    **facts})
+                except Exception:
+                    pass  # Diagnostic observers cannot alter execution certainty.
+
+        async def remember_provider(response_id):
+            nonlocal observed_id
+            if observer and endpoint.protocol == "responses" and response_id and response_id != observed_id:
+                try:
+                    await observer({"response_id": response_id})
+                    observed_id = response_id
+                except Exception:
+                    pass  # Losing the handle is not evidence of a stopped provider.
+
+        async def read_body(response):
+            nonlocal last_output, stage
+            chunks, size = [], 0
+            decoder = SSEDecoder() if streaming else None
+            iterator = response.aiter_bytes().__aiter__()
+            while True:
+                total_remaining = lifecycle.total_seconds - (time.monotonic() - started) if lifecycle else None
+                if total_remaining is not None and total_remaining <= 0:
+                    stage = "total"
+                    raise asyncio.TimeoutError()
+                if streaming and lifecycle:
+                    cutoff = ((last_output + lifecycle.idle_seconds) if last_output is not None
+                              else started + lifecycle.first_output_seconds)
+                    stage = "output_idle" if last_output is not None else "first_output"
+                    remaining = min(cutoff - time.monotonic(), total_remaining)
+                    if remaining <= 0:
+                        raise asyncio.TimeoutError()
+                else:
+                    remaining = total_remaining
+                try:
+                    chunk = await asyncio.wait_for(iterator.__anext__(), remaining)
+                except StopAsyncIteration:
+                    break
+                size += len(chunk)
+                if size > self.output_cap:
+                    raise UnknownExecution("Endpoint response exceeded transport output cap",
+                                           cause="output_cap", stage=stage)
+                if not streaming:
+                    chunks.append(chunk)
+                    continue
+                for data in decoder.feed(chunk):
+                    meaningful = stream.accept(data)
+                    if meaningful:
+                        last_output = time.monotonic()
+                    await remember_provider(stream.provider_id)
+                    if meaningful or stream.terminal:
+                        await report("receiving" if meaningful else "terminal", bytes_received=size,
+                                     provider_id=self.sanitize(stream.provider_id))
+                    if stream.terminal:
+                        break
+                if stream.terminal:
+                    break
+            if streaming:
+                decoder.feed(b"", final=True)
+                if not stream.terminal:
+                    raise UnknownExecution("Stream ended without a terminal event",
+                                           cause="missing_terminal", stage=stage)
+                if stream.error is not None:
+                    code = self.sanitize(stream.error.get("type") or stream.error.get("code"))
+                    raise ProviderError("Provider stream ended with an error", category=(
+                        "service_unavailable" if code in {"overloaded_error", "api_error", "server_error"}
+                        else "rate_limit" if code == "rate_limit_error" else "request_rejected"), provider_code=code,
+                        provider_message=self.sanitize(stream.error.get("message")))
+                return stream.body
             try:
-                body = json.loads(b"".join(chunks))
+                return json.loads(b"".join(chunks))
             except (ValueError, UnicodeError) as exc:
                 raise self.response_error("Endpoint returned invalid JSON", {}, response, "invalid_json") from exc
+
+        try:
+            await report("waiting_first_output" if streaming else "waiting_buffered_response")
+            options = {}
+            if lifecycle:
+                options["timeout"] = httpx.Timeout(connect=lifecycle.connect_seconds,
+                    pool=lifecycle.connect_seconds, write=lifecycle.connect_seconds,
+                    read=None if streaming else lifecycle.total_seconds)
+            manager = self.client.stream("POST", endpoint.base_url.rstrip("/") + wire["path"],
+                                         json=wire["payload"], **options)
+            header_timeout = min(lifecycle.first_output_seconds, lifecycle.total_seconds) if lifecycle and streaming else (
+                lifecycle.total_seconds if lifecycle else None)
+            response = await asyncio.wait_for(manager.__aenter__(), header_timeout)
+            try:
+                if response.status_code >= 400:
+                    raise await self.rejected(response)
+                if streaming and "text/event-stream" not in response.headers.get("content-type", ""):
+                    raise UnknownExecution("Requested SSE but received a different content type",
+                                           cause="stream_protocol", stage=stage)
+                body = await read_body(response)
+            finally:
+                await manager.__aexit__(None, None, None)
+
         except (httpx.ConnectError, httpx.ConnectTimeout, httpx.PoolTimeout) as exc:
             raise ProviderError("Endpoint connection failed before submission", category="connection",
                                 submitted=False) from exc
-        except (httpx.TransportError, asyncio.CancelledError) as exc:
-            raise UnknownExecution("Endpoint disconnected; execution requires reconciliation") from exc
+        except (StreamFault, ValueError, UnicodeError, KeyError, TypeError, IndexError) as exc:
+            raise UnknownExecution("Malformed provider stream", cause=type(exc).__name__, stage=stage) from exc
+        except (httpx.TransportError, asyncio.TimeoutError, asyncio.CancelledError) as exc:
+            cause = type(exc).__name__
+            await report("uncertain", cause=cause, stage=stage)
+            raise UnknownExecution("Endpoint transport ended without termination evidence: " + cause,
+                                   cause=cause, stage=stage) from exc
         if not isinstance(body, dict):
             raise self.response_error("Endpoint returned a non-object response", {}, response, "invalid_shape")
+        if isinstance(body.get("id"), str):
+            await remember_provider(body["id"])
         try:
             return self.normalize(body, max_output, response)
         except (KeyError, TypeError, IndexError, AttributeError) as exc:

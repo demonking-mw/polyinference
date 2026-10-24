@@ -6,18 +6,13 @@ import os
 import shutil
 from pathlib import Path
 
+from ..ports import WriteScopeError as WriteScopeError  # compatibility re-export
 from ..primitives import canonical, digest
 
 ENVIRONMENT_DIRS = {"node_modules", ".venv", ".venv-linux"}
 DEPENDENCY_FILES = {"package.json", "package-lock.json", "npm-shrinkwrap.json", "yarn.lock",
                     "pnpm-lock.yaml", "pyproject.toml", "uv.lock", "poetry.lock", "Pipfile.lock"}
 
-
-class WriteScopeError(ValueError):
-    def __init__(self, workspace_id, phase, paths, allowed):
-        self.detail = {"code": "write_scope_exceeded", "workspace_id": workspace_id,
-                       "phase": phase, "paths": sorted(paths), "allowed_write_paths": sorted(allowed)}
-        super().__init__(f"Private changes exceed write scope ({phase}): " + ", ".join(sorted(paths)))
 
 
 def dependency_digest(tree):
