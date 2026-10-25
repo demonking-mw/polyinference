@@ -60,7 +60,7 @@ class ScriptedAgent:
         self.review_inputs = []
         self.hook = None
 
-    async def generate(self, messages, max_output, response_schema=None):
+    async def generate(self, messages, max_output, response_schema=None, **kwargs):
         import asyncio
 
         from polyinference.domain import digest

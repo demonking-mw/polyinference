@@ -175,7 +175,7 @@ async def test_worker_allowance_exhaustion_never_fabricates_assessment(config):
     config = config.model_copy(update={"limits": limits})
 
     class Looping(ScriptedAgent):
-        async def generate(self, messages, *args):
+        async def generate(self, messages, *args, **kwargs):
             data = json.loads(
                 next(m["content"] for m in messages if "Pinned application inputs:" in m["content"]).split(
                     "Pinned application inputs:\n", 1
@@ -205,7 +205,7 @@ async def test_steering_keeps_unstarted_task_pending_then_explicitly_cancels_it(
     config = config.model_copy(update={"max_workers": 1})
 
     class SteeringSenior(ScriptedAgent):
-        async def generate(self, messages, *args):
+        async def generate(self, messages, *args, **kwargs):
             data = json.loads(
                 next(m["content"] for m in messages if "Pinned application inputs:" in m["content"]).split(
                     "Pinned application inputs:\n", 1

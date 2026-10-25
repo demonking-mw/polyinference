@@ -23,6 +23,7 @@ class Endpoint(Wire):
     brokered_tools: bool = False
     inference_location: Literal["local", "cloud"] | None = None
     timeout_seconds: Annotated[float, Field(gt=0, le=1800)] = 180
+    supports_temperature: bool = True
 
     @property
     def physical_location(self):

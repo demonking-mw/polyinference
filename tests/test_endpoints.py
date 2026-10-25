@@ -12,8 +12,9 @@ from polyinference.runtime.codex import CodexAppServer, CodexProxy, NativeJobSto
 from polyinference.runtime.inference import Admission, EndpointError, HTTPInference, UnknownExecution
 
 
-@pytest.mark.parametrize("protocol", ["chat", "responses", "gemini"])
-async def test_endpoint_request_and_usage(protocol, monkeypatch):
+@pytest.mark.parametrize("protocol", ["chat", "responses", "gemini", "anthropic"])
+@pytest.mark.parametrize("temperature", [None, 0.0, 0.7])
+async def test_endpoint_request_and_usage(protocol, temperature, monkeypatch):
     monkeypatch.setenv("FIXTURE_KEY", "never-store-this")
     captured = []
 
@@ -24,6 +25,12 @@ async def test_endpoint_request_and_usage(protocol, monkeypatch):
             body = {
                 "candidates": [{"finishReason": "STOP", "content": {"parts": [{"text": '{"ok":true}'}]}}],
                 "usageMetadata": {"totalTokenCount": 17},
+            }
+        elif protocol == "anthropic":
+            body = {
+                "stop_reason": "end_turn",
+                "content": [{"type": "text", "text": '{"ok":true}'}],
+                "usage": {"input_tokens": 10, "output_tokens": 7},
             }
         elif protocol == "responses":
             body["output"] = [
@@ -43,12 +50,21 @@ async def test_endpoint_request_and_usage(protocol, monkeypatch):
     )
     try:
         result = await client.generate(
-            [{"role": "system", "content": "instructions"}, {"role": "user", "content": "request"}], 30
+            [{"role": "system", "content": "instructions"}, {"role": "user", "content": "request"}],
+            30,
+            temperature=temperature,
         )
         assert json.loads(result["text"]) == {"ok": True}
         assert result["usage"]["total_tokens"] == 17
         request = captured[0]
         body = json.loads(request.content)
+        settings = body["generationConfig"] if protocol == "gemini" else body
+        if temperature is None:
+            assert "temperature" not in settings
+        else:
+            assert settings["temperature"] == temperature
+        expected = {} if temperature is None else {"temperature": temperature}
+        assert result["generation_settings"] == {"requested": expected, "sent": expected, "effective": None}
         assert "tools" not in body
         assert "fixture" in request.url.path if protocol == "gemini" else body["model"] == "fixture"
         assert request.method == "POST"
@@ -152,8 +168,7 @@ for line in sys.stdin:
     assert any(e["method"] == "turn/completed" for e in result["events"])
     assert len(result["events"]) < 2000
     assert all(
-        not e["method"].endswith(("/delta", "textDelta", "summaryTextDelta"))
-        for e in result["events"]
+        not e["method"].endswith(("/delta", "textDelta", "summaryTextDelta")) for e in result["events"]
     )
 
 
@@ -224,3 +239,18 @@ for line in sys.stdin:
         NativeJobStopped, match="profile rejected" if failure == "dispatch" else "invalid output schema"
     ):
         await client.generate_job([], tmp_path, {"type": "object"})
+
+
+async def test_unsupported_temperature_is_not_silently_dropped():
+    async def handler(request):
+        pytest.fail("unsupported settings must fail before network dispatch")
+
+    client = HTTPInference(
+        Endpoint(model="fixture", supports_temperature=False),
+        httpx.AsyncClient(transport=httpx.MockTransport(handler)),
+    )
+    try:
+        with pytest.raises(EndpointError, match="does not support"):
+            await client.generate([{"role": "user", "content": "x"}], 20, temperature=0)
+    finally:
+        await client.close()

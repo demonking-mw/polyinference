@@ -292,6 +292,14 @@ check the endpoint bindings and recorded model operations before assuming a bug.
 where inference happens: the default `local` lane points to Anthropic's cloud API.
 Physical inference location is recorded separately.
 
+Raw model requests forward their declared temperature to Chat Completions,
+Responses, Anthropic or Gemini (using its `generationConfig` field). Result
+artifacts distinguish the requested/sent value from effective sampling, which
+the provider may not report. Set endpoint `supports_temperature` to `false` for
+a model that cannot honor this setting; an explicit request then fails clearly
+rather than silently dropping it. Legacy adapter calls that omit temperature
+continue to use the provider's defaults.
+
 The default bindings are:
 
 | Role | Purpose | Lane / default backend |

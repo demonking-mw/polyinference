@@ -61,7 +61,7 @@ async def test_unknown_remote_effect_is_not_retried_or_treated_as_cancelled(conf
     class Disconnected:
         calls = 0
 
-        async def generate(self, *args):
+        async def generate(self, *args, **kwargs):
             self.calls += 1
             raise UnknownExecution("after send")
 
@@ -167,9 +167,7 @@ async def test_check_npm_cache_is_excluded_but_source_changes_invalidate_evidenc
     )
     if modify_source:
         script += "; Path('a.py').write_text('VALUE = 77\\n')"
-    config = config.model_copy(
-        update={"checks": [Check(name="syntax", argv=[sys.executable, "-c", script])]}
-    )
+    config = config.model_copy(update={"checks": [Check(name="syntax", argv=[sys.executable, "-c", script])]})
     runtime, _, _ = await setup(config)
     try:
         evidence = await runtime.tools.check("fixture-ws", "syntax")

@@ -93,8 +93,10 @@ class HTTPInference:
             transport=httpx.AsyncHTTPTransport(retries=0),
         )
 
-    async def generate(self, messages, max_output, response_schema=None):
+    async def generate(self, messages, max_output, response_schema=None, *, temperature=None):
         endpoint = self.endpoint
+        if temperature is not None and not endpoint.supports_temperature:
+            raise EndpointError("Endpoint does not support the requested temperature")
         if endpoint.protocol == "gemini":
             path = "/models/" + endpoint.model.removeprefix("models/") + ":generateContent"
             payload = {
@@ -139,6 +141,12 @@ class HTTPInference:
             }
         # Compatibility endpoints may not implement response_format. The typed grammar
         # is in the instruction; host validation is always authoritative.
+        settings = {} if temperature is None else {"temperature": temperature}
+        if temperature is not None:
+            if endpoint.protocol == "gemini":
+                payload["generationConfig"]["temperature"] = temperature
+            else:
+                payload["temperature"] = temperature
         try:
             async with self.client.stream(
                 "POST", endpoint.base_url.rstrip("/") + path, json=payload
@@ -220,6 +228,7 @@ class HTTPInference:
             "provider_id": body.get("id"),
             "model": body.get("model", endpoint.model),
             "events": [],
+            "generation_settings": {"requested": settings, "sent": settings, "effective": None},
         }
 
     async def close(self):

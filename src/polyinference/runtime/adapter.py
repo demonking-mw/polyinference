@@ -379,7 +379,11 @@ class StandaloneRuntime:
                         if endpoint.protocol not in {"chat", "responses", "gemini", "anthropic"}:
                             raise EndpointError("Native backend requires AgentJob")
                         result = await asyncio.wait_for(
-                            self.clients[name].generate(messages, request.limits.max_output_tokens_per_call),
+                            self.clients[name].generate(
+                                messages,
+                                request.limits.max_output_tokens_per_call,
+                                temperature=payload.temperature,
+                            ),
                             timeout,
                         )
                     else:
