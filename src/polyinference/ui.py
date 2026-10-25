@@ -356,9 +356,10 @@ class TestUI:
                 except (ValueError, OSError) as exc:
                     nodes.append({**original, "export_error": str(exc)})
             processes.append({**process, "nodes": nodes})
-        effects = []
+        effects, inference_attempts = [], []
         for key, effect in records.items():
-            if not key.startswith("effect/"):
+            attempt = key.startswith("inference-attempt/")
+            if not attempt and not key.startswith("effect/"):
                 continue
             outputs = []
             for ref in (effect.get("result") or {}).get("output_refs", []):
@@ -371,7 +372,19 @@ class TestUI:
                     outputs.append({"ref": ref, "value": output})
                 except (ValueError, OSError) as exc:
                     outputs.append({"ref": ref, "error": str(exc)})
-            effects.append({**effect, "outputs": outputs})
+            exported = {"record_ref": key, **effect, "outputs": outputs}
+            if attempt:
+                # A replacement may differ from the logical request. Export the
+                # actual attempted context with its original trust/provenance.
+                parts = []
+                for part in effect["request"]["payload"].get("context", {}).get("parts", []):
+                    try:
+                        parts.append({**part, "text": read_artifact(state, part["content"])})
+                    except (ValueError, OSError) as exc:
+                        parts.append({**part, "export_error": str(exc)})
+                inference_attempts.append({**exported, "context_parts": parts})
+            else:
+                effects.append(exported)
         config_path = Path(state).parent / "config.json"
         return {
             "schema_version": 1,
@@ -380,6 +393,15 @@ class TestUI:
             "configuration": json.loads(config_path.read_text()) if config_path.is_file() else None,
             "processes": processes,
             "effects": effects,
+            "inference_attempts": inference_attempts,
+            "retry_windows": {key: value for key, value in records.items() if key.startswith("retry/")},
+            "check_diagnoses": {key: value for key, value in records.items() if key.startswith("diagnosis/")},
+            "completion_reviews": {
+                key: value for key, value in records.items() if key.startswith("completion-review/")
+            },
+            "review_artifacts": {
+                key: value for key, value in records.items() if key.startswith("review-artifact/")
+            },
             "reports": [value for key, value in records.items() if key.startswith("report/")],
             "steering": [value for key, value in sorted(records.items()) if key.startswith("steering/")],
             "run_record": records.get("app/run"),

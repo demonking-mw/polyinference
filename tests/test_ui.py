@@ -8,7 +8,7 @@ import threading
 
 import httpx
 import pytest
-from conftest import ScriptedAgent
+from conftest import ScriptedAgent, fixture_completion
 
 from polyinference.agent.controller import ProjectAgent
 from polyinference.agent.services import AgentServices
@@ -40,14 +40,15 @@ async def fixture_runner(config):
 
 
 async def finished(client, run_id):
-    for _ in range(500):
+    deadline = asyncio.get_running_loop().time() + 60
+    while asyncio.get_running_loop().time() < deadline:
         response = await client.get("/api/run", params={"id": run_id})
         assert response.status_code == 200, response.text
         value = response.json()
         if value["status"] != "running":
             return value
-        await asyncio.sleep(0.02)
-    pytest.fail("UI test run did not finish")
+        await asyncio.sleep(0.05)
+    pytest.fail("UI fixture did not finish within 60 seconds: " + str(value))
 
 
 async def test_ui_runs_real_agent_and_inspects_actual_nodes_over_http(config, tmp_path):
@@ -239,6 +240,10 @@ async def test_ui_selects_another_repository_and_exports_complete_json(config, t
             assert model_nodes and model_nodes[0]["operations"][0]["prompt"]
             assert model_nodes[0]["operations"][0]["response"]["text"]
             assert document["effects"] and document["effects"][0]["request"]["operation_id"]
+            assert document["inference_attempts"] and document["inference_attempts"][0]["context_parts"]
+            semantic = document["run_record"]["semantic_completion"]
+            assert document["completion_reviews"][semantic["review_ref"]] == semantic
+            assert document["review_artifacts"]
             assert "cost" in document["run"]
             assert (source / "a.py").read_text() == "VALUE = 1\n"
             assert not subprocess.check_output(["git", "-C", str(source), "status", "--porcelain"]).strip()
@@ -391,6 +396,8 @@ async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_spri
                 ]
             else:
                 reply["complete"] = not data["reports"] and not data["pending_tasks"]
+                if reply["complete"]:
+                    reply["completion_assessment"] = fixture_completion(data)
             return {
                 "model": "gpt-6.1-sol",
                 "text": json.dumps(reply),

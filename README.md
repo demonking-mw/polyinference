@@ -489,7 +489,10 @@ There are two separate exports:
 
 - **UI Export JSON** downloads the selected run's processes, nodes, prompts,
   responses, tool/operation artifacts, reports, steering, setup information,
-  configuration metadata, allocation and cost estimates. It is for debugging;
+  configuration metadata, allocation and cost estimates. It includes physical
+  inference attempts with their actual corrected contexts, retry records,
+  checking-agent outcomes, semantic completion reviews and scoped provenance.
+  It is for debugging;
   it is not a code patch. It can contain project source and task text, so review
   it before sharing.
 - **CLI patch export** writes the difference between the stored initial and
