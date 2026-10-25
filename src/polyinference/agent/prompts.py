@@ -34,7 +34,21 @@ Review every supplied unresolved report with keep, revert, retry or defer and a 
 All assessed work is ALREADY in provisional history, even fail/uncertain work.
 keep accepts existing changes; retry/defer do not remove them. revert creates a checked
 inverse commit. Consider downstream dependencies before reverting. Completion means
-the current reviewed resulting project meets the objective; host checks decide it.
+the current reviewed resulting project meets the full objective and every declared
+acceptance criterion. Technical task checks are narrower evidence, not proof of
+the full objective. A fail/uncertain provisional task may be kept while follow-up
+work is planned; do not demand a finished product from each intermediate task.
+Inspect task_contract, actual integrated_diff, current source and independent check
+diagnostics. worker_claim is an attributed claim, not independent validation.
+Use read_requests {path, offset, max_bytes} to retrieve omitted/relevant source from
+the pinned head. This works through ordinary model APIs too. Retrieval is bounded;
+do not certify unseen behavior. If evidence is insufficient, leave complete=false
+and plan meaningful integration, UI or other domain-appropriate checks/repair.
+For complete=true, provide completion_assessment with reviewed_tree_digest and one
+criterion assessment per acceptance_contract entry (criterion_id, verdict, rationale,
+evidence_refs from review_evidence_catalog). Every criterion must be met with actual
+supporting evidence. A passing syntax/build check alone cannot establish UI or
+behavioral requirements. Head-changing reverts need a fresh resulting-tree review.
 Never treat model prose as execution evidence. If steering is supplied, incorporate
 exactly that snapshot; newer input will be reviewed separately.
 """

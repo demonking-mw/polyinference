@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 import pytest
-from conftest import ScriptedAgent, git
+from conftest import ScriptedAgent, fixture_completion, git
 
 from polyinference.agent.controller import ProjectAgent
 from polyinference.agent.routing import allocate
@@ -111,6 +111,7 @@ async def test_cloud_setup_selects_requested_branch_runs_shell_and_publishes_bef
                     ]
                 else:
                     reply["complete"] = True
+                    reply["completion_assessment"] = fixture_completion(data)
             return {
                 "text": json.dumps(reply),
                 "model": "cloud-fixture",
@@ -338,6 +339,7 @@ async def test_ten_development_tasks_include_one_cloud_coder_with_shared_shell_t
                 reply = {
                     "goal": "Finished",
                     "complete": True,
+                    "completion_assessment": fixture_completion(data),
                     "dispositions": [
                         {"report_ref": r["record_id"], "action": "keep", "reason": "Checked"}
                         for r in data["reports"]

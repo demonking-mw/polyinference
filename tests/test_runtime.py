@@ -181,10 +181,39 @@ async def test_check_npm_cache_is_excluded_but_source_changes_invalidate_evidenc
 
 
 async def test_final_acceptance_rejects_new_steering_during_checks(config):
+    import json
+
+    from conftest import fixture_completion
+
+    class Reviewer:
+        async def generate(self, messages, *args, **kwargs):
+            data = json.loads(
+                next(m["content"] for m in messages if "Pinned application inputs:\n" in m["content"]).split(
+                    "Pinned application inputs:\n", 1
+                )[1]
+            )
+            return {
+                "text": json.dumps(
+                    {
+                        "goal": "Fixture baseline review",
+                        "complete": True,
+                        "completion_assessment": fixture_completion(data),
+                    }
+                ),
+                "usage": {"total_tokens": 10},
+                "model": "fixture",
+                "events": [],
+            }
+
+        async def close(self):
+            pass
+
     runtime, app, engine = await setup(config)
     try:
-        run = app.get("app/run")
-        app.update("app/run", {**run, "completion_proposed": True})
+        await runtime.clients["cloud"].close()
+        runtime.clients["cloud"] = Reviewer()
+        await engine.review()
+        assert app.get("app/run")["completion_proposed"]
         original = runtime.tools.check
 
         async def interrupt_check(*args):

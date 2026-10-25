@@ -44,6 +44,7 @@ from ..domain import (
 from ..ports import RuntimePorts
 from .diagnostics import DIAGNOSIS_PROMPT, DiagnosisPlan
 from .prompts import BOOTSTRAP, SENIOR, WORKER
+from .review import report_view, repository_context
 from .tasks import coding_tools
 
 
@@ -226,31 +227,8 @@ class AgentServices:
             ],
         }
 
-    def review_report(self, report):
-        return {
-            "record_id": report["record_id"],
-            "task_spec_ref": report["task_spec_ref"],
-            "verdict": report["verdict"],
-            "resolution": report["resolution"],
-            "comment": self.read(report["assessment_summary"]),
-            "captured_head": report["captured_head"],
-            "final_code": report["final_code"],
-            "candidate_commit_id": report["candidate_commit_id"],
-            "hazard_refs": report["hazard_refs"],
-            "evidence": [
-                {
-                    "criterion": e["criterion_ref"],
-                    "status": e["status"],
-                    "exit_code": e["exit_code"],
-                    "checked_code": e["checked_code"],
-                    "output_ref": e["output"],
-                    "output_preview": self.ports.artifacts.read(ArtifactRef.model_validate(e["output"]))[
-                        :800
-                    ].decode(errors="replace"),
-                }
-                for e in report["evidence"]
-            ],
-        }
+    async def review_report(self, report):
+        return await report_view(self, report)
 
     def evidence_view(self, evidence, cap=3000):
         ref = ArtifactRef.model_validate(evidence["output"])
@@ -270,32 +248,8 @@ class AgentServices:
             "truncated": len(raw) > cap,
         }
 
-    async def repository_context(self, code):
-        from ..contracts import CodeRevision
-
-        tree = await self.ports.workspaces.tree(CodeRevision.model_validate(code).commit_id)
-        selected = list(dict.fromkeys(self.config.allowed_write_paths + self.config.closure_paths))
-        remaining, contents = 5000, []
-        for path in selected:
-            if path not in tree or remaining <= 0:
-                continue
-            content = tree[path][1]
-            preview = content[: min(remaining, 2000)]
-            remaining -= len(preview)
-            contents.append(
-                {
-                    "path": path,
-                    "digest": digest(content),
-                    "content": preview.decode(errors="replace"),
-                    "truncated": len(preview) < len(content),
-                }
-            )
-        return {
-            "paths": sorted(tree)[:100],
-            "omitted_path_count": max(0, len(tree) - 100),
-            "contents": contents,
-            "source_code": code,
-        }
+    async def repository_context(self, code, changed_paths=()):
+        return await repository_context(self, code, changed_paths)
 
     def ensure_request(self, process_id, step, payload, view=None, protected=False):
         key = f"request/{process_id}/{step}"

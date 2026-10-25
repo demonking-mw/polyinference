@@ -52,6 +52,12 @@ class CheckDiagnosis(Wire):
     instructions: str = ""
 
 
+class AcceptanceCriterion(Wire):
+    criterion_id: Annotated[str, Field(pattern=r"^[a-zA-Z0-9_-]{1,80}$")]
+    description: Annotated[str, Field(min_length=1, max_length=4000)]
+    required_checks: list[str] = Field(default_factory=list)
+
+
 class AgentConfig(Wire):
     repository: str
     state_directory: str = ".polyinference"
@@ -79,6 +85,8 @@ class AgentConfig(Wire):
     check_execution: Literal["disabled", "trusted", "bubblewrap"] = "disabled"
     inference_retry: InferenceRetry = Field(default_factory=InferenceRetry)
     check_diagnosis: CheckDiagnosis = Field(default_factory=CheckDiagnosis)
+    acceptance_criteria: list[AcceptanceCriterion] = Field(default_factory=list)
+    max_review_reads: Annotated[int, Field(ge=0, le=16)] = 4
 
     @model_validator(mode="after")
     def feasible(self):
@@ -96,6 +104,11 @@ class AgentConfig(Wire):
         names = [c.name for c in self.checks]
         if len(names) != len(set(names)):
             raise ValueError("Check names must be unique")
+        ids = [c.criterion_id for c in self.acceptance_criteria]
+        if len(ids) != len(set(ids)) or "objective" in ids:
+            raise ValueError("Acceptance criterion IDs must be unique; objective is reserved")
+        if any(not set(c.required_checks) <= set(names) for c in self.acceptance_criteria):
+            raise ValueError("Acceptance criteria must use configured checks")
         if self.limits.cost_guarantee == "enforced":
             raise ValueError("No provider-enforced dollar quota in placeholder; use estimate")
         return self

@@ -9,6 +9,7 @@ from collections import defaultdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
+from conftest import fixture_completion
 
 from polyinference.agent.controller import ProjectAgent
 from polyinference.agent.services import AgentServices
@@ -69,6 +70,7 @@ async def test_complete_agent_over_real_http(config, protocol, monkeypatch):
                         reply = {
                             "goal": "Done",
                             "complete": True,
+                            "completion_assessment": fixture_completion(data),
                             "memory_update": "The value was updated and reviewed.",
                             "dispositions": [
                                 {"report_ref": r["record_id"], "action": "keep", "reason": "Reviewed"}

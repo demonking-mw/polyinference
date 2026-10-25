@@ -100,6 +100,24 @@ class Disposition(Wire):
     reason: Annotated[str, Field(min_length=1, max_length=8000)]
 
 
+class ReviewRead(Wire):
+    path: RelativePath
+    offset: Annotated[int, Field(ge=0)] = 0
+    max_bytes: Annotated[int, Field(ge=1, le=4000)] = 2000
+
+
+class CriterionAssessment(Wire):
+    criterion_id: str
+    verdict: Literal["met", "unmet", "uncertain"]
+    rationale: Annotated[str, Field(min_length=1, max_length=2000)]
+    evidence_refs: list[str] = Field(default_factory=list)
+
+
+class CompletionAssessment(Wire):
+    reviewed_tree_digest: str
+    criteria: list[CriterionAssessment]
+
+
 class SeniorProposal(Wire):
     goal: str
     tasks: list[Assignment] = Field(default_factory=list)
@@ -107,6 +125,8 @@ class SeniorProposal(Wire):
     complete: bool = False
     memory_update: str | None = None
     cancel_pending_task_ids: list[str] = Field(default_factory=list)
+    read_requests: list[ReviewRead] = Field(default_factory=list, max_length=8)
+    completion_assessment: CompletionAssessment | None = None
 
     @model_validator(mode="after")
     def validate_dag(self):
@@ -137,6 +157,8 @@ class SeniorProposal(Wire):
             raise ValueError("Duplicate report disposition")
         if self.complete and self.tasks:
             raise ValueError("Completion cannot create tasks")
+        if self.complete and self.read_requests:
+            raise ValueError("Read requested evidence before proposing completion")
         return self
 
 

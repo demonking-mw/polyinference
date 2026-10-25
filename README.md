@@ -348,6 +348,25 @@ Code defects and unresolved uncertainty remain failures; diagnosis cannot mark
 a check passed. Native Codex diagnosis uses a read-only current-tree snapshot;
 dynamic diagnosis via the optional `codex_proxy` adapter is unsupported.
 
+Senior review receives task contracts, attributed worker claims, actual integrated
+diffs, current source and independent check diagnostics. Previews are bounded and
+mark omissions; `read_requests` can retrieve project-relative byte ranges from
+the pinned head through either ordinary APIs or native Codex. `max_review_reads`
+defaults to 4. Full scoped artifact references remain in `review-artifact/` records.
+
+Project completion requires a separate `completion_assessment` covering the full
+original objective and every configured `acceptance_criteria` entry. Entries have
+`criterion_id`, `description` and optional `required_checks` naming configured
+checks. Use these to declare meaningful integration, UI or domain behavior; a
+syntax gate cannot certify those requirements. The senior must cite presented
+current-tree source and evidence, with every criterion met and required checks
+passing. Its immutable assessment is bound to the reviewed tree and steering
+snapshot; final acceptance reruns checks and retains the existing atomic guards.
+Reverts require another review of their resulting tree. Failed/uncertain task
+reports can still be kept as provisional work while follow-up tasks are planned.
+Semantic review remains a model judgment; strong independent behavior checks are
+necessary for reliable product acceptance.
+
 There is also an optional `codex_proxy` adapter for a separately installed,
 compatible proxy with a pinned read-only snapshot. It supports senior queries;
 opaque proxy coding jobs are rejected. No third-party proxy is installed by this
@@ -475,7 +494,9 @@ There are two separate exports:
   it before sharing.
 - **CLI patch export** writes the difference between the stored initial and
   provisional heads, including binary diffs. It does not depend on a model's
-  description of its edits.
+  description of its edits. A sibling `OUTPUT.patch.status.json` identifies the
+  run outcome, acceptance review and unresolved reports. Incomplete output is
+  labeled `partial_provisional`; exporting it does not accept the project.
 
 To export a UI run, replace `RUN_ID` with the selected run's ID:
 

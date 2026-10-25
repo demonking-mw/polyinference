@@ -19,6 +19,7 @@ from ..contracts import (
 )
 from ..domain import SeniorProposal, canonical, digest, now
 from .design_basis import DESIGN_BASIS
+from .review import check_view, code_identity, contract, evidence_catalog, fit_snapshot, validate_completion
 from .routing import allocate
 from .senior import build_senior
 from .tasks import make_task
@@ -358,6 +359,7 @@ class ProjectAgent:
             if run["steering_applied"] < body["sequence"] <= run["steering_received"]
         ]
         pending = [v for _, _, v in app.ports.records.scan("task/") if v["execution"] == "pending"]
+        report_views = [await app.review_report(report) for report in reports]
         snapshot = {
             "objective": run["objective"],
             "repository_setup": (app.ports.records.get("repository/setup") or (0, {}))[1],
@@ -370,9 +372,11 @@ class ProjectAgent:
                     and body["execution"] != "cancelled"
                 ],
             },
-            "repository_context": await app.repository_context(head),
+            "repository_context": await app.repository_context(
+                head, [p for r in report_views for p in r["changed_paths"]]
+            ),
             "head": head,
-            "reports": [app.review_report(report) for report in reports],
+            "reports": report_views,
             "steering": steering,
             "pending_tasks": pending,
             "all_task_ids": [v["assignment"]["task_id"] for _, _, v in app.ports.records.scan("task/")],
@@ -382,6 +386,7 @@ class ProjectAgent:
             "closure_paths": app.config.closure_paths,
             "configured_checks": [c.name for c in app.config.checks],
             "previous_acceptance": run.get("acceptance_failure"),
+            "acceptance_contract": contract(app, head),
         }
         fingerprint = digest(canonical(snapshot))
         if fingerprint == run.get("last_review_fingerprint"):
@@ -396,9 +401,29 @@ class ProjectAgent:
         expected_version = app.ports.records.get("app/run")[0]
         pid = f"senior-{query_index}"
         app.process(pid, "senior")
-        if reports:
-            evidence = await self.review_checks(pid, query_index, head)
-            snapshot["independent_review_evidence"] = evidence
+        # Check the current head even when all reports were resolved previously.
+        # A source review or a syntax check alone is not project acceptance.
+        evidence = await self.review_checks(pid, query_index, head)
+        snapshot["independent_review_evidence"] = [
+            {key: e[key] for key in ("evidence_id", "criterion_ref", "status")}
+            | {"checked_code": code_identity(e["checked_code"])}
+            for e in evidence
+        ]
+        snapshot["independent_check_diagnostics"] = [check_view(app, e, cap=1500) for e in evidence]
+        snapshot["review_evidence_catalog"] = evidence_catalog(snapshot)
+        try:
+            snapshot = fit_snapshot(app, snapshot)
+        except ValueError as exc:
+            app.update(
+                "app/run",
+                {
+                    **app.get("app/run"),
+                    "status": "paused",
+                    "blocker": str(exc),
+                    "review_input_ref": app.artifact(snapshot).model_dump(mode="json"),
+                },
+            )
+            return
         endpoint = getattr(app.config, app.config.role_bindings["senior"])
         if endpoint.protocol in {"codex_app_server", "codex_proxy"}:
             await app.ports.workspaces.prepare_snapshot(CodeRevision.model_validate(head), pid)
@@ -412,13 +437,18 @@ class ProjectAgent:
         }
         result = await self.senior.ainvoke(
             query,
-            {"configurable": {"thread_id": pid}, "recursion_limit": 20},
+            {
+                "configurable": {"thread_id": pid, "corrections": app.config.max_senior_corrections},
+                "recursion_limit": 80,
+            },
             context=self.context,
             durability="sync",
         )
         if result.get("error"):
             app.update("app/run", {**app.get("app/run"), "status": "paused", "blocker": result["error"]})
             return
+        # Retrieval changes the pinned review packet; retain exactly what was seen.
+        snapshot = result["input"]
         app.ports.records.compare_and_publish(
             {},
             {},
@@ -484,6 +514,16 @@ class ProjectAgent:
             app.update("review-batch/active", {**batch, "state": "superseded"})
             return
         final_head = app.get("head/provisional")["code"]
+        completion = proposal.complete
+        completion_failure = None
+        if completion:
+            try:
+                validate_completion(proposal, snapshot)
+                if final_head != head:
+                    raise ValueError("Head-changing dispositions require a fresh resulting-tree review")
+            except ValueError as exc:
+                completion = False
+                completion_failure = {"semantic_review": str(exc)}
         unresolved = self.unresolved()
         updates = {}
         immutable_specs = {}
@@ -546,11 +586,29 @@ class ProjectAgent:
             "sprint": run["sprint"] + 1,
             "plan_ref": plan_ref,
             "steering_applied": run["steering_received"],
-            "starts_closed": proposal.complete,
+            "starts_closed": completion,
             "captured_workers": [],
-            "completion_proposed": proposal.complete,
+            "completion_proposed": completion,
+            "semantic_completion": {
+                "proposal_ref": "proposal/" + pid,
+                "head": head,
+                "contract": snapshot.get("acceptance_contract"),
+                "assessment": proposal.completion_assessment.model_dump(mode="json"),
+            }
+            if completion
+            else None,
             "last_review_fingerprint": fingerprint,
         }
+        if completion_failure:
+            updates["app/run"]["acceptance_failure"] = completion_failure
+        if completion:
+            semantic = {
+                **updates["app/run"]["semantic_completion"],
+                "review_ref": "completion-review/" + pid,
+                "evidence_catalog": snapshot["review_evidence_catalog"],
+            }
+            updates["app/run"]["semantic_completion"] = semantic
+            immutable_specs[semantic["review_ref"]] = semantic
         if proposal.memory_update is not None:
             memory = app.ports.records.get("memory/working")
             expected["memory/working"] = memory[0] if memory else 0
@@ -747,6 +805,31 @@ class ProjectAgent:
         head = app.get("head/provisional")["code"]
         if app.get("head/reviewed")["code"] != head:
             return False
+        semantic = run.get("semantic_completion")
+        retained = app.ports.records.get(semantic["review_ref"]) if semantic else None
+        proposal_record = app.ports.records.get(semantic["proposal_ref"]) if semantic else None
+        if (
+            not semantic
+            or not retained
+            or retained[1] != semantic
+            or not proposal_record
+            or semantic["head"] != head
+            or semantic["contract"] != contract(app, head)
+            or proposal_record[1]["head"] != head
+            or proposal_record[1]["steering_through"] != run["steering_applied"]
+            or proposal_record[1]["proposal"].get("completion_assessment") != semantic["assessment"]
+        ):
+            app.update(
+                "app/run",
+                {
+                    **run,
+                    "completion_proposed": False,
+                    "acceptance_failure": {
+                        "semantic_review": "Missing or stale source-backed completion review"
+                    },
+                },
+            )
+            return False
         permit = await app.ports.exclusive.acquire("verification/project", "controller")
         try:
             # Pin every completion authority before checks; ingress can still run.
@@ -819,6 +902,7 @@ class ProjectAgent:
                         "plan_ref": run["plan_ref"],
                         "steering_through": run["steering_applied"],
                         "evidence": evidence,
+                        "semantic_review": semantic,
                     }
                 },
             }
