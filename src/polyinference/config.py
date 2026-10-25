@@ -24,6 +24,7 @@ class Endpoint(Wire):
     inference_location: Literal["local", "cloud"] | None = None
     timeout_seconds: Annotated[float, Field(gt=0, le=1800)] = 180
     supports_temperature: bool = True
+    reasoning_effort: Literal["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"] = "medium"
 
     @property
     def physical_location(self):

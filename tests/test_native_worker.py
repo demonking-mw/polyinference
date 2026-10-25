@@ -26,10 +26,12 @@ for line in sys.stdin:
  elif method=="thread/start":
   assert message["params"]["dynamicTools"][0]["name"]=="polyinference_tool"
   assert message["params"]["permissions"]=="polyinference_readonly"
+  assert "Return exactly one JSON object" in message["params"]["developerInstructions"]
+  assert "baseInstructions" not in message["params"]
   send({"id":message["id"],"result":{"thread":{"id":"native-thread"}}})
  elif method=="turn/start":
-  messages=json.loads(message["params"]["input"][0]["text"])
-  data=json.loads(next(m["content"] for m in messages if "Pinned application inputs:" in m["content"]).split("Pinned application inputs:\n".replace("\\n","\n"),1)[1])
+  text=next(item["text"] for item in message["params"]["input"] if "Pinned application inputs:" in item["text"])
+  data=json.loads(text.split("Pinned application inputs:\n".replace("\\n","\n"),1)[1])
   phase=data["phase"]
   if phase=="development":
    from hashlib import sha256

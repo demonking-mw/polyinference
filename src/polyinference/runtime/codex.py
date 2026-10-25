@@ -29,6 +29,27 @@ class NativeJobStopped(EndpointError):
     """The app-server rejected dispatch or explicitly confirmed a terminal turn."""
 
 
+def native_context(messages):
+    """Render canonical context without promoting retrieved data into instructions.
+
+    Only the native transport uses this renderer. Ordinary API clients retain
+    the canonical system/user/assistant message list and its actual roles.
+    """
+    instructions, inputs = [], []
+    for message in messages:
+        role, content = message["role"], message["content"]
+        if role == "system":
+            instructions.append(content)
+        else:
+            label = (
+                "Recorded assistant output (context data)"
+                if role == "assistant"
+                else "Task/context or recorded observation"
+            )
+            inputs.append({"type": "text", "text": label + ":\n" + content})
+    return "\n\n".join(instructions), inputs
+
+
 def strict_output_schema(schema):
     """Translate the application grammar to Codex's strict JSON-schema subset."""
 
@@ -71,7 +92,7 @@ class CodexAppServer:
             messages = [
                 *messages,
                 {
-                    "role": "user",
+                    "role": "system",
                     "content": 'Return the final phase JSON inside {"reply": ...}, as required by the output schema.',
                 },
             ]
@@ -247,19 +268,23 @@ class CodexAppServer:
                 messages = [
                     *messages,
                     {
-                        "role": "user",
+                        "role": "system",
                         "content": "Execute actions internally using polyinference_tool. Do not return an action as your "
                         "final answer. Finish this phase with candidate, assessment or needs_review. "
                         "The host owns all phase changes and publication.",
                     },
                 ]
+            instructions, inputs = native_context(messages)
+            if instructions:
+                params["developerInstructions"] = instructions
             thread = await rpc("thread/start", params)
             thread_id = thread["thread"]["id"]
             result = await rpc(
                 "turn/start",
                 {
                     "threadId": thread_id,
-                    "input": [{"type": "text", "text": json.dumps(messages)}],
+                    "input": inputs,
+                    "effort": self.endpoint.reasoning_effort,
                     "cwd": str(snapshot),
                     "approvalPolicy": "never",
                     "outputSchema": output_schema,

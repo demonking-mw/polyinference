@@ -300,6 +300,13 @@ a model that cannot honor this setting; an explicit request then fails clearly
 rather than silently dropping it. Legacy adapter calls that omit temperature
 continue to use the provider's defaults.
 
+The native Codex adapter sends application instructions through
+`developerInstructions`, with task/context and recorded observations as readable
+text inputs. It keeps Codex's own base instructions and the final output schema.
+Endpoint `reasoning_effort` explicitly controls native turns (default `medium`).
+Direct API endpoints continue receiving canonical messages with actual roles;
+they do not use the Codex renderer or require an integrated agent harness.
+
 The default bindings are:
 
 | Role | Purpose | Lane / default backend |
