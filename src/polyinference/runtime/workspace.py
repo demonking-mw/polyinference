@@ -573,6 +573,41 @@ class Workspaces:
         self.records.put_once(key, delta.model_dump(mode="json"))
         return key
 
+    async def validate_handoff(self, delta_ref, base, write_paths):
+        delta = WorkspaceDelta.model_validate(self.records.get(delta_ref)[1])
+        original = await self.tree(delta.original_base.commit_id)
+        target = await self.tree(base.commit_id)
+        if not {c.path for c in delta.changes} <= set(write_paths):
+            raise ValueError("Retained source exceeds replacement write grant")
+        for change in delta.changes:
+            if original.get(change.path) != target.get(change.path):
+                raise ValueError("Retained source conflicts with current base: " + change.path)
+        return delta
+
+    async def apply_handoff(self, workspace_id, delta_ref):
+        key = "handoff/" + workspace_id
+        existing = self.records.get(key)
+        if existing:
+            if existing[1]["delta_ref"] != delta_ref:
+                raise ValueError("Workspace source handoff is immutable")
+            return
+        manifest = self.current(workspace_id)
+        if manifest.view != "development":
+            raise ValueError("Source handoff requires an unstarted development view")
+        delta = await self.validate_handoff(delta_ref, manifest.original_base, manifest.allowed_write_paths)
+        tree = self.scan(self.root_for(manifest))
+        modes = self.records.get("delta-modes/" + delta.workspace_id)[1]["modes"]
+        for change in delta.changes:
+            if change.action == "delete":
+                tree.pop(change.path, None)
+            else:
+                tree[change.path] = (modes[change.path], self.artifacts.read(change.content))
+        for change in delta.changes:
+            if change.action == "delete":
+                (self.root_for(manifest) / change.path).unlink(missing_ok=True)
+        self.materialize(self.root_for(manifest), tree)
+        self.records.put_once(key, {"delta_ref": delta_ref})
+
     async def integrate(self, workspace_id, head, permit_ref):
         manifest = self.current(workspace_id)
         if not self.exclusive.owns(permit_ref, "verification/project", manifest.process_id):

@@ -396,6 +396,15 @@ class TestUI:
             "inference_attempts": inference_attempts,
             "retry_windows": {key: value for key, value in records.items() if key.startswith("retry/")},
             "check_diagnoses": {key: value for key, value in records.items() if key.startswith("diagnosis/")},
+            "worker_exceptions": {
+                key: value for key, value in records.items() if key.startswith("worker-exception/")
+            },
+            "exception_decisions": {
+                key: value for key, value in records.items() if key.startswith("exception-queue/")
+            },
+            "recovery_accounts": {
+                key: value for key, value in records.items() if key.startswith("process-account/")
+            },
             "completion_reviews": {
                 key: value for key, value in records.items() if key.startswith("completion-review/")
             },

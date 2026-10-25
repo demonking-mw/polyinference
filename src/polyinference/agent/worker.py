@@ -20,6 +20,7 @@ from ..contracts import (
 )
 from ..domain import Action, Assessment, Candidate, NeedsReview, WorkerReply, digest
 from .diagnostics import diagnose, feedback
+from .exceptions import park as park_exception
 
 
 class WorkerState(TypedDict, total=False):
@@ -64,6 +65,8 @@ async def load(state, runtime: Runtime[AppContext]):
         task["assignment"]["write_paths"],
         task["assignment"]["read_paths"],
     )
+    if task.get("source_delta_ref"):
+        await app.ports.workspaces.apply_handoff(state["workspace_id"], task["source_delta_ref"])
     return {"workspace_generation": manifest.generation, "workspace_view": manifest.view}
 
 
@@ -419,39 +422,7 @@ async def release(state, runtime: Runtime[AppContext]):
 
 
 async def park(state, runtime: Runtime[AppContext]):
-    app = runtime.context.services
-    if app.ports.operations.uncertain():
-        raise RuntimeError("Unknown effects retain ownership")
-    if state.get("verification_permit_ref"):
-        await app.ports.workspaces.abort(state["workspace_id"])
-        await app.ports.exclusive.release(state["verification_permit_ref"], state["process_id"])
-    task = app.get(state["task_ledger_ref"])
-    app.update(
-        state["task_ledger_ref"],
-        {**task, "execution": "interrupted", "exception": state.get("interrupted", "needs_review")},
-    )
-    process = app.get("process/" + state["process_id"])
-    app.update("process/" + state["process_id"], {**process, "state": "paused"})
-    attempt_key = "attempt/" + state["attempt_id"]
-    attempt_version, attempt_body = app.ports.records.get(attempt_key)
-    attempt = TaskAttempt.model_validate(attempt_body).model_copy(
-        update={
-            "revision": attempt_body["revision"] + 1,
-            "execution": "interrupted",
-            "stop_reason": state.get("interrupted", "needs_review"),
-        }
-    )
-    app.ports.records.compare_and_publish(
-        {attempt_key: attempt_version}, {attempt_key: attempt.model_dump(mode="json")}
-    )
-    app.process_status(
-        state["process_id"],
-        state="paused",
-        cleanup_state="complete",
-        permit_refs=[],
-        pending_operations=[],
-        wait=None,
-    )
+    await park_exception(runtime.context.services, state)
     return {"verification_permit_ref": None}
 
 

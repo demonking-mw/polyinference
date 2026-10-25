@@ -81,6 +81,7 @@ async def diagnose(app, state, trigger, evidence=None, reason=None):
         )
     pid = "diagnostic-" + token
     app.process(pid, definition.role, entry_point="check_diagnosis", output_schema_ref="diagnosis/1")
+    app.ports.operations.bind_recovery(pid, state["process_id"], require_park=False)
     app.process_status(pid, phase="check_diagnosis")
     plan = DiagnosisPlan(classification="uncertain", guidance="Diagnostic agent did not establish a repair")
     reads, final_evidence = [], evidence

@@ -42,12 +42,26 @@ def validate_plan(proposal, tasks, contracts):
     if any(t.task_id in existing for t in proposal.tasks):
         raise ValueError("New tasks need new IDs; retry must be a linked new assignment")
 
-    retained = {k: t for k, t in existing.items() if k not in cancelled and t["execution"] != "cancelled"}
+    retired = {
+        d.exception_ref.removeprefix("worker-exception/")
+        for d in proposal.exception_dispositions
+        if d.action == "retry"
+    }
+    retained = {
+        k: t
+        for k, t in existing.items()
+        if k not in cancelled
+        and t["execution"] != "cancelled"
+        and t.get("attempt_id") not in retired
+        and not t.get("replacement_task_id")
+    }
     assignments = {k: Assignment.model_validate(t["assignment"]) for k, t in retained.items()}
     assignments.update({t.task_id: t for t in proposal.tasks})
     retained_pending = {k for k, t in retained.items() if t["execution"] == "pending"}
     pending = retained_pending | {t.task_id for t in proposal.tasks}
-    unfinished = pending | {k for k, t in retained.items() if t["execution"] == "in_progress"}
+    unfinished = pending | {
+        k for k, t in retained.items() if t["execution"] in {"in_progress", "interrupted"}
+    }
     for task_id in pending:
         assignment = assignments[task_id]
         if not set(assignment.dependencies) <= assignments.keys():

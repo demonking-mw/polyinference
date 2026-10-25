@@ -12,8 +12,8 @@ from pydantic import Field, model_validator
 from .contracts import Limits, PhaseReserve, Wire
 from .workspace_contracts import RelativePath
 
-PROGRAM_VERSION = "agent-3-module-planning"
-STATE_VERSION = "2.2"
+PROGRAM_VERSION = "agent-4-exception-recovery"
+STATE_VERSION = "2.3"
 
 
 def now():
@@ -112,6 +112,7 @@ class Assignment(Wire):
     non_goals: list[ContractText] = Field(default_factory=list, max_length=12)
     provides: list[InterfaceRef] = Field(default_factory=list, max_length=16)
     consumes: list[InterfaceRef] = Field(default_factory=list, max_length=16)
+    resume_from: str | None = None
 
     @model_validator(mode="after")
     def unique(self):
@@ -136,6 +137,23 @@ class Disposition(Wire):
     report_ref: str
     action: Literal["keep", "revert", "retry", "defer"]
     reason: Annotated[str, Field(min_length=1, max_length=8000)]
+
+
+class ExceptionDisposition(Wire):
+    exception_ref: str
+    action: Literal["retry", "defer", "stop"]
+    reason: Annotated[str, Field(min_length=1, max_length=4000)]
+    changed_condition: Annotated[str, Field(max_length=4000)] = ""
+    replacement_task_id: str | None = None
+
+    @model_validator(mode="after")
+    def linked_retry(self):
+        if self.action == "retry":
+            if not self.replacement_task_id or not self.changed_condition.strip():
+                raise ValueError("Recovery needs a new assignment and a specific changed condition")
+        elif self.replacement_task_id is not None:
+            raise ValueError("Only retry may name a replacement")
+        return self
 
 
 class ReviewRead(Wire):
@@ -166,6 +184,7 @@ class SeniorProposal(Wire):
     read_requests: list[ReviewRead] = Field(default_factory=list, max_length=8)
     completion_assessment: CompletionAssessment | None = None
     interface_contracts: list[InterfaceContract] = Field(default_factory=list, max_length=16)
+    exception_dispositions: list[ExceptionDisposition] = Field(default_factory=list, max_length=16)
 
     @model_validator(mode="after")
     def validate_dag(self):

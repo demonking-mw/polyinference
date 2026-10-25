@@ -46,6 +46,7 @@ from .architecture import pinned_context
 from .diagnostics import DIAGNOSIS_PROMPT, DiagnosisPlan
 from .prompts import BOOTSTRAP, SENIOR, WORKER
 from .review import report_view, repository_context
+from .schema import schema_text
 from .tasks import coding_tools
 
 
@@ -113,6 +114,8 @@ class AgentServices:
     ):
         key = "process/" + process_id
         if self.ports.records.get(key):
+            if task_data and task_data.get("previous_process_id"):
+                self.ports.operations.bind_recovery(process_id, task_data["previous_process_id"])
             return
         endpoint_name = self.config.role_bindings[role]
         endpoint = getattr(self.config, endpoint_name)
@@ -208,6 +211,8 @@ class AgentServices:
             },
             {spec_ref: spec.model_dump(mode="json"), status.record_id: status.model_dump(mode="json")},
         )
+        if task_data and task_data.get("previous_process_id"):
+            self.ports.operations.bind_recovery(process_id, task_data["previous_process_id"])
 
     def process_status(self, process_id, **updates):
         key = "process-status/" + process_id
@@ -267,6 +272,9 @@ class AgentServices:
             created + timedelta(milliseconds=limits.max_wall_time_ms),
             datetime.fromisoformat(process["started_at"]) + timedelta(milliseconds=limits.max_wall_time_ms),
         )
+        cutoff = self.ports.operations.process_deadline(process_id)
+        if cutoff:
+            deadline = min(deadline, cutoff)
         request = OperationRequest(
             **{**self.base(key), "scope": self.scope(process_id)},
             operation_id=digest(f"{self.run_id}:{process_id}:{step}".encode()),
@@ -334,8 +342,7 @@ class AgentServices:
         return self.artifact(history).model_dump(mode="json")
 
     def context(self, instruction, data, history, process_id, schema):
-        schema_text = "Return JSON matching this schema: " + json.dumps(schema)
-        text = instruction + "\n" + schema_text
+        text = instruction + "\nReturn JSON matching this schema: " + schema_text(schema)
         data_text = "Pinned application inputs:\n" + json.dumps(data)
         instruction_ref = self.ports.artifacts.put(text.encode(), self.scope(process_id), "text/plain")
         parts = [

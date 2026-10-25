@@ -9,7 +9,12 @@ def allocate(assignments, retained, fraction):
     prior = [
         task
         for task in retained
-        if task.get("category", "development") == "development" and task["execution"] != "cancelled"
+        if task.get("category", "development") == "development"
+        and (
+            task["execution"] != "cancelled"
+            or task.get("started_at")
+            or task.get("spec_ref", "").endswith(":started")
+        )
     ]
     senior = sum(task["assignment"]["role"] == "specialist" for task in prior)
     quota = max(
@@ -29,7 +34,11 @@ def accounting(records, fraction=0.1):
         for key, task in records.items()
         if key.startswith("task/")
         and task.get("category", "development") == "development"
-        and task["execution"] not in {"pending", "cancelled"}
+        and (
+            task["execution"] not in {"pending", "cancelled"}
+            or task.get("started_at")
+            or task.get("spec_ref", "").endswith(":started")
+        )
     ]
     senior = sum(task["assignment"]["role"] == "specialist" for task in tasks)
     return {

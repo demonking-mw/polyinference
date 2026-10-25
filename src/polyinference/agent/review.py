@@ -228,6 +228,7 @@ def fit_snapshot(app, snapshot):
 
     from ..domain import SeniorProposal
     from .prompts import SENIOR
+    from .schema import schema_text
 
     result = deepcopy(snapshot)
     result["memory"] = {
@@ -239,7 +240,7 @@ def fit_snapshot(app, snapshot):
     }
     omitted = list(result.get("omitted_review_material", []))
     instruction = (
-        SENIOR + "\nReturn JSON matching this schema: " + json.dumps(SeniorProposal.model_json_schema())
+        SENIOR + "\nReturn JSON matching this schema: " + schema_text(SeniorProposal.model_json_schema())
     )
 
     def size():

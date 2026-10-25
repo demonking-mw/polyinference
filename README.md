@@ -598,6 +598,14 @@ workspace, which may represent only one task or an intermediate integration view
 
 ## Limits, steering and recovery
 
+Cleanly stopped workers that need review now enter a durable exception queue. The
+senior can defer, stop, or create a linked replacement with a changed condition.
+Replacements share the original allowance and deadline; `max_worker_recoveries`
+defaults to one. Explicit source reuse must pass scope and current-base checks.
+Unknown execution still requires reconciliation. See [worker recovery](design-docs/implementation/WORKER_RECOVERY.md)
+and the [implementation fix log](design-docs/implementation/FIXES.md). Use fresh state
+after this program/state version change; saved runs require their pinned implementation.
+
 The default per-process allowance is 512 model calls, 2,048 steps and a one-hour
 wall-clock deadline, with reserved reconciliation, assessment, publication and
 cleanup capacity. Context reservations and the parent token allowance also limit

@@ -87,6 +87,7 @@ class AgentConfig(Wire):
     check_diagnosis: CheckDiagnosis = Field(default_factory=CheckDiagnosis)
     acceptance_criteria: list[AcceptanceCriterion] = Field(default_factory=list)
     max_review_reads: Annotated[int, Field(ge=0, le=16)] = 4
+    max_worker_recoveries: Annotated[int, Field(ge=0, le=3)] = 1
 
     @model_validator(mode="after")
     def feasible(self):

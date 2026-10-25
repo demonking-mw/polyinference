@@ -25,6 +25,7 @@ from ..domain import canonical, digest, now, operation_fingerprint
 from .codex import CodexAppServer, CodexProxy
 from .exclusive import Exclusive
 from .inference import Admission, EndpointError, HTTPInference, UnknownExecution
+from .lifecycle import ProcessLifecycle
 from .retry import InferenceRetries, ReservedInferenceCalls
 from .storage import Artifacts, Records
 from .tools import Tools
@@ -35,7 +36,7 @@ class UncertainEffect(RuntimeError):
     pass
 
 
-class StandaloneRuntime(InferenceRetries):
+class StandaloneRuntime(ProcessLifecycle, InferenceRetries):
     def __init__(self, config, run_id="run"):
         self.config, self.run_id = config, run_id
         self.scope = Scope(
@@ -86,6 +87,7 @@ class StandaloneRuntime(InferenceRetries):
                 "native-broker-callbacks",
                 "inference-retry",
                 "readonly-query",
+                "process-recovery",
             )
         }
         for requirement in requirements:
@@ -231,6 +233,17 @@ class StandaloneRuntime(InferenceRetries):
             raise ValueError("Unknown process principal")
         if request.owner_generation != process[1]["owner_generation"]:
             raise ValueError("Stale owner generation")
+        if self.records.get("process-parked/" + request.scope.process_id):
+            raise ValueError("Parked process cannot start new effects")
+        cutoff = self.process_deadline(request.scope.process_id)
+        if cutoff and (request.deadline > cutoff or now() >= cutoff):
+            raise ValueError("Recovery exceeds original process deadline")
+        account = self.records.get("process-account/" + request.scope.process_id)
+        if account and (
+            request.limits.model_dump(mode="json") != account[1]["limits"]
+            or request.grant_ref != account[1]["grant_ref"]
+        ):
+            raise ValueError("Recovery cannot enlarge inherited limits or grants")
         parent = (
             self.records.get("effect/" + request.causal_parent_ref) if request.causal_parent_ref else None
         )
@@ -264,15 +277,16 @@ class StandaloneRuntime(InferenceRetries):
                 and body["state"] in {"active", "submitting"}
             ):
                 raise ValueError("Only one top-level active effect per process")
-        self._update(
-            key,
-            {
-                "fingerprint": expected_digest,
-                "state": "prepared",
-                "request": request.model_dump(mode="json"),
-                "result": None,
-            },
-        )
+        body = {
+            "fingerprint": expected_digest,
+            "state": "prepared",
+            "request": request.model_dump(mode="json"),
+            "result": None,
+        }
+        if saved:
+            self._update(key, body)
+        else:
+            self.prepare_effect(request, key, body)
         task = asyncio.create_task(self._dispatch(request, key))
         self.inflight[request.operation_id] = task
         try:
@@ -284,7 +298,7 @@ class StandaloneRuntime(InferenceRetries):
     def _reserve_budget(self, request, amount):
         keys = [
             ("budget/run", self.config.run_token_budget),
-            ("budget/process/" + request.scope.process_id, request.limits.max_total_tokens),
+            ("budget/process/" + self.account(request.scope.process_id), request.limits.max_total_tokens),
         ]
         expected, updates = {}, {}
         for key, limit in keys:
@@ -383,7 +397,7 @@ class StandaloneRuntime(InferenceRetries):
                     raise EndpointError("Required context does not fit; no silent pin removal")
                 if reserved > endpoint.max_context_tokens:
                     raise EndpointError("Context/output cannot fit backend")
-                counter = "budget/model-calls/" + request.scope.process_id
+                counter = "budget/model-calls/" + self.account(request.scope.process_id)
                 prior_calls = self.records.get(counter)
                 count = prior_calls[1]["used"] if prior_calls else 0
                 if count >= request.limits.max_model_calls:
@@ -503,7 +517,7 @@ class StandaloneRuntime(InferenceRetries):
                 # leave a known total below the initial application reservation.
                 if total is not None and total > reserved:
                     extra = total - reserved
-                    pointers = ["budget/run", "budget/process/" + request.scope.process_id]
+                    pointers = ["budget/run", "budget/process/" + self.account(request.scope.process_id)]
                     rows = {key: self.records.get(key) for key in pointers}
                     self.records.compare_and_publish(
                         {key: row[0] for key, row in rows.items()},

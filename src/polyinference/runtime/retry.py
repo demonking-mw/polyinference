@@ -20,7 +20,7 @@ class ReservedInferenceCalls(EndpointError):
 
 class InferenceRetries:
     def inference_calls_used(self, process_id):
-        row = self.records.get("budget/model-calls/" + process_id)
+        row = self.records.get("budget/model-calls/" + self.account(process_id))
         return row[1]["used"] if row else 0
 
     def register_response_validator(self, schema_ref, validator):

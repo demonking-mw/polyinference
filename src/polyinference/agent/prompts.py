@@ -67,6 +67,17 @@ Replace affected pending dependents together so none refer to cancelled prerequi
 Running tasks retain their original scope and interface versions. memory_update may
 refine shared notes after review; immutable
 original verdict comments remain attached to their reports.
+Cleanly stopped workers appear in exceptions, separately from assessed reports.
+Use exception_dispositions: retry, defer or stop, with exception_ref and reason.
+Retry needs replacement_task_id matching one NEW task plus a specific changed_condition.
+Changing only a task ID or narrative is not progress. Replacement work shares the
+original call/token/deadline allowance; exhausted work must defer or stop.
+Select resume_from=exception_ref explicitly to reuse its preserved development delta;
+omit it to start fresh. Reuse must fit the original grant and current base. The
+abandoned integration view is diagnostic evidence, never an automatically reusable delta.
+Cancel and replace affected unstarted dependents together, pointing them at the new
+task ID; do not mutate started assignments. Defer/stop leave the objective incomplete.
+The uncertain verdict here means task confidence, not unknown physical execution.
 """
 
 SENIOR += """
