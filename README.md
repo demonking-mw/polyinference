@@ -553,6 +553,9 @@ pins, roles, output contracts, scope, deadline and budget remain authoritative.
 Agents can register a synchronous response validator under their declared schema
 reference; the OS does not need to know their application grammar or implement
 their repair policy. This coding agent registers its existing response contracts.
+Validation failures are application-origin context data linked to the recorded
+model output, not invented assistant/tool calls. Worker and senior feedback keep
+the original reply available for audit and preserve real tool-call/result pairs.
 
 Each provider attempt has a durable `inference-attempt/` record and counts toward
 the process call/token allowance. Logical replay reuses recorded attempts;

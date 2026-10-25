@@ -32,6 +32,8 @@ from ..contracts import (
 from ..domain import (
     PROGRAM_VERSION,
     STATE_VERSION,
+    Assessment,
+    Candidate,
     SeniorProposal,
     WorkerReply,
     canonical,
@@ -50,7 +52,7 @@ class AgentServices:
         self.worker_tasks = {}
         register = getattr(ports.operations, "register_response_validator", None)
         if register:
-            register("worker/1", lambda text, payload: TypeAdapter(WorkerReply).validate_json(text))
+            register("worker/1", self.validate_worker_response)
             register("senior/1", lambda text, payload: SeniorProposal.model_validate_json(text))
         self.program = ProgramRef(
             program_id="polyinference",
@@ -65,6 +67,16 @@ class AgentServices:
         if not row:
             raise ValueError("Missing application record: " + key)
         return row[1]
+
+    @staticmethod
+    def validate_worker_response(text, payload):
+        reply = TypeAdapter(WorkerReply).validate_json(text)
+        phase = getattr(payload, "phase", None)
+        if isinstance(reply, Assessment) and phase != "assessment":
+            raise ValueError("Verdict outside assessment phase")
+        if isinstance(reply, Candidate) and phase == "assessment":
+            raise ValueError("Assessment requires a verdict")
+        return reply
 
     def update(self, key, body):
         row = self.ports.records.get(key)
@@ -335,6 +347,15 @@ class AgentServices:
         history.append({"id": call_id, "reply": reply, "observation": observation})
         return self.artifact(history).model_dump(mode="json")
 
+    def append_feedback(self, ref, event_id, feedback, *, source_ref, received=None):
+        history = self.history(ref)
+        if any(entry["id"] == event_id for entry in history):
+            return ref
+        if received is not None:
+            feedback = {**feedback, "received_output_ref": self.artifact(received).model_dump(mode="json")}
+        history.append({"id": event_id, "feedback": feedback, "source_ref": source_ref})
+        return self.artifact(history).model_dump(mode="json")
+
     def context(self, instruction, data, history, process_id, schema):
         schema_text = "Return JSON matching this schema: " + json.dumps(schema)
         text = instruction + "\n" + schema_text
@@ -370,9 +391,17 @@ class AgentServices:
         ]
         budget = self.config.limits.max_input_tokens_per_call - len(canonical(pinned_messages)) - 2000
         for entry in reversed(history):
-            messages = [{"role": "assistant", "content": canonical(entry["reply"]).decode()}]
-            if entry["reply"].get("kind") == "action":
-                messages.append({"role": "user", "content": canonical(entry["observation"]).decode()})
+            if "feedback" in entry:
+                messages = [
+                    {
+                        "role": "user",
+                        "content": canonical({"application_feedback": entry["feedback"]}).decode(),
+                    }
+                ]
+            else:
+                messages = [{"role": "assistant", "content": canonical(entry["reply"]).decode()}]
+                if entry["reply"].get("kind") == "action":
+                    messages.append({"role": "user", "content": canonical(entry["observation"]).decode()})
             # The adapter bounds serialized messages, including the second JSON
             # escaping of tool content and each new message's separating comma.
             size = sum(len(canonical(message)) + 1 for message in messages)
@@ -383,6 +412,18 @@ class AgentServices:
             budget -= size
         for entry in selected:
             call_id = entry["id"]
+            if "feedback" in entry:
+                parts.append(
+                    ContextPart(
+                        part_id=call_id + "/feedback",
+                        content=self.artifact({"application_feedback": entry["feedback"]}, process_id),
+                        part_kind="data",
+                        trust="application",
+                        source_ref=entry["source_ref"],
+                        required=False,
+                    )
+                )
+                continue
             action = entry["reply"].get("kind") == "action"
             content = self.ports.artifacts.put(canonical(entry["reply"]), self.scope(process_id))
             parts.append(
@@ -496,6 +537,8 @@ class AgentServices:
                 self.sync_setup(state)
             try:
                 reply = json.loads(output["text"])
+                if not isinstance(reply, dict):
+                    return {"invalid_output": output["text"][:2000]}
                 if not senior and state["phase"] == "assessment" and reply.get("kind") == "assessment":
                     pinned_part = next(
                         part
@@ -606,6 +649,8 @@ class AgentServices:
             self.sync_setup(state)
         try:
             reply = json.loads(output["text"])
+            if not isinstance(reply, dict):
+                return {"invalid_output": output["text"][:2000]}
             if not senior and state["phase"] == "assessment" and reply.get("kind") == "assessment":
                 after = await self.ports.workspaces.revision(state["workspace_id"])
                 if after.effective_tree_digest != current.effective_tree_digest:

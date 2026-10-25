@@ -95,11 +95,12 @@ async def consume(state, runtime: Runtime[AppContext]):
         if isinstance(reply, Candidate) and state["phase"] == "assessment":
             raise ValueError("Assessment requires a verdict")
     except ValueError as exc:
-        history = app.append_history(
+        history = app.append_feedback(
             state.get("trajectory_ref"),
             f"invalid-{step}",
-            {"kind": "action", "tool": "protocol.validation"},
             {"error": str(exc)[:1500]},
+            source_ref=f"request/{state['process_id']}/model-{step}",
+            received=state["reply"],
         )
         return {"trajectory_ref": history, "logical_step": step + 1, "route": "model"}
     if isinstance(reply, Action):

@@ -38,11 +38,12 @@ async def validate(state, runtime: Runtime[AppContext]):
                 raise ValueError("Unknown configured check")
         return {"proposal": proposal.model_dump(mode="json"), "error": None}
     except ValueError as exc:
-        history = app.append_history(
+        history = app.append_feedback(
             state.get("trajectory_ref"),
             f"invalid-{state['logical_step']}",
-            {"kind": "action", "tool": "proposal.validation"},
             {"error": str(exc)[:2000]},
+            source_ref=f"request/{state['process_id']}/model-{state['logical_step']}",
+            received=state["reply"],
         )
         return {"trajectory_ref": history, "logical_step": state["logical_step"] + 1, "error": str(exc)}
 
