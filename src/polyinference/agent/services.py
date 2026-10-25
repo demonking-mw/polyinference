@@ -568,6 +568,7 @@ class AgentServices:
                 "evidence": state.get("evidence", []),
                 "hazards": [v for _, _, v in self.ports.records.scan("hazard/")],
                 "memory": self.memory_view(),
+                "progress_attention": state.get("progress_attention"),
             }
             schema, instruction, phase = TypeAdapter(WorkerReply).json_schema(), WORKER, state["phase"]
             if task.get("category") == "setup":

@@ -74,6 +74,7 @@ class ProjectAgent:
                 "persistent-checkpoints",
                 "fixed-role-routing",
                 "process-recovery",
+                "execution-progress",
             )
         ]
         for feature, enabled in (
@@ -222,7 +223,10 @@ class ProjectAgent:
             try:
                 return await self.worker.ainvoke(
                     initial,
-                    {"configurable": {"thread_id": pid}, "recursion_limit": 2000},
+                    {
+                        "configurable": {"thread_id": pid},
+                        "recursion_limit": 6 * app.config.limits.max_steps + 128,
+                    },
                     context=self.context,
                     durability="sync",
                 )

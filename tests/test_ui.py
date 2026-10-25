@@ -234,6 +234,8 @@ async def test_ui_selects_another_repository_and_exports_complete_json(config, t
             assert document["schema_version"] == 1 and document["run"]["repository"] == str(source)
             assert document["configuration"]["repository"] == str(source)
             assert document["reports"][0]["verdict"] == "successful"
+            assert document["worker_progress"] and isinstance(document["progress_events"], dict)
+            assert any(process.get("progress") for process in document["processes"])
             model_nodes = [
                 node for process in document["processes"] for node in process["nodes"] if node["model_call"]
             ]

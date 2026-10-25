@@ -26,6 +26,7 @@ from .codex import CodexAppServer, CodexProxy
 from .exclusive import Exclusive
 from .inference import Admission, EndpointError, HTTPInference, UnknownExecution
 from .lifecycle import ProcessLifecycle
+from .progress import ExecutionProgress
 from .retry import InferenceRetries, ReservedInferenceCalls
 from .storage import Artifacts, Records
 from .tools import Tools
@@ -36,7 +37,7 @@ class UncertainEffect(RuntimeError):
     pass
 
 
-class StandaloneRuntime(ProcessLifecycle, InferenceRetries):
+class StandaloneRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
     def __init__(self, config, run_id="run"):
         self.config, self.run_id = config, run_id
         self.scope = Scope(
@@ -61,6 +62,7 @@ class StandaloneRuntime(ProcessLifecycle, InferenceRetries):
         self.response_validators = {}
         self.response_schemas = {}
         self.retry_events = {}
+        self.progress_sources = {}
         self.stack = AsyncExitStack()
 
     def negotiate(self, requirements):
@@ -88,6 +90,7 @@ class StandaloneRuntime(ProcessLifecycle, InferenceRetries):
                 "inference-retry",
                 "readonly-query",
                 "process-recovery",
+                "execution-progress",
             )
         }
         for requirement in requirements:

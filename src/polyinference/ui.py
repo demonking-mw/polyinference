@@ -405,6 +405,15 @@ class TestUI:
             "recovery_accounts": {
                 key: value for key, value in records.items() if key.startswith("process-account/")
             },
+            "worker_progress": {
+                key: value for key, value in records.items() if key.startswith("worker-progress/")
+            },
+            "progress_events": {
+                key: value for key, value in records.items() if key.startswith("progress-event/")
+            },
+            "progress_observer_errors": {
+                key: value for key, value in records.items() if key.startswith("progress-observer-error/")
+            },
             "completion_reviews": {
                 key: value for key, value in records.items() if key.startswith("completion-review/")
             },
@@ -527,6 +536,9 @@ class TestUI:
         for process in processes:
             record = records.get("process/" + process["id"], {})
             process["role"] = "controller" if process["id"] == "controller" else record.get("role", "process")
+            progress = records.get("worker-progress/" + process["id"])
+            if progress:
+                process["progress"] = {key: progress[key] for key in ("status", "idle_decisions")}
             for node in process["nodes"]:
                 node["process_id"] = process["id"]
                 details[node["id"]] = node

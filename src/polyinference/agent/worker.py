@@ -21,6 +21,7 @@ from ..contracts import (
 from ..domain import Action, Assessment, Candidate, NeedsReview, WorkerReply, digest
 from .diagnostics import diagnose, feedback
 from .exceptions import park as park_exception
+from .progress import inspect_progress
 
 
 class WorkerState(TypedDict, total=False):
@@ -47,6 +48,8 @@ class WorkerState(TypedDict, total=False):
     report_ref: str | None
     interrupted: str | None
     last_check_evidence: dict | None
+    progress_route: str
+    progress_attention: dict | None
 
 
 @dataclass(frozen=True)
@@ -88,6 +91,10 @@ async def model(state, runtime: Runtime[AppContext]):
         "calls": calls + 1,
         "task_spec_ref": app.ports.workspaces.current(state["workspace_id"]).task_spec_ref,
     }
+
+
+async def progress(state, runtime: Runtime[AppContext]):
+    return await inspect_progress(runtime.context.services, state)
 
 
 async def consume(state, runtime: Runtime[AppContext]):
@@ -430,6 +437,7 @@ def build_worker(checkpointer):
     graph = StateGraph(WorkerState, context_schema=AppContext)
     for name, function in [
         ("load", load),
+        ("progress", progress),
         ("model", model),
         ("consume", consume),
         ("tool", tool),
@@ -443,19 +451,23 @@ def build_worker(checkpointer):
     ]:
         graph.add_node(name, function)
     graph.add_edge(START, "load")
-    graph.add_edge("load", "model")
+    graph.add_edge("load", "progress")
+    graph.add_conditional_edges("progress", lambda s: s["progress_route"], {"model": "model", "park": "park"})
     graph.add_edge("model", "consume")
     graph.add_conditional_edges(
         "consume",
         lambda s: s["route"],
-        {key: key for key in ("model", "tool", "acquire", "checks", "publish", "park", "diagnose")},
+        {
+            key: "progress" if key == "model" else key
+            for key in ("model", "tool", "acquire", "checks", "publish", "park", "diagnose")
+        },
     )
-    graph.add_conditional_edges("diagnose", lambda s: s["route"], {"model": "model", "park": "park"})
+    graph.add_conditional_edges("diagnose", lambda s: s["route"], {"model": "progress", "park": "park"})
     for first, second in [
-        ("tool", "model"),
+        ("tool", "progress"),
         ("acquire", "integrate"),
-        ("integrate", "model"),
-        ("checks", "model"),
+        ("integrate", "progress"),
+        ("checks", "progress"),
         ("publish", "release"),
     ]:
         graph.add_edge(first, second)

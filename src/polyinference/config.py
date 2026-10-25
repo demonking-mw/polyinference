@@ -58,6 +58,18 @@ class AcceptanceCriterion(Wire):
     required_checks: list[str] = Field(default_factory=list)
 
 
+class ProgressMonitor(Wire):
+    mode: Literal["off", "observe", "enforce"] = "enforce"
+    warn_after: Annotated[int, Field(ge=2, le=128)] = 8
+    escalate_after: Annotated[int, Field(ge=3, le=256)] = 12
+
+    @model_validator(mode="after")
+    def ordered(self):
+        if self.escalate_after <= self.warn_after:
+            raise ValueError("Progress escalation must leave decisions after warning")
+        return self
+
+
 class AgentConfig(Wire):
     repository: str
     state_directory: str = ".polyinference"
@@ -88,6 +100,7 @@ class AgentConfig(Wire):
     acceptance_criteria: list[AcceptanceCriterion] = Field(default_factory=list)
     max_review_reads: Annotated[int, Field(ge=0, le=16)] = 4
     max_worker_recoveries: Annotated[int, Field(ge=0, le=3)] = 1
+    progress_monitor: ProgressMonitor = Field(default_factory=ProgressMonitor)
 
     @model_validator(mode="after")
     def feasible(self):

@@ -80,6 +80,8 @@ async def park(app, state):
         "assignment": task["assignment"],
         "task_spec_ref": task["spec_ref"],
         "calls_used": app.ports.operations.inference_calls_used(pid),
+        "progress_attention": state.get("progress_attention"),
+        "progress_ref": "worker-progress/" + pid if app.ports.records.get("worker-progress/" + pid) else None,
         "cleanup_receipt_ref": "process-parked/" + pid,
         **{k: v for k, v in intent.items() if k != "manifest"},
     }
@@ -168,6 +170,16 @@ def validate(app, proposal, snapshot):
             )
         if used >= app.config.limits.max_model_calls - finishing or cutoff <= now():
             raise ValueError("Original worker allowance exhausted; recovery cannot refill it")
+        resources = app.ports.operations.resource_state(packet["process_id"])
+        finishing_steps = (
+            finishing + (reserve.publication_steps + reserve.cleanup_steps if reserve else 2) + 1
+        )
+        if (
+            resources["remaining_operations"] < finishing_steps
+            or resources["remaining_tokens"]
+            < app.config.limits.max_input_tokens_per_call + app.config.limits.max_output_tokens_per_call
+        ):
+            raise ValueError("Original operation/token allowance cannot safely start replacement work")
         if not set(assignment.write_paths) <= set(source["write_paths"]):
             raise ValueError("Recovery cannot widen the original write grant")
         if assignment.resume_from not in {None, decision.exception_ref}:

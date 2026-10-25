@@ -598,6 +598,13 @@ workspace, which may represent only one task or an intermediate integration view
 
 ## Limits, steering and recovery
 
+Workers now receive an evidence-based progress warning after eight idle decisions
+and enter senior exception review after twelve. New source states, new read coverage
+and new check outcomes count; repeated reads/checks and edit/revert cycles do not.
+Configure `progress_monitor.mode` as `enforce` (default), `observe`, or `off`, with
+`warn_after` and `escalate_after` thresholds. The OS exposes execution and endpoint
+observations; the agent owns this policy. See [progress monitoring](design-docs/implementation/PROGRESS_MONITORING.md).
+
 Cleanly stopped workers that need review now enter a durable exception queue. The
 senior can defer, stop, or create a linked replacement with a changed condition.
 Replacements share the original allowance and deadline; `max_worker_recoveries`

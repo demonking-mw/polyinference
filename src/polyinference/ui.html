@@ -137,7 +137,9 @@ function render(data){
  const container=$("processes");container.replaceChildren();
  for(const process of data.processes){
   const section=element("div",undefined,"process"),title=element("div",undefined,"process-title");
-  title.append(element("span",process.id),element("span",process.role,"role"));section.append(title);
+  title.append(element("span",process.id),element("span",process.role,"role"));
+  if(process.progress)title.append(element("span","Last progress observation: "+process.progress.status+" · "+process.progress.idle_decisions+" idle decisions","role"));
+  section.append(title);
   const nodes=element("div",undefined,"nodes");
   process.nodes.forEach((node,index)=>{
    if(index)nodes.append(element("span","→","arrow"));

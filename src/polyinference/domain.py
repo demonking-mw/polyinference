@@ -12,8 +12,8 @@ from pydantic import Field, model_validator
 from .contracts import Limits, PhaseReserve, Wire
 from .workspace_contracts import RelativePath
 
-PROGRAM_VERSION = "agent-4-exception-recovery"
-STATE_VERSION = "2.3"
+PROGRAM_VERSION = "agent-5-progress-monitoring"
+STATE_VERSION = "2.4"
 
 
 def now():
