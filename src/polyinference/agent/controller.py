@@ -84,7 +84,7 @@ class ProjectAgent:
         manifest = AgentProgram(
             **app.base("program/manifest"),
             program=app.program,
-            entry_points=["controller", "worker", "senior"],
+            entry_points=["controller", "worker", "senior", "check_diagnosis"],
             required_runtime_features=requirements,
             optional_runtime_features=[],
             migration_registry_ref=None,

@@ -42,6 +42,7 @@ from ..domain import (
     operation_fingerprint,
 )
 from ..ports import RuntimePorts
+from .diagnostics import DIAGNOSIS_PROMPT, DiagnosisPlan
 from .prompts import BOOTSTRAP, SENIOR, WORKER
 from .tasks import coding_tools
 
@@ -54,12 +55,16 @@ class AgentServices:
         if register:
             register("worker/1", self.validate_worker_response)
             register("senior/1", lambda text, payload: SeniorProposal.model_validate_json(text))
+            register("diagnosis/1", lambda text, payload: DiagnosisPlan.model_validate_json(text))
+        register_schema = getattr(ports.operations, "register_response_schema", None)
+        if register_schema:
+            register_schema("diagnosis/1", DiagnosisPlan.model_json_schema())
         self.program = ProgramRef(
             program_id="polyinference",
             program_version=PROGRAM_VERSION,
             graph_digest=digest(b"".join(p.read_bytes() for p in sorted(Path(__file__).parent.glob("*.py")))),
             state_schema_version=STATE_VERSION,
-            prompt_bundle_digest=digest((WORKER + SENIOR + BOOTSTRAP).encode()),
+            prompt_bundle_digest=digest((WORKER + SENIOR + BOOTSTRAP + DIAGNOSIS_PROMPT).encode()),
         )
 
     def get(self, key):
@@ -101,7 +106,9 @@ class AgentServices:
     def base(self, record_id):
         return dict(record_id=record_id, revision=1, scope=self.scope(), created_at=now())
 
-    def process(self, process_id, role, task_ref=None, task_data=None):
+    def process(
+        self, process_id, role, task_ref=None, task_data=None, *, entry_point=None, output_schema_ref=None
+    ):
         key = "process/" + process_id
         if self.ports.records.get(key):
             return
@@ -152,11 +159,8 @@ class AgentServices:
             process_id=process_id,
             parent_process_id=None if process_id == "controller" else "controller",
             program=self.program,
-            entry_point="controller"
-            if process_id == "controller"
-            else "senior"
-            if role == "senior"
-            else "worker",
+            entry_point=entry_point
+            or ("controller" if process_id == "controller" else "senior" if role == "senior" else "worker"),
             role=role,
             input_refs=[self.artifact({"task_ref": task_ref, "objective": self.config.objective})],
             task_spec_ref=task_ref,
@@ -166,7 +170,7 @@ class AgentServices:
             budget_account_ref="budget/run",
             limits=self.config.limits,
             schedule=schedule,
-            output_schema_ref="senior/1" if role == "senior" else "worker/1",
+            output_schema_ref=output_schema_ref or ("senior/1" if role == "senior" else "worker/1"),
             resume_strategy="portable_context",
         )
         status = ProcessStatus(
@@ -246,6 +250,24 @@ class AgentServices:
                 }
                 for e in report["evidence"]
             ],
+        }
+
+    def evidence_view(self, evidence, cap=3000):
+        ref = ArtifactRef.model_validate(evidence["output"])
+        raw = self.ports.artifacts.read(ref)
+        excerpt = (
+            raw
+            if len(raw) <= cap
+            else raw[: cap // 2] + b"\n[...truncated; full output in output_ref...]\n" + raw[-cap // 2 :]
+        )
+        return {
+            "criterion": evidence["criterion_ref"],
+            "status": evidence["status"],
+            "exit_code": evidence["exit_code"],
+            "checked_code": evidence["checked_code"],
+            "output_ref": evidence["output"],
+            "output_preview": excerpt.decode(errors="replace"),
+            "truncated": len(raw) > cap,
         }
 
     async def repository_context(self, code):

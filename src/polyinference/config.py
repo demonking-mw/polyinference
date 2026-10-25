@@ -45,6 +45,13 @@ class InferenceRetry(Wire):
     replacement_wait_seconds: Annotated[float, Field(ge=0, le=60)] = 1
 
 
+class CheckDiagnosis(Wire):
+    role: Literal["worker", "specialist", "senior"] = "worker"
+    max_rounds: Annotated[int, Field(ge=0, le=3)] = 1
+    max_read_paths: Annotated[int, Field(ge=1, le=32)] = 16
+    instructions: str = ""
+
+
 class AgentConfig(Wire):
     repository: str
     state_directory: str = ".polyinference"
@@ -71,6 +78,7 @@ class AgentConfig(Wire):
     max_workspace_bytes: Annotated[int, Field(gt=0)] = 64 * 1024 * 1024
     check_execution: Literal["disabled", "trusted", "bubblewrap"] = "disabled"
     inference_retry: InferenceRetry = Field(default_factory=InferenceRetry)
+    check_diagnosis: CheckDiagnosis = Field(default_factory=CheckDiagnosis)
 
     @model_validator(mode="after")
     def feasible(self):

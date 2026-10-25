@@ -337,6 +337,17 @@ file, shell and check operations use the same host broker as raw LLM workers.
 Planning/review queries remain read-only. Setup and senior development have file
 and enabled shell/check tools through the worker protocol.
 
+An uncertain worker/check failure goes to a bounded checking agent before parking.
+`check_diagnosis` selects its `role` (default `worker`), `max_rounds` per failure
+kind (default 1), `max_read_paths` (default 16), and optional instructions. The
+role uses the ordinary pinned endpoint bindings; cloud is not mandatory. It sees
+actual diagnostics, the materialized manifest, pinned-base paths and source, and
+may request existing-base reads or offer repair guidance. The OS enforces those
+reads, never expands write grants, and reruns checks to obtain fresh evidence.
+Code defects and unresolved uncertainty remain failures; diagnosis cannot mark
+a check passed. Native Codex diagnosis uses a read-only current-tree snapshot;
+dynamic diagnosis via the optional `codex_proxy` adapter is unsupported.
+
 There is also an optional `codex_proxy` adapter for a separately installed,
 compatible proxy with a pinned read-only snapshot. It supports senior queries;
 opaque proxy coding jobs are rejected. No third-party proxy is installed by this

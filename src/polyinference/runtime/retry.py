@@ -26,6 +26,15 @@ class InferenceRetries:
     def register_response_validator(self, schema_ref, validator):
         self.response_validators[schema_ref] = validator
 
+    def register_response_schema(self, schema_ref, schema):
+        fingerprint = digest(canonical(schema))
+        key = "response-schema/" + schema_ref
+        prior = self.records.get(key)
+        if prior and prior[1]["digest"] != fingerprint:
+            raise ValueError("Response schema changed within this run")
+        self.records.put_once(key, {"digest": fingerprint, "schema": schema})
+        self.response_schemas[schema_ref] = schema
+
     async def offer_retry(self, operation_id, replacement, *, process_id):
         """Optional owning-agent correction; absence of a repair agent is supported."""
         key = "retry/" + operation_id

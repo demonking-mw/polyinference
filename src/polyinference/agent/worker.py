@@ -19,6 +19,7 @@ from ..contracts import (
     UsageMeasure,
 )
 from ..domain import Action, Assessment, Candidate, NeedsReview, WorkerReply, digest
+from .diagnostics import diagnose, feedback
 
 
 class WorkerState(TypedDict, total=False):
@@ -44,6 +45,7 @@ class WorkerState(TypedDict, total=False):
     route: str
     report_ref: str | None
     interrupted: str | None
+    last_check_evidence: dict | None
 
 
 @dataclass(frozen=True)
@@ -110,7 +112,7 @@ async def consume(state, runtime: Runtime[AppContext]):
     if state["phase"] == "reconciliation":
         update["reconciliation_turn_refs"] = [*state.get("reconciliation_turn_refs", []), f"turn-{step}"]
     if isinstance(reply, NeedsReview):
-        return {**update, "route": "park", "interrupted": reply.reason}
+        return {**update, "route": "diagnose", "interrupted": reply.reason}
     if isinstance(reply, Candidate):
         return {**update, "route": "acquire" if state["phase"] == "development" else "checks"}
     if isinstance(reply, Assessment):
@@ -165,6 +167,13 @@ async def tool(state, runtime: Runtime[AppContext]):
         "workspace_generation": app.ports.workspaces.current(state["workspace_id"]).generation,
         "task_spec_ref": app.ports.workspaces.current(state["workspace_id"]).task_spec_ref,
     }
+    if reply.tool == "checks.run" and result and result.state == "succeeded":
+        update["last_check_evidence"] = observation
+        if observation["status"] != "passed":
+            outcome = await diagnose(app, state, "check/" + observation["criterion_ref"], observation)
+            update["trajectory_ref"] = feedback(app, history, state, outcome)
+            update["last_check_evidence"] = outcome["evidence"]
+            update["workspace_generation"] = app.ports.workspaces.current(state["workspace_id"]).generation
     if (
         state["phase"] == "assessment"
         and reply.tool in {"files.write", "files.delete", "shell.run"}
@@ -205,7 +214,31 @@ async def checks(state, runtime: Runtime[AppContext]):
     app = runtime.context.services
     names = app.get(state["task_ledger_ref"])["assignment"]["checks"]
     evidence = await app.checks(state, names)
-    return {"evidence": evidence, "phase": "assessment", "logical_step": state["logical_step"] + 1}
+    history = state.get("trajectory_ref")
+    for index, item in enumerate(evidence):
+        if item["status"] != "passed":
+            outcome = await diagnose(app, state, "check/" + item["criterion_ref"], item)
+            evidence[index] = outcome["evidence"]
+            history = feedback(app, history, state, outcome)
+    return {
+        "evidence": evidence,
+        "phase": "assessment",
+        "logical_step": state["logical_step"] + 1,
+        "trajectory_ref": history,
+    }
+
+
+async def diagnose_exception(state, runtime: Runtime[AppContext]):
+    app = runtime.context.services
+    outcome = await diagnose(
+        app, state, "exception", state.get("last_check_evidence"), state.get("interrupted")
+    )
+    return {
+        "trajectory_ref": feedback(app, state.get("trajectory_ref"), state, outcome),
+        "route": "model" if outcome["can_continue"] else "park",
+        "interrupted": None if outcome["can_continue"] else state.get("interrupted"),
+        "workspace_generation": app.ports.workspaces.current(state["workspace_id"]).generation,
+    }
 
 
 async def publish(state, runtime: Runtime[AppContext]):
@@ -435,6 +468,7 @@ def build_worker(checkpointer):
         ("publish", publish),
         ("release", release),
         ("park", park),
+        ("diagnose", diagnose_exception),
     ]:
         graph.add_node(name, function)
     graph.add_edge(START, "load")
@@ -443,8 +477,9 @@ def build_worker(checkpointer):
     graph.add_conditional_edges(
         "consume",
         lambda s: s["route"],
-        {key: key for key in ("model", "tool", "acquire", "checks", "publish", "park")},
+        {key: key for key in ("model", "tool", "acquire", "checks", "publish", "park", "diagnose")},
     )
+    graph.add_conditional_edges("diagnose", lambda s: s["route"], {"model": "model", "park": "park"})
     for first, second in [
         ("tool", "model"),
         ("acquire", "integrate"),

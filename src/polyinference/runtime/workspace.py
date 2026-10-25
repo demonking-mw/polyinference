@@ -50,13 +50,23 @@ class Workspaces:
 
     async def prepare_snapshot(self, code, snapshot_id):
         tree = await self.tree(code.commit_id, snapshot_id)
+        return self._prepare_tree_snapshot(tree, code, snapshot_id)
+
+    async def prepare_workspace_snapshot(self, workspace_id, snapshot_id):
+        tree = await self.private_tree(workspace_id)
+        return self._prepare_tree_snapshot(tree, self.code(tree), snapshot_id, proxy=False)
+
+    async def private_tree(self, workspace_id):
+        return self.scan(self.root_for(self.current(workspace_id)))
+
+    def _prepare_tree_snapshot(self, tree, code, snapshot_id, proxy=True):
         root = self.config.state_path / "snapshots" / snapshot_id
         if root.exists() and self.scan(root) != tree:
             raise ValueError("An immutable native snapshot cannot be replaced")
         self.materialize(root, tree)
         endpoint = getattr(self.config, self.config.role_bindings["senior"])
         proxy_root = None
-        if endpoint.protocol == "codex_proxy":
+        if proxy and endpoint.protocol == "codex_proxy":
             expected = (self.config.state_path / "proxy-snapshot").resolve()
             if (
                 not endpoint.readonly_snapshot_root
@@ -176,7 +186,13 @@ class Workspaces:
             elif self.config.prepare_repository:
                 await self.command(["git", "init", "--bare", "--initial-branch=main", str(self.gitdir)])
                 exclusions = [
-                    ".git", ".polyinference", "node_modules", ".npm", ".venv", ".venv-linux", "__pycache__"
+                    ".git",
+                    ".polyinference",
+                    "node_modules",
+                    ".npm",
+                    ".venv",
+                    ".venv-linux",
+                    "__pycache__",
                 ]
                 await self.git(
                     "--work-tree",

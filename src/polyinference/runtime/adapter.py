@@ -12,6 +12,7 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from ..contracts import (
     ActualBackend,
     AgentJob,
+    ArtifactRef,
     CapabilityCall,
     ErrorDetail,
     ModelQuery,
@@ -57,6 +58,7 @@ class StandaloneRuntime(InferenceRetries):
         self.admission = {}
         self.inflight = {}
         self.response_validators = {}
+        self.response_schemas = {}
         self.retry_events = {}
         self.stack = AsyncExitStack()
 
@@ -83,6 +85,7 @@ class StandaloneRuntime(InferenceRetries):
                 "agent-job",
                 "native-broker-callbacks",
                 "inference-retry",
+                "readonly-query",
             )
         }
         for requirement in requirements:
@@ -429,7 +432,17 @@ class StandaloneRuntime(InferenceRetries):
                         from ..domain import Assessment, Candidate, NeedsReview, SeniorProposal
 
                         callback = None
-                        if payload.required_phase_protocol == "polyinference/senior-readonly/1":
+                        if payload.required_phase_protocol == "runtime/readonly-query/1":
+                            if (
+                                payload.allowed_capabilities
+                                or payload.response_schema_ref not in self.response_schemas
+                            ):
+                                raise EndpointError(
+                                    "Read-only query needs a registered schema and no tool grant"
+                                )
+                            snapshot = self.workspaces.snapshot_root(payload.workspace_id)
+                            schema = self.response_schemas[payload.response_schema_ref]
+                        elif payload.required_phase_protocol == "polyinference/senior-readonly/1":
                             snapshot = self.workspaces.snapshot_root(payload.workspace_id)
                             schema = SeniorProposal.model_json_schema()
                         elif (
@@ -634,7 +647,21 @@ class StandaloneRuntime(InferenceRetries):
             child = child.model_copy(update={"extensions": {"polyinference/workspace-view": view}})
             child = child.model_copy(update={"intent_digest": operation_fingerprint(child)})
         result = await self.execute(child)
-        return {"state": result.state, "observation": json.loads(self.artifacts.read(result.output_refs[0]))}
+        observation = json.loads(self.artifacts.read(result.output_refs[0]))
+        presented = {"state": result.state, "observation": observation}
+        ref = observation.get("output") if isinstance(observation, dict) else None
+        if isinstance(ref, dict) and ref.get("media_type") == "text/plain":
+            raw = self.artifacts.read(ArtifactRef.model_validate(ref))
+            cap = min(3000, parent.limits.max_output_bytes)
+            excerpt = (
+                raw if len(raw) <= cap else raw[: cap // 2] + b"\n[...truncated...]\n" + raw[-cap // 2 :]
+            )
+            presented["diagnostics"] = {
+                "output_ref": ref,
+                "text": excerpt.decode(errors="replace"),
+                "truncated": len(raw) > cap,
+            }
+        return presented
 
     def _publish(self, arguments, process_id):
         receipt = self.records.get(arguments["receipt_ref"])
