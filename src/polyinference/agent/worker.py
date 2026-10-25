@@ -69,6 +69,8 @@ async def model(state, runtime: Runtime[AppContext]):
     app = runtime.context.services
     limits = app.config.limits
     calls = state.get("calls", 0)
+    used = getattr(app.ports.operations, "inference_calls_used", lambda pid: 0)(state["process_id"])
+    calls = max(calls, used)
     reserve = limits.final_phase_reserve
     reserved = reserve.reconciliation_model_calls + reserve.assessment_model_calls if reserve else 2
     if state["phase"] == "development" and calls >= limits.max_model_calls - reserved:

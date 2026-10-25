@@ -40,6 +40,11 @@ class Endpoint(Wire):
         )
 
 
+class InferenceRetry(Wire):
+    max_attempts: Annotated[int, Field(ge=2, le=8)] = 2
+    replacement_wait_seconds: Annotated[float, Field(ge=0, le=60)] = 1
+
+
 class AgentConfig(Wire):
     repository: str
     state_directory: str = ".polyinference"
@@ -65,6 +70,7 @@ class AgentConfig(Wire):
     max_artifact_bytes: Annotated[int, Field(gt=0)] = 128 * 1024 * 1024
     max_workspace_bytes: Annotated[int, Field(gt=0)] = 64 * 1024 * 1024
     check_execution: Literal["disabled", "trusted", "bubblewrap"] = "disabled"
+    inference_retry: InferenceRetry = Field(default_factory=InferenceRetry)
 
     @model_validator(mode="after")
     def feasible(self):

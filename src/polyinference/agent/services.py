@@ -48,6 +48,10 @@ class AgentServices:
     def __init__(self, ports: RuntimePorts, config, run_id="run"):
         self.ports, self.config, self.run_id = ports, config, run_id
         self.worker_tasks = {}
+        register = getattr(ports.operations, "register_response_validator", None)
+        if register:
+            register("worker/1", lambda text, payload: TypeAdapter(WorkerReply).validate_json(text))
+            register("senior/1", lambda text, payload: SeniorProposal.model_validate_json(text))
         self.program = ProgramRef(
             program_id="polyinference",
             program_version=PROGRAM_VERSION,
@@ -297,6 +301,17 @@ class AgentServices:
             required_features=[Feature(feature_id="runtime/workspace-view", version="1")] if view else [],
             extensions={"polyinference/workspace-view": view} if view else {},
         )
+        if isinstance(payload, ModelQuery) and payload.phase == "development" and limits.final_phase_reserve:
+            reserve = limits.final_phase_reserve
+            request = request.model_copy(
+                update={
+                    "extensions": {
+                        **request.extensions,
+                        "polyinference/inference-call-reserve": reserve.reconciliation_model_calls
+                        + reserve.assessment_model_calls,
+                    }
+                }
+            )
         request = request.model_copy(update={"intent_digest": operation_fingerprint(request)})
         self.ports.records.compare_and_publish({}, {}, {key: request.model_dump(mode="json")})
         return request
@@ -466,7 +481,16 @@ class AgentServices:
         if retained:
             result = await self.ports.operations.execute(OperationRequest.model_validate(retained[1]))
             output = self.read(result.output_refs[0])
-            if result.state != "succeeded":
+            if (
+                not senior
+                and state["phase"] == "development"
+                and result.error
+                and result.error.code == "ReservedInferenceCalls"
+            ):
+                return {"kind": "candidate", "summary": "Development allowance ended; preserve final phases"}
+            if result.state != "succeeded" and not (
+                result.error and result.error.code == "ResponseValidationError"
+            ):
                 raise RuntimeError(str(output))
             if not senior:
                 self.sync_setup(state)
@@ -500,6 +524,13 @@ class AgentServices:
             data = {
                 "assignment": task["assignment"],
                 "phase": state["phase"],
+                "remaining_model_calls": max(
+                    0,
+                    self.config.limits.max_model_calls
+                    - getattr(
+                        self.ports.operations, "inference_calls_used", lambda pid: state.get("calls", 0)
+                    )(pid),
+                ),
                 "workspace_generation": manifest.generation,
                 "workspace_view": manifest.view,
                 "code": current.model_dump(mode="json"),
@@ -558,7 +589,16 @@ class AgentServices:
             view,
             protected=bool(state.get("verification_permit_ref")),
         )
-        if result.state != "succeeded":
+        if (
+            not senior
+            and state["phase"] == "development"
+            and result.error
+            and result.error.code == "ReservedInferenceCalls"
+        ):
+            return {"kind": "candidate", "summary": "Development allowance ended; preserve final phases"}
+        if result.state != "succeeded" and not (
+            result.error and result.error.code == "ResponseValidationError"
+        ):
             raise RuntimeError(output.get("error", "Model effect failed"))
         if len(output["text"].encode()) > self.config.limits.max_output_bytes:
             raise ValueError("Model output exceeds cap")

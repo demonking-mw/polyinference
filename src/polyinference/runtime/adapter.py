@@ -24,6 +24,7 @@ from ..domain import canonical, digest, now, operation_fingerprint
 from .codex import CodexAppServer, CodexProxy
 from .exclusive import Exclusive
 from .inference import Admission, EndpointError, HTTPInference, UnknownExecution
+from .retry import InferenceRetries, ReservedInferenceCalls
 from .storage import Artifacts, Records
 from .tools import Tools
 from .workspace import Workspaces
@@ -33,7 +34,7 @@ class UncertainEffect(RuntimeError):
     pass
 
 
-class StandaloneRuntime:
+class StandaloneRuntime(InferenceRetries):
     def __init__(self, config, run_id="run"):
         self.config, self.run_id = config, run_id
         self.scope = Scope(
@@ -55,6 +56,8 @@ class StandaloneRuntime:
         self.clients = {}
         self.admission = {}
         self.inflight = {}
+        self.response_validators = {}
+        self.retry_events = {}
         self.stack = AsyncExitStack()
 
     def negotiate(self, requirements):
@@ -79,6 +82,7 @@ class StandaloneRuntime:
                 "project-scope",
                 "agent-job",
                 "native-broker-callbacks",
+                "inference-retry",
             )
         }
         for requirement in requirements:
@@ -121,6 +125,18 @@ class StandaloneRuntime:
 
             request = OperationRequest.model_validate(body["request"])
             payload = request.payload
+            attempts = self.records.scan("inference-attempt/" + request.operation_id + "/")
+            if attempts and all(
+                (value.get("result") and value["result"]["execution_termination"] == "confirmed_stopped")
+                or value["state"] == "prepared"
+                for _, _, value in attempts
+            ):
+                # A crash between known attempts/settlement can resume without
+                # repeating a completed provider call or resetting its budget.
+                self.records.compare_and_publish(
+                    {key: rev}, {key: {**body, "state": "prepared", "result": None}}
+                )
+                continue
             output = None
             if isinstance(payload, Publication) and self.records.get(payload.receipt_ref):
                 output = {"receipt_ref": payload.receipt_ref}
@@ -168,6 +184,12 @@ class StandaloneRuntime:
             )
 
     async def close(self):
+        tasks = list(self.inflight.values())
+        for task in tasks:
+            if not task.done():
+                task.cancel()
+        if tasks:
+            await asyncio.gather(*tasks, return_exceptions=True)
         for client in self.clients.values():
             await client.close()
         await self.stack.aclose()
@@ -307,7 +329,7 @@ class StandaloneRuntime:
         )
         self.records.compare_and_publish({key: retained[0]}, {key: updated.model_dump(mode="json")})
 
-    async def _dispatch(self, request, key):
+    async def _dispatch_once(self, request, key):
         started = now()
         payload = request.payload
         usage, backend = [], None
@@ -358,6 +380,21 @@ class StandaloneRuntime:
                     raise EndpointError("Required context does not fit; no silent pin removal")
                 if reserved > endpoint.max_context_tokens:
                     raise EndpointError("Context/output cannot fit backend")
+                counter = "budget/model-calls/" + request.scope.process_id
+                prior_calls = self.records.get(counter)
+                count = prior_calls[1]["used"] if prior_calls else 0
+                if count >= request.limits.max_model_calls:
+                    raise EndpointError("Model call allowance exhausted (including retries)")
+                reserve = request.extensions.get("polyinference/inference-call-reserve", 0)
+                if (
+                    isinstance(reserve, bool)
+                    or not isinstance(reserve, int)
+                    or not 0 <= reserve <= request.limits.max_model_calls
+                ):
+                    raise EndpointError("Invalid inference call reserve")
+                if count >= request.limits.max_model_calls - reserve:
+                    raise ReservedInferenceCalls("Caller-reserved inference allowance reached")
+                self._update(counter, {"used": count + 1})
                 self._reserve_budget(request, reserved)
                 manifest_ref = request.extensions.get("polyinference/workspace-view")
                 if manifest_ref:
@@ -516,7 +553,10 @@ class StandaloneRuntime:
                 retryable_after_reconciliation=False,
                 retry_after_ms=None,
             )
-            outputs = [self.artifacts.put(canonical({"error": str(exc)[:4000]}), request.scope)]
+            diagnostic = {"error": str(exc)[:4000]}
+            if getattr(exc, "detail", None):
+                diagnostic["provider_detail"] = exc.detail
+            outputs = [self.artifacts.put(canonical(diagnostic), request.scope)]
         result = OperationResult(
             record_id="result/" + request.operation_id,
             revision=1,

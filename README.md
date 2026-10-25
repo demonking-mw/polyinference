@@ -544,6 +544,24 @@ cleanup capacity. Context reservations and the parent token allowance also limit
 work. Native Codex jobs have their own deadline/event bounds; there is no
 provider-enforced dollar or subscription spend cap in this placeholder.
 
+The OS retries known failed inference by default: `inference_retry.max_attempts`
+defaults to 2 (including the original attempt). It opens a bounded replacement
+window (`replacement_wait_seconds`, default 1). An optional agent can submit an
+improved context/temperature through `operations.offer_retry`; absent a timely
+replacement, the original request is retried automatically. Required context
+pins, roles, output contracts, scope, deadline and budget remain authoritative.
+Agents can register a synchronous response validator under their declared schema
+reference; the OS does not need to know their application grammar or implement
+their repair policy. This coding agent registers its existing response contracts.
+
+Each provider attempt has a durable `inference-attempt/` record and counts toward
+the process call/token allowance. Logical replay reuses recorded attempts;
+debugging costs count physical attempts without counting the aggregate twice.
+Known completed invalid output is retryable; uncertain execution is not blindly
+repeated. Effectful tools and native agent jobs with tool grants require their
+own reconciliation instead of automatic replay. Retries remain subject to hard
+deadlines, capacity and budget, so those limits can prevent another dispatch.
+
 The execution protocol is:
 
 1. Setup, when enabled, handles the initial objective's prerequisites and Git/branch instructions.

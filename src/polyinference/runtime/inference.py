@@ -12,7 +12,10 @@ import httpx
 
 
 class EndpointError(RuntimeError):
-    pass
+    def __init__(self, message, *, detail=None):
+        super().__init__(message)
+        # Scoped diagnostic data is retained separately, never echoed in str/logs.
+        self.detail = detail
 
 
 class UnknownExecution(EndpointError):
@@ -152,8 +155,16 @@ class HTTPInference:
                 "POST", endpoint.base_url.rstrip("/") + path, json=payload
             ) as response:
                 if response.status_code >= 400:
-                    await response.aread()
-                    raise EndpointError(f"Endpoint HTTP {response.status_code}")
+                    detail = bytearray()
+                    async for chunk in response.aiter_bytes():
+                        detail.extend(chunk[: max(0, 4000 - len(detail))])
+                        if len(detail) >= 4000:
+                            break
+                    diagnostic = detail.decode(errors="replace")
+                    secret = os.environ.get(endpoint.api_key_env, "") if endpoint.api_key_env else ""
+                    if secret:
+                        diagnostic = diagnostic.replace(secret, "[redacted]")
+                    raise EndpointError(f"Endpoint HTTP {response.status_code}", detail=diagnostic)
                 chunks, size = [], 0
                 async for chunk in response.aiter_bytes():
                     size += len(chunk)

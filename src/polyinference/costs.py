@@ -116,7 +116,16 @@ def combine_costs(costs):
 def run_cost(records, read):
     total = empty_cost()
     seen = set()
+    effects = []
     for key, effect in records.items():
+        if not key.startswith("effect/"):
+            continue
+        prefix = "inference-attempt/" + effect["request"]["operation_id"] + "/"
+        attempts = [
+            ("effect/" + v["request"]["operation_id"], v) for k, v in records.items() if k.startswith(prefix)
+        ]
+        effects.extend(attempts or [(key, effect)])
+    for key, effect in effects:
         if not key.startswith("effect/"):
             continue
         request = effect["request"]
