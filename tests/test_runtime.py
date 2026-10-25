@@ -154,6 +154,34 @@ async def test_checks_that_modify_source_cannot_prove_success(config):
         await runtime.close()
 
 
+@pytest.mark.parametrize("modify_source", [False, True])
+async def test_check_npm_cache_is_excluded_but_source_changes_invalidate_evidence(config, modify_source):
+    import sys
+
+    from polyinference.domain import Check
+
+    script = (
+        "from pathlib import Path; "
+        "cache=Path('.npm/_logs/check.log'); "
+        "cache.parent.mkdir(parents=True); cache.write_text('npm cache output')"
+    )
+    if modify_source:
+        script += "; Path('a.py').write_text('VALUE = 77\\n')"
+    config = config.model_copy(
+        update={"checks": [Check(name="syntax", argv=[sys.executable, "-c", script])]}
+    )
+    runtime, _, _ = await setup(config)
+    try:
+        evidence = await runtime.tools.check("fixture-ws", "syntax")
+        assert evidence["status"] == ("inconclusive" if modify_source else "passed")
+        manifest = runtime.workspaces.current("fixture-ws")
+        tree = runtime.workspaces.scan(runtime.workspaces.root_for(manifest))
+        assert not any(path.startswith(".npm/") for path in tree)
+        await runtime.workspaces.preserve_delta("fixture-ws")
+    finally:
+        await runtime.close()
+
+
 async def test_final_acceptance_rejects_new_steering_during_checks(config):
     runtime, app, engine = await setup(config)
     try:

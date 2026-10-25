@@ -173,7 +173,8 @@ def main():
                         {
                             **body,
                             "resolved": bool(
-                                records.get("resolution/" + body["report_ref"])
+                                body.get("report_ref")
+                                and records.get("resolution/" + body["report_ref"])
                                 and records.get("resolution/" + body["report_ref"])[1]["action"]
                                 in {"keep", "revert"}
                             ),

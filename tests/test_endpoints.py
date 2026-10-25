@@ -109,7 +109,8 @@ async def _until(predicate):
         await asyncio.sleep(0.001)
 
 
-async def test_codex_real_stdio_handshake_terminal_events_before_start_reply(tmp_path):
+@pytest.mark.parametrize("streaming_events", [False, True])
+async def test_codex_real_stdio_handshake_terminal_events_before_start_reply(tmp_path, streaming_events):
     script = tmp_path / "server.py"
     script.write_text("""import json,sys
 def send(m):
@@ -117,6 +118,7 @@ def send(m):
 for line in sys.stdin:
  m=json.loads(line); method=m.get("method")
  if method=="initialize":
+  assert "item/agentMessage/delta" in m["params"]["capabilities"]["optOutNotificationMethods"]
   send({"id":m["id"],"result":{}})
  elif method=="thread/start":
   assert m["params"]["permissions"]=="polyinference_readonly"
@@ -124,6 +126,10 @@ for line in sys.stdin:
   send({"id":m["id"],"result":{"thread":{"id":"thread-fixture"}}})
  elif method=="turn/start":
   assert "permissions" not in m["params"]
+  if sys.argv[1]=="stream":
+   methods=["item/agentMessage/delta","item/reasoning/textDelta","item/reasoning/summaryTextDelta"]
+   for i in range(2500):
+    send({"method":methods[i%len(methods)],"params":{"threadId":"thread-fixture","turnId":"turn-fixture","delta":"text"}})
   send({"method":"thread/tokenUsage/updated","params":{"threadId":"thread-fixture","turnId":"turn-fixture","tokenUsage":{"total":{"totalTokens":17}}}})
   send({"method":"item/completed","params":{"item":{"type":"agentMessage","text":"{\\"goal\\":\\"done\\",\\"complete\\":true}"}}})
   send({"method":"turn/completed","params":{"turn":{"id":"turn-fixture","status":"completed","items":[]}}})
@@ -133,7 +139,7 @@ for line in sys.stdin:
         Endpoint(
             protocol="codex_app_server",
             model="fixture",
-            command=[sys.executable, str(script)],
+            command=[sys.executable, str(script), "stream" if streaming_events else "plain"],
             timeout_seconds=3,
         )
     )
@@ -144,6 +150,11 @@ for line in sys.stdin:
     assert result["session_id"] == "thread-fixture"
     assert result["usage"]["total_tokens"] == 17
     assert any(e["method"] == "turn/completed" for e in result["events"])
+    assert len(result["events"]) < 2000
+    assert all(
+        not e["method"].endswith(("/delta", "textDelta", "summaryTextDelta"))
+        for e in result["events"]
+    )
 
 
 async def test_proxy_requires_pinned_snapshot(tmp_path):

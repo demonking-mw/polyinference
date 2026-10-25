@@ -91,6 +91,7 @@ async def test_cloud_setup_selects_requested_branch_runs_shell_and_publishes_bef
             else:
                 assert runtime.records.get("setup/completed")
                 assert data["repository_setup"]["base_branch"] == "requested-base"
+                assert data["write_scope"] == "project"
                 reply = {
                     "goal": "Update value",
                     "dispositions": [
@@ -154,6 +155,8 @@ async def test_prepare_initializes_private_git_for_plain_folder_without_tracking
 ):
     source = tmp_path / "new-project"
     source.mkdir()
+    (source / ".npm" / "_logs").mkdir(parents=True)
+    (source / ".npm" / "_logs" / "cached.log").write_text("generated npm log\n")
     if not empty:
         (source / "main.py").write_text("VALUE = 1\n")
         (source / ".env").write_text("SECRET=fixture\n")
@@ -167,6 +170,7 @@ async def test_prepare_initializes_private_git_for_plain_folder_without_tracking
         code = await runtime.workspaces.initialize()
         tree = await runtime.workspaces.tree(code.commit_id)
         assert ".env" not in tree and "ignored.txt" not in tree
+        assert not any(path.startswith(".npm/") for path in tree)
         assert ("main.py" in tree) != empty
         assert not (source / ".git").exists()
         assert runtime.records.get("repository/setup")[1]["base_branch"] == "main"

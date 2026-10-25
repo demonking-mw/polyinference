@@ -377,6 +377,7 @@ class ProjectAgent:
             "pending_tasks": pending,
             "all_task_ids": [v["assignment"]["task_id"] for _, _, v in app.ports.records.scan("task/")],
             "allowed_write_paths": app.config.allowed_write_paths,
+            "write_scope": app.config.write_scope,
             "memory": app.memory_view(),
             "closure_paths": app.config.closure_paths,
             "configured_checks": [c.name for c in app.config.checks],

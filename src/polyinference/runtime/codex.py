@@ -12,6 +12,18 @@ from pathlib import Path
 
 from .inference import EndpointError, HTTPInference, UnknownExecution
 
+# Completed items carry the authoritative text. Retaining their streaming
+# fragments makes the lifecycle-event bound depend on a reply's token count.
+STREAMED_TEXT_METHODS = (
+    "item/agentMessage/delta",
+    "item/plan/delta",
+    "item/reasoning/summaryTextDelta",
+    "item/reasoning/summaryPartAdded",
+    "item/reasoning/textDelta",
+    "item/commandExecution/outputDelta",
+    "item/fileChange/outputDelta",
+)
+
 
 class NativeJobStopped(EndpointError):
     """The app-server rejected dispatch or explicitly confirmed a terminal turn."""
@@ -106,9 +118,12 @@ class CodexAppServer:
                 raise UnknownExecution("Codex app-server exited without a terminal turn")
             message = json.loads(line)
             if "method" in message:
-                if len(events) >= 2000:
-                    raise UnknownExecution("Native event limit exceeded")
-                events.append(message)
+                # Also filter locally for older servers that ignore opt-out.
+                # Requests must still be retained and answered through the broker.
+                if "id" in message or message["method"] not in STREAMED_TEXT_METHODS:
+                    if len(events) >= 2000:
+                        raise UnknownExecution("Native event limit exceeded")
+                    events.append(message)
                 if "id" in message and message.get("method") == "item/tool/call" and callback:
                     params = message["params"]
                     if params.get("threadId") != thread_id or params.get("tool") != "polyinference_tool":
@@ -155,7 +170,10 @@ class CodexAppServer:
                 "initialize",
                 {
                     "clientInfo": {"name": "polyinference", "version": "0.1.0"},
-                    "capabilities": {"experimentalApi": True},
+                    "capabilities": {
+                        "experimentalApi": True,
+                        "optOutNotificationMethods": list(STREAMED_TEXT_METHODS),
+                    },
                 },
             )
             await send({"method": "initialized", "params": {}})

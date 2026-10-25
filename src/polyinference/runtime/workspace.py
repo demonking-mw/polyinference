@@ -20,6 +20,7 @@ IGNORED = {
     ".ruff_cache",
     ".mypy_cache",
     "node_modules",
+    ".npm",
     ".venv",
     ".venv-linux",
 }
@@ -174,7 +175,9 @@ class Workspaces:
                 )
             elif self.config.prepare_repository:
                 await self.command(["git", "init", "--bare", "--initial-branch=main", str(self.gitdir)])
-                exclusions = [".git", ".polyinference", "node_modules", ".venv", ".venv-linux", "__pycache__"]
+                exclusions = [
+                    ".git", ".polyinference", "node_modules", ".npm", ".venv", ".venv-linux", "__pycache__"
+                ]
                 await self.git(
                     "--work-tree",
                     str(self.config.repo_path),

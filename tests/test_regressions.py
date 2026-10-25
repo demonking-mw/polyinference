@@ -18,7 +18,7 @@ from polyinference.contracts import (
     TaskReport,
     TaskSpec,
 )
-from polyinference.domain import Check
+from polyinference.domain import Check, canonical
 from polyinference.runtime.adapter import StandaloneRuntime
 
 
@@ -31,6 +31,42 @@ async def connect(config, client=None):
             await old.close()
         runtime.clients = {name: client for name in runtime.clients}
     return runtime, app, engine
+
+
+async def test_context_budget_counts_json_escaped_complete_tool_pairs(config):
+    config = config.model_copy(
+        update={"limits": config.limits.model_copy(update={"max_input_tokens_per_call": 10000})}
+    )
+    runtime, app, _ = await connect(config)
+    history = [
+        {
+            "id": f"tool-{index}",
+            "reply": {"kind": "action", "tool": "files.read", "arguments": {"path": "a.py"}},
+            "observation": {"content": "\\" * 600},
+        }
+        for index in range(10)
+    ]
+    try:
+        view = app.context("Keep these instructions", {"objective": "Keep this task"}, history, "worker", {})
+        messages = [
+            {
+                "role": "system"
+                if part.part_kind == "instruction"
+                else "assistant"
+                if part.part_kind in {"message", "tool_call"}
+                else "user",
+                "content": runtime.artifacts.read(part.content).decode(),
+            }
+            for part in view.parts
+        ]
+        assert len(canonical(messages)) <= config.limits.max_input_tokens_per_call
+        assert [part.part_id for part in view.parts if part.required] == ["instructions", "pinned-data"]
+        assert view.omitted_refs
+        calls = [part.call_id for part in view.parts if part.part_kind == "tool_call"]
+        results = [part.call_id for part in view.parts if part.part_kind == "tool_result"]
+        assert calls == results and calls[-1] == "tool-9"
+    finally:
+        await runtime.close()
 
 
 async def test_crash_after_durable_commit_and_publication_reuses_receipts(config):

@@ -349,11 +349,18 @@ class AgentServices:
         omitted = []
         # Keep complete pairs; no partial provider tool-call records or mixed-worker histories.
         selected = []
-        budget = (
-            self.config.limits.max_input_tokens_per_call - len(text.encode()) - len(data_text.encode()) - 2000
-        )
+        pinned_messages = [
+            {"role": "system", "content": text},
+            {"role": "user", "content": data_text},
+        ]
+        budget = self.config.limits.max_input_tokens_per_call - len(canonical(pinned_messages)) - 2000
         for entry in reversed(history):
-            size = len(canonical(entry))
+            messages = [{"role": "assistant", "content": canonical(entry["reply"]).decode()}]
+            if entry["reply"].get("kind") == "action":
+                messages.append({"role": "user", "content": canonical(entry["observation"]).decode()})
+            # The adapter bounds serialized messages, including the second JSON
+            # escaping of tool content and each new message's separating comma.
+            size = sum(len(canonical(message)) + 1 for message in messages)
             if size > budget:
                 omitted.append(entry["id"])
                 continue
