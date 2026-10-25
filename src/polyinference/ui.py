@@ -402,6 +402,9 @@ class TestUI:
             "review_artifacts": {
                 key: value for key, value in records.items() if key.startswith("review-artifact/")
             },
+            "interface_contracts": {
+                key: value for key, value in records.items() if key.startswith("interface-contract/")
+            },
             "reports": [value for key, value in records.items() if key.startswith("report/")],
             "steering": [value for key, value in sorted(records.items()) if key.startswith("steering/")],
             "run_record": records.get("app/run"),

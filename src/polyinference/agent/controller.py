@@ -18,6 +18,7 @@ from ..contracts import (
     TaskSpec,
 )
 from ..domain import SeniorProposal, canonical, digest, now
+from .architecture import catalog, validate_plan
 from .design_basis import DESIGN_BASIS
 from .review import check_view, code_identity, contract, evidence_catalog, fit_snapshot, validate_completion
 from .routing import allocate
@@ -379,6 +380,7 @@ class ProjectAgent:
             "reports": report_views,
             "steering": steering,
             "pending_tasks": pending,
+            "interface_contracts": [c.model_dump(mode="json") for c in catalog(app).values()],
             "all_task_ids": [v["assignment"]["task_id"] for _, _, v in app.ports.records.scan("task/")],
             "allowed_write_paths": app.config.allowed_write_paths,
             "write_scope": app.config.write_scope,
@@ -487,6 +489,7 @@ class ProjectAgent:
             app.update("review-batch/active", {**batch, "state": "done"})
             return
         proposal = SeniorProposal.model_validate(batch["proposal"])
+        interfaces = validate_plan(proposal, [v for _, _, v in app.ports.records.scan("task/")], catalog(app))
         retained = [
             body
             for _, _, body in app.ports.records.scan("task/")
@@ -536,10 +539,15 @@ class ProjectAgent:
                 plan_ref,
                 final_head,
                 f"{run['sprint'] + 1}-{assignment.task_id}",
+                interfaces=interfaces,
             )
             expected[key] = 0
             updates[key] = task
             immutable_specs.update(specs)
+        for interface in proposal.interface_contracts:
+            key = "interface-contract/" + interface.reference
+            if not app.ports.records.get(key):
+                immutable_specs[key] = interface.model_dump(mode="json")
         for task_id in proposal.cancel_pending_task_ids:
             key = "task/" + task_id
             retained = app.ports.records.get(key)

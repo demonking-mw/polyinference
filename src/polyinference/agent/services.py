@@ -42,6 +42,7 @@ from ..domain import (
     operation_fingerprint,
 )
 from ..ports import RuntimePorts
+from .architecture import pinned_context
 from .diagnostics import DIAGNOSIS_PROMPT, DiagnosisPlan
 from .prompts import BOOTSTRAP, SENIOR, WORKER
 from .review import report_view, repository_context
@@ -542,6 +543,9 @@ class AgentServices:
             current = await self.ports.workspaces.revision(state["workspace_id"])
             data = {
                 "assignment": task["assignment"],
+                "module_context": pinned_context(self, self.get(state["task_spec_ref"]))
+                if state.get("task_spec_ref")
+                else [],
                 "phase": state["phase"],
                 "remaining_model_calls": max(
                     0,

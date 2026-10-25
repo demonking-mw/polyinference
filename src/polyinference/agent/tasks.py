@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from ..contracts import CodeRevision, Prerequisite, TaskAttempt, TaskSpec
+from .architecture import catalog, task_context
 
 
 def coding_tools(config, setup=False):
@@ -14,7 +15,7 @@ def coding_tools(config, setup=False):
     return tools
 
 
-def make_task(app, assignment, plan_ref, base, attempt, category="development"):
+def make_task(app, assignment, plan_ref, base, attempt, category="development", *, interfaces=None):
     task = {
         "assignment": assignment.model_dump(mode="json"),
         "category": category,
@@ -41,7 +42,7 @@ def make_task(app, assignment, plan_ref, base, attempt, category="development"):
         ],
         base=CodeRevision.model_validate(base),
         acceptance_spec=app.artifact(assignment.checks),
-        context_refs=[],
+        context_refs=task_context(app, assignment, catalog(app) if interfaces is None else interfaces),
         memory_snapshot_refs=[],
         allowed_capabilities=coding_tools(app.config, category == "setup"),
         worker_process_spec_ref="process-spec/" + task["process_id"],

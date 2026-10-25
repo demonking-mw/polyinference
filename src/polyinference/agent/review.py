@@ -7,6 +7,7 @@ from copy import deepcopy
 
 from ..contracts import CodeRevision
 from ..domain import canonical, digest
+from .architecture import pinned_context
 
 
 def code_identity(code):
@@ -136,6 +137,7 @@ async def report_view(app, report):
             "allowed_change_scope": spec["allowed_change_scope"],
             "acceptance_spec": app.read(spec["acceptance_spec"]),
             "source_ref": spec["record_id"],
+            "module_context": pinned_context(app, spec),
         },
         "changed_paths": paths[:100],
         "omitted_changed_path_count": max(0, len(paths) - 100),

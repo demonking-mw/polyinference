@@ -6,6 +6,7 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.runtime import Runtime
 
 from ..domain import SeniorProposal
+from .architecture import catalog, validate_plan
 from .review import fit_snapshot, retrieve, validate_completion
 from .worker import AppContext
 
@@ -46,6 +47,7 @@ async def validate(state, runtime: Runtime[AppContext]):
                     "Review retrieval allowance exhausted; leave incomplete or plan follow-up work"
                 )
             return {"proposal": proposal.model_dump(mode="json"), "error": None, "route": "read_context"}
+        validate_plan(proposal, [v for _, _, v in app.ports.records.scan("task/")], catalog(app))
         validate_completion(proposal, state["input"])
         return {"proposal": proposal.model_dump(mode="json"), "error": None, "route": "done"}
     except ValueError as exc:

@@ -12,8 +12,8 @@ from pydantic import Field, model_validator
 from .contracts import Limits, PhaseReserve, Wire
 from .workspace_contracts import RelativePath
 
-PROGRAM_VERSION = "agent-2-setup-shell-routing"
-STATE_VERSION = "2.1"
+PROGRAM_VERSION = "agent-3-module-planning"
+STATE_VERSION = "2.2"
 
 
 def now():
@@ -75,6 +75,31 @@ class Check(Wire):
     timeout_seconds: Annotated[float, Field(gt=0, le=600)] = 60
 
 
+InterfaceRef = Annotated[str, Field(pattern=r"^[a-zA-Z0-9_-]{1,80}@[1-9][0-9]*$")]
+ContractText = Annotated[str, Field(min_length=1, max_length=3000)]
+
+
+class InterfaceContract(Wire):
+    interface_id: Annotated[str, Field(pattern=r"^[a-zA-Z0-9_-]{1,80}$")]
+    version: Annotated[int, Field(ge=1)]
+    description: ContractText
+    inputs: ContractText
+    outputs: ContractText
+    invariants: Annotated[list[ContractText], Field(min_length=1, max_length=12)]
+    verification: Annotated[list[ContractText], Field(min_length=1, max_length=12)]
+    change_reason: Annotated[str, Field(max_length=3000)] = ""
+
+    @property
+    def reference(self):
+        return f"{self.interface_id}@{self.version}"
+
+    @model_validator(mode="after")
+    def revision_reason(self):
+        if self.version > 1 and not self.change_reason.strip():
+            raise ValueError("Interface revisions require a change_reason and compatibility impact")
+        return self
+
+
 class Assignment(Wire):
     task_id: Annotated[str, Field(pattern=r"^[a-zA-Z0-9_-]{1,80}$")]
     objective: Annotated[str, Field(min_length=1, max_length=16000)]
@@ -83,14 +108,27 @@ class Assignment(Wire):
     dependencies: list[str] = Field(default_factory=list)
     role: Literal["worker", "specialist"] = "worker"
     checks: Annotated[list[str], Field(min_length=1)]
+    acceptance_criteria: list[ContractText] = Field(default_factory=list, max_length=12)
+    non_goals: list[ContractText] = Field(default_factory=list, max_length=12)
+    provides: list[InterfaceRef] = Field(default_factory=list, max_length=16)
+    consumes: list[InterfaceRef] = Field(default_factory=list, max_length=16)
 
     @model_validator(mode="after")
     def unique(self):
-        for values in (self.write_paths, self.read_paths, self.dependencies, self.checks):
+        for values in (
+            self.write_paths,
+            self.read_paths,
+            self.dependencies,
+            self.checks,
+            self.provides,
+            self.consumes,
+        ):
             if len(values) != len(set(values)):
                 raise ValueError("Assignment lists must contain unique entries")
         if self.task_id in self.dependencies:
             raise ValueError("Task cannot depend on itself")
+        if (self.provides or self.consumes) and not self.acceptance_criteria:
+            raise ValueError("Module assignments require observable acceptance_criteria")
         return self
 
 
@@ -127,12 +165,16 @@ class SeniorProposal(Wire):
     cancel_pending_task_ids: list[str] = Field(default_factory=list)
     read_requests: list[ReviewRead] = Field(default_factory=list, max_length=8)
     completion_assessment: CompletionAssessment | None = None
+    interface_contracts: list[InterfaceContract] = Field(default_factory=list, max_length=16)
 
     @model_validator(mode="after")
     def validate_dag(self):
         tasks = {t.task_id: t for t in self.tasks}
         if len(tasks) != len(self.tasks):
             raise ValueError("Task IDs must be unique")
+        refs = [c.reference for c in self.interface_contracts]
+        if len(refs) != len(set(refs)):
+            raise ValueError("Duplicate interface contract version")
         visiting, done = set(), set()
 
         def visit(key):

@@ -367,6 +367,31 @@ reports can still be kept as provisional work while follow-up tasks are planned.
 Semantic review remains a model judgment; strong independent behavior checks are
 necessary for reliable product acceptance.
 
+The senior also owns module design. It plans the next useful milestone as bounded
+module/feature assignments (for example, physics and rendering separately), with
+matching I/O and explicit acceptance criteria and exclusions. Later milestones stay
+tentative in shared notes; reviews can redistribute future work without dropping
+unfinished requirements. This is prompt-led planning, not a fixed task-size metric.
+
+`SeniorProposal.interface_contracts` declares shared boundaries using `interface_id`,
+integer `version`, `description`, `inputs`, `outputs`, `invariants` and `verification`.
+Assignments reference them through `provides` and `consumes`, such as `motion-state@1`,
+and include `acceptance_criteria` and `non_goals`. The planner specifies concrete API
+shapes, units, coordinates, timing, ownership and errors. Self-contained edits may
+leave interface lists empty. Verification descriptions are planning requirements,
+not executable checks or evidence of a pass; workers implement meaningful checks
+and senior review inspects the actual resulting code and integration evidence.
+
+The agent validates references and unfinished-provider dependencies, then publishes
+immutable `interface-contract/ID@VERSION` records with the plan. Each task pins its
+relevant definitions in existing task-context artifacts, supplied to both ordinary
+and native workers and retained in senior review/export. Revisions need the next
+version and a `change_reason` explaining compatibility impact; affected pending
+assignments must be cancelled and replaced together with their dependents. Existing
+code and started assignments are not silently rewritten. These are agent policies
+over existing record/artifact ports; OS schemas, scheduling, budgets and recovery
+are unchanged. Old paused runs still require their pinned program/source snapshot.
+
 There is also an optional `codex_proxy` adapter for a separately installed,
 compatible proxy with a pinned read-only snapshot. It supports senior queries;
 opaque proxy coding jobs are rejected. No third-party proxy is installed by this
