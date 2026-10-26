@@ -134,8 +134,10 @@ async def test_review_crash_between_two_reverts_resumes_only_remaining_dispositi
     app = AgentServices(runtime, config)
     engine = ProjectAgent(app)
     try:
-        await engine.run()
-        assert app.get("app/run")["status"] == "completed"
+        await engine.review()  # Resume the interrupted batch, not an unreviewed completion.
+        assert app.get("app/run")["status"] == "active"
+        assert not app.get("app/run")["completion_proposed"]
+        assert "semantic_review" in app.get("app/run")["acceptance_failure"]
         assert app.get("senior-receipt/99/0") == first_receipt
         assert len(runtime.records.scan("senior-receipt/99/")) == 2
         assert len(runtime.records.scan("report/")) == 2

@@ -8,7 +8,7 @@ from pathlib import Path
 
 import httpx
 import pytest
-from conftest import ScriptedAgent, git
+from conftest import ScriptedAgent, fixture_completion, fixture_review_reply, git
 
 from polyinference.agent.controller import ProjectAgent
 from polyinference.agent.routing import accounting, allocate
@@ -115,6 +115,7 @@ async def test_cloud_setup_selects_requested_branch_runs_shell_and_publishes_bef
             else:
                 assert runtime.records.get("setup/completed")
                 assert data["repository_setup"]["base_branch"] == "requested-base"
+                assert data["write_scope"] == "project"
                 reply = {
                     "goal": "Update value",
                     "dispositions": [
@@ -134,8 +135,9 @@ async def test_cloud_setup_selects_requested_branch_runs_shell_and_publishes_bef
                     ]
                 else:
                     reply["complete"] = True
+                    reply["completion_assessment"] = fixture_completion(data)
             return {
-                "text": json.dumps(reply),
+                "text": json.dumps(fixture_review_reply(reply, data)),
                 "model": "cloud-fixture",
                 "usage": {"total_tokens": 50},
                 "events": [],
@@ -187,6 +189,9 @@ async def test_prepare_initializes_private_git_for_plain_folder_without_tracking
     empty = project_kind != "populated"
     if project_kind != "missing":
         source.mkdir(parents=True)
+    if source.exists():
+        (source / ".npm" / "_logs").mkdir(parents=True)
+        (source / ".npm" / "_logs" / "cached.log").write_text("generated npm log\n")
     if not empty:
         (source / "main.py").write_text("VALUE = 1\n")
         (source / ".env").write_text("SECRET=fixture\n")
@@ -201,6 +206,7 @@ async def test_prepare_initializes_private_git_for_plain_folder_without_tracking
         assert source.is_dir()
         tree = await runtime.workspaces.tree(code.commit_id)
         assert ".env" not in tree and "ignored.txt" not in tree
+        assert not any(path.startswith(".npm/") for path in tree)
         assert ("main.py" in tree) != empty
         assert not (source / ".git").exists()
         assert runtime.records.get("repository/setup")[1]["base_branch"] == "main"
@@ -278,14 +284,16 @@ async def test_retiring_started_development_preserves_count_and_replacement_allo
         async def generate(self, messages, *args):
             data = pinned(messages)
             if data.get("assignment", {}).get("task_id") == "a":
-                reply = {"kind": "needs_review", "reason": "Replace this safely stopped assignment"}
+                from polyinference.runtime.inference import ProviderError
+
+                raise ProviderError("Fixture known-stopped failure", category="invalid_request", submitted=False)
             elif "assignment" not in data and data["all_task_ids"] and "b" not in data["all_task_ids"]:
                 reply = {"goal": "Replace a", "cancel_pending_task_ids": ["a"], "tasks": [{
                     "task_id": "b", "objective": "Set b to 2", "write_paths": ["b.py"],
                     "read_paths": ["b.py"], "checks": ["syntax"]}]}
             else:
                 return await super().generate(messages, *args)
-            return {"text": json.dumps(reply), "model": "fixture", "usage": {"total_tokens": 5}}
+            return {"text": json.dumps(fixture_review_reply(reply, data)), "model": "fixture", "usage": {"total_tokens": 5}}
 
     runtime = await StandaloneRuntime(config).open()
     client = RetiringAgent(two=False)
@@ -295,6 +303,9 @@ async def test_retiring_started_development_preserves_count_and_replacement_allo
     app, engine = AgentServices(runtime, config), None
     engine = ProjectAgent(app)
     try:
+        await engine.run()
+        assert app.get("app/run")["status"] == "paused"
+        engine.steer("Retire the safely stopped assignment a and replace it with b")
         await engine.run()
         assert app.get("app/run")["status"] == "completed"
         assert app.get("task/a")["execution"] == "cancelled"
@@ -464,7 +475,7 @@ async def test_default_setup_creates_missing_project_and_follows_objective_befor
                         for report in data["reports"]
                     ],
                 }
-            return {"text": json.dumps(reply), "model": "cloud-fixture", "usage": {"total_tokens": 50}}
+            return {"text": json.dumps(fixture_review_reply(reply, data)), "model": "cloud-fixture", "usage": {"total_tokens": 50}}
 
         async def close(self):
             pass
@@ -662,13 +673,14 @@ async def test_ten_development_tasks_include_one_cloud_coder_with_shared_shell_t
                 reply = {
                     "goal": "Finished",
                     "complete": True,
+                    "completion_assessment": fixture_completion(data),
                     "dispositions": [
                         {"report_ref": r["record_id"], "action": "keep", "reason": "Checked"}
                         for r in data["reports"]
                     ],
                 }
             return {
-                "text": json.dumps(reply),
+                "text": json.dumps(fixture_review_reply(reply, data)),
                 "model": "cloud-fixture",
                 "usage": {"total_tokens": 50},
                 "events": [],
@@ -784,7 +796,7 @@ async def test_missing_discovered_checks_cannot_be_published_as_success(config):
                         for r in data["reports"]
                     ],
                 }
-            return {"text": json.dumps(reply), "model": "fixture", "usage": {"total_tokens": 50}}
+            return {"text": json.dumps(fixture_review_reply(reply, data)), "model": "fixture", "usage": {"total_tokens": 50}}
 
         async def close(self):
             pass

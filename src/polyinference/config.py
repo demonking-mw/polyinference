@@ -4,12 +4,42 @@ from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
-from .contracts import InferencePolicy
+from .contracts import InferencePolicy, Wire
 from .execution_contracts import Check
 from .system_settings import Endpoint, RuntimeConfig
 from .workspace_contracts import RelativePath
 
 __all__ = ["AgentConfig", "Endpoint", "RuntimeConfig"]
+
+
+class InferenceRetry(Wire):
+    max_attempts: Annotated[int, Field(ge=2, le=8)] = 2
+    replacement_wait_seconds: Annotated[float, Field(ge=0, le=60)] = 1
+
+
+class CheckDiagnosis(Wire):
+    role: Literal["worker", "specialist", "senior"] = "worker"
+    max_rounds: Annotated[int, Field(ge=0, le=3)] = 1
+    max_read_paths: Annotated[int, Field(ge=1, le=32)] = 16
+    instructions: str = ""
+
+
+class AcceptanceCriterion(Wire):
+    criterion_id: Annotated[str, Field(pattern=r"^[a-zA-Z0-9_-]{1,80}$")]
+    description: Annotated[str, Field(min_length=1, max_length=4000)]
+    required_checks: list[str] = Field(default_factory=list)
+
+
+class ProgressMonitor(Wire):
+    mode: Literal["off", "observe", "enforce"] = "enforce"
+    warn_after: Annotated[int, Field(ge=2, le=128)] = 8
+    escalate_after: Annotated[int, Field(ge=3, le=256)] = 12
+
+    @model_validator(mode="after")
+    def ordered(self):
+        if self.escalate_after <= self.warn_after:
+            raise ValueError("Progress escalation must leave decisions after warning")
+        return self
 
 
 class AgentConfig(RuntimeConfig):
@@ -28,6 +58,13 @@ class AgentConfig(RuntimeConfig):
     senior_development_fraction: Annotated[float, Field(ge=0, le=1)] = 0.1
     max_sprints: Annotated[int, Field(gt=0, le=100)] = 8
     max_senior_corrections: Annotated[int, Field(ge=0, le=3)] = 1
+    inference_retry: InferenceRetry = Field(default_factory=InferenceRetry)
+    check_diagnosis: CheckDiagnosis = Field(default_factory=CheckDiagnosis)
+    acceptance_criteria: list[AcceptanceCriterion] = Field(default_factory=list)
+    max_review_reads: Annotated[int, Field(ge=0, le=16)] = 4
+    max_worker_recoveries: Annotated[int, Field(ge=0, le=3)] = 1
+    progress_monitor: ProgressMonitor = Field(default_factory=ProgressMonitor)
+
     max_protocol_corrections: Annotated[int, Field(ge=0, le=16)] = 3
 
     @model_validator(mode="before")
@@ -50,6 +87,12 @@ class AgentConfig(RuntimeConfig):
 
     @model_validator(mode="after")
     def feasible_agent(self):
+        ids = [c.criterion_id for c in self.acceptance_criteria]
+        if len(ids) != len(set(ids)) or "objective" in ids:
+            raise ValueError("Acceptance criterion IDs must be unique; objective is reserved")
+        if any(not set(c.required_checks) <= {c.name for c in [*self.checks, *(self.acceptance_checks or [])]} for c in self.acceptance_criteria):
+            raise ValueError("Acceptance criteria must use configured checks")
+
         if not (self.checks or self.acceptance_checks) and not self.prepare_repository:
             raise ValueError("Provide checks or enable prepare_repository to discover them")
         definitions = {}

@@ -191,13 +191,14 @@ for line in sys.stdin:
  message=json.loads(line);method=message.get("method")
  if method=="initialize":send({"id":message["id"],"result":{}})
  elif method=="thread/start":
+  instructions=message["params"].get("developerInstructions", "")
   schema=message["params"]["dynamicTools"][0]["inputSchema"]
   assert schema["properties"]["tool"]["enum"]==["research.lookup","user.notify"]
   assert "topic" in schema["properties"]["arguments"]["anyOf"][0]["properties"]
   send({"id":message["id"],"result":{"thread":{"id":"research-thread"},"sandbox":{"type":"readOnly"},"approvalPolicy":"never"}})
  elif method=="turn/start":
-  messages=json.loads(message["params"]["input"][0]["text"])
-  prompt=json.dumps(messages)
+  messages=message["params"]["input"]
+  prompt=json.dumps(messages)+instructions
   assert "candidate" not in prompt and "assessment" not in prompt and "files.write" not in prompt
   assert "supplied summary schema" in prompt
   for index,limit in enumerate([2,2,0]):

@@ -220,7 +220,8 @@
             "title": "Bounded OS model retries",
             "doc": "docs/modules/retries.md",
             "files": [
-              "src/polyinference/runtime/model_retries.py"
+              "src/polyinference/runtime/model_retries.py",
+              "src/polyinference/runtime/retry.py"
             ]
           },
           {
@@ -397,8 +398,36 @@
               "src/polyinference/agent/worker.py",
               "src/polyinference/agent/senior.py",
               "src/polyinference/agent/prompts.py",
-              "src/polyinference/domain.py"
+              "src/polyinference/domain.py",
+              "src/polyinference/agent/architecture.py",
+              "src/polyinference/agent/review.py",
+              "src/polyinference/agent/diagnostics.py",
+              "src/polyinference/agent/schema.py"
             ]
+          },
+          {
+            "id": "worker-recovery",
+            "title": "Bounded worker exception recovery",
+            "doc": "design-docs/implementation/WORKER_RECOVERY.md",
+            "files": [
+              "src/polyinference/agent/exceptions.py",
+              "src/polyinference/runtime/lifecycle.py"
+            ]
+          },
+          {
+            "id": "execution-progress",
+            "title": "Execution observations and agent progress policy",
+            "doc": "design-docs/implementation/PROGRESS_MONITORING.md",
+            "files": [
+              "src/polyinference/agent/progress.py",
+              "src/polyinference/runtime/progress.py"
+            ]
+          },
+          {
+            "id": "reliability-fix-log",
+            "title": "Reliability branch implementation fixes",
+            "doc": "design-docs/implementation/FIXES.md",
+            "files": []
           }
         ]
       },
@@ -783,6 +812,12 @@
             "title": "Run eb66fc618354: interrupted inventory repair",
             "doc": "development-docs/run-eb66fc618354-analysis.md",
             "files": []
+          },
+          {
+            "id": "branch-integration-audit",
+            "title": "Reliability/simple OS integration audit",
+            "doc": "development-docs/branch-integration-audit-2026-10-26.md",
+            "files": []
           }
         ]
       },
@@ -976,7 +1011,17 @@
               "tests/test_user_briefs.py",
               "tests/test_workspace_outputs.py",
               "tests/ui_start.test.cjs",
-              "tests/test_inference_lifecycle.py"
+              "tests/test_inference_lifecycle.py",
+              "tests/test_check_diagnosis.py",
+              "tests/test_exception_recovery.py",
+              "tests/test_inference_retry.py",
+              "tests/test_module_planning.py",
+              "tests/test_progress.py",
+              "tests/test_retry_export.py",
+              "tests/test_semantic_review.py",
+              "tests/test_validation_feedback.py",
+              "tests/test_cli.py",
+              "tests/test_branch_integration.py"
             ]
           }
         ]

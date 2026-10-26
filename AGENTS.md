@@ -74,3 +74,20 @@ Preserve user work, immutable attempts, source authority, original budgets/deadl
 and historical evidence. Lost delivery proves no remote stop: optional raw-query
 isolation retains physical holds and fences late output. Retries cannot reset
 allowances. Report actual checks and limits; keep docs/navigation/history current.
+
+## Integrated reliability branch (2026-10-26)
+
+Retained project knowledge refreshed for codex/simple-os-v1, 2026-10-26: the
+integrated kernel keeps generic runtime settings, registered capabilities, strict
+unknown execution and attached repository safeguards. The agent owns module
+contracts, source-backed semantic completion, bounded diagnosis and stagnation.
+Response-validation retries must not multiply transport retry allowances. Linked
+worker replacements inherit accounts, deadlines and grants. Use fresh integrated
+program/state pins; preserve old runs on their original source. Current evidence:
+[FIX-0127](development-docs/FIXES.md#fix-0127), worker recovery and progress guides.
+This project-rule save was read back; it does not install runtime hooks.
+
+Prepared retry bookkeeping never proves unknown execution stopped. Preserve actual
+physical holds through restart; later unknown response repairs require explicit
+reconciliation. Keep cache-named source visible to scope checks and preserve paged
+read/cancellation compatibility while extending progress and recovery.

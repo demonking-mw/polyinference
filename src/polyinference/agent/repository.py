@@ -341,6 +341,8 @@ class RepositoryWorkspaces(Workspaces):
                                      check_names=check_names, expandable=expandable)
         task = next((t for _, _, t in self.records.scan("task/") if t["workspace_id"] == workspace_id), None)
         resume = task and task["assignment"].get("resume_from")
+        if resume and resume.startswith("worker-exception/"):
+            resume = None  # Its validated delta is applied by worker.load after creation.
         if resume and resume.startswith("coding/interrupted/"):
             retained = self.records.get(resume)
             if not retained:
@@ -589,11 +591,19 @@ class RepositoryWorkspaces(Workspaces):
         self.app.update(key, {"digest": fingerprint, "status": "succeeded"})
 
     def preparation_issues(self, workspace_id=None):
-        return [{"workspace_id": key.removeprefix("coding/dependencies/"),
-                 "diagnostic": json.dumps(value["output"])[:4000]}
-                for key, _, value in self.records.scan("coding/dependencies/")
-                if value.get("status") == "failed"
-                and (workspace_id is None or key == "coding/dependencies/" + workspace_id)]
+        issues = []
+        for key, _, value in self.records.scan("coding/dependencies/"):
+            wid = key.removeprefix("coding/dependencies/")
+            if value.get("status") != "failed" or (workspace_id is not None and wid != workspace_id):
+                continue
+            if workspace_id is None:
+                worktree = self.records.get("coding/worktree/" + wid)
+                manifest = self.records.get("workspace/" + wid)
+                status = self.records.get("process-status/" + manifest[1]["process_id"]) if manifest else None
+                if worktree and worktree[1].get("checking") and status and status[1]["state"] == "completed":
+                    continue  # The immutable failed check remains evidence, not an active worker blocker.
+            issues.append({"workspace_id": wid, "diagnostic": json.dumps(value["output"])[:4000]})
+        return issues
 
     async def summary(self):
         setup = self.records.get("repository/setup")

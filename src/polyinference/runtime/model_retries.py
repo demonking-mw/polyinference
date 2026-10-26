@@ -147,6 +147,8 @@ class ModelRetries:
 
     def _blocked(self, request, result):
         rt = self.runtime
+        if result.error and result.error.code in {"ResponseValidationError", "ReservedInferenceCalls"}:
+            return "caller response retry allowance or finishing reserve reached"
         replaceable = result.extensions.get("runtime/undelivered-generation") and self.policy(request).replace_undelivered
         if not replaceable and (result.state != "failed" or result.effects != "known"
                 or result.execution_termination != "confirmed_stopped"

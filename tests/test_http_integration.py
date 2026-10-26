@@ -9,6 +9,7 @@ from collections import defaultdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
+from conftest import fixture_completion
 
 from polyinference.agent.controller import ProjectAgent
 from polyinference.agent.services import AgentServices
@@ -16,7 +17,7 @@ from polyinference.domain import digest
 from polyinference.runtime.adapter import StandaloneRuntime
 
 
-@pytest.mark.parametrize("protocol", ["chat", "anthropic"])
+@pytest.mark.parametrize("protocol", ["chat", "anthropic", "responses"])
 async def test_complete_agent_over_real_http(config, protocol, monkeypatch):
     monkeypatch.setenv("HTTP_FIXTURE_KEY", "fixture-credential")
     counts = defaultdict(int)
@@ -28,17 +29,28 @@ async def test_complete_agent_over_real_http(config, protocol, monkeypatch):
 
         def do_POST(self):
             payload = json.loads(self.rfile.read(int(self.headers["content-length"])))
-            assert self.path == ("/v1/messages" if protocol == "anthropic" else "/v1/chat/completions")
+            assert (
+                self.path
+                == {
+                    "anthropic": "/v1/messages",
+                    "chat": "/v1/chat/completions",
+                    "responses": "/v1/responses",
+                }[protocol]
+            )
             if protocol == "anthropic":
                 assert self.headers["x-api-key"] == "fixture-credential"
                 assert self.headers["anthropic-version"] == "2023-06-01"
                 assert payload["system"] and all(m["role"] != "system" for m in payload["messages"])
                 assert payload["messages"][-1]["role"] == "user", "Configured Claude models reject assistant prefill"
+                assert payload["temperature"] == 0
             assert "tools" not in payload
+            messages = payload["input"] if protocol == "responses" else payload["messages"]
+            if protocol != "anthropic":
+                assert messages[0]["role"] == "system"
             data = json.loads(
-                next(
-                    m["content"] for m in payload["messages"] if "Pinned application inputs:" in m["content"]
-                ).split("Pinned application inputs:\n", 1)[1]
+                next(m["content"] for m in messages if "Pinned application inputs:" in m["content"]).split(
+                    "Pinned application inputs:\n", 1
+                )[1]
             )
             with lock:
                 if "assignment" not in data:
@@ -59,6 +71,7 @@ async def test_complete_agent_over_real_http(config, protocol, monkeypatch):
                         reply = {
                             "goal": "Done",
                             "complete": True,
+                            "completion_assessment": fixture_completion(data),
                             "memory_update": "The value was updated and reviewed.",
                             "dispositions": [
                                 {"report_ref": r["record_id"], "action": "keep", "reason": "Reviewed"}
@@ -93,6 +106,16 @@ async def test_complete_agent_over_real_http(config, protocol, monkeypatch):
                 "choices": [{"finish_reason": "stop", "message": {"content": json.dumps(reply)}}],
                 "usage": {"total_tokens": 25},
             }
+            if protocol == "responses":
+                response = {
+                    "id": "responses-fixture",
+                    "status": "completed",
+                    "model": "http-fixture",
+                    "output": [
+                        {"type": "message", "content": [{"type": "output_text", "text": json.dumps(reply)}]}
+                    ],
+                    "usage": {"total_tokens": 25},
+                }
             if protocol == "anthropic":
                 response = {
                     "id": "msg-fixture",

@@ -502,3 +502,13 @@ exercises the actual adapter wire code, but does not claim fresh live-provider o
 live-bubblewrap validation. See
 [current-iteration results](../../development-docs/current-iter-issues.md) for the
 final test counts and remaining deferred audit items.
+
+## Integrated reliability branch (2026-10-26)
+
+The merged kernel exposes generic execution observations, settled-process fencing,
+inherited account limits and caller-supplied response validation. The agent owns
+stagnation, diagnosis, semantic completion, module contracts and exception recovery.
+The adapter stays a compatibility alias; generic processes still require no coding
+services. See [worker recovery](../implementation/WORKER_RECOVERY.md),
+[progress monitoring](../implementation/PROGRESS_MONITORING.md) and the
+[merge record](../../development-docs/FIXES.md#fix-0127). Existing U01–U04 gaps remain.

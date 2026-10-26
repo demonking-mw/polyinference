@@ -101,3 +101,12 @@ warm-up, see [endpoint lifecycle/testing](endpoint-testing.md). New fields are
 opt-in for custom configs; preserve saved configuration pins.
 
 Next: [Budgets and execution settings](budgets.md) includes validation, probes and launch commands. Update configuration docs and module guides after changing settings.
+
+## Integrated reliability branch (2026-10-26)
+
+The agent can configure inference_retry, check_diagnosis, acceptance_criteria,
+max_review_reads, max_worker_recoveries and progress_monitor at the top level.
+See [settings](../modules/settings.md), [worker recovery](../../design-docs/implementation/WORKER_RECOVERY.md)
+and [progress policy](../../design-docs/implementation/PROGRESS_MONITORING.md).
+Endpoint supports_temperature and reasoning_effort remain inside local/cloud.
+The combined program/state schema requires a fresh run; keep old run evidence.

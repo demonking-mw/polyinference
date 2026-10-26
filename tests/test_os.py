@@ -4,7 +4,7 @@ import asyncio
 import json
 
 import pytest
-from conftest import git
+from conftest import fixture_review_reply, git
 
 from polyinference.agent.controller import ProjectAgent
 from polyinference.agent.services import AgentServices
@@ -28,7 +28,7 @@ def model_request(app, step="model-0"):
             phase="development",
             prompt_template_ref="prompt/1",
             context=context,
-            response_schema_ref="worker/1",
+            response_schema_ref="os-fixture/1",
             capability_requirements=[],
             temperature=0,
             session_ref=None,
@@ -348,7 +348,7 @@ async def test_four_workers_failure_retains_commit_drains_and_replans(config):
                 else:
                     reply = {"kind": "candidate", "summary": "Reconciled"}
             return {
-                "text": json.dumps(reply),
+                "text": json.dumps(fixture_review_reply(reply, data)),
                 "usage": {"total_tokens": 10},
                 "model": "fixture",
                 "events": [],

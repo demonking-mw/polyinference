@@ -54,3 +54,12 @@ See [profiles, retry policy and testing](../guides/endpoint-testing.md).
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
 Follow [documentation maintenance](../maintenance.md) in the same task.
+
+## Integrated reliability branch (2026-10-26)
+
+Raw prepared payloads forward an explicitly requested temperature, including SSE
+and operation-aware adapter paths. Endpoint.supports_temperature rejects unsupported
+requests. Results retain requested/sent settings; provider-effective values may
+remain unknown. Native turns use Endpoint.reasoning_effort and readable task inputs;
+application instructions enter developerInstructions while native safety/broker
+restrictions, immutable views and rolling event retention remain enforced.

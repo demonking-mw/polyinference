@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 
 import pytest
+from conftest import fixture_review_reply
 
 from polyinference.agent.controller import ProjectAgent
 from polyinference.agent.services import AgentServices
@@ -65,7 +66,7 @@ async def test_long_review_reason_retires_setup_and_activates_replacement(config
                     }], cancel_pending_task_ids=["project_setup"])
                 else:
                     reply["complete"] = True
-            return {"text": json.dumps(reply), "model": "fixture", "usage": {"total_tokens": 5}}
+            return {"text": json.dumps(fixture_review_reply(reply, data)), "model": "fixture", "usage": {"total_tokens": 5}}
 
         async def close(self):
             pass

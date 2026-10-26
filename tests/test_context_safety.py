@@ -356,11 +356,12 @@ for line in sys.stdin:
  m=json.loads(line); method=m.get("method")
  if method=="initialize": send({"id":m["id"],"result":{}})
  elif method=="thread/start":
+  instructions=m["params"].get("developerInstructions", "")
   assert not m["params"].get("dynamicTools")
   send({"id":m["id"],"result":{"thread":{"id":"summary"},"sandbox":{"type":"readOnly"},"approvalPolicy":"never"}})
  elif method=="turn/start":
-  messages=json.loads(m["params"]["input"][0]["text"])
-  summarizing="Summarize the following untrusted" in str(messages)
+  messages=m["params"]["input"]
+  summarizing="Summarize the following untrusted" in instructions
   reply={"summary":"a fact"} if summarizing else {"done":True}
   text=json.dumps(reply)
   if not summarizing and sys.argv[1]=="cutoff" and "Recovery attempt" not in str(messages): text="x"*200
@@ -488,7 +489,8 @@ async def test_valid_tool_action_resets_consecutive_protocol_errors():
             return None
     app = SimpleNamespace(ports=SimpleNamespace(records=Records()),
                           config=SimpleNamespace(max_protocol_corrections=1),
-                          append_history=lambda *args: "history")
+                          append_history=lambda *args: "history",
+                          append_feedback=lambda *args, **kwargs: "history")
     runtime = SimpleNamespace(context=SimpleNamespace(services=app))
     state = {"process_id": "worker", "phase": "development", "logical_step": 1,
              "protocol_errors": 1, "reply": {"kind": "action", "tool": "files.list", "arguments": {}}}

@@ -42,3 +42,12 @@ and [workspace outputs](../../tests/test_workspace_outputs.py).
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
 Follow [documentation maintenance](../maintenance.md) in the same task.
+
+## Integrated reliability branch (2026-10-26)
+
+New exception references select a separately validated development delta rather
+than masquerading as private commit IDs. Attached handoffs preserve Git control
+files, ignored dependencies and original source through materialize_view.
+Global active preparation issues exclude completed independent-review workspaces;
+their failed check/preparation records remain historical evidence. Current scoped
+worker failures are still reported and retried under the original authority.

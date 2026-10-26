@@ -62,6 +62,8 @@ class Endpoint(Wire):
     readonly_snapshot_root: str | None = None
     brokered_tools: bool = False
     inference_location: Literal["local", "cloud"] | None = None
+    supports_temperature: bool = True
+    reasoning_effort: Literal["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"] = "medium"
     timeout_seconds: Annotated[float, Field(gt=0, le=1800)] = 180
     lifecycle: InferenceLifecycle | None = Field(default=None, exclude_if=lambda value: value is None)
     estimated_microusd_per_token: Annotated[float, Field(ge=0)] | None = None

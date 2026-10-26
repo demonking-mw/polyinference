@@ -619,6 +619,9 @@ class TestUI:
         for process in processes:
             record = records.get("process/" + process["id"], {})
             process["role"] = "controller" if process["id"] == "controller" else record.get("role", "process")
+            progress = records.get("worker-progress/" + process["id"])
+            if progress:
+                process["progress"] = {key: progress[key] for key in ("status", "idle_decisions")}
             for node in process["nodes"]:
                 node["process_id"] = process["id"]
                 details[node["id"]] = node

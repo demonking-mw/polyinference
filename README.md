@@ -20,3 +20,11 @@ inference with per-run TPS, batch and failure controls; see the
 **After every fix or feature, update all affected docs and navigation in the same
 change.** Agents: read [AGENTS.md](AGENTS.md) and the
 [fix history](development-docs/FIXES.md) before work.
+
+## Integrated reliability branch (2026-10-26)
+
+The reliability work is integrated with the simple OS runtime. Workers now support
+[bounded exception recovery](design-docs/implementation/WORKER_RECOVERY.md),
+[execution observations and stagnation warnings](design-docs/implementation/PROGRESS_MONITORING.md),
+source-backed semantic review, and versioned module contracts. See the
+[settings guide](docs/modules/settings.md) for controls and fresh-run requirements.

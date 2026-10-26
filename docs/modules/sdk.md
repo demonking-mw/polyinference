@@ -43,3 +43,10 @@ and [capability boundary](../../tests/test_capability_boundary.py).
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
 Follow [documentation maintenance](../maintenance.md) in the same task.
+
+## Integrated reliability branch (2026-10-26)
+
+OperationPorts adds settlement/park_process, inherited recovery/resource accounts,
+registered response validators/schemas and progress observations/inspectors.
+WorkspacePorts adds private-tree/snapshot and explicit scoped handoff methods.
+These are generic optional mechanisms; application code interprets task progress.

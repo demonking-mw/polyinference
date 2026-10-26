@@ -14,6 +14,18 @@ from pathlib import Path
 
 from .inference import EndpointError, HTTPInference, IncompleteGeneration, UnknownExecution
 
+# Completed items carry the authoritative text. Retaining their streaming
+# fragments makes the lifecycle-event bound depend on a reply's token count.
+STREAMED_TEXT_METHODS = (
+    "item/agentMessage/delta",
+    "item/plan/delta",
+    "item/reasoning/summaryTextDelta",
+    "item/reasoning/summaryPartAdded",
+    "item/reasoning/textDelta",
+    "item/commandExecution/outputDelta",
+    "item/fileChange/outputDelta",
+)
+
 
 class NativeJobStopped(EndpointError):
     """The app-server rejected dispatch or explicitly confirmed a terminal turn."""
@@ -42,7 +54,7 @@ class NativeEventLog:
         bucket = method if method in self.methods or len(self.methods) < 32 else "other"
         self.methods[bucket] += 1
         self.recent.append({"method": method, "bytes": size})
-        if method.endswith("/delta") or size > self.byte_limit:
+        if method in STREAMED_TEXT_METHODS or method.endswith("/delta") or size > self.byte_limit:
             self.dropped_events += 1
             return
         self.events.append((message, size))
@@ -64,6 +76,27 @@ class NativeEventLog:
             "byte_limit": self.byte_limit, "methods": dict(self.methods),
             "recent_events": list(self.recent),
         }
+
+
+def native_context(messages):
+    """Render canonical context without promoting retrieved data into instructions.
+
+    Only the native transport uses this renderer. Ordinary API clients retain
+    the canonical system/user/assistant message list and its actual roles.
+    """
+    instructions, inputs = [], []
+    for message in messages:
+        role, content = message["role"], message["content"]
+        if role == "system":
+            instructions.append(content)
+        else:
+            label = (
+                "Recorded assistant output (context data)"
+                if role == "assistant"
+                else "Task/context or recorded observation"
+            )
+            inputs.append({"type": "text", "text": label + ":\n" + content})
+    return "\n\n".join(instructions), inputs
 
 
 def strict_output_schema(schema):
@@ -135,8 +168,8 @@ class CodexAppServer:
             messages = [
                 *messages,
                 {
-                    "role": "user",
-                    "content": 'Return the final JSON inside {"reply": ...}, as required by the output schema.',
+                    "role": "system",
+                    "content": 'Return the final phase JSON inside {"reply": ...}, as required by the output schema.',
                 },
             ]
         developer = ("The native filesystem view is read-only input and may be stale. "
@@ -145,8 +178,10 @@ class CodexAppServer:
             "Never request escalated access. Only the host owns workspace generations, checks and publication. "
             + instructions + f" Return a small complete response; the requested output allowance is {max_output} tokens.")
         if instructions:
-            messages = [*messages, {"role": "user", "content": instructions}]
-        wire = {"input": [{"type": "text", "text": json.dumps(messages)}],
+            messages = [*messages, {"role": "system", "content": instructions}]
+        rendered, inputs = native_context(messages)
+        developer += "\n\n" + rendered
+        wire = {"input": inputs,
                 "outputSchema": output_schema, "developerInstructions": developer, "wrapped": wrapped}
         if tools:
             wire["dynamicTools"] = [{"type": "function", "name": "polyinference_tool",
@@ -279,7 +314,10 @@ class CodexAppServer:
                 "initialize",
                 {
                     "clientInfo": {"name": "polyinference", "version": "0.1.0"},
-                    "capabilities": {"experimentalApi": True},
+                    "capabilities": {
+                        "experimentalApi": True,
+                        "optOutNotificationMethods": list(STREAMED_TEXT_METHODS),
+                    },
                 },
             )
             await send({"method": "initialized", "params": {}})
@@ -310,6 +348,7 @@ class CodexAppServer:
                 {
                     "threadId": thread_id,
                     "input": wire["input"],
+                    "effort": self.endpoint.reasoning_effort,
                     "cwd": str(snapshot),
                     "approvalPolicy": "never",
                     "outputSchema": output_schema,

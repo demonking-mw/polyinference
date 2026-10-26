@@ -61,3 +61,11 @@ and [browser logic](../../tests/ui_start.test.cjs).
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
 Follow [documentation maintenance](../maintenance.md) in the same task.
+
+## Integrated reliability branch (2026-10-26)
+
+Live task rows expose the last worker progress observation. Shared Save/export
+snapshots retain physical inference attempts and expanded attempted context,
+retry windows, diagnoses, exception decisions, resource lineage, progress events,
+review artifacts and interface contracts, alongside the existing schema-v2 records,
+OS inspection, artifacts and checkpoints. Earlier saved snapshots remain viewable.

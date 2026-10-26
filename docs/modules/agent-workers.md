@@ -44,3 +44,26 @@ and bounded corrections for unavailable source or incomplete replacement grants.
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
 Follow [documentation maintenance](../maintenance.md) in the same task.
+
+## Integrated reliability branch (2026-10-26)
+
+The integrated worker/senior protocol retains scope recovery and check-preparation
+ownership, adds bounded diagnosis and exact-tree semantic completion, and pins
+versioned module interfaces. Related implementation files:
+
+- `agent/architecture.py` validates immutable interfaces and resulting dependency plans.
+- `agent/review.py` supplies source/diff/check evidence and validates completion criteria.
+- `agent/diagnostics.py` runs a bounded, read-only checking agent sharing the worker account.
+- `agent/schema.py` compacts displayed schemas without changing their constraints.
+
+See [worker recovery](../../design-docs/implementation/WORKER_RECOVERY.md) and
+[progress monitoring](../../design-docs/implementation/PROGRESS_MONITORING.md).
+Private in-place reports remain private until verified publication; a successful
+fixture response is not live product verification.
+
+Integrated source responsibilities:
+
+- [src/polyinference/agent/architecture.py](../../src/polyinference/agent/architecture.py) implements versioned module contracts and dependency validation.
+- [src/polyinference/agent/review.py](../../src/polyinference/agent/review.py) implements source-backed review and exact-tree semantic completion.
+- [src/polyinference/agent/diagnostics.py](../../src/polyinference/agent/diagnostics.py) implements bounded read-only check diagnosis.
+- [src/polyinference/agent/schema.py](../../src/polyinference/agent/schema.py) implements compact response schema presentation.

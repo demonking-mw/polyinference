@@ -14,6 +14,7 @@ from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 from ..contracts import (
     ActualBackend,
     AgentJob,
+    ArtifactRef,
     CapabilityCall,
     ErrorDetail,
     ModelQuery,
@@ -38,10 +39,13 @@ from .inference import (
     UnknownExecution,
     terminal_call,
 )
+from .lifecycle import ProcessLifecycle
 from .messages import Messages, UserNotification
 from .model_retries import ModelRetries
 from .outputs import Outputs
 from .processes import Processes
+from .progress import ExecutionProgress
+from .retry import InferenceRetries, ReservedInferenceCalls
 from .storage import Artifacts, Records
 from .tool_contracts import FILE_CAPABILITIES
 from .tools import Tools
@@ -56,7 +60,7 @@ class ProcessCancelled(RuntimeError):
     pass
 
 
-class KernelRuntime:
+class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
     def __init__(self, config, run_id="run"):
         self.config, self.run_id = config, run_id
         self.scope = Scope(
@@ -81,6 +85,10 @@ class KernelRuntime:
         self.clients = {}
         self.admission = {}
         self.inflight = {}
+        self.response_validators = {}
+        self.response_schemas = {}
+        self.retry_events = {}
+        self.progress_sources = {}
         self.model_retries = ModelRetries(self)
         self.agent_protocols = {}
         self.contexts = ContextService(self)
@@ -180,6 +188,10 @@ class KernelRuntime:
                 "project-scope",
                 "agent-job",
                 "native-broker-callbacks",
+                "inference-retry",
+                "readonly-query",
+                "process-recovery",
+                "execution-progress",
                 "output-delivery",
                 "model-recovery",
                 "model-retries",
@@ -247,6 +259,10 @@ class KernelRuntime:
 
             request = OperationRequest.model_validate(body["request"])
             payload = request.payload
+            attempts = self.records.scan("inference-attempt/" + request.operation_id + "/")
+            if attempts and all((value.get("result") and value["result"]["execution_termination"] == "confirmed_stopped" and value["result"]["effects"] != "unknown") or (value["state"] == "prepared" and value["request"]["operation_id"] != request.operation_id) for _, _, value in attempts):
+                self.records.compare_and_publish({key: rev}, {key: {**body, "state": "prepared", "result": None}})
+                continue
             output = None
             if isinstance(payload, Publication) and self.records.get(payload.receipt_ref):
                 output = {"receipt_ref": payload.receipt_ref}
@@ -409,6 +425,8 @@ class KernelRuntime:
         process = self.records.get("process/" + request.scope.process_id)
         if not process:
             raise ValueError("Unknown process principal")
+        if self.records.get("process-parked/" + request.scope.process_id):
+            raise ValueError("Parked process cannot start new effects")
         if process[1]["state"] in {"completed", "cancelled", "failed", "paused"}:
             raise ValueError("Process is stopped; an explicit recovery or new process is required")
         control = self.records.get("process-control/" + request.scope.process_id)
@@ -419,7 +437,7 @@ class KernelRuntime:
         if request.grant_ref != "grant/run" or request.budget_account_ref != "budget/run":
             raise ValueError("Unknown grant or budget account")
         if request.limits != self.config.limits:
-            raise ValueError("Operation limits differ from the pinned process grant")
+            raise ValueError("Operation limits differ from the pinned or inherited process grant")
         started = process[1].get("started_at")
         if started:
             cutoff = datetime.fromisoformat(started.replace("Z", "+00:00")) + timedelta(milliseconds=request.limits.max_wall_time_ms)
@@ -456,9 +474,19 @@ class KernelRuntime:
                 >= request.limits.max_model_calls
             ):
                 raise ValueError("Process model-call allowance exhausted")
-        parent = (
-            self.records.get("effect/" + request.causal_parent_ref) if request.causal_parent_ref else None
-        )
+        if self.records.get("process-parked/" + request.scope.process_id):
+            raise ValueError("Parked process cannot start new effects")
+        cutoff = self.process_deadline(request.scope.process_id)
+        if cutoff and (request.deadline > cutoff or now() >= cutoff):
+            raise ValueError("Recovery exceeds original process deadline")
+        account = self.records.get("process-account/" + request.scope.process_id)
+        if account and (request.limits.model_dump(mode="json") != account[1]["limits"] or request.grant_ref != account[1]["grant_ref"]):
+            raise ValueError("Recovery cannot enlarge inherited limits or grants")
+        parent = self.records.get("effect/" + request.causal_parent_ref) if request.causal_parent_ref else None
+        if parent is None and request.causal_parent_ref and request.extensions.get("runtime/context-compaction"):
+            index = self.records.get("inference-attempt-index/" + request.causal_parent_ref)
+            if index:
+                parent = self.records.get(index[1]["record_ref"])
         if request.causal_parent_ref:
             if (
                 not parent
@@ -486,15 +514,11 @@ class KernelRuntime:
             ):
                 raise ValueError("Only one top-level active effect per process")
         self.records.put_once(logical_key, {"operation_id": request.operation_id})
-        self._update(
-            key,
-            {
-                "fingerprint": expected_digest,
-                "state": "prepared",
-                "request": request.model_dump(mode="json"),
-                "result": None,
-            },
-        )
+        body = {"fingerprint": expected_digest, "state": "prepared", "request": request.model_dump(mode="json"), "result": None}
+        if saved:
+            self._update(key, body)
+        else:
+            self.prepare_effect(request, key, body)
         task = asyncio.create_task(self._dispatch(request, key))
         self.inflight[request.operation_id] = task
         try:
@@ -509,7 +533,7 @@ class KernelRuntime:
             return
         keys = [
             ("budget/run", self.config.run_token_budget),
-            ("budget/process/" + request.scope.process_id, request.limits.max_total_tokens),
+            ("budget/process/" + self.account(request.scope.process_id), request.limits.max_total_tokens),
         ]
         expected, updates = {}, {}
         for key, limit in keys:
@@ -539,7 +563,7 @@ class KernelRuntime:
         expected, updates = {}, {}
         for pointer, limit in (
             ("spend/run", self.config.run_spend_budget_microusd),
-            ("spend/process/" + request.scope.process_id, request.limits.max_api_spend_microusd),
+            ("spend/process/" + self.account(request.scope.process_id), request.limits.max_api_spend_microusd),
         ):
             saved = self.records.get(pointer)
             used = saved[1]["estimated_microusd"] if saved else 0
@@ -562,7 +586,7 @@ class KernelRuntime:
             {key: retained[0]},
             {key: {**allocation, "amount": amount, "settled": True, "provider_reported": actual is not None}},
         )
-        for pointer in ("budget/run", "budget/process/" + request.scope.process_id):
+        for pointer in ("budget/run", "budget/process/" + self.account(request.scope.process_id)):
             row = self.records.get(pointer)
             expected[pointer] = row[0]
             updates[pointer] = {
@@ -574,7 +598,7 @@ class KernelRuntime:
             cost = math.ceil(amount * spend[1]["rate"])
             expected[spend_key] = spend[0]
             updates[spend_key] = {**spend[1], "cost": cost, "settled": True}
-            for pointer in ("spend/run", "spend/process/" + request.scope.process_id):
+            for pointer in ("spend/run", "spend/process/" + self.account(request.scope.process_id)):
                 row = self.records.get(pointer)
                 expected[pointer] = row[0]
                 updates[pointer] = {
@@ -618,7 +642,7 @@ class KernelRuntime:
         )
         self.records.compare_and_publish({key: retained[0]}, {key: updated.model_dump(mode="json")})
 
-    async def _dispatch(self, request, key):
+    async def _dispatch_once(self, request, key):
         started = now()
         payload = request.payload
         usage, backend = [], None
@@ -664,9 +688,9 @@ class KernelRuntime:
                 def measure(messages):
                     client = self.clients[name]
                     if isinstance(client, HTTPInference):
-                        prepared = client.prepare(messages, output_tokens)
+                        prepared = client.prepare(messages, output_tokens, temperature=getattr(payload, "temperature", None))
                     elif isinstance(client, CodexProxy):
-                        prepared = client.http.prepare(messages, output_tokens)
+                        prepared = client.http.prepare(messages, output_tokens, temperature=getattr(payload, "temperature", None))
                     elif isinstance(client, CodexAppServer):
                         if not protocol:
                             raise EndpointError("Unsupported native phase protocol")
@@ -708,6 +732,16 @@ class KernelRuntime:
                 ):
                     if model_deadline <= now():
                         raise EndpointError("Deadline expired before provider submission")
+                    counter = "budget/model-calls/" + self.account(request.scope.process_id)
+                    count = self.inference_calls_used(request.scope.process_id)
+                    if count >= request.limits.max_model_calls:
+                        raise EndpointError("Model call allowance exhausted (including retries)")
+                    reserve = request.extensions.get("polyinference/inference-call-reserve", 0)
+                    if isinstance(reserve, bool) or not isinstance(reserve, int) or not 0 <= reserve <= request.limits.max_model_calls:
+                        raise EndpointError("Invalid inference call reserve")
+                    if count >= request.limits.max_model_calls - reserve:
+                        raise ReservedInferenceCalls("Caller-reserved inference allowance reached")
+                    self._update(counter, {"used": count + 1})
                     self._reserve_budget(request, reserved)
                     self._reserve_spend(request, reserved, endpoint)
                     self._update(key, {**saved, "state": "submitting"})
@@ -1024,7 +1058,10 @@ class KernelRuntime:
             detail = getattr(exc, "detail", {})
             if detail:
                 extensions["polyinference/workspace-error"] = detail
-            outputs = [self.artifacts.put(canonical(failed_response or {"error": str(exc)[:4000], **detail}), request.scope)]
+            diagnostic = {"error": str(exc)[:4000], **detail}
+            if isinstance(exc, ProviderError):
+                diagnostic["provider_detail"] = canonical(exc.diagnostics).decode()
+            outputs = [self.artifacts.put(canonical(failed_response or diagnostic), request.scope)]
         result = OperationResult(
             extensions=extensions,
             record_id="result/" + request.operation_id,
@@ -1224,7 +1261,15 @@ class KernelRuntime:
             child = child.model_copy(update={"extensions": {"polyinference/workspace-view": view} if view else {}})
             child = child.model_copy(update={"intent_digest": operation_fingerprint(child)})
         result = await self.execute(child)
-        return {"state": result.state, "observation": json.loads(self.artifacts.read(result.output_refs[0]))}
+        observation = json.loads(self.artifacts.read(result.output_refs[0]))
+        presented = {"state": result.state, "observation": observation}
+        ref = observation.get("output") if isinstance(observation, dict) else None
+        if isinstance(ref, dict) and ref.get("media_type") == "text/plain":
+            raw = self.artifacts.read(ArtifactRef.model_validate(ref))
+            cap = min(3000, parent.limits.max_output_bytes)
+            excerpt = raw if len(raw) <= cap else raw[:cap // 2] + b"\n[...truncated...]\n" + raw[-cap // 2:]
+            presented["diagnostics"] = {"output_ref": ref, "text": excerpt.decode(errors="replace"), "truncated": len(raw) > cap}
+        return presented
 
     def _publish(self, arguments, process_id):
         receipt = self.records.get(arguments["receipt_ref"])
@@ -1268,6 +1313,8 @@ class KernelRuntime:
         old = self.records.get(key)
         if old[1]["state"] != "uncertain":
             return
+        if any(row["request"]["operation_id"] != request.operation_id for _, _, row in self._unsettled_response_attempts(request.operation_id)):
+            raise ValueError("Unsettled response-repair attempts require explicit reconciliation")
         name = self.config.role_bindings[request.payload.role]
         endpoint = getattr(self.config, name)
         total = (response.get("usage") or {}).get("total_tokens")
@@ -1294,6 +1341,13 @@ class KernelRuntime:
             **old[1], "state": result.state, "result": result.model_dump(mode="json"),
             "reconciliation": "retained_completed_response",
         }})
+        index = self.records.get("inference-attempt-index/" + request.operation_id)
+        if index:
+            attempt_key = index[1]["record_ref"]
+            revision, attempt = self.records.get(attempt_key)
+            self.records.compare_and_publish({attempt_key: revision}, {attempt_key: {
+                **attempt, "state": result.state, "result": result.model_dump(mode="json"),
+                "reconciliation": "retained_completed_response"}})
         total = (response.get("usage") or {}).get("total_tokens")
         self._settle_budget(request, total if type(total) is int and total >= 0 else None)
         self._effect_status(request, False)
@@ -1368,6 +1422,16 @@ class KernelRuntime:
                 }
             },
         )
+        for attempt_key, revision, row in self._unsettled_response_attempts(operation_id):
+            attempted = OperationRequest.model_validate(row["request"])
+            stopped = result.model_copy(update={"record_id": "result/" + attempted.operation_id,
+                "operation_id": attempted.operation_id, "logical_step_id": attempted.logical_step_id,
+                "started_at": attempted.created_at})
+            self.records.compare_and_publish({attempt_key: revision}, {attempt_key: {
+                **row, "state": "failed", "result": stopped.model_dump(mode="json"),
+                "reconciliation": "operator_confirmed_stopped", "evidence": ref.model_dump(mode="json")}})
+            self._settle_budget(attempted)
+            self._effect_status(attempted, False)
         self._settle_budget(request)  # Unknown usage stays conservatively charged.
         self._effect_status(request, False)
         for admission in self.admission.values():

@@ -61,6 +61,16 @@ class Workspaces:
 
     async def prepare_snapshot(self, code, snapshot_id, *, binding_ref=None):
         tree = await self.tree(code.commit_id, snapshot_id)
+        return await self._prepare_tree_snapshot(tree, code, snapshot_id, binding_ref=binding_ref)
+
+    async def prepare_workspace_snapshot(self, workspace_id, snapshot_id):
+        tree = await self.private_tree(workspace_id)
+        return await self._prepare_tree_snapshot(tree, self.code(tree), snapshot_id)
+
+    async def private_tree(self, workspace_id):
+        return await self.scan_async(self.root_for(self.current(workspace_id)))
+
+    async def _prepare_tree_snapshot(self, tree, code, snapshot_id, *, binding_ref=None):
         root = self.config.state_path / "snapshots" / snapshot_id
         if root.exists() and await self.scan_async(root) != tree:
             raise ValueError("An immutable native snapshot cannot be replaced")
@@ -206,7 +216,15 @@ class Workspaces:
                 )
             elif self.config.prepare_repository:
                 await self.command(["git", "init", "--bare", "--initial-branch=main", str(self.gitdir)])
-                exclusions = [".git", ".polyinference", "node_modules", ".venv", ".venv-linux", "__pycache__"]
+                exclusions = [
+                    ".git",
+                    ".polyinference",
+                    "node_modules",
+                    ".npm",
+                    ".venv",
+                    ".venv-linux",
+                    "__pycache__",
+                ]
                 await self.git(
                     "--work-tree",
                     str(self.config.repo_path),
@@ -788,6 +806,38 @@ class Workspaces:
         self.records.put_once("delta-modes/" + workspace_id, {"modes": modes})
         self.records.put_once(key, delta.model_dump(mode="json"))
         return key
+
+    async def validate_handoff(self, delta_ref, base, write_paths):
+        delta = WorkspaceDelta.model_validate(self.records.get(delta_ref)[1])
+        original = await self.tree(delta.original_base.commit_id)
+        target = await self.tree(base.commit_id)
+        if not {c.path for c in delta.changes} <= set(write_paths):
+            raise ValueError("Retained source exceeds replacement write grant")
+        for change in delta.changes:
+            if original.get(change.path) != target.get(change.path):
+                raise ValueError("Retained source conflicts with current base: " + change.path)
+        return delta
+
+    async def apply_handoff(self, workspace_id, delta_ref):
+        key = "handoff/" + workspace_id
+        existing = self.records.get(key)
+        if existing:
+            if existing[1]["delta_ref"] != delta_ref:
+                raise ValueError("Workspace source handoff is immutable")
+            return
+        manifest = self.current(workspace_id)
+        if manifest.view != "development":
+            raise ValueError("Source handoff requires an unstarted development view")
+        delta = await self.validate_handoff(delta_ref, manifest.original_base, manifest.allowed_write_paths)
+        tree = await self.scan_async(self.root_for(manifest))
+        modes = self.records.get("delta-modes/" + delta.workspace_id)[1]["modes"]
+        for change in delta.changes:
+            if change.action == "delete":
+                tree.pop(change.path, None)
+            else:
+                tree[change.path] = (modes[change.path], self.artifacts.read(change.content))
+        await self.materialize_view(manifest, manifest, tree)
+        self.records.put_once(key, {"delta_ref": delta_ref})
 
     async def integrate(self, workspace_id, head, permit_ref):
         manifest = self.current(workspace_id)

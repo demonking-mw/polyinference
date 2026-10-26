@@ -53,3 +53,18 @@ Documentation-tool regressions have their own feature guide:
 Run only appropriate checks, record actual results/limits, and keep historical
 results separate. Follow [documentation maintenance](../docs/maintenance.md)
 before finishing, including affected guide/settings/navigation updates.
+
+## Integrated reliability coverage
+
+- [test_check_diagnosis.py](test_check_diagnosis.py) checks bounded checking-agent observations and read expansion.
+- [test_exception_recovery.py](test_exception_recovery.py) checks fenced worker exceptions and inherited recovery limits.
+- [test_inference_retry.py](test_inference_retry.py) checks bounded response attempts, replacement windows and replay.
+- [test_module_planning.py](test_module_planning.py) checks versioned interfaces and dependency plans.
+- [test_progress.py](test_progress.py) checks execution observations and evidence-based stagnation.
+- [test_retry_export.py](test_retry_export.py) checks attempt provenance in shared run export.
+- [test_semantic_review.py](test_semantic_review.py) checks source-backed exact-tree completion.
+- [test_validation_feedback.py](test_validation_feedback.py) checks application-origin validation feedback without invented tools.
+
+- [test_cli.py](test_cli.py) checks private runtime status and delivery commands.
+
+- [test_branch_integration.py](test_branch_integration.py) verifies attached-source preservation, context compaction with response validation, shared response-repair bounds across transport retries, and physical-attempt certainty/admission through recovery and restart.

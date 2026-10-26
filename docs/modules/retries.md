@@ -39,3 +39,26 @@ and [incident recovery](../../tests/test_incident_fixes.py).
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
 Follow [documentation maintenance](../maintenance.md) in the same task.
+
+## Integrated reliability branch (2026-10-26)
+
+`runtime/retry.py` adds caller-registered response validation, durable physical
+attempts and an optional owning-agent replacement window. `inference_retry` is
+coding-app configuration; bare RuntimeConfig processes retain their existing
+transport retry flow. Confirmed malformed replies consume this response allowance;
+exhaustion does not restart it through ModelRetries. Transport/output recovery
+retains its separate existing guards. Unknown effects are never blindly retried.
+Physical attempts share model-call, token and inherited recovery accounts.
+
+Integrated source responsibilities:
+
+- [src/polyinference/runtime/retry.py](../../src/polyinference/runtime/retry.py) implements caller-registered response validation and physical attempt history.
+
+Physical-attempt indexes retain admission ownership across restart. Prepared
+bookkeeping is not termination evidence. If a later response-repair attempt is
+unknown, an older completed root response cannot settle it; explicit provider/host
+reconciliation is required and releases only attested physical holds.
+
+Interruption while waiting for a response replacement preserves the prior settled
+physical receipt and any accepted replacement. Replay can continue that bounded
+repair without resubmitting the completed attempt or charging it again.

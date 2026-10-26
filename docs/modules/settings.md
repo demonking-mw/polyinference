@@ -58,3 +58,13 @@ and [endpoint tests](../../tests/test_endpoints.py). Validate all five examples.
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
 Follow [documentation maintenance](../maintenance.md) in the same task.
+
+## Integrated reliability branch (2026-10-26)
+
+New top-level agent fields are inference_retry (two maximum physical attempts and
+a one-second replacement window), check_diagnosis, acceptance_criteria,
+max_review_reads (4), max_worker_recoveries (1), and progress_monitor
+(enforce, warn_after=8, escalate_after=12). Progress supports observe/off modes.
+Endpoint fields supports_temperature (true) and reasoning_effort (medium) belong
+to the generic endpoint schema. Existing grouped system settings and separate
+prerequisite/task/acceptance checks retain their ownership.

@@ -35,3 +35,11 @@ class for existing callers, preserving structured details and catch identity.
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
 Follow [documentation maintenance](../maintenance.md) in the same task.
+
+## Integrated reliability branch (2026-10-26)
+
+An immutable prepare_workspace_snapshot captures a parked private view for evidence.
+Explicit validate_handoff/apply_handoff reuse only its scoped development delta,
+checking the current base and replacement grant. In-place repository source remains
+preserved; integration repairs are not flattened into the original delta. Native
+snapshot preparation remains asynchronous and honors the explicit proxy binding.

@@ -15,6 +15,7 @@ class FileList(Wire):
 
 class FileRead(FileList):
     path: RelativePath
+    max_bytes: int | None = Field(default=None, ge=1)
 
 
 class FileSearch(Wire):

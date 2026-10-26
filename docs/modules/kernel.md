@@ -53,3 +53,11 @@ and [general-agent](../../tests/test_runtime_general.py) fixtures.
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
 Follow [documentation maintenance](../maintenance.md) in the same task.
+
+## Integrated reliability branch (2026-10-26)
+
+The kernel composes generic settlement/account lineage and read-only execution
+observations through `runtime/lifecycle.py` and `runtime/progress.py`. The historical
+adapter remains an import alias. No new OS dependency on coding-agent grammar or
+Git policy is introduced. See [recovery](../../design-docs/implementation/WORKER_RECOVERY.md)
+and [observations](../../design-docs/implementation/PROGRESS_MONITORING.md).

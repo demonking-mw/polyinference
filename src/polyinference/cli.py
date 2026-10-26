@@ -369,8 +369,27 @@ def main():
                         final,
                     ]
                 )
-                Path(args.output).resolve().write_bytes(patch)
-                print(str(Path(args.output).resolve()))
+                destination = Path(args.output).resolve()
+                destination.write_bytes(patch)
+                run = records.get("app/run")[1]
+                accepted = run["status"] == "completed" and bool(run.get("acceptance_ref"))
+                metadata = {
+                    "artifact_status": "accepted" if accepted else "partial_provisional",
+                    "run_status": run["status"],
+                    "provisional_code": records.get("head/provisional")[1]["code"],
+                    "reviewed_code": records.get("head/reviewed")[1]["code"],
+                    "acceptance_ref": run.get("acceptance_ref"),
+                    "semantic_review": run.get("semantic_completion"),
+                    "blocker": run.get("blocker"),
+                    "unresolved_reports": [
+                        key
+                        for key, _, _ in records.scan("report/")
+                        if not records.get("resolution/" + key)
+                        or records.get("resolution/" + key)[1]["action"] in {"retry", "defer"}
+                    ],
+                }
+                Path(str(destination) + ".status.json").write_text(json.dumps(metadata, indent=2) + "\n")
+                print(str(destination))
             elif args.command == "operation":
                 value = records.get("effect/" + args.operation_id)
                 print(json.dumps(value[1] if value else None, indent=2))

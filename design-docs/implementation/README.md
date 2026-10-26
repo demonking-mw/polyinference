@@ -178,3 +178,10 @@ program version prevents silently resuming an older graph/prompt implementation.
 A future OS must implement the advertised optional features or reject negotiation.
 Trusted shell execution is a host execution mode, not filesystem isolation; the
 bubblewrap mode enforces a restricted workspace environment when available.
+
+## Integrated reliability branch (2026-10-26)
+
+- [Worker exception recovery](WORKER_RECOVERY.md)
+- [Execution observations and progress policy](PROGRESS_MONITORING.md)
+- [Reliability branch fix log](FIXES.md), retained as historical implementation evidence.
+- [Integration record](../../development-docs/FIXES.md#fix-0127) for the combined simple OS branch.

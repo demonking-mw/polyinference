@@ -283,6 +283,9 @@ async def export_run(metadata, configuration, active=False):
     for process in history:
         record = records.get("process/" + process["id"], {})
         process["role"] = "controller" if process["id"] == "controller" else record.get("role", "process")
+        progress = records.get("worker-progress/" + process["id"])
+        if progress:
+            process["progress"] = {key: progress[key] for key in ("status", "idle_decisions")}
         nodes = []
         for node in process["nodes"]:
             original = {**node, "process_id": process["id"]}
@@ -306,7 +309,28 @@ async def export_run(metadata, configuration, active=False):
                 outputs.append({"ref": ref, "value": output})
             except (ValueError, OSError) as exc:
                 outputs.append({"ref": ref, "error": str(exc)})
-        effects.append({**effect, "outputs": outputs})
+        effects.append({"record_ref": key, **effect, "outputs": outputs})
+    inference_attempts = []
+    for key, effect in records.items():
+        if not key.startswith("inference-attempt/"):
+            continue
+        outputs, parts = [], []
+        for ref in (effect.get("result") or {}).get("output_refs", []):
+            try:
+                text = read_artifact(state, ref)
+                try:
+                    output = json.loads(text)
+                except ValueError:
+                    output = text
+                outputs.append({"ref": ref, "value": output})
+            except (ValueError, OSError) as exc:
+                outputs.append({"ref": ref, "error": str(exc)})
+        for part in effect["request"]["payload"].get("context", {}).get("parts", []):
+            try:
+                parts.append({**part, "text": read_artifact(state, part["content"])})
+            except (ValueError, OSError) as exc:
+                parts.append({**part, "export_error": str(exc)})
+        inference_attempts.append({"record_ref": key, **effect, "outputs": outputs, "context_parts": parts})
     os_view = runtime_view(snapshot, configuration, view["status"] == "running")
     retained_checkpoints = await checkpoints(state)
     checkpoint_records = [{
@@ -338,6 +362,18 @@ async def export_run(metadata, configuration, active=False):
         },
         "processes": processes,
         "effects": effects,
+        "inference_attempts": inference_attempts,
+        "retry_windows": {key: value for key, value in records.items() if key.startswith("retry/")},
+        "check_diagnoses": {key: value for key, value in records.items() if key.startswith("diagnosis/")},
+        "worker_exceptions": {key: value for key, value in records.items() if key.startswith("worker-exception/")},
+        "exception_decisions": {key: value for key, value in records.items() if key.startswith("exception-queue/")},
+        "recovery_accounts": {key: value for key, value in records.items() if key.startswith("process-account/")},
+        "worker_progress": {key: value for key, value in records.items() if key.startswith("worker-progress/")},
+        "progress_events": {key: value for key, value in records.items() if key.startswith("progress-event/")},
+        "progress_observer_errors": {key: value for key, value in records.items() if key.startswith("progress-observer-error/")},
+        "completion_reviews": {key: value for key, value in records.items() if key.startswith("completion-review/")},
+        "review_artifacts": {key: value for key, value in records.items() if key.startswith("review-artifact/")},
+        "interface_contracts": {key: value for key, value in records.items() if key.startswith("interface-contract/")},
         "reports": [value for key, value in records.items() if key.startswith("report/")],
         "steering": [value for key, value in sorted(records.items()) if key.startswith("steering/")],
         "run_record": records.get("app/run"),

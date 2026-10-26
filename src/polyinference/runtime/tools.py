@@ -87,6 +87,18 @@ class Tools:
         if not target.resolve().is_relative_to(root.resolve()) or target.is_symlink():
             raise ValueError("Path escapes workspace")
         if tool == "files.read":
+            cap = self.config.limits.max_output_bytes
+            offset = arguments.get("offset") or 0
+            requested = arguments.get("max_bytes") or arguments.get("limit") or cap
+            if (
+                isinstance(offset, bool)
+                or not isinstance(offset, int)
+                or offset < 0
+                or isinstance(requested, bool)
+                or not isinstance(requested, int)
+                or not 1 <= requested <= cap
+            ):
+                raise ValueError("Read needs a nonnegative offset and bounded positive max_bytes")
             if not target.exists():
                 if path in {entry.path for entry in manifest.copied_files}:
                     raise ValueError("File was deleted in this workspace")
@@ -126,18 +138,16 @@ class Tools:
                 )
                 target = self.workspaces.root_for(new) / path
             data = target.read_bytes()
-            cap = min(
-                max(int(arguments.get("limit") or self.config.limits.max_output_bytes), 1),
-                self.config.limits.max_output_bytes,
-            )
-            offset = max(int(arguments.get("offset") or 0), 0)
+            excerpt = data[offset : offset + requested]
             return {
                 "path": path,
-                "content": data[offset : offset + cap].decode(errors="replace"),
+                "content": excerpt.decode(errors="replace"),
                 "digest": digest(data),
-                "truncated": len(data) > offset + cap,
                 "offset": offset,
-                "next_offset": offset + cap if len(data) > offset + cap else None,
+                "returned_bytes": len(excerpt),
+                "next_offset": offset + len(excerpt) if offset + len(excerpt) < len(data) else None,
+                "total_bytes": len(data),
+                "truncated": offset + len(excerpt) < len(data),
                 "generation": self.workspaces.current(manifest.workspace_id).generation,
             }
         if path not in manifest.allowed_write_paths:

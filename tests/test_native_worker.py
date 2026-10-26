@@ -28,13 +28,15 @@ for line in sys.stdin:
  elif method=="thread/start":
   assert message["params"]["dynamicTools"][0]["name"]=="polyinference_tool"
   assert message["params"]["permissions"]=="polyinference_readonly"
+  assert "Return exactly one JSON object" in message["params"]["developerInstructions"]
+  assert "baseInstructions" not in message["params"]
   assert message["params"]["approvalPolicy"]=="never"
   assert message["params"]["config"]["features.shell_tool"] is False
   assert "Never use native shell, apply_patch" in message["params"]["developerInstructions"]
   send({"id":message["id"],"result":{"thread":{"id":"native-thread"},"sandbox":{"type":"readOnly"},"approvalPolicy":"never"}})
  elif method=="turn/start":
-  messages=json.loads(message["params"]["input"][0]["text"])
-  data=json.loads(next(m["content"] for m in messages if "Pinned application inputs:" in m["content"]).split("Pinned application inputs:\n".replace("\\n","\n"),1)[1])
+  text=next(item["text"] for item in message["params"]["input"] if "Pinned application inputs:" in item["text"])
+  data=json.loads(text.split("Pinned application inputs:\n".replace("\\n","\n"),1)[1])
   phase=data["phase"]
   if phase=="development":
    from hashlib import sha256

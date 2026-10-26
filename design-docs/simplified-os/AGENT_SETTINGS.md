@@ -378,3 +378,16 @@ prerequisite-only criteria. All purposes use the generic Check fields above;
 shared names must retain identical definitions. Explicit criteria cannot be
 replaced and discovery closes after setup/planning. See the
 [configuration guide](../../docs/guides/configuration.md) for selection and fresh-state rules.
+
+## Integrated reliability branch (2026-10-26)
+
+Endpoint.supports_temperature defaults to true; explicit unsupported sampling
+fails. Endpoint.reasoning_effort defaults to medium for native turns. Coding-only
+inference_retry, check_diagnosis, acceptance_criteria, review/recovery bounds and
+progress_monitor stay in AgentConfig; see [current defaults](../../docs/modules/settings.md).
+They do not add coding policy to RuntimeConfig.
+
+| Endpoint field | Default and behavior |
+| --- | --- |
+| supports_temperature | true; reject an explicit unsupported sampling request |
+| reasoning_effort | medium; native turn reasoning selection |

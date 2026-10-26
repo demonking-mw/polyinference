@@ -35,3 +35,13 @@ is not a shell script. Tool environment does not inherit provider credentials.
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
 Follow [documentation maintenance](../maintenance.md) in the same task.
+
+## Integrated reliability branch (2026-10-26)
+
+files.read accepts bounded offset/max_bytes for progress-aware read coverage,
+retaining the existing limit alias, check grants, generation binding and source
+authority. Its public FileRead schema advertises the new bound to native brokers.
+
+Read results retain next_offset for existing paged readers as well as returned-byte
+coverage. Cache-like names such as .npm remain source during checks/scope auditing;
+real tool caches stay in the separate invocation environment.

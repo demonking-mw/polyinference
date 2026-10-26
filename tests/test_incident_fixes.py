@@ -4,7 +4,7 @@ import asyncio
 import json
 
 import pytest
-from conftest import ScriptedAgent
+from conftest import ScriptedAgent, fixture_review_reply
 
 from polyinference.agent.controller import ProjectAgent
 from polyinference.agent.services import AgentServices
@@ -102,7 +102,7 @@ async def test_new_project_can_write_application_and_delivers_accepted_files(con
                                        "checks": ["syntax"]}]
                 else:
                     reply["complete"] = True
-            return {"text": json.dumps(reply), "model": "fixture", "usage": {"total_tokens": 5}}
+            return {"text": json.dumps(fixture_review_reply(reply, data)), "model": "fixture", "usage": {"total_tokens": 5}}
 
         async def close(self):
             pass

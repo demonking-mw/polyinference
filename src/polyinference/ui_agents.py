@@ -12,6 +12,7 @@ def agent_snapshot(records, read_text):
     prefixes = (
         "task/", "task-spec/", "attempt/", "report/", "resolution/", "resolution-event/",
         "plan/", "proposal/", "head/", "memory/", "memory-note/", "hazard/", "setup/",
+        "worker-exception/", "exception-queue/", "worker-progress/", "progress-event/", "progress-observer-error/", "interface-contract/",
         "acceptance-receipt/", "outputs/", "output-delivery/", "review-batch/", "coding/", "repository/",
     )
     selected = {key: value for key, value in records.items()

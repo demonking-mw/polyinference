@@ -169,6 +169,7 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0117](#fix-0117) | 2026-10-23 | Implement bounded streaming lifecycle and native/caller retry policy |
 | [FIX-0118](#fix-0118) | 2026-10-23 | Add explicit endpoint profiles, generic warm-up and timing inspection |
 | [FIX-0119](#fix-0119) | 2026-10-23 | Move workspace scope errors to the public agent/OS port |
+| [FIX-0127](#fix-0127) | 2026-10-26 | Integrate reliability fixes into the simple OS branch |
 
 
 ## Entry template
@@ -6271,3 +6272,89 @@ context, retry, resume, provider and UI suites; all passed. Final focused safety
 selection passed 113 cases. Documentation generation/check passed (274 files,
 123 leaves), and Git whitespace checks passed.
 This changes exception ownership, not scope grants or source mutation semantics.
+
+
+<a id="fix-0127"></a>
+## FIX-0127 — 2026-10-26 — Integrate reliability fixes into the simple OS branch
+
+Status: implemented and verified offline; five unchanged baseline test failures remain.
+Related: FIX-0083–0086, FIX-0088–0090, FIX-0115–0119 and the retained
+[reliability fix log](../design-docs/implementation/FIXES.md).
+
+### Problem
+
+The runtime reliability branch and codex/simple-os-v1 diverged from main. The user
+requested a local merge and push making simple-os-v1 contain both histories.
+
+### What was wrong
+
+The fix branch extended an older monolithic adapter; simple-os-v1 had split generic
+kernel/settings/capabilities, in-place Git integration, source/authority safeguards,
+streaming recovery and richer shared snapshots. Taking either conflicted side
+wholesale would discard independent fixes. Stacking response validation over the
+existing transport retries also multiplied the response-repair allowance.
+
+### How it was fixed
+
+Merge the reliability branch into codex/simple-os-v1, adapting generic response
+validation, shared recovery accounts and progress observations into the split
+KernelRuntime. Preserve the compatibility adapter, registered tool authority,
+unknown-execution guards, streaming transport and in-place repository rules.
+Retain both check-purpose policy and exact-tree semantic completion, shared-check
+preparation, versioned modules, source offers, linked worker exceptions and bounded
+stagnation. Keep response exhaustion from refilling through transport retries.
+Shared schema-v2 snapshots also project the incoming attempt/recovery/progress
+records. Update affected module/configuration/design guides and navigation.
+Retained project knowledge is refreshed and read back in AGENTS.md.
+
+Preserve the original query's physical identity and index later response repairs.
+Unknown attempts retain admission holds across restart; an older root response
+cannot settle a later unknown repair. Explicit reconciliation settles attested
+physical attempts, while original-query recovery updates its indexed receipt.
+Interruption during the replacement window preserves the settled prior receipt
+and accepted replacement instead of copying the logical wait state over it.
+Retain operator recovery across the new progress checkpoint, explicit cancellation,
+paged reads and isolated tool homes/caches. Do not hide cache-named source paths
+from scope checks; the incoming cache fixture now uses the actual tool environment.
+The [integration audit](branch-integration-audit-2026-10-26.md) records the full
+conflict matrix and verification limits.
+
+### Design principle enforced or reconstructed
+
+Integrate histories without erasing either branch's tested guarantees. Coding
+policy stays in the agent; the OS enforces generic grants, resource lineage,
+certainty and truthful observations. Retry layering cannot multiply authority or
+reset original budgets, and private source is not accepted shared output.
+
+### Verification
+
+The initial complete merged-tree run produced **566 passed, 22 failed, 2 skipped**
+(590 cases, 1694.32 seconds); its source/test inputs were unchanged during the run.
+All 17 integration failures passed in the corrected-case rerun. The final affected
+retry/recovery/progress/runtime/cache/source suite produced **78 passed, 1 skipped,
+1 deselected** in 245.71 seconds. It includes all five cross-branch regressions and
+the interruption/cache corrections found by the intermediate checks. Separate
+critical restart/operator-recovery checks passed all six cases.
+
+Across the complete run and subsequent focused reruns, using the latest result
+for each of **592 distinct cases**, results are **585 passed, 5 failed, 2 skipped**.
+This is not a single all-green full-suite run. All five remaining failures also
+reproduced on untouched `26da7f7`: the short-deadline lifecycle fixture, fixed-time
+pacing observation, expired-deadline resume diagnostic and two simulated-worker
+output-limit fixtures. Their tests and production defaults remain unchanged; the
+[audit](branch-integration-audit-2026-10-26.md#verification-record) lists them.
+
+Ruff, Python source compilation, Node syntax and all **30 frontend tests** passed.
+An offline wheel built with cached build tools; its new modules/UI asset, current
+retry source and runtime adapter/kernel imports were verified. Documentation
+generation/check passed for **297 files / 127 feature/doc leaves**, as did whitespace
+checks. The two environment skips require Node/npm in the normal test PATH; the
+bundled Node independently ran the frontend tests, but native npm was unavailable.
+
+The command sandbox's async SQLite probe timed out; runtime tests used approved
+host execution with disposable fixture state. No live inference or historical
+application run was executed. Fresh integrated program/state pins are required;
+historical runs remain on their pinned source. Setup/provider credentials, accepted
+revisions U01–U04 and future-work proposals require no behavior edit: no new
+provider/authentication flow or repair of those unrelated gaps is claimed. Earlier
+fix entries and the separate execution-profile worktree remain unchanged.

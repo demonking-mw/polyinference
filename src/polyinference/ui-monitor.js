@@ -471,6 +471,8 @@ function renderTasks(){
   title.append(element("span",compactText(task.assignment.objective,140),"note-preview task-objective"));
   const execution=secondary(stateBadge(task.execution),process?.status?.phase||"");
   if(task.execution==="in_progress"&&process){const wait=processWait(process);if(wait)execution.append(buttonLink("Waiting · "+wait,()=>{selectTab("os");showProcess(process.process_id)}))}
+  const progress=agentRecords["worker-progress/"+task.process_id];
+  if(progress)execution.append(element("span", "Last progress observation: "+progress.status+" · "+progress.idle_decisions+" idle decisions", "secondary-line"));
   if(task.execution==="pending")execution.append(element("span",pendingReason(task),"secondary-line"));
   const verdict=task.verdict?secondary(stateBadge(task.verdict),task.report.code_location==="private"?"Private candidate":"Provisionally published"):"—";
   const review=task.report?element("span",taskReviewLabel(task),"badge "+(task.resolved?"resolved":"needs-review")):"—";

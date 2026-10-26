@@ -23,3 +23,5 @@ and [module guides](../docs/modules/README.md). Investigation/proposal status mu
 not be mistaken for implemented behavior. Preserve older entries and stable IDs;
 mark corrections/supersession explicitly. Long append-only evidence remains at
 its original paths; use these short indexes to choose what to read.
+
+[2026-10-26 reliability/simple OS compatibility audit](branch-integration-audit-2026-10-26.md) records the merge conflicts, owning layers and integration decisions.

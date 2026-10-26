@@ -14,6 +14,29 @@ def git(repo, *args):
     return subprocess.check_output(["git", "-C", str(repo), *args], stderr=subprocess.STDOUT).decode().strip()
 
 
+def fixture_completion(data):
+    """Deterministic reviewer response, not a live model's semantic validation."""
+    return {
+        "reviewed_tree_digest": data["acceptance_contract"]["reviewed_tree_digest"],
+        "criteria": [
+            {
+                "criterion_id": c["criterion_id"],
+                "verdict": "met",
+                "rationale": "Fixture inspected supplied source/checks",
+                "evidence_refs": [e["evidence_id"] for e in data["review_evidence_catalog"]],
+            }
+            for c in data["acceptance_contract"]["criteria"]
+        ],
+    }
+
+
+def fixture_review_reply(reply, data):
+    """Adapt deterministic legacy reviewers to the current exact-tree protocol."""
+    if reply.get("complete") and "acceptance_contract" in data:
+        return {**reply, "completion_assessment": fixture_completion(data)}
+    return reply
+
+
 @pytest.fixture
 def repository(tmp_path):
     repo = tmp_path / "source"
@@ -62,7 +85,7 @@ class ScriptedAgent:
         self.review_inputs = []
         self.hook = None
 
-    async def generate(self, messages, max_output, response_schema=None):
+    async def generate(self, messages, max_output, response_schema=None, **kwargs):
         import asyncio
 
         from polyinference.domain import digest
@@ -104,6 +127,7 @@ class ScriptedAgent:
                     reply = {
                         "goal": "Finished",
                         "complete": True,
+                        "completion_assessment": fixture_completion(data),
                         "dispositions": [
                             {"report_ref": r["record_id"], "action": "keep", "reason": "Inspected changes"}
                             for r in data["reports"]

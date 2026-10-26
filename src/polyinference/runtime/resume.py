@@ -32,6 +32,8 @@ async def prepare(runtime, request_ref):
             if "request" not in retained:
                 raise RuntimeError("Could not resume: this saved operation lacks recovery metadata.")
             request = OperationRequest.model_validate(retained["request"])
+            if any(row["request"]["operation_id"] != operation_id for _, _, row in runtime._unsettled_response_attempts(operation_id)):
+                raise RuntimeError("Could not resume: an unsettled response-repair attempt requires explicit reconciliation.")
             if retained.get("isolated_generation"):
                 # Physical reconciliation is independent of logical delivery. A
                 # late result releases holds but never replaces the chosen answer.

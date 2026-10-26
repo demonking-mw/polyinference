@@ -54,3 +54,17 @@ checks remain combined task/final criteria when no acceptance override is suppli
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
 Follow [documentation maintenance](../maintenance.md) in the same task.
+
+## Integrated reliability branch (2026-10-26)
+
+Review includes independent current-tree checks, bounded source retrieval, versioned
+module contracts and explicit semantic completion criteria. Clean fenced worker
+exceptions become review obligations; linked replacements share original resource
+accounts/deadlines. Existing steering, check-preparation dependencies, historical
+started-task allocation and retained private-source offers remain authoritative.
+These combined graph/schema changes use fresh program/state pins; old live runs
+must use their original pinned source.
+
+Operator-prepared model recovery may resume at the progress node inserted before
+the model node, retaining its linked recovery identity and original allowance.
+Explicit cancellation remains cancelled rather than becoming a semantic exception.

@@ -115,7 +115,13 @@ class Admission:
             if body["state"] != "held":
                 continue
             effect = self.records.get("effect/" + body["operation_id"])
-            if effect and (effect[1].get("result") or effect[1]["state"] == "prepared"):
+            if not effect:
+                index = self.records.get("inference-attempt-index/" + body["operation_id"])
+                if index:
+                    effect = self.records.get(index[1]["record_ref"])
+            result = effect[1].get("result") if effect else None
+            settled = result and result["execution_termination"] != "unknown" and result["effects"] != "unknown"
+            if effect and (settled or effect[1]["state"] == "prepared"):
                 self.records.compare_and_publish({key: revision}, {key: {**body, "state": "released"}})
             else:
                 self.active += 1
@@ -293,7 +299,7 @@ class HTTPInference:
             retry_after_ms=retry_after,
         )
 
-    def prepare(self, messages, max_output, response_schema=None):
+    def prepare(self, messages, max_output, response_schema=None, *, temperature=None):
         self.validate_messages(messages)
         endpoint = self.endpoint
         if endpoint.protocol == "gemini":
@@ -338,6 +344,13 @@ class HTTPInference:
                 "max_tokens": max_output,
                 "stream": False,
             }
+        if temperature is not None:
+            if not endpoint.supports_temperature:
+                raise EndpointError("Endpoint does not support the requested temperature")
+            if endpoint.protocol == "gemini":
+                payload["generationConfig"]["temperature"] = temperature
+            else:
+                payload["temperature"] = temperature
         lifecycle = endpoint.lifecycle
         if lifecycle and lifecycle.transport == "sse":
             if endpoint.protocol not in {"anthropic", "chat", "responses"}:
@@ -379,9 +392,9 @@ class HTTPInference:
             return self.normalize(body, request.limits.max_output_tokens_per_call, response)
 
     async def generate(self, messages, max_output, response_schema=None, *, prepared=None,
-                       observer=None, progress=None):
+                       observer=None, progress=None, temperature=None):
         endpoint = self.endpoint
-        wire = prepared or self.prepare(messages, max_output, response_schema)
+        wire = prepared or self.prepare(messages, max_output, response_schema, temperature=temperature)
         lifecycle = endpoint.lifecycle
         streaming = bool(wire["payload"].get("stream"))
         started = time.monotonic()
@@ -510,7 +523,10 @@ class HTTPInference:
         if isinstance(body.get("id"), str):
             await remember_provider(body["id"])
         try:
-            return self.normalize(body, max_output, response)
+            result = self.normalize(body, max_output, response)
+            sent = wire["payload"].get("generationConfig", {}).get("temperature") if endpoint.protocol == "gemini" else wire["payload"].get("temperature")
+            settings = {} if sent is None else {"temperature": sent}
+            return {**result, "generation_settings": {"requested": settings, "sent": settings, "effective": None}}
         except (KeyError, TypeError, IndexError, AttributeError) as exc:
             raise self.response_error("Endpoint returned a malformed response", body, response, "invalid_shape") from exc
 

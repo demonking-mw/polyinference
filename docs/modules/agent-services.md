@@ -44,3 +44,12 @@ targets; the OS executes bounded retries without reading coding task/grammar pol
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
 Follow [documentation maintenance](../maintenance.md) in the same task.
+
+## Integrated reliability branch (2026-10-26)
+
+Services register caller-owned worker/senior/diagnosis validators and the read-only
+diagnosis protocol through existing OS extension APIs. Application-origin feedback
+remains data, complete history pairs stay canonical, mode-specific repository rules
+remain present, and merged model failures retain bounded response-correction routes.
+Source-backed review and worker module/progress inputs coexist with cumulative user
+updates, check purposes, source offers and original recovery deadlines.

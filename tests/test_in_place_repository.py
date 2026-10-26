@@ -9,7 +9,7 @@ import sys
 from types import SimpleNamespace
 
 import pytest
-from conftest import ScriptedAgent, git
+from conftest import ScriptedAgent, fixture_review_reply, git
 
 from polyinference.agent.controller import ProjectAgent, tick
 from polyinference.agent.services import AgentServices
@@ -139,7 +139,7 @@ async def test_shared_check_preparation_is_accepted_before_two_isolated_test_wri
                 reply = {"kind": "assessment", "verdict": "successful", "summary": "Discovered tests pass"}
             else:
                 reply = {"kind": "candidate", "summary": "Scoped changes"}
-        return {"text": json.dumps(reply), "usage": {"total_tokens": 50}, "model": "fixture", "events": []}
+        return {"text": json.dumps(fixture_review_reply(reply, data)), "usage": {"total_tokens": 50}, "model": "fixture", "events": []}
 
     scripted.generate = generate
     try:
@@ -391,7 +391,7 @@ async def test_senior_selects_retained_source_and_corrects_unavailable_handoff(c
                 reply = {"kind": "candidate", "summary": "Reconciled retained source"}
         else:
             return await original(messages, max_output, response_schema)
-        return {"text": json.dumps(reply), "usage": {"total_tokens": 50}, "model": "fixture", "events": []}
+        return {"text": json.dumps(fixture_review_reply(reply, data)), "usage": {"total_tokens": 50}, "model": "fixture", "events": []}
 
     scripted.generate = generate
     try:
@@ -492,7 +492,7 @@ async def test_fresh_project_setup_writes_and_commits_at_requested_path(config, 
                 "path": "README.md", "expected_digest": None, "content": "# Actual project\n"}}
         else:
             reply = {"kind": "candidate", "summary": "Scaffold ready"}
-        return {"text": json.dumps(reply), "usage": {"total_tokens": 30}, "model": "fixture"}
+        return {"text": json.dumps(fixture_review_reply(reply, data)), "usage": {"total_tokens": 30}, "model": "fixture"}
 
     scripted.generate = generate
     try:
