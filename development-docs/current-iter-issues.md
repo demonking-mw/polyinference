@@ -1,5 +1,11 @@
 # Current iteration issues
 
+[Authorized model fallback and existing-browser repair](model-fallback-browser-repair-2026-10-28.md)
+implements agent-selected Terra/high/seven through the OS retry_model option and
+trusted native continuation, with fresh simple-os/4 state. Existing text-field
+input leakage is repaired and actual Chromium checks retained. Convergence,
+context-unit sizing and worker-state defects remain plan-only; old runs stay frozen.
+
 [Authorized reliability implementation](reliability-implementation-2026-10-27.md)
 tracks the OS/agent/qualification stages following FIX-0133. Changes require fresh
 state; retained live evidence and the earlier cloud takeover remain preserved.

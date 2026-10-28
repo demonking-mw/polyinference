@@ -7278,3 +7278,109 @@ were added or source fixed. Documentation generation/check and whitespace passed
 Original report/config/database/frozen source and delivered game hashes were checked.
 Worker/context guides remain applicable; no behavior/interface changed. AGENTS
 retained knowledge was read back. No provider/browser run, Resume, commit or push.
+
+<a id="fix-0151"></a>
+## FIX-0151 — 2026-10-28 — Existing browser keyboard isolation and real regression coverage
+
+**Status:** implemented in the uncommitted reviewed game; no new gameplay.
+
+### Problem
+
+The partial Minecraft entry treated text-field arrows/A/D and Escape as gameplay
+input. Focusing an editable control could leave prior movement held. FIX-0148–0150
+identified this after Node tests and a narrower browser qualification had passed.
+
+### What was wrong
+
+The entry attached keydown to document without checking its target, and cleared
+held input on window blur but not when focus moved into an editing control. Stub
+coverage lacked these real focus/input transitions. The existing qualification
+increment-button fixture did not exercise a game's keyboard behavior.
+
+### How it was fixed
+
+The target game's src/main.js ignores editable keydown targets and clears held
+movement on focusin, preserving keyup releases. Two actual-entry Node regressions
+cover these transitions. A retained finite tests/browser-real.mjs checks actual
+Chromium controls, pause timing, save durability and failure preservation; it
+owns/closes its server and browser. Qualification wording now names its narrower
+increment fixture. Existing timing, blur and assertion repairs were rechecked.
+
+### Design principle enforced or reconstructed
+
+Application event routing belongs to the product. Test the existing behavior on
+its actual entry; a passing stub or unrelated fixture cannot establish browser
+playability. Do not add missing loading/physics/features under a bug-fix request.
+
+### Verification
+
+Two regressions failed before repair; 46 Node tests pass after it. Eight actual
+Chromium checks pass with no page errors; the screenshot was inspected. Native OS
+focus switching, loading/resumed play and full 2018 gameplay remain unverified or
+missing. Runner root-path mistakes were harness errors corrected before those
+checks. Source/evidence and documentation are retained in the
+[implementation record](model-fallback-browser-repair-2026-10-28.md). No commits.
+
+<a id="fix-0152"></a>
+## FIX-0152 — 2026-10-28 — Agent-selected provider fallback with durable OS routing
+
+**Status:** implemented for fresh simple-os/4 state; old runs remain frozen.
+
+### Problem
+
+The live run ended on native cloud model capacity after completed brokered tools.
+Ordinary retry correctly refused a blind effectful replay, but no alternate-model
+continuation existed. The user explicitly authorized this mechanism after the
+analysis-only FIX-0149/0150 work and specified agent-selected Terra/high.
+
+### What was wrong
+
+OS retries covered unchanged transport/output attempts, without durable model
+selection or a bounded alternate window. The native adapter did not expose trusted
+terminal same-thread continuation for this case. An application task replacement
+would conflate provider routing with semantic recovery and risk repeating effects.
+
+### How it was fixed
+
+Generic Endpoint.retry_model exposes alternate model/effort and fallback_calls;
+seven is the OS default count, overridable by agent input. The OS has no model
+default. AgentConfig.default_retry_model selects Terra/high for native cloud,
+respecting explicit endpoint overrides/null and stable serialization. The latest
+user sequence supersedes the earlier immediate probe: retry the failed logical
+request once on alternate, use it for X subsequent invocations, then restore the
+configured primary model/effort; a failed primary probe repeats that sequence.
+
+runtime/model_fallback.py persists binding-wide selections/window and OS-issued
+intents. It shares original admission, grants, accounts, reserves and logical
+deadline without refilling ordinary retry allowances. Trusted provider diagnostics
+include model capacity, HTTP rate/service rejection and native overload. Auth,
+quota, input/policy errors and unknown effects do not switch. Ordinary retries
+return immediately when an availability rejection needs alternate routing.
+
+The app-server adapter retains terminal thread identity, resumes it on alternate
+with persisted tools/results and disables opaque provider fallback. Old callback
+IDs replay receipts; changed arguments reject. Current authorized workspace state
+is recaptured without grant expansion. Convergence/context/worker-state defects
+remain planned and unchanged. Read the [policy](../docs/guides/model-fallback.md).
+
+### Design principle enforced or reconstructed
+
+Agents select model preferences and semantic recovery. The generic OS enforces
+bounded routing, execution certainty, durable replay and accounting. A native
+continuation must preserve completed effects; lost delivery never proves stop.
+Changed runtime behavior needs fresh state rather than rewriting original pins.
+
+### Verification
+
+Fixture HTTP/actual stdio tests cover same-request retry, default/overridden
+windows, restoration, restart/replay, cross-process out-of-order primary results,
+original call/deadline/cancellation bounds, policy/error exclusions, forged intent
+rejection and native continuation with exactly-once notifications and file writes.
+The broad pinned run passed 679 cases with two Node-tool skips; both skipped cases
+passed with installed Node 24/npm. The final 27-case fallback run includes the last
+physical response-repair payload refinement; no single fresh 682-case gate is claimed.
+Finite browser checks are separate from inference fixtures. Generated settings,
+docs/navigation, examples, Ruff and broader suite evidence are finalized in the
+[implementation record](model-fallback-browser-repair-2026-10-28.md). No live
+provider outage was induced, real model called, historical run resumed or source
+committed. Setup/authentication remain existing configuration, without new login.

@@ -95,7 +95,7 @@ kept nonempty contributions; it never interprets inherited ancestry as new work.
 The current coding marker is `agent-7-bounded-worker-state`, state schema `2.6`.
 New runs require fresh state. Older layouts are not migrated. Updated 2026-10-23:
 the exact graph-only Resume compatibility path below preserves layout and prior outcomes.
-The OS marker is `simple-os/3`; an artifact-only or workspace-none process still
+The OS marker is `simple-os/4`; an artifact-only or workspace-none process still
 requires no Git, coding task, check or code-writing finalization. MCP and shutdown
 recovery are not expanded by this change. The sections below describe shared
 mechanisms; private-copy details apply to the legacy optional provider.
@@ -454,6 +454,26 @@ old runs are not silently opted into new behavior. See the
 [endpoint testing guide](../../docs/guides/endpoint-testing.md) for profiles,
 configuration, fixture coverage and v1 limits.
 
+## Availability model selection
+
+Endpoint.retry_model is a generic caller-supplied OS option, absent by default.
+The coding agent chooses its native-cloud default through default_retry_model;
+no model identity or coding role is hard-coded into the kernel. Explicit agent
+configuration supplies/overrides the OS preference. One confirmed provider availability
+failure gets the same logical request retried once on the alternate, then X subsequent
+invocations use it before primary is probed again. X defaults to seven in the OS and
+agent input can override it. The original primary model/effort stay pinned. Selection,
+counts and linked intents are durable per binding and share original authority,
+admission, accounts and deadlines. This separate availability attempt does not
+refill ordinary retries. See [policy/configuration](../../docs/guides/model-fallback.md).
+
+Terminal app-server model failure may retain a trusted same-thread continuation,
+including completed tool results. The OS can resume that thread on the alternate,
+deduplicating old callback IDs; it cannot blindly replay effectful work or infer
+termination from lost transport. Task replacement, diagnosis, canonical memory,
+source reuse and acceptance remain agent policy. Fresh simple-os/4 state is
+required; original frozen runs remain on their original source/configuration.
+
 ## Diagnosing a boundary failure
 
 | Observation | Owner and next inspection |
@@ -479,7 +499,7 @@ disconnect or local transport kill does not establish remote termination. An
 exception during an external-write handler or result recording is uncertain,
 so it cannot be silently repeated as a known failed tool invocation.
 
-The kernel compatibility marker is `simple-os/3`, with coding program
+The kernel compatibility marker is `simple-os/4`, with coding program
 `agent-7-bounded-worker-state` and state schema `2.6`. This identifies changed
 registration/grant wiring within the current basic function set. It does not
 introduce the planned next-version integration platform. Use new run/state

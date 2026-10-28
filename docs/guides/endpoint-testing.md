@@ -54,6 +54,9 @@ linked worker recovery have [separate agent settings](agent-reliability.md).
 Every attempt passes grants, cancellation, finishing
 reserve, capacity and token/spend admission. Hard output ceilings remain intact;
 the smaller target applies to raw queries. Saved explicit values win over defaults.
+Optional [model fallback](model-fallback.md) handles confirmed provider availability
+errors separately: one alternate attempt plus the caller-overridable OS seven-call
+window. It retains the same accounts/deadline and does not refill ordinary retries.
 
 Replacing an unknown call requires caller consent and trusted raw generation-only
 adapter facts. The original physical execution stays unknown, holds capacity and

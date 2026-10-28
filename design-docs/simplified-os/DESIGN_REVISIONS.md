@@ -14,6 +14,13 @@ alignment. No runtime behavior is changed by this document.
 
 ## Authority and historical material
 
+Accepted 2026-10-28: the OS exposes caller-selected retry_model with an overridable
+seven-call default window; the agent chooses model/effort. Confirmed provider
+availability errors can use one alternate and trusted same-thread continuation,
+preserving original effects, accounts and deadlines. Unknown execution still
+blocks. See [current policy](../../docs/guides/model-fallback.md) and
+[FIX-0152](../../development-docs/FIXES.md#fix-0152); use fresh simple-os/4 state.
+
 Use the current guides and the accepted revisions below for the implemented
 profile. The original merged graph, its source fingerprints, contract examples,
 17 October audit and static visual readers preserve their historical baseline.

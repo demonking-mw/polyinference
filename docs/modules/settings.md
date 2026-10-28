@@ -71,6 +71,9 @@ Endpoint `supports_temperature` defaults to true and rejects an explicit unsuppo
 sampling request. `reasoning_effort` defaults to medium and is sent on native turns;
 the turn field takes precedence over a command-line startup default.
 The UI launcher no longer supplies a conflicting low-effort override.
+Agent `default_retry_model` selects the native cloud alternate (Terra/high/seven).
+Generic Endpoint.retry_model is optional with no OS default. Explicit null disables
+and survives serialization; see [fallback configuration](../guides/model-fallback.md).
 Optional `system.data_policy` constrains every process/replacement; narrower
 ProcessSpec policies remain enforceable. Explicit endpoint location is required
 to satisfy a local-only/cloud-only constraint. Fresh state pins these contracts.

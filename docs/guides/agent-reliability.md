@@ -64,9 +64,9 @@ unavailable; installed foreground test dependencies must be established with rea
 
 The integrated reliability implementation requires fresh program/state pins. The exact historical graph-only
 Resume exception does not authorize arbitrary migration across this merge. Keep old runs with their original
-code and config. The next [implementation
-stage](../../development-docs/reliability-implementation-2026-10-27.md) uses runtime simple-os/3, agent-7
-and state 2.6. Bounded worker memory, explicit finishing resources and error-conditioned physical response
+code and config. The [27 October stage](../../development-docs/reliability-implementation-2026-10-27.md)
+used runtime simple-os/3; current [model fallback](model-fallback.md) requires simple-os/4,
+with agent-7/state 2.6. Bounded worker memory, explicit finishing resources and error-conditioned physical response
 repair are included. An unstarted linked recovery consumer may be retargeted with its original
 predecessor/contract/account; started contracts and source authority stay pinned. See
 [qualification](qualification.md) for separate fixture/live completion gates. The [integration

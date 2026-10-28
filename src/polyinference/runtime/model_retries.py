@@ -145,7 +145,7 @@ class ModelRetries:
             self.runtime._update(key, body)
         return result
 
-    def _blocked(self, request, result):
+    def _blocked(self, request, result, *, allow_native_continuation=False):
         rt = self.runtime
         if result.error and result.error.code in {"ResponseValidationError", "ReservedInferenceCalls"}:
             return "caller response retry allowance or finishing reserve reached"
@@ -171,7 +171,7 @@ class ModelRetries:
             return "process cancellation requested"
         if process["state"] in {"paused", "cancelled", "failed", "completed"}:
             return "process stopped"
-        if isinstance(request.payload, AgentJob) and any(
+        if not allow_native_continuation and isinstance(request.payload, AgentJob) and any(
             body["request"].get("causal_parent_ref") == result.operation_id
             and body["request"]["payload"]["kind"] == "capability_call"
             for _, _, body in rt.records.scan("effect/")
@@ -193,6 +193,8 @@ class ModelRetries:
 
     async def _run(self, original, result):
         rt = self.runtime
+        if rt.model_fallback.policy(original) and result.extensions.get("polyinference/model-unavailable"):
+            return self.complete(original, result, "model unavailable; alternative routing required")
         policy = self.policy(original)
         allowance = rt.config.model_call_retries + policy.additional_retries
         for attempt in range(1, allowance + 1):
@@ -248,4 +250,6 @@ class ModelRetries:
             result = await rt._execute_once(request)
             if result.state == "succeeded":
                 return self.complete(original, result, "recovered")
+            if rt.model_fallback.policy(original) and result.extensions.get("polyinference/model-unavailable"):
+                return self.complete(original, result, "model unavailable; alternative routing required")
         return self.complete(original, result, "retry allowance exhausted")

@@ -41,7 +41,7 @@ if (process.argv.includes('--preflight')) {
     await page.reload();
     assert.equal(await page.locator('#value').textContent(), '1');
     assert.deepEqual(errors, []);
-    console.log('Production entry, input, pause, save and reload passed in Chromium.');
+    console.log('Actual entry increment, pause, save and reload passed in Chromium.');
   } finally {
     if (browser) await browser.close();
     await new Promise(resolve => server.close(resolve));

@@ -350,6 +350,17 @@
             "title": "Reserved Context Tokens",
             "type": "integer"
           },
+          "retry_model": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RetryModel"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "supports_temperature": {
             "default": true,
             "title": "Supports Temperature",
@@ -633,6 +644,44 @@
         },
         "title": "ProgressMonitor",
         "type": "object"
+      },
+      "RetryModel": {
+        "additionalProperties": false,
+        "description": "Caller-selected alternate on the same provider/protocol and authority envelope.",
+        "properties": {
+          "fallback_calls": {
+            "default": 7,
+            "maximum": 32,
+            "minimum": 1,
+            "title": "Fallback Calls",
+            "type": "integer"
+          },
+          "model": {
+            "minLength": 1,
+            "title": "Model",
+            "type": "string"
+          },
+          "reasoning_effort": {
+            "default": "medium",
+            "enum": [
+              "none",
+              "minimal",
+              "low",
+              "medium",
+              "high",
+              "xhigh",
+              "max",
+              "ultra"
+            ],
+            "title": "Reasoning Effort",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model"
+        ],
+        "title": "RetryModel",
+        "type": "object"
       }
     },
     "additionalProperties": false,
@@ -729,6 +778,16 @@
           }
         ],
         "default": null
+      },
+      "default_retry_model": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/RetryModel"
+          },
+          {
+            "type": "null"
+          }
+        ]
       },
       "dependency_prepare": {
         "items": {
@@ -1314,6 +1373,17 @@
             "title": "Reserved Context Tokens",
             "type": "integer"
           },
+          "retry_model": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/RetryModel"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "supports_temperature": {
             "default": true,
             "title": "Supports Temperature",
@@ -1524,6 +1594,44 @@
           "cleanup_steps"
         ],
         "title": "PhaseReserve",
+        "type": "object"
+      },
+      "RetryModel": {
+        "additionalProperties": false,
+        "description": "Caller-selected alternate on the same provider/protocol and authority envelope.",
+        "properties": {
+          "fallback_calls": {
+            "default": 7,
+            "maximum": 32,
+            "minimum": 1,
+            "title": "Fallback Calls",
+            "type": "integer"
+          },
+          "model": {
+            "minLength": 1,
+            "title": "Model",
+            "type": "string"
+          },
+          "reasoning_effort": {
+            "default": "medium",
+            "enum": [
+              "none",
+              "minimal",
+              "low",
+              "medium",
+              "high",
+              "xhigh",
+              "max",
+              "ultra"
+            ],
+            "title": "Reasoning Effort",
+            "type": "string"
+          }
+        },
+        "required": [
+          "model"
+        ],
+        "title": "RetryModel",
         "type": "object"
       }
     },

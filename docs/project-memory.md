@@ -21,7 +21,11 @@ clean local exceptions a finite coding takeover with original resources. Planner
 guidance requires small behaviors and actual tool inventory; it adds no browser/MCP.
 Changed recovery/program pins require fresh state and fresh live qualification.
 
-The 27 October implementation uses runtime `simple-os/3`, agent-7 and state 2.6.
+The current implementation uses runtime `simple-os/4`, agent-7 and state 2.6.
+The OS exposes optional retry_model; the agent selects Terra/high/seven through
+default_retry_model. Caller input overrides OS defaults. Availability routing and
+trusted same-thread continuation preserve original accounts and tool receipts;
+unknown effects still block. Read [model fallback](guides/model-fallback.md).
 Static data/allocation policy and uniform limits are enforced; paused residency
 requires explicit safe hibernation/readmission. Bounded worker facts and error-aware
 response repair retain original evidence and physical retry bounds. Pending linked

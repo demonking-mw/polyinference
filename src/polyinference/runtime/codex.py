@@ -12,7 +12,7 @@ import shutil
 from collections import Counter, deque
 from pathlib import Path
 
-from .inference import EndpointError, HTTPInference, IncompleteGeneration, UnknownExecution
+from .inference import EndpointError, HTTPInference, IncompleteGeneration, UnknownExecution, model_unavailable
 
 # Completed items carry the authoritative text. Retaining their streaming
 # fragments makes the lifecycle-event bound depend on a reply's token count.
@@ -190,7 +190,7 @@ class CodexAppServer:
         return wire
 
     async def generate_job(self, messages, snapshot, schema, callback=None, observer=None,
-                           *, tools=None, instructions="", max_output=4000, prepared=None):
+                           *, tools=None, instructions="", max_output=4000, prepared=None, session_ref=None):
         if callback and not tools:
             raise NativeJobStopped("Brokered jobs require explicitly granted tool descriptors")
         wire = prepared or self.prepare(messages, schema, tools=tools, instructions=instructions, max_output=max_output)
@@ -303,10 +303,13 @@ class CodexAppServer:
                 message = await receive()
                 if message.get("id") == serial and "method" not in message:
                     if "error" in message:
-                        raise NativeJobStopped(
+                        failure = NativeJobStopped(
                             f"Codex RPC rejected {method}: {message['error'].get('code')} "
                             + str(message["error"].get("message", ""))[:1500]
                         )
+                        failure.model_unavailable = model_unavailable(message["error"].get("message"),
+                                                                      message["error"].get("code"))
+                        raise failure
                     return message["result"]
 
         try:
@@ -332,9 +335,14 @@ class CodexAppServer:
                     "web_search": "disabled",
                 },
             }
-            if callback:
+            if callback and not session_ref:
                 params["dynamicTools"] = wire["dynamicTools"]
-            thread = await rpc("thread/start", params)
+            if session_ref:
+                params["threadId"] = session_ref
+            else:
+                # Model routing is owned and recorded by the OS, not an opaque provider fallback.
+                params["allowProviderModelFallback"] = False
+            thread = await rpc("thread/resume" if session_ref else "thread/start", params)
             sandbox = thread.get("sandbox") or {}
             if (sandbox.get("type") != "readOnly" or sandbox.get("networkAccess", False)
                     or thread.get("approvalPolicy") != "never"):
@@ -347,7 +355,11 @@ class CodexAppServer:
                 "turn/start",
                 {
                     "threadId": thread_id,
-                    "input": wire["input"],
+                    "input": ([{"type": "text", "text":
+                        "Continue the interrupted turn from its recorded conversation. Completed host tool "
+                        "operations retain their results and must not be repeated. Inspect current state through "
+                        "the granted tools when needed; finish the remaining work under the original protocol."}]
+                        if session_ref else wire["input"]),
                     "effort": self.endpoint.reasoning_effort,
                     "cwd": str(snapshot),
                     "approvalPolicy": "never",
@@ -363,11 +375,17 @@ class CodexAppServer:
                 await receive()
             turn = terminal["params"]["turn"]
             if turn["status"] != "completed":
-                raise NativeJobStopped(
+                failure = NativeJobStopped(
                     f"Codex turn ended: {turn['status']}: "
                     + str((turn.get("error") or {}).get("message", "No error detail"))[:1500],
                     retryable=turn["status"] not in {"cancelled", "interrupted"},
                 )
+                failure.model_unavailable = model_unavailable((turn.get("error") or {}).get("message"),
+                                                              (turn.get("error") or {}).get("codexErrorInfo")
+                                                              or (turn.get("error") or {}).get("code"))
+                if turn["status"] == "failed" and failure.model_unavailable:
+                    failure.native_continuation = {"session_id": thread_id, "turn_id": turn_id}
+                raise failure
             if final_text is None:
                 texts = [i["text"] for i in turn.get("items", []) if i.get("type") == "agentMessage"]
                 final_text = texts[-1] if texts else None

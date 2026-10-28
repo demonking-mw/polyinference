@@ -9,7 +9,7 @@ does not resume preserved Minecraft runs or certify a broader product objective.
 | --- | --- |
 | [agent/qualification.py](../../src/polyinference/agent/qualification.py) | Physical-attempt/source outcome metrics and the three-success-plus-resume gate. |
 | [qualify_workflow.py](../../scripts/qualify_workflow.py) | Pinned short-task corpus, fresh states, independent checks, manifests and a settled interruption/resume trial. |
-| [browser_check.mjs](../../scripts/browser_check.mjs) | Real Chromium entry/input/pause/save/reload checks with a command-owned temporary server and cleanup. |
+| [browser_check.mjs](../../scripts/browser_check.mjs) | Real Chromium increment-button/pause/save/reload fixture with an owned temporary server; not a game keyboard/physics test. |
 | [test_reliability_plan.py](../../tests/test_reliability_plan.py) | Regressions for OS authority, residency, task-state continuity and error-conditioned response repair. |
 
 ## Run and inspect

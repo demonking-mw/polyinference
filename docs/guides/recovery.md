@@ -1,5 +1,8 @@
 # Limits, steering and recovery
 
+For confirmed model capacity failures, [availability fallback](model-fallback.md)
+preserves original accounts and can continue a trusted native thread after tools.
+
 [Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
 
 The default per-process allowance is 512 model calls, 2,048 steps and a one-hour

@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 from typing import Annotated, Literal
 
-from pydantic import AliasChoices, Field, ValidationInfo, model_validator
+from pydantic import AliasChoices, Field, ValidationInfo, model_serializer, model_validator
 
 from .contracts import DataPolicy, Limits, Wire
 from .execution_contracts import Check
@@ -50,6 +50,14 @@ class InferenceLifecycle(Wire):
     total_seconds: Annotated[float, Field(gt=0, le=7200)] = 600
 
 
+class RetryModel(Wire):
+    """Caller-selected alternate on the same provider/protocol and authority envelope."""
+
+    model: Annotated[str, Field(min_length=1)]
+    reasoning_effort: Literal["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"] = "medium"
+    fallback_calls: Annotated[int, Field(ge=1, le=32)] = 7
+
+
 class Endpoint(Wire):
     protocol: Literal["chat", "responses", "gemini", "anthropic", "codex_app_server", "codex_proxy"] = "chat"
     base_url: str = "http://127.0.0.1:8000/v1"
@@ -64,9 +72,25 @@ class Endpoint(Wire):
     inference_location: Literal["local", "cloud"] | None = None
     supports_temperature: bool = True
     reasoning_effort: Literal["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"] = "medium"
+    retry_model: RetryModel | None = Field(default=None, exclude_if=lambda value: value is None)
     timeout_seconds: Annotated[float, Field(gt=0, le=1800)] = 180
     lifecycle: InferenceLifecycle | None = Field(default=None, exclude_if=lambda value: value is None)
     estimated_microusd_per_token: Annotated[float, Field(ge=0)] | None = None
+
+    @model_serializer(mode="wrap")
+    def preserve_disabled_retry(self, handler):
+        data = handler(self)
+        if self.retry_model is None and "retry_model" in self.model_fields_set:
+            data["retry_model"] = None
+        return data
+
+    @model_validator(mode="after")
+    def distinct_retry_model(self):
+        if self.retry_model and self.retry_model.model == self.model:
+            raise ValueError("Retry model must differ from the primary model")
+        if self.retry_model and self.protocol == "codex_proxy":
+            raise ValueError("Model fallback requires a direct provider or app-server adapter")
+        return self
 
     @property
     def physical_location(self):

@@ -6,7 +6,7 @@ from pydantic import Field, model_validator
 
 from .contracts import InferencePolicy, Wire
 from .execution_contracts import Check
-from .system_settings import Endpoint, RuntimeConfig
+from .system_settings import Endpoint, RetryModel, RuntimeConfig
 from .workspace_contracts import RelativePath
 
 __all__ = ["AgentConfig", "Endpoint", "RuntimeConfig"]
@@ -45,6 +45,9 @@ class ProgressMonitor(Wire):
 class AgentConfig(RuntimeConfig):
     """Policy of the bundled coding agent, separate from the runtime's contract."""
 
+    default_retry_model: RetryModel | None = Field(default_factory=lambda: RetryModel(
+        model="gpt-6.1-terra", reasoning_effort="high"))
+
     inference_policy: InferencePolicy | None = Field(default=None, exclude_if=lambda value: value is None)
     model_output_target_tokens: Annotated[int, Field(gt=0)] | None = Field(
         default=None, exclude_if=lambda value: value is None)
@@ -78,6 +81,15 @@ class AgentConfig(RuntimeConfig):
             if not isinstance(system, dict) or system.keys() & value.keys():
                 raise ValueError("System settings must be configured once, in system or at top level")
             value = {**coding_system_defaults(), **system, **value}
+            cloud = value.get("cloud")
+            fields = cloud.model_fields_set if isinstance(cloud, Endpoint) else set(cloud or {})
+            data = cloud.model_dump() if isinstance(cloud, Endpoint) else dict(cloud or {})
+            if data.get("protocol") == "codex_app_server" and "retry_model" not in fields:
+                retry = value.get("default_retry_model", RetryModel(
+                    model="gpt-6.1-terra", reasoning_effort="high"))
+                target = retry.model if isinstance(retry, RetryModel) else (retry or {}).get("model")
+                if target != data.get("model"):
+                    value["cloud"] = {**data, "retry_model": retry}
             if "review_token_reserve" in value:
                 value["control_token_reserve"] = value.pop("review_token_reserve")
         return value

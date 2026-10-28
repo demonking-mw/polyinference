@@ -2,7 +2,8 @@
 
 [Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
 
-The OS first uses bounded native retries, then any additional attempts declared
+Confirmed provider availability errors use optional [model fallback](model-fallback.md)
+before continuing ordinary recovery. Other eligible failures use bounded native retries, then attempts declared
 by the caller's InferencePolicy. Shared root deadlines, accounting and finishing
 reserves apply; see [endpoint lifecycle policy](endpoint-testing.md).
 Registered malformed responses also have a bounded

@@ -17,6 +17,8 @@ KernelRuntime composes OS services and settles stable operation intents with ret
 Open KernelRuntime, install trusted application handlers/protocols and register
 processes before dispatch. execute(original) follows retained OS retry outcomes;
 individual attempts remain immutable. Generic publication invokes installed policy.
+Endpoint retry_model is caller-selected; the kernel runs durable availability
+routing through [ModelFallback](retries.md) without choosing a coding model default.
 prepare_resume accepts a retained intent under the runtime coordinator lease,
 recovers host receipts/completed query artifacts or an adapter-retrievable response,
 and records OS-owned resume-preparation/ readiness separately from agent progress.

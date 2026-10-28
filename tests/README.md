@@ -24,6 +24,7 @@ need separately stated checks. Update affected docs and FIXES.md with every fix.
 | [test_incident_fixes.py](test_incident_fixes.py) | Incident-derived lifecycle, provider and recovery regressions. |
 | [test_inference_lifecycle.py](test_inference_lifecycle.py) | Split UTF-8/SSE terminals, heartbeat/idle/total deadlines, native/caller quotas, shared adaptation allowance, physical holds, late-result fencing, generic probes and real loopback streaming. |
 | [test_model_retries.py](test_model_retries.py) | Durable bounded retries, accounting and recovery composition. |
+| [test_model_fallback.py](test_model_fallback.py) | Availability routing/window/restart, trusted native continuation, callback replay and original resource guards. |
 | [test_native_events.py](test_native_events.py) | Bounded native telemetry and terminal evidence. |
 | [test_native_worker.py](test_native_worker.py) | Native brokered coding phases and source authority. |
 | [test_os.py](test_os.py) | Kernel resources, effects, publication and replay. |

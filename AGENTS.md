@@ -227,3 +227,17 @@ max_bytes; the previous discrepancy claim was wrong. Canonical ordinary reads to
 182/88 repeats ignoring injected generation; the prior 178/84 was a trailing
 projection sample. Follow-up evidence preserves original records and all source;
 no implementation/configuration/test changes or model calls occurred. Read back.
+
+Authorized repair, 2026-10-28 (FIX-0151/0152): current runtime is simple-os/4,
+agent-7/state 2.6; use fresh state. The OS exposes optional retry_model without a
+model default; the coding agent chooses Terra/high via default_retry_model. Seven
+subsequent fallback invocations is an OS default, overridable by agent input.
+Latest policy: retry the failed logical request once on alternate, stay there for
+X invocations, then probe configured primary/effort. Original admission/accounts/
+deadlines and unknown-effect guards remain. Trusted same-thread native continuation
+preserves tool receipts and scoped edits; never blindly replay effectful jobs.
+Existing browser text-field isolation is repaired and real finite Chromium checks
+retained; no gameplay feature was added. Convergence, context-unit sizing and
+worker-state error-retirement changes remain plans. Read the current implementation
+record for actual checks/limits; preserved runs/pins stay untouched and uncommitted.
+This project-rule save was read back; it installs no automation or runtime hook.

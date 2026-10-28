@@ -179,6 +179,7 @@ Linux sandbox. Neither backend grants additional source paths.
 | inference_location | null | Explicit local/cloud physical location. Otherwise localhost chat/Responses is inferred local; other cases cloud. |
 | supports_temperature | true | Reject an explicit sampling request when false; supported requests forward the requested temperature. |
 | reasoning_effort | medium | Native turn effort: none/minimal/low/medium/high/xhigh/max/ultra. The explicit turn value takes precedence over a startup command default. |
+| retry_model | null | Optional caller-selected alternate on this provider/protocol. Fields: model (required), reasoning_effort (medium), fallback_calls (7; 1–32). Distinct primary required; codex_proxy unsupported. Explicit null survives serialization. |
 | timeout_seconds | 180 | Legacy HTTP/native job timeout, at most 1800 seconds and bounded by original deadline. Raw lifecycle mode uses its shared total instead. |
 | lifecycle | omitted | Optional InferenceLifecycle: transport sse/buffered; connect_seconds=10 (0–1800], first_output_seconds=180 (0–3600], idle_seconds=90 (0–3600], total_seconds=600 (0–7200]. Original logical/process deadline still wins. |
 | estimated_microusd_per_token | null | Nonnegative token-price estimate for cloud spend admission; required for a configured spend bound on that cloud lane. |
@@ -356,9 +357,13 @@ dependency_prepare, prerequisite_checks, acceptance_checks,
 senior_development_fraction, max_sprints, max_senior_corrections and
 max_protocol_corrections, inference_policy, model_output_target_tokens,
 inference_retry, check_diagnosis, acceptance_criteria, max_review_reads,
-max_worker_recoveries, max_cloud_recoveries and progress_monitor. The
+max_worker_recoveries, max_cloud_recoveries, default_retry_model and progress_monitor. The
 [agent reliability reference](../../docs/guides/agent-reliability.md) gives all
 nested defaults, bounds, semantic criteria and recovery interactions.
+Agent default_retry_model selects Terra/high/seven for native cloud when the
+endpoint has no explicit retry_model; null disables the default. The OS has no
+model default. Agent input overrides OS defaults; explicit endpoint configuration
+overrides the agent's default preference. See [model fallback](../../docs/guides/model-fallback.md).
 inference_policy and model_output_target_tokens are omitted when absent. The policy declares
 additional_retries (0–3, default 0) and replace_undelivered (default false), carried
 on model requests through the negotiated runtime/inference-policy extension.

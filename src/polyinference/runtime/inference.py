@@ -39,6 +39,30 @@ class EndpointError(RuntimeError):
     pass
 
 
+def model_unavailable(message, code=None, status=None):
+    """Classify provider diagnostics, never generated model response text."""
+    text = str(message or "").lower()
+    if isinstance(code, dict):
+        detail = next((code[key] for key in ("httpConnectionFailed", "responseStreamConnectionFailed",
+            "responseStreamDisconnected", "responseTooManyFailedAttempts") if key in code), {})
+        status = detail.get("httpStatusCode") if isinstance(detail, dict) else None
+        if not isinstance(status, int):
+            return False
+        code = ""
+    code = str(code or "").lower()
+    if status in {401, 403} or code in {"unauthorized", "badrequest", "contextwindowexceeded",
+            "sessionbudgetexceeded", "usagelimitexceeded", "cyberpolicy", "misalignmentpolicyviolation",
+            "toomanydenials", "sandboxerror"}:
+        return False
+    if any(word in text + " " + code for word in ("quota", "permission", "unauthorized", "authentication",
+                                                  "api key", "not found", "does not exist", "access denied")):
+        return False
+    return (isinstance(status, int) and (status == 429 or status >= 500)) or code in {
+        "model_unavailable", "modelunavailable", "model_capacity_exceeded", "model_not_available",
+        "flexunavailable", "serveroverloaded", "internalservererror", "ratelimitexceeded"} or (
+        "model" in text and any(word in text for word in ("at capacity", "unavailable", "not available")))
+
+
 class ProviderError(EndpointError):
     """A known rejection, with bounded diagnostics kept separately from log text."""
 
@@ -54,7 +78,7 @@ class ProviderError(EndpointError):
                              "admission": "resource"}
                             .get(category, "operation")),
         }
-        self.retryable = category in {"rate_limit", "service_unavailable", "connection", "admission"}
+        self.retryable = category in {"rate_limit", "service_unavailable", "model_unavailable", "connection", "admission"}
 
 
 class ModelResponseError(EndpointError):
@@ -280,6 +304,8 @@ class HTTPInference:
         detail_message = str(detail.get("message", "")).lower()
         category = ({400: "invalid_request", 401: "authentication", 403: "permission", 429: "rate_limit"}
                     .get(status, "service_unavailable" if status >= 500 else "request_rejected"))
+        if status not in {401,403} and model_unavailable(detail_message, detail.get("code") or detail.get("type")):
+            category = "model_unavailable"
         if status in {400, 413, 422} and any(t in detail_message for t in ("context length", "context window", "too many tokens", "prompt is too long")):
             category = "input_overflow"
         retry_after = None

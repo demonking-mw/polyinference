@@ -200,6 +200,12 @@
             "title": "Coding-agent reliability settings",
             "doc": "docs/guides/agent-reliability.md",
             "files": []
+          },
+          {
+            "id": "model-fallback-guide",
+            "title": "Model availability fallback configuration and guarantees",
+            "doc": "docs/guides/model-fallback.md",
+            "files": []
           }
         ]
       },
@@ -233,7 +239,8 @@
             "doc": "docs/modules/retries.md",
             "files": [
               "src/polyinference/runtime/model_retries.py",
-              "src/polyinference/runtime/retry.py"
+              "src/polyinference/runtime/retry.py",
+              "src/polyinference/runtime/model_fallback.py"
             ]
           },
           {
@@ -889,6 +896,12 @@
             "title": "Reliability implementation and verification",
             "doc": "development-docs/reliability-implementation-2026-10-27.md",
             "files": []
+          },
+          {
+            "id": "model-fallback-browser-repair-20261028",
+            "title": "Agent-selected model fallback and existing browser repair",
+            "doc": "development-docs/model-fallback-browser-repair-2026-10-28.md",
+            "files": []
           }
         ]
       },
@@ -1094,7 +1107,8 @@
               "tests/test_semantic_review.py",
               "tests/test_validation_feedback.py",
               "tests/test_cli.py",
-              "tests/test_branch_integration.py"
+              "tests/test_branch_integration.py",
+              "tests/test_model_fallback.py"
             ]
           }
         ]

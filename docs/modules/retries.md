@@ -7,13 +7,13 @@ Generic safe inference retry and smaller-output adaptation filter eligible failu
 | File | Responsibility |
 | --- | --- |
 | [src/polyinference/runtime/model_retries.py](../../src/polyinference/runtime/model_retries.py) | Durable retry chains, delayed attempts, authorization, output feedback and effective-outcome projection. |
+| [src/polyinference/runtime/model_fallback.py](../../src/polyinference/runtime/model_fallback.py) | Binding-wide availability routing, alternate intents and trusted native continuation. |
 | [src/polyinference/runtime/retry.py](../../src/polyinference/runtime/retry.py) | Registered response validation, physical attempt records and bounded caller replacement windows. |
 
 ## Interface and ownership
 
-Each additional submission has a new linked intent and reservation. Backoff and
-Retry-After remain bounded by original deadlines and budgets. The kernel retains
-all failed/successful attempts; replay follows the stored effective outcome.
+Every extra submission has a linked intent/reservation. Backoff and Retry-After
+respect original deadlines/budgets; replay follows retained effective outcomes.
 The OS-native allowance precedes InferencePolicy.additional_retries. Durable
 source/counters distinguish native from caller permission. Both share the root
 logical deadline and retry allowance across output adaptation. A new application
@@ -24,7 +24,8 @@ replacement requires free capacity and another unknown stops the chain. See
 
 ## Principles to preserve
 
-- Never blindly retry uncertain execution or native jobs with brokered effects.
+- Never blindly retry uncertain execution or effectful native jobs; trusted terminal
+  thread continuation preserves completed receipts.
 - OS retry allowance is distinct from explicit application recovery allowance.
 - Remeasure feedback; preserve routing, grants, trust, limits and finishing reserves.
 - Grammar repair/task decomposition remain caller policy. Generic smaller-output
@@ -34,8 +35,6 @@ replacement requires free capacity and another unknown stops the chain. See
 
 [Retry regressions](../../tests/test_model_retries.py), [output limits](../../tests/test_output_limits.py)
 and [incident recovery](../../tests/test_incident_fixes.py).
-
-[FIX-0047](../../development-docs/FIXES.md#fix-0047) · [Boundary retries](../../design-docs/simplified-os/RUNTIME_BOUNDARY.md#bounded-inference-retries).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
@@ -73,3 +72,8 @@ the existing deadline/window and `offer_retry` authority checks still apply.
 Callback errors are separate diagnostics and cannot change an execution outcome.
 The coding agent pins bounded validation feedback and the current phase, retaining
 all required inputs. No extra model call or recursive repair allowance is added.
+
+Optional endpoint `retry_model` adds one availability attempt charged to original
+physical accounts. Its durable main-probe/seven-call policy and same-thread rules
+are in the [fallback guide](../guides/model-fallback.md) and
+[regressions](../../tests/test_model_fallback.py). The OS chooses no model by default.

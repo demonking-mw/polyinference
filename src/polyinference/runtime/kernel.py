@@ -37,10 +37,12 @@ from .inference import (
     ModelResponseError,
     ProviderError,
     UnknownExecution,
+    model_unavailable,
     terminal_call,
 )
 from .lifecycle import ProcessLifecycle
 from .messages import Messages, UserNotification
+from .model_fallback import ModelFallback
 from .model_retries import ModelRetries
 from .outputs import Outputs
 from .process_policy import ProcessPolicy
@@ -85,11 +87,13 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
         self.outputs = Outputs(config, self.records, self.artifacts)
         self.messages = Messages(self.records)
         self.clients = {}
+        self.fallback_clients = {}
         self.admission = {}
         self.inflight = {}
         self.response_validators = {}
         self.response_schemas = {}
         self.response_repairs = {}
+        self.model_fallback = ModelFallback(self)
         self.retry_events = {}
         self.progress_sources = {}
         self.model_retries = ModelRetries(self)
@@ -198,6 +202,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                 "output-delivery",
                 "model-recovery",
                 "model-retries",
+                "model-fallback",
                 "inference-policy",
                 "generic-processes",
                 "artifact-snapshots",
@@ -220,9 +225,9 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
             raise RuntimeError("Configuration changed: start a new run/state directory")
         self.records.put_once("runtime/config", {"digest": fingerprint, "run_id": self.run_id})
         kernel = self.records.get("runtime/kernel")
-        if kernel and kernel[1].get("version") != "simple-os/3":
+        if kernel and kernel[1].get("version") != "simple-os/4":
             raise RuntimeError("Runtime authority/residency changed: use original source or fresh state")
-        self.records.put_once("runtime/kernel", {"version": "simple-os/3"})
+        self.records.put_once("runtime/kernel", {"version": "simple-os/4"})
         from ..contracts import ProcessSpec
 
         for _, _, process in self.records.scan("process/"):
@@ -236,6 +241,13 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                 else (CodexProxy if endpoint.protocol == "codex_proxy" else HTTPInference)
             )
             self.clients[name] = cls(endpoint)
+            if endpoint.retry_model:
+                alternative = endpoint.model_copy(update={"model": endpoint.retry_model.model,
+                    "reasoning_effort": endpoint.retry_model.reasoning_effort, "retry_model": None})
+                self.fallback_clients[name] = cls(alternative)
+                self.fallback_clients[name].output_cap = self.config.max_model_response_bytes
+                if isinstance(self.fallback_clients[name], HTTPInference):
+                    self.fallback_clients[name].require_completion_metadata = self.config.inference_safety.require_completion_metadata
             if hasattr(self.clients[name], "output_cap"):
                 self.clients[name].output_cap = self.config.max_model_response_bytes
             if isinstance(self.clients[name], HTTPInference):
@@ -350,6 +362,8 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
             await asyncio.gather(*tasks, return_exceptions=True)
         for client in self.clients.values():
             await client.close()
+        for client in self.fallback_clients.values():
+            await client.close()
         self.workspaces.blocking.close()
         await self.stack.aclose()
         self.exclusive.close()
@@ -402,7 +416,12 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
 
     async def execute(self, request):
         result = await self._execute_once(request)
-        return await self.model_retries.run(request, result)
+        handled, result = await self.model_fallback.recover(request, result)
+        if handled:
+            return result
+        result = await self.model_retries.run(request, result)
+        _, result = await self.model_fallback.recover(request, result, final=True)
+        return result
 
     async def _execute_once(self, request):
         key = "effect/" + request.operation_id
@@ -412,7 +431,8 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
         if isinstance(request.payload, (ModelQuery, AgentJob)):
             self.model_retries.policy(request)
             if request.extensions.get("runtime/inference-root") and not (
-                    request.extensions.get("runtime/model-retry") or request.extensions.get("runtime/output-retry")):
+                    request.extensions.get("runtime/model-retry") or request.extensions.get("runtime/output-retry")
+                    or request.extensions.get("runtime/model-fallback")):
                 raise ValueError("Inference retry root requires an OS-issued intent")
         if request.intent_digest != expected_digest:
             raise ValueError("Intent fingerprint mismatch")
@@ -456,7 +476,9 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
             if now() >= cutoff or request.deadline > cutoff:
                 raise ValueError("Operation exceeds the process wall-time allowance")
         recovery = request.extensions.get("polyinference/recovery-of")
-        if request.extensions.get("runtime/model-retry"):
+        if request.extensions.get("runtime/model-fallback"):
+            self.model_fallback.authorize(request)
+        elif request.extensions.get("runtime/model-retry"):
             # The originating recovery was already authorized. Revalidate the
             # OS-issued retry intent without charging another caller recovery.
             self.model_retries.authorize(request)
@@ -686,6 +708,9 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
             if isinstance(payload, (ModelQuery, AgentJob)):
                 name = self.config.role_bindings[payload.role]
                 endpoint = getattr(self.config, name)
+                endpoint, client, selection = self.model_fallback.select(request, key)
+                if selection:
+                    extensions["runtime/model-selection"] = selection
                 attempted = {"binding_ref": name, "model": endpoint.model, "protocol": endpoint.protocol,
                              "submitted": False}
                 extensions["polyinference/attempted-backend"] = attempted
@@ -698,7 +723,6 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                     raise ValueError("Invalid output-token allowance")
                 protocol = self.agent_protocols.get(payload.required_phase_protocol) if isinstance(payload, AgentJob) else None
                 def measure(messages):
-                    client = self.clients[name]
                     if isinstance(client, HTTPInference):
                         prepared = client.prepare(messages, output_tokens, temperature=getattr(payload, "temperature", None))
                     elif isinstance(client, CodexProxy):
@@ -767,11 +791,10 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                     if isinstance(payload, ModelQuery):
                         if endpoint.protocol not in {"chat", "responses", "gemini", "anthropic"}:
                             raise EndpointError("Native backend requires AgentJob")
-                        if hasattr(self.clients[name], "validate_messages"):
-                            self.clients[name].validate_messages(messages)
+                        if hasattr(client, "validate_messages"):
+                            client.validate_messages(messages)
                         dispatched = True
                         attempted["submitted"] = True
-                        client = self.clients[name]
                         if isinstance(client, HTTPInference) and hasattr(client, "generate_operation"):
                             # Trusted raw adapters may own service latency separately
                             # from network timeouts. All OS guards still surround the
@@ -881,29 +904,31 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
 
                             options = (
                                 {"observer": observer}
-                                if isinstance(self.clients[name], CodexAppServer)
+                                if isinstance(client, CodexAppServer)
                                 else {}
                             )
-                            if isinstance(self.clients[name], CodexAppServer):
+                            if isinstance(client, CodexAppServer):
                                 options.update(
                                     tools=tool_descriptors if callback else [],
                                     instructions=protocol["instructions"],
                                     prepared=prepared, max_output=output_tokens,
+                                    session_ref=(payload.session_ref
+                                        if request.extensions.get("runtime/model-fallback") else None),
                                 )
-                            elif isinstance(self.clients[name], CodexProxy):
+                            elif isinstance(client, CodexProxy):
                                 options.update(max_output=output_tokens, prepared=prepared)
                             dispatched = True
                             attempted["submitted"] = True
                             if callback:
                                 result = await asyncio.wait_for(
-                                    self.clients[name].generate_job(
+                                    client.generate_job(
                                         messages, snapshot, schema, callback, **options
                                     ),
                                     timeout,
                                 )
                             else:
                                 result = await asyncio.wait_for(
-                                    self.clients[name].generate_job(messages, snapshot, schema, **options),
+                                    client.generate_job(messages, snapshot, schema, **options),
                                     timeout,
                                 )
                             paths = await unbrokered_changes()
@@ -1022,6 +1047,13 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                 return result
             raise UncertainEffect(request.operation_id) from exc
         except Exception as exc:
+            if isinstance(payload, (ModelQuery, AgentJob)) and (getattr(exc, "model_unavailable", False) or
+                    isinstance(exc, ProviderError) and model_unavailable(
+                        exc.diagnostics.get("provider_message"), exc.diagnostics.get("provider_code"),
+                        exc.diagnostics.get("http_status"))):
+                extensions["polyinference/model-unavailable"] = {"model": endpoint.model}
+                if getattr(exc, "native_continuation", None):
+                    extensions["runtime/native-continuation"] = exc.native_continuation
             if isinstance(exc, InputOverflow):
                 extensions["runtime/io-error"] = exc.diagnostics
             if isinstance(exc, ProviderError) and exc.diagnostics["category"] == "input_overflow":
@@ -1219,10 +1251,11 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
             or arguments.get("tool") not in parent.payload.allowed_capabilities
         ):
             raise ValueError("Native tool outside grant")
+        callback_root = self.model_fallback.callback_root(parent)
         existing_count = sum(
             1
             for _, _, value in self.records.scan("effect/")
-            if value["request"].get("causal_parent_ref") == parent.operation_id
+            if value["request"].get("causal_parent_ref") in {parent.operation_id, callback_root}
         )
         capability = self.capabilities.get(arguments["tool"])
         manifest = self.workspaces.current(parent.payload.workspace_id) if capability.workspace else None
@@ -1239,7 +1272,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
             effect_class=capability.effect_class,
             reconciliation_strategy_ref="journal/1",
         )
-        operation_id = digest(canonical([parent.operation_id, call_id]))
+        operation_id = digest(canonical([callback_root, call_id]))
         retained = self.records.get("effect/" + operation_id)
         if retained:
             child = __import__(

@@ -2,8 +2,7 @@
 
 [Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
 
-All OS settings are configured together in the examples' `system` block. The [complete OS settings
-reference](../../design-docs/simplified-os/AGENT_SETTINGS.md) documents every field, default, context mode
+All OS settings use the examples' `system` block. The [complete reference](../../design-docs/simplified-os/AGENT_SETTINGS.md) documents every field, default, context mode
 and I/O recovery limit. Coding workflow choices such as `objective` and `max_sprints` stay outside that
 block. The bundled agent's OS defaults and UI preferences live together in
 [src/polyinference/agent/system_settings.py](../../src/polyinference/agent/system_settings.py). Legacy flat
@@ -60,7 +59,8 @@ fresh state.
 
 [Endpoint testing](endpoint-testing.md) covers streaming timings, native/caller retry allowances and
 explicit warm-up. [Budgets](budgets.md) covers execution backends, validation and launch commands. Preserve
-saved configuration pins.
+saved configuration pins. [Model fallback](model-fallback.md) covers agent
+`default_retry_model` (Terra/high/seven), endpoint overrides and disabling.
 
 For mixed native/local runs, size each endpoint from its actual model/server metadata. Context preparation
 uses the smaller of the shared input limit and that endpoint's context minus output headroom. Its UTF-8 byte
