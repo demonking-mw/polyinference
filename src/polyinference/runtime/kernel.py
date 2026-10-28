@@ -43,6 +43,7 @@ from .lifecycle import ProcessLifecycle
 from .messages import Messages, UserNotification
 from .model_retries import ModelRetries
 from .outputs import Outputs
+from .process_policy import ProcessPolicy
 from .processes import Processes
 from .progress import ExecutionProgress
 from .retry import InferenceRetries, ReservedInferenceCalls
@@ -79,7 +80,8 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
         self.workspaces = Workspaces(config, self.records, self.exclusive, self.artifacts, self.scope)
         self.tools = Tools(config, self.workspaces, self.exclusive, self.artifacts, self.scope)
         self.operations = self
-        self.processes = Processes(self.records, config.max_workers)
+        self.process_policy = ProcessPolicy(config, self.records)
+        self.processes = Processes(self.records, config.max_workers, self.process_policy)
         self.outputs = Outputs(config, self.records, self.artifacts)
         self.messages = Messages(self.records)
         self.clients = {}
@@ -87,6 +89,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
         self.inflight = {}
         self.response_validators = {}
         self.response_schemas = {}
+        self.response_repairs = {}
         self.retry_events = {}
         self.progress_sources = {}
         self.model_retries = ModelRetries(self)
@@ -216,7 +219,15 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
         if pinned and pinned[1]["digest"] != fingerprint:
             raise RuntimeError("Configuration changed: start a new run/state directory")
         self.records.put_once("runtime/config", {"digest": fingerprint, "run_id": self.run_id})
-        self.records.put_once("runtime/kernel", {"version": "simple-os/2"})
+        kernel = self.records.get("runtime/kernel")
+        if kernel and kernel[1].get("version") != "simple-os/3":
+            raise RuntimeError("Runtime authority/residency changed: use original source or fresh state")
+        self.records.put_once("runtime/kernel", {"version": "simple-os/3"})
+        from ..contracts import ProcessSpec
+
+        for _, _, process in self.records.scan("process/"):
+            self.process_policy.register(ProcessSpec.model_validate(self.records.get(process["spec_ref"])[1]),
+                                         self.config.role_bindings.get(process["role"]))
         for name in sorted(set(self.config.role_bindings.values())):
             endpoint = getattr(self.config, name)
             cls = (
@@ -438,6 +449,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
             raise ValueError("Unknown grant or budget account")
         if request.limits != self.config.limits:
             raise ValueError("Operation limits differ from the pinned or inherited process grant")
+        self.process_policy.dispatch(request, process[1])
         started = process[1].get("started_at")
         if started:
             cutoff = datetime.fromisoformat(started.replace("Z", "+00:00")) + timedelta(milliseconds=request.limits.max_wall_time_ms)

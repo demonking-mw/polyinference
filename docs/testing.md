@@ -16,9 +16,9 @@ and adversarial execution schedules. It covers provider protocols, workspace
 contracts, setup/branch handling, brokered tools, publication/replay, steering,
 UI exports and cost accounting without requiring live provider credentials.
 
-The OS validation includes the full agent/UI/provider regression suite, the
-four-worker failure/drain/replan scenario, restart recovery and a real complete
-Codex coding run on macOS. Results and platform limits are recorded in the
+Historical OS validation includes agent/UI/provider regressions, the four-worker
+drain/replan scenario, restart recovery and a small Codex coding run on macOS.
+Those results and platform limits are recorded in the
 [historical OS validation record](../design-docs/simplified-os/VALIDATION.md). Later
 Linux/WSL I/O, settings and source-handoff checks are recorded in the
 [I/O completion report](../development-docs/io-safety-verification-2026-10-20.md),
@@ -26,10 +26,25 @@ with the ordering and limits of its full/focused runs. Neither record proves
 physical local-serving performance. Earlier agent-only WSL evidence remains in
 the [agent validation record](../design-docs/implementation/VALIDATION.md).
 
+The [current implementation record](../development-docs/reliability-implementation-2026-10-27.md)
+contains the new framework/qualification checks and their exact source limits.
+The historical [26 October integrated-tree audit](../development-docs/branch-integration-audit-2026-10-26.md#verification-record)
+recorded 585 passed, 5 baseline failures and 2 skips
+across a full run plus focused reruns, not one all-green suite. The separate
+[local Strata test](../development-docs/local-strata-live-test-2026-10-26.md) passed
+25 project tests but failed browser/product verification. Neither fixture counts
+nor historical live checks establish current end-to-end readiness.
+
+[Cloud recovery regressions](../tests/test_cloud_recovery.py) exercise actual
+controller dispatch to a fixture cloud worker, quota immunity, shared accounts/
+deadlines, transitive pending-plan rewiring, finite attempts and hard blockers.
+They establish policy behavior, not live model convergence or product acceptance.
+
 ## Documentation checks
 
 ```bash
 python scripts/project_docs.py --check
+python scripts/settings_docs.py --check
 python -m pytest tests/test_project_docs.py -q
 ruff check scripts/project_docs.py tests/test_project_docs.py
 ```
@@ -39,4 +54,8 @@ Add meaningful behavioral regressions when changing runtime guarantees. Choose
 focused checks for the affected layer and record limits; historical results do
 not count as today's verification. Update related module, settings, design and
 usage docs plus FIXES.md in the same task. See [maintenance](maintenance.md).
+
+Use the [qualification harness](guides/qualification.md) for three fresh small
+workflows plus a settled interruption/resume. Scripted fixture results and real
+model/browser qualification must be reported separately, with source/profile pins.
 

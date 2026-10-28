@@ -170,6 +170,29 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0118](#fix-0118) | 2026-10-23 | Add explicit endpoint profiles, generic warm-up and timing inspection |
 | [FIX-0119](#fix-0119) | 2026-10-23 | Move workspace scope errors to the public agent/OS port |
 | [FIX-0127](#fix-0127) | 2026-10-26 | Integrate reliability fixes into the simple OS branch |
+| [FIX-0128](#fix-0128) | 2026-10-26 | Establish real local Strata setup and mixed-lane capacity evidence |
+| [FIX-0129](#fix-0129) | 2026-10-27 | Correct documentation drift and assess retained workflow reliability |
+| [FIX-0130](#fix-0130) | 2026-10-27 | Explain long-run stopping rules and management qualification gates |
+| [FIX-0131](#fix-0131) | 2026-10-27 | Verify preserved cloud-resolution fixes and distinguish review from repair |
+| [FIX-0132](#fix-0132) | 2026-10-27 | Make local stalls transfer to bounded cloud coding and narrow planner assignments |
+| [FIX-0133](#fix-0133) | 2026-10-27 | Plan remaining reliability fixes by ownership and map historical failure coverage |
+| [FIX-0134](#fix-0134) | 2026-10-27 | Enforce static process data/allocation policy and uniform limits |
+| [FIX-0135](#fix-0135) | 2026-10-27 | Retain paused residency until explicit safe hibernation |
+| [FIX-0136](#fix-0136) | 2026-10-27 | Preserve bounded worker state and condition response repair on real errors |
+| [FIX-0137](#fix-0137) | 2026-10-27 | Retarget unstarted recovery consumers without new resource accounts |
+| [FIX-0138](#fix-0138) | 2026-10-27 | Add reproducible workflow qualification and physical-attempt metrics |
+| [FIX-0139](#fix-0139) | 2026-10-27 | Validate maintained HTML/settings and correct smoke/baseline fixtures |
+| [FIX-0140](#fix-0140) | 2026-10-27 | Remove conflicting native startup effort from the UI preset |
+| [FIX-0141](#fix-0141) | 2026-10-27 | Bound replacement host drivers by the original account deadline |
+| [FIX-0142](#fix-0142) | 2026-10-27 | Preflight browser qualification in the actual check environment |
+| [FIX-0143](#fix-0143) | 2026-10-27 | Trigger qualification interruption after settled patch operations |
+| [FIX-0144](#fix-0144) | 2026-10-27 | Include direct native worker effects in physical job reporting |
+| [FIX-0145](#fix-0145) | 2026-10-27 | Keep bounded worker-state eviction replay idempotent |
+| [FIX-0146](#fix-0146) | 2026-10-27 | Keep endpoint probing compatible with mandatory placement policy |
+| [FIX-0147](#fix-0147) | 2026-10-27 | Prepare the scheduled real-local Minecraft test without early inference |
+| [FIX-0148](#fix-0148) | 2026-10-28 | Record the scheduled live result and preserve checked partial delivery |
+| [FIX-0149](#fix-0149) | 2026-10-28 | Isolate Minecraft live failures against frozen source and canonical evidence |
+| [FIX-0150](#fix-0150) | 2026-10-28 | Verify no-edit task necessity and trace current context and worker-state behavior |
 
 
 ## Entry template
@@ -6358,3 +6381,900 @@ historical runs remain on their pinned source. Setup/provider credentials, accep
 revisions U01–U04 and future-work proposals require no behavior edit: no new
 provider/authentication flow or repair of those unrelated gaps is claimed. Earlier
 fix entries and the separate execution-profile worktree remain unchanged.
+
+<a id="fix-0128"></a>
+## FIX-0128 — 2026-10-26 — Establish real local Strata setup and mixed-lane capacity evidence
+
+Status: configuration/investigation complete; product test failed; no framework implementation changed.
+Related: [FIX-0127](#fix-0127), [FIX-0117](#fix-0117), [FIX-0118](#fix-0118),
+and [the live investigation](local-strata-live-test-2026-10-26.md).
+
+### Problem
+
+The user requested one autonomous real local-model Minecraft test after the merge,
+with Strata, the installed Qwen IQ1_M, 64K context and batch 1, preserving uncommitted
+source for review. Native planning stopped twice before provider submission despite
+working authentication and local inference readiness.
+
+### What was wrong
+
+The run's shared input ceiling was initially sized for the local lane. Native
+review required 54,085 then 103,227 conservative bytes, exceeding 49,152 then 98,304.
+Current native model metadata permits a larger endpoint; this was setup capacity,
+not an authentication failure. Local workers also stalled amid repeated reads,
+invalid action JSON and conflicting create writes. The observed context omissions
+and low-bit model are possible contributors, not isolated proven causes.
+
+### How it was fixed
+
+Configured the actual installed qwen3.8-flash-next-coder-iq1_m at 65,536 server
+context with one request/batch group, verified Codex/local readiness, and restored
+an exited foreground server through its supported owned-runtime interface.
+Fresh attempt 3 uses native 500,000/shared 400,000, below the cached 95% effective
+window with 16,384 output headroom. Local input remains 49,152 conservative bytes.
+Previous states, source, limits and journals remain unchanged. Isolated repository
+mode and conflict/hash-checked provisional export preserve the user's unborn
+pi-dev branch without commits. Configuration guidance and this evidence record
+are documentation changes; no transport, context or agent implementation fix is
+claimed. The final run paused at 19:43:30 Toronto, exit 2, with no runnable tasks
+after local locomotion/menu and their bounded recoveries stalled. Private failed
+source remains separate. The user target holds only the checked partial export.
+
+### Design principle enforced or reconstructed
+
+Endpoint metadata, configured limits, prepared bytes and actual provider capacity
+are distinct facts. New setup cannot rewrite old program pins or replenish linked
+recovery allowances. The agent owns task allocation/acceptance and Git policy; the
+OS owns generic effects, certainty and admission. A tested partial source milestone
+or private runtime commit is not accepted gameplay or a user-branch commit.
+
+### Verification
+
+Real local and Codex probes passed; Strata reports the requested model, 65,536
+context, serving/requested concurrency 1 and prompt-and-validate structured output.
+No Haiku or simulation was used. Baseline 11 tests passed; the native storage
+recovery and final independent exported-tree rerun passed 25. Final prerequisites
+and six-file syntax checks passed. Actual browser control checks still show an
+unplayable canvas and no menus; a final-private menu snapshot also failed its real
+DOM module probe. No game acceptance is claimed. All 179 physical local generations
+and 13 validation failures remain accounted, with zero uncertain effects. Linked
+recoveries retained original accounts/deadlines and max depth 1. Supported CLI/UI
+exports and cumulative/private review diffs preserve partial provenance. Physics
+attempts retained no net source delta; menu recovery retained the unchanged private
+shell. Owned services were stopped and source remains uncommitted. Documentation
+generation/check passed
+for 298 files / 128 feature/doc leaves; Git whitespace checks passed. Earlier full
+framework-suite results are historical, not rerun for these documentation changes.
+
+<a id="fix-0129"></a>
+## FIX-0129 — 2026-10-27 — Correct documentation drift and assess retained workflow reliability
+
+Status: documentation corrected and history investigated; no application/OS implementation changed.
+Related: [FIX-0080](#fix-0080), [FIX-0094](#fix-0094), [FIX-0098](#fix-0098),
+[FIX-0117](#fix-0117), [FIX-0127](#fix-0127), [FIX-0128](#fix-0128).
+Report: [documentation and cross-run reliability audit](documentation-and-reliability-audit-2026-10-27.md).
+
+### Problem
+
+The user requested a documentation compliance/correctness/concision audit and a
+manager-level review of retained runs. The tree passed, but module navigation,
+settings explanations and verification claims lagged behind the reliability merge.
+
+### What was wrong
+
+Link/ownership checks establish structure, not prose accuracy, responsibility
+quality, length or all standalone HTML links. Merge appendices duplicated source
+descriptions while module indexes and nested settings remained incomplete.
+Guidance confused the 32000 hard output ceiling with the fresh 4096 raw target,
+described native startup low effort while turns send medium, and retained stale
+resume-overlay and whole-run-pause descriptions. This recurs after FIX-0094:
+structural regression coverage still cannot detect semantic overview drift.
+These are documentation ownership defects; suspected implementation changes are
+separately reported rather than adopted as new design or silently implemented.
+
+### How it was fixed
+
+Updated module ownership/protocol/retry/inspection guides, settings reference,
+setup/testing, current configuration/recovery/UI/tester routes and maintenance
+limits. Split checks and agent reliability into focused guides with defaults,
+bounds and linked invariants/tests. Repaired archived graph reference URLs while
+preserving layout, behavior and historical provenance. Updated JSON navigation,
+generated HTML and development/issue indexes. Refreshed retained AGENTS knowledge.
+
+Added the linked report comparing earlier Haiku incidents and recent real-Qwen
+tests: containment, diagnostics and explicit recovery improved, while task
+convergence and browser/product delivery remain unproven. Different models,
+baselines/configurations and attempts prevent a controlled overall speed trend.
+The report preserves native effort, documentation-checker and legacy-smoke code
+follow-ups, existing runtime gaps and baseline failures as unimplemented work.
+Original saved runs, historical FIX bodies and pre-existing local work are retained.
+
+### Design principle enforced or reconstructed
+
+Documentation must explain effective behavior and its owning layer, not merely
+link every source file. Preserve agent task/Git/memory/acceptance policy, generic
+OS authority/accounting/certainty and provider execution boundaries. Distinguish
+request targets from ceilings, attempted work from accepted contributions, current
+checks from historical evidence, and bounded failure containment from successful
+product delivery. Preserve older evidence and explicitly correct later summaries.
+
+### Verification
+
+Documentation generation and --check passed for 303 files / 133 feature/doc leaves;
+all 20 existing documentation-tool tests passed. Offline schema/default and five
+example-validation checks, archived-link/graph-data preservation, source/test
+baseline hashes, earlier FIX-body preservation, focused-guide lengths and task
+patch whitespace were checked. The report records reviewed adjacent guides and
+remaining tooling/runtime limits. Existing local FIX-0128/configuration/navigation
+edits are preserved, not claimed as newly implemented work. Two concurrently added
+workflow-readiness reports were registered without claiming their probes/authorship.
+No live provider, historical-run execution, game repair, full runtime suite,
+commit or push occurred.
+
+<a id="fix-0130"></a>
+## FIX-0130 — 2026-10-27 — Explain long-run stopping rules and management qualification gates
+
+Status: investigation/report complete; recommendations proposed; no implementation changed.
+Related: [FIX-0127](#fix-0127), [FIX-0128](#fix-0128), [FIX-0129](#fix-0129).
+Report: [meeting brief](workflow-readiness-brief-2026-10-27.md) and
+[engineering analysis](workflow-readiness-analysis-2026-10-27.md).
+
+### Problem
+
+The user needs a senior meeting report because long-running workflows have not
+finished. Literal stopping conditions, likely causes and agent/OS responsibilities
+must be clear enough to choose engineering work and a meaningful qualification gate.
+
+### What was wrong
+
+Request success, grammar validity, novelty and product completion can be conflated.
+Reviewed October 24–26 Minecraft runs did not reach accepted end-to-end delivery,
+despite finite subtask successes. The latest final stop was worker stagnation and
+exhausted semantic recovery, after two corrected native input-ceiling stops. Saved
+history is not necessarily visible/useful next-call memory. More precise module
+contracts did not consistently produce smaller tasks or effective recovery.
+
+### How it was fixed
+
+Produced a read-aloud brief and source-grounded analysis of context/memory,
+cutoffs versus malformed JSON and clipped diagnostics, distinct retry/correction/
+stall counters, dependency and role policy, resource lineage, unknown execution,
+source authority, acceptance and declared U01–U04 OS gaps. Added proposed local
+qualification, bounded worker state, evidence-based recovery and integrated gates.
+These are recommendations, not implemented or validated repairs. No agent, runtime,
+provider, fixture, configuration or game behavior changed; no model was dispatched.
+The concurrent FIX-0129 documentation audit and all other edits were preserved,
+not claimed as authored here. It also registered these new report paths in the tree.
+
+### Design principle enforced or reconstructed
+
+The agent includes host controller code and owns task semantics, grammar, canonical
+memory, progress and recovery strategy. The generic OS owns execution facts,
+derived context views, accounting and safe effects; providers own generation.
+Failure containment is distinct from productive completion. Improve continuity and
+recovery without refilling accounts or weakening source/uncertainty guarantees.
+
+### Verification
+
+Inspected current source at 5fe92f3, saved reports and operation records read-only.
+Eleven automatic local schema follow-ups used unchanged payloads and no supplied
+replacement; nine became schema-valid and two failed again. This supports format
+resampling, not task repair. Original 179-generation/13-validation-failure counts
+and empty physics/unchanged menu deltas remain intact. No live run or old state was
+resumed. Documentation/navigation checks passed for 303 files / 133 feature/doc
+leaves, and whitespace checks passed; exact results are in the review evidence. No full framework
+suite or new model result is claimed. Project knowledge remains in AGENTS.md and
+was read back. Existing execution guides, setup/authentication and onboarding rules
+remain applicable; this report does not change their contracts or claim OS gaps fixed.
+
+<a id="fix-0131"></a>
+## FIX-0131 — 2026-10-27 — Verify preserved cloud-resolution fixes and distinguish review from repair
+
+Status: history/source/data investigation; no implementation changed.
+Related: [FIX-0127](#fix-0127), [FIX-0130](#fix-0130), FIX-0125/0126 in the
+[implementation log](../design-docs/implementation/FIXES.md).
+
+### Problem
+
+The user recalled a cloud-resolution fix for stalls and asked whether it existed
+or was overwritten, requesting an enhancement to the management report.
+
+### What was wrong
+
+Cloud senior review, configurable read-only diagnosis and cloud coding recovery
+were easy to conflate. The prior report also needed to distinguish a quota's
+ability to override roles from proof of an override in this actual run. The saved
+final replacements were proposed as local workers by the cloud senior itself.
+
+### How it was fixed
+
+Verified that 309713c (checking agent), 073f523 (FIX-0125 exception review) and
+cb2fae5 (FIX-0126 stagnation) are ancestors of 5fe92f3. Diagnosis source is identical
+to the fix tip. The pre-merge stagnation graph already bypassed diagnosis and
+parked for senior review; default diagnosis role was worker from its introduction.
+Recorded all four final stalls reaching cloud senior review, configured cloud
+checking agents with zero diagnosis records, and requested/allocated replacement
+roles. The earlier storage recovery was proposed and issued as a cloud specialist.
+The separate unmerged diagnostic execution profile is unrelated to automatic rescue.
+
+Enhanced both management reports and clarified the worker guide. A new explicit
+cloud-first repair policy is proposed, not implemented. No runtime code, model,
+configuration, test fixture, historical record, other worktree or budget changed.
+
+### Design principle enforced or reconstructed
+
+Trace actual control flow and pre-allocation intent before attributing a failure
+to a merge or allocator. Cloud review is a decision boundary; repair execution
+requires an explicit scoped task. New agent recovery policy must preserve provider
+constraints, source authority, original accounts/deadlines and known-effect guards.
+
+### Verification
+
+Read-only Git ancestry/blob/graph comparisons and saved SQLite/proposal/backend
+inspection support the finding of no overwritten cloud-resolution mechanism.
+Machine-local cloud-resolution-audit-2026-10-27.json retains the evidence. Report
+links/navigation and whitespace checks cover documentation maintenance; no new
+model call, old-run resume, live recovery test or full framework suite is claimed.
+The report's proposed cloud-first execution policy remains unverified. Current
+project knowledge is refreshed/read back in AGENTS.md; adjacent runtime/context,
+provider and recovery contracts remain unchanged.
+
+<a id="fix-0132"></a>
+## FIX-0132 — 2026-10-27 — Make local stalls transfer to bounded cloud coding and narrow planner assignments
+
+Status: implemented in the uncommitted working tree; fixture verification complete;
+fresh live qualification remains pending. Related: [FIX-0127](#fix-0127),
+[FIX-0130](#fix-0130), [FIX-0131](#fix-0131), implementation FIX-0125/0126.
+
+### Problem
+
+The user observed coarse local assignments, repeated local failures without cloud
+implementation takeover, excessive stalls and planner assumptions about unsupported
+OS tools. The latest Minecraft attempt paused with no runnable tasks despite
+43/256 and 87/256 calls used by the failing lineages. Cloud review alone did not
+produce cloud coding. The top current-version issue links the combined
+[requirements and implementation record](local-task-granularity-and-cloud-recovery-2026-10-27.md).
+
+### What was wrong
+
+The agent bounded semantic depth without a dedicated cloud implementation route.
+Normal task-share rounding could demote a proposed specialist repair. A valid
+empty/deferred plan could abandon recoverable local work, while broad task and
+capability instructions encouraged unsuitable assignments. This is application
+policy; generic OS settlement/accounting was not the missing coding decision.
+
+### How it was fixed
+
+Added agent-owned cloud eligibility/normalization before proposal validation,
+`max_cloud_recoveries` (default one, range zero to three), lineage counters,
+failure/changed-condition/source context and quota protection. Eligible clean local
+retry/defer/stop/omitted decisions become actual cloud-specialist coding tasks even
+after ordinary semantic depth is spent. Pending ordinary consumers are cloned and
+rewired transitively; started contracts stay pinned. Conflicting deltas remain
+preserved while automatic repair starts at the current base. Raw model proposals
+remain separate from effective decisions/adjustments; final empty-queue blockers
+state why cloud recovery is unavailable.
+
+Planner instructions require one behavior/focused check per local task and expose
+actual tool inventory: no browser/MCP/persistent service API or native-tool bypass.
+Compact task contract/lineage review views avoid repeating dispatch/base/workspace
+envelopes while retaining canonical records, specs, source pins and constraints.
+Updated primary guides, configuration/design references, historical report pointers,
+navigation and project knowledge; the issue is first in current issues and linked
+at the top of the README. Preserved unrelated changes and all old live evidence.
+
+### Design principle enforced or reconstructed
+
+Cloud management, diagnosis and coding are distinct. Productive recovery is a
+bounded application intent, not permission to weaken OS enforcement. Every linked
+attempt inherits original calls/tokens/operations/grants/deadline. Unknown effects,
+explicit cancellation, published work, unavailable cloud and depleted physical
+resources remain blockers; cloud failure cannot bounce to local or reset counters.
+A role rename on the same backend is not a changed condition. Already-linked
+pending recovery supersession remains unsupported rather than resetting an account.
+Validated local and cloud recovery roles survive allocation and are revalidated
+before side effects. New policy uses
+fresh program/config/state pins; no preserved run was migrated or resumed.
+
+### Verification
+
+Latest results across 228 selected cases: 227 passed and one unchanged baseline
+100 ms provider-resume diagnostic failure. This combines group runs and targeted
+reruns; it is not an all-green full-suite claim. The groups returned 57 passes;
+49 passes/two UI poll timeouts; and 116 passes/one serial-policy timeout/one known
+baseline failure. All three load-sensitive cases passed sequentially in 36.86
+seconds without changing their deadlines. Two final role/validation checks and
+six allocation/recovery checks passed; the duplicate ten-task case was interrupted
+while the main planning group completed that case successfully. Exact coverage,
+commands by source group and limits are in the linked implementation record.
+Early checks exposed prompt/context overhead and a multi-task review overflow;
+the prompt was compressed and task inputs projected without raising the default
+context limit. Actual cloud dispatch, shared accounts/deadlines, source handoff,
+bounded failure and transitive pending replanning are covered. Ruff, whitespace,
+wheel contents and documentation generation/check passed (306 files / 134 leaves).
+The initial offline build lacked setuptools; isolated temporary build dependencies
+resolved packaging without modifying the active environment. No live model or
+Minecraft qualification is claimed. Runtime boundary, endpoint/authentication,
+setup and generic context/uncertainty contracts were reviewed; they need no policy
+change because tools, grants, source authority and original accounts stay intact.
+Project knowledge was saved/read back in AGENTS.md and docs/project-memory.md.
+
+<a id="fix-0133"></a>
+## FIX-0133 — 2026-10-27 — Plan remaining reliability fixes by ownership and map historical failure coverage
+
+Status: investigation and proposed implementation report; no fixes implemented.
+Related: [FIX-0127](#fix-0127), [FIX-0128](#fix-0128), [FIX-0129](#fix-0129),
+[FIX-0130](#fix-0130), [FIX-0131](#fix-0131), [FIX-0132](#fix-0132).
+Report: [run reliability implementation plan](run-reliability-implementation-plan-2026-10-27.md).
+
+### Problem
+
+The user requested a scheduled detailed plan for the latest run's executive
+directions, explicit OS versus agent implementation ownership, and an assessment
+against earlier failure records. The request explicitly excluded implementation.
+
+### What was wrong
+
+Older recommendations and current uncommitted cloud takeover can be conflated.
+Cloud review did not imply cloud coding in the saved failing replacements, while
+fixture-tested policy does not establish live convergence. Historical provider,
+context, planning, source reuse, semantic and acceptance failures need different
+owning-layer changes rather than one generalized retry or larger budget.
+
+### How it was fixed
+
+Added a report with direction-to-package traceability, detailed proposed designs,
+current status/paths, tests/invariants/limits, staging and qualification gates.
+Separated agent ledger/planning/cloud/repair/acceptance from generic OS context,
+data-policy/allocation/limit/residency enforcement, provider setup and developer
+tooling. Mapped twenty failure/gap families, explicitly identifying prospective
+gaps and partial/out-of-scope coverage. Inspected historical reports and current
+source, and queried latest attempt-02/03 SQLite records read-only. Reproduced
+49+130 local physical attempts, 2+11 schema failures and 38+107 local-result
+history omissions; confirmed zero diagnosis records and zero saved uncertain effects,
+requested/issued local replacement roles, root account links and 43/87 calls used.
+Added navigation, current-issue/investigation pointers and a retained AGENTS note.
+All pre-existing implementation/documentation changes remain their original work.
+
+### Design principle enforced or reconstructed
+
+Productive recovery is application policy, including the host controller; the OS
+must enforce generic authority, data constraints, accounting, admission and effect
+certainty. Source retention, valid grammar, novel evidence and real product
+completion are separate. Existing cloud takeover must be qualified rather than
+reimplemented from an older report. A plan covering recurring mechanisms is not
+proof that most historical failed products would complete. No implementation,
+live model call, old-run resume, commit or push is authorized by this report.
+
+### Verification
+
+Documentation generation and `--check` both passed for 307 maintained files /
+135 feature/doc leaves; `git diff --check` and the new report's whitespace review
+passed. Preservation hashes match for all 133 snapshotted implementation, test,
+example and script files, including pre-existing uncommitted work, and all twenty
+selected historical database/journal files. AGENTS.md's retained project note was
+read back. No framework suite or live workload was rerun; historical test/live
+results remain attributed to their original reports. Adjacent execution, setup
+and ownership guides require no behavioral edit for a planning report. The report
+uses scoped source/history evidence, not an exhaustive revalidation of all prior
+fixes or a statistical counterfactual completion estimate.
+
+<a id="fix-0134"></a>
+## FIX-0134 — 2026-10-27 — Enforce static process data/allocation policy and uniform limits
+
+Status: implemented; final combined verification recorded in the [stage record](reliability-implementation-2026-10-27.md).
+Related: FIX-0072 U01–U03, [FIX-0127](#fix-0127), [FIX-0133](#fix-0133).
+
+### Problem
+Registered mandatory data/distribution/limit declarations could differ from actual execution authority.
+### What was wrong
+Generic registration stored declarations without checking them; dispatch used global limits and role bindings.
+### How it was fixed
+Added runtime/process_policy.py registration/dispatch checks, optional run-wide data_policy, declared-location/classification/destination validation and static hard-rule rejection. Unequal process/runtime limits reject. Recovery preserves data policy as well as grants/limits. Coding defaults declare a real static harness contract. New runtime pin simple-os/3 requires fresh state.
+### Design principle enforced or reconstructed
+The OS honors or rejects generic mandatory constraints before effects; lane/URL names do not attest constrained placement. Application cloud staffing remains separate.
+### Verification
+Five new registration-denial regressions pass; intermediate generic fixtures exposed placeholder destination/role declarations and were corrected, retaining non-coding execution coverage. Combined/final results and limits remain in the stage record; no preserved run is migrated.
+
+<a id="fix-0135"></a>
+## FIX-0135 — 2026-10-27 — Retain paused residency until explicit safe hibernation
+
+Status: implemented; final combined verification in the [stage record](reliability-implementation-2026-10-27.md).
+Related: U04 in FIX-0072, [FIX-0127](#fix-0127).
+
+### Problem
+A completed paused driver silently stopped counting against max_workers.
+### What was wrong
+Capacity counted unfinished Python tasks rather than durable logical residency.
+### How it was fixed
+Added durable process-residency admission generations, explicit hibernate after settlement/fencing, release on terminal finish and readmission on start. Clean process parking explicitly hibernates; unsettled effects/permits/reservations prevent release. The ProcessPorts boundary exposes the generic operation.
+### Design principle enforced or reconstructed
+Logical residency and provider physical holds are separate. A stopped driver or lost connection never proves remote termination or frees unknown capacity.
+### Verification
+New paused-resident/hibernation/replay regression passes. Generic deadline fixtures now retain uniform authority and explicitly hibernate before starting another worker. Restart/unknown-effect combined checks remain part of final verification.
+
+<a id="fix-0136"></a>
+## FIX-0136 — 2026-10-27 — Preserve bounded worker state and condition response repair on real errors
+
+Status: implemented; final combined verification in the [stage record](reliability-implementation-2026-10-27.md).
+Related: [FIX-0047](#fix-0047), [FIX-0058](#fix-0058), [FIX-0130](#fix-0130).
+
+### Problem
+Optional history omission could remove current digests/errors; immediate schema retries reused input without the new error.
+### What was wrong
+Shared senior memory was not a bounded automatic worker fact ledger. The awaited response retry window had no production owner feedback builder.
+### How it was fixed
+Added agent/worker_memory.py with an 8192-byte source/generation-bound projection, trajectory/evidence references, recent digests/errors and next-step guidance. Worker inputs include root resource state/finishing reserves. A generic synchronous response-repair callback offers agent-owned error feedback through the existing guarded window; callback failures remain diagnostics. Agent/state pins advance to agent-7/2.6.
+### Design principle enforced or reconstructed
+The application owns canonical task semantics; the OS owns physical validation attempts, bounds and immutable pins. No recursive repair allowance or execution of partial output is introduced.
+### Verification
+New ledger invalidation/idempotence and real error-conditioned two-attempt tests pass. Existing agent/cloud focused cases pass in intermediate runs. Context/retry/native combined checks and live limitations are recorded separately in the stage record.
+
+<a id="fix-0137"></a>
+## FIX-0137 — 2026-10-27 — Retarget unstarted recovery consumers without new resource accounts
+
+Status: implemented; final combined verification in the [stage record](reliability-implementation-2026-10-27.md).
+Related: [FIX-0088](#fix-0088), [FIX-0089](#fix-0089), [FIX-0132](#fix-0132).
+
+### Problem
+Replacing a failed provider could not rewire an already-linked pending recovery consumer safely.
+### What was wrong
+Blind cloning would drop the consumer's predecessor and mint a fresh allowance; the earlier safe implementation rejected the shape.
+### How it was fixed
+Review exposes eligible pending recovery lineage. Replanning retargets its original exception to the new pending assignment, preserving contract/source/predecessor and original depth/counts. It rejects an admitted/started consumer or effects, and publication atomically updates retirement/replacement records. Paired behavior/focused_check and declared check required_paths also make task completion closure explicit.
+### Design principle enforced or reconstructed
+Changing pending dependency identity does not renew authority. Started contracts remain immutable; cloud coding stays an application decision subject to OS data policy.
+### Verification
+The previous unsafe-clone negative fixture remains applicable. Positive transitive retarget, restart and account-preservation coverage is tracked in the stage record; no live convergence claim follows from planner guidance.
+
+<a id="fix-0138"></a>
+## FIX-0138 — 2026-10-27 — Add reproducible workflow qualification and physical-attempt metrics
+
+Status: implemented; narrow offline/live gates passed; exact framework results/limits in the [stage record](reliability-implementation-2026-10-27.md).
+Related: [FIX-0086](#fix-0086), [FIX-0130](#fix-0130), [FIX-0133](#fix-0133).
+
+### Problem
+Unit/build success and generation activity did not demonstrate integrated product completion.
+### What was wrong
+There was no repeatable short workflow/settled-resume gate with independent checks and identical source/profile pins.
+### How it was fixed
+Added scripts/qualify_workflow.py corpus/manifests/independent checks and scripts/browser_check.mjs real DOM entry/input/pause/save/reload. Agent qualification metrics feed live/saved monitor data without double-counting logical/physical usage. Four fresh disposable trials include one ordinary settled run-level resume. The fixture provider is explicitly distinct from live inference.
+### Design principle enforced or reconstructed
+Useful completion needs actual behavior on accepted source. A finite browser check owns its server/process cleanup; it does not invent browser/MCP capabilities for the model.
+### Verification
+Initial fixture execution exposed a missing disposable Git baseline and retained that failed evidence; the harness now initializes its own disposable baseline. Final offline/live/browser results must be read from the stage record, not inferred from the presence of the harness.
+
+<a id="fix-0139"></a>
+## FIX-0139 — 2026-10-27 — Validate maintained HTML/settings and correct smoke/baseline fixtures
+
+Status: implemented; final results in the [stage record](reliability-implementation-2026-10-27.md).
+Related: [FIX-0080](#fix-0080), [FIX-0129](#fix-0129).
+
+### Problem
+Green Markdown/tree checks missed maintained HTML anchors; schema/default drift and legacy fixture assumptions obscured real verification status.
+### What was wrong
+Validation omitted most rendered documentation HTML; live smoke inherited in-place mode despite asserting unchanged source. Deadline/pacing fixtures raced preparation and simulator assertions expected an obsolete 32000 target.
+### How it was fixed
+Extended maintained documentation HTML/anchor validation with explicit UI/template/upstream boundaries. Added exact settings-schema/default generation/check. Smoke explicitly selects isolated mode. Fixtures synchronize submitted/provider events, bound lookup independently within a usable deadline and assert the configured 4096 target. Production deadlines and unknown-effect rules are unchanged.
+### Design principle enforced or reconstructed
+Tooling must test its actual contract and retain adverse evidence; structural/schema checks do not prove prose or product semantics.
+### Verification
+Documentation generation passes at the current inventory. New HTML/default regressions, original baseline cases and final documentation/package results are recorded in the stage record. No real smoke/model call is claimed merely from repairing its mode.
+
+<a id="fix-0140"></a>
+## FIX-0140 — 2026-10-27 — Remove conflicting native startup effort from the UI preset
+
+Status: implemented; verification in the [stage record](reliability-implementation-2026-10-27.md).
+Related: [FIX-0129](#fix-0129), [FIX-0133](#fix-0133).
+
+### Problem
+UI launcher selected low reasoning effort while the actual native turn used Endpoint.reasoning_effort, default medium.
+### What was wrong
+Two configuration surfaces implied different effective settings.
+### How it was fixed
+Removed the UI launcher's low override; explicit endpoint effort remains the native turn authority. Existing user-supplied commands are retained; no best-effort/model-performance result is inferred.
+### Design principle enforced or reconstructed
+Report configured and actually sent provider settings faithfully. Correcting configuration ambiguity is separate from improving model competence.
+### Verification
+Source/fixture native turn checks and UI configuration regressions are part of the combined verification. No new reasoning-level benchmark is claimed.
+
+<a id="fix-0141"></a>
+## FIX-0141 — 2026-10-27 — Bound replacement host drivers by the original account deadline
+
+Status: implemented; final combined verification in the [stage record](reliability-implementation-2026-10-27.md).
+Related: [FIX-0089](#fix-0089), [FIX-0127](#fix-0127), [FIX-0137](#fix-0137).
+
+### Problem
+A linked replacement with a newer process start could keep its host driver running after its inherited root deadline, even though new effects were already prohibited.
+### What was wrong
+The generic driver timer used only the process start and wall limit. Existing account inheritance and dispatch coverage did not test a continuation waiting without submitting an effect.
+### How it was fixed
+Processes.start takes the earlier of its own cutoff and the durable process-account deadline. The regression uses a long child wall limit and a near-expired inherited deadline with a non-returning continuation.
+### Design principle enforced or reconstructed
+Recovery keeps the original account and deadline for host execution as well as effects. A new process identity cannot renew time authority.
+### Verification
+The new regression failed before the change and passed afterward; the selected deadline/restart/unknown-effect tests passed (3 tests). The full suite and final qualification results are recorded in the stage record. No preserved run was resumed or rewritten.
+
+<a id="fix-0142"></a>
+## FIX-0142 — 2026-10-27 — Preflight browser qualification in the actual check environment
+
+Status: implemented; qualification results in the [stage record](reliability-implementation-2026-10-27.md).
+Related: [FIX-0086](#fix-0086), [FIX-0138](#fix-0138).
+
+### Problem
+The first live qualification preflight launched Chromium, but its configured worker check could not locate Playwright.
+### What was wrong
+The verification harness inherited dependency variables that the generic OS correctly removes from command environments. That preflight tested a different environment from actual checks.
+### How it was fixed
+Browser dependency and Chromium paths are pinned explicitly in command argv. Preflight uses the same runtime tool_environment as configured checks. Cancellation retains a failed qualification result and does not continue new trials. No OS environment filtering or source grants were weakened.
+### Design principle enforced or reconstructed
+Qualification must exercise the actual execution contract. Infrastructure readiness cannot depend on hidden supervisor state or be inferred from an unrelated successful launch.
+### Verification
+Through actual OS configured checks, the valid fixture passed and bad-save/missing-export fixtures failed in real Chromium. The aborted live trial remains preserved; its owned service drained with zero pending requests. New live qualification uses fresh state and a separate service instance. Exact results and limits are in the stage record.
+
+<a id="fix-0143"></a>
+## FIX-0143 — 2026-10-27 — Trigger qualification interruption after settled patch operations
+
+Status: implemented; live continuation verification in the [stage record](reliability-implementation-2026-10-27.md).
+Related: [FIX-0138](#fix-0138), [FIX-0142](#fix-0142).
+
+### Problem
+Four live small workflows completed and passed independent Chromium checks, but the intended fourth interruption did not happen.
+### What was wrong
+The qualification hook recognized only files.write; the actual worker correctly used files.patch. The gate stayed red because there was no verified resume.
+### How it was fixed
+The hook recognizes successful changed observations from files.write/patch/delete and source-changing shell commands. Reads and failed edits do not trigger interruption. A fresh fifth trial exercises the fault while the four successful ordinary trials remain preserved with identical runtime/model/resource pins.
+### Design principle enforced or reconstructed
+A successful product check cannot substitute for an unexecuted fault scenario. Test injection must follow actual settled effects and the gate must reject a missing continuation.
+### Verification
+The retained initial results show four passing product outcomes and a failed qualification gate. Mutation-selector regressions and the additional live settled-resume outcome are recorded in the stage record. No old trial source, accounts or acceptance checks are repaired by the supervisor.
+
+<a id="fix-0144"></a>
+## FIX-0144 — 2026-10-27 — Include direct native worker effects in physical job reporting
+
+Status: implemented; final reporting verification in the [stage record](reliability-implementation-2026-10-27.md).
+Related: [FIX-0138](#fix-0138), [FIX-0143](#fix-0143).
+
+### Problem
+The live resumed cloud task succeeded, but its task summary showed zero native jobs.
+### What was wrong
+The new summary selected inference-attempt rows only. Effectful native jobs deliberately bypass response retries and retain their physical result directly under effect/, so those jobs were omitted. Runtime execution, original accounts and provider records were intact.
+### How it was fixed
+Physical reporting selects retry-attempt rows when present, otherwise the direct model/native effect once, and still requires provider-submission evidence. Task lineage and live/saved summaries share that view. Qualification now also retains source archives/diffs, exact dependency versions and full stable profile/tool inventory for reproducibility.
+### Design principle enforced or reconstructed
+Count canonical physical work once, including jobs that cannot safely be response-replayed. Reporting repairs cannot create charges, change execution or rewrite historical journals.
+### Verification
+The regression proves direct native jobs are included and adding their retry rows cannot double-count them. Four selected metric regressions passed. The live cloud continuation has three confirmed direct worker jobs on its original account; corrected metrics are projected from retained journals separately from the original qualification results. Final suite/provenance checks are in the stage record.
+
+<a id="fix-0145"></a>
+## FIX-0145 — 2026-10-27 — Keep bounded worker-state eviction replay idempotent
+
+Status: implemented; final combined verification in the [stage record](reliability-implementation-2026-10-27.md).
+Related: [FIX-0136](#fix-0136).
+
+### Problem
+Replaying the same bounded worker projection after byte-limit eviction published an unnecessary new revision.
+### What was wrong
+The projection reused already-trimmed facts but reset eviction counts to zero. Earlier replay coverage exercised only views that needed no byte eviction.
+### How it was fixed
+Eviction counts accumulate within the same source/generation view and reset with source invalidation. A regression uses sixteen valid deeply nested paths to force real byte eviction, then requires identical facts and revision on replay.
+### Design principle enforced or reconstructed
+Derived bounded facts must replay idempotently, including their metadata; packing cannot invent new progress or erase evidence of omitted facts.
+### Verification
+The regression failed with eviction counts 9→0 before the fix. Focused replay and final-suite results are in the stage record. The previous full run was stopped after 219 passes so the final full run can use the exact corrected source. Live qualification views had zero byte evictions; no grants, budgets or accepted source were changed.
+
+<a id="fix-0146"></a>
+## FIX-0146 — 2026-10-27 — Keep endpoint probing compatible with mandatory placement policy
+
+Status: implemented; final affected-suite verification in the [stage record](reliability-implementation-2026-10-27.md).
+Related: [FIX-0134](#fix-0134), [FIX-0139](#fix-0139).
+
+### Problem
+The explicit artifact-only endpoint probe was rejected when the endpoint had unspecified placement metadata.
+### What was wrong
+The application probe built a mandatory location rule from endpoint.physical_location, which guesses from a URL. That declaration conflicted with the newly enforced unknown-location policy.
+### How it was fixed
+The probe declares its actual static protocol class and local binding, leaving placement unrestricted at process level. The copied run-wide DataPolicy remains mandatory and rejects incompatible or unknown location before submission. One-call/no-tools/no-Git bounds remain. Retry fixtures now declare their one-call limit before runtime registration; UI pin and user-brief assertions follow the new version and equivalent compact instructions.
+### Design principle enforced or reconstructed
+Callers must declare authority they can establish. Lane/URL guesses cannot satisfy mandatory placement, and changing a fixture request cannot alter a registered resource envelope.
+### Verification
+The full 651-case run returned 646 passes and five integration/compatibility failures. After fixes, all 73 affected lifecycle/retry/brief/UI cases passed, including unspecified/local/cloud probe metadata and two fail-closed constrained cases. The final 655-case inventory is covered by passing results across the full run and affected rerun; see the stage record. This is not presented as a single all-green full run.
+
+<a id="fix-0147"></a>
+## FIX-0147 — 2026-10-27 — Prepare the scheduled real-local Minecraft test without early inference
+
+Status: preparation/configuration only; the scheduled live outcome is pending.
+Related: [FIX-0128](#fix-0128), [FIX-0138](#fix-0138), [FIX-0146](#fix-0146).
+
+### Problem
+
+The user requested autonomous setup and a fresh Minecraft live test at 22:30
+America/Toronto, using the installed local IQ1_M model instead of Haiku and leaving
+changes uncommitted for morning review. Preparation started before that time.
+
+### What was wrong
+
+No new framework defect is established. The existing target has unborn pi-dev and
+untracked prior source; default in-place publication would conflict with the user's
+uncommitted-delivery requirement. Sandbox GPU visibility also differs from the host.
+
+### How it was fixed
+
+No application/OS implementation changed. Created a one-occurrence in-thread app
+heartbeat for 22:30 local and read back its saved schedule. Prepared the exact new
+prompt, isolated fresh-state agent configuration, real Strata 65536/one-slot/group
+configuration, technical check and execution handoff under the ignored local path
+`../testing/minecraft-v1-live-2026-10-27-2230/`. Retained 320 framework and twelve
+target-source hashes. Verified existing ChatGPT login and installed model component
+presence without exposing credentials. Refreshed retained project rules in AGENTS.md.
+
+### Design principle enforced or reconstructed
+
+Future execution authorization permits preparation without claiming an early live
+result. Agent Git/source/acceptance policy remains separate from generic OS authority,
+accounting and provider GPU scheduling. Preserve prior source, immutable attempts,
+original resources/deadlines and uncertain execution. Private isolated history must
+not become a commit on the user's branch; exported partial work is not acceptance.
+
+### Verification
+
+Codex login status reports ChatGPT authentication; host GPU inspection finds the
+16 GB RTX 3080 Laptop with no inference process. Strata inventory reports requested
+IQ1_M components present. Existing Python environment imports current source and
+`pip check` passes. Configuration/schema, launch-plan and documentation checks are
+recorded in the local preparation receipt. No model readiness request, server,
+live run, game change, framework suite, commit or push was performed in preparation.
+Setup, provider, configuration/export, lifecycle, reliability and implementation
+guides were reviewed; their existing interfaces remain applicable and need no edits.
+No maintained file/feature appeared or moved, so authored navigation is unchanged.
+Actual start, provider readiness, independent gameplay checks and final outcome
+must be recorded after the time gate; earlier qualification results remain historical.
+
+Execution handoff, 2026-10-27 22:38 Toronto: scheduled setup began after the 22:30
+wake-up; frozen current-source CLI started at 22:33:26.984356 local. Actual Strata
+metadata confirms IQ1_M, context 65536 and one requested/effective slot. Real local
+and Codex readiness passed; specialist setup completed successfully and initial
+planning is active. The target baseline remains unchanged/uncommitted. Host checks
+passed 25 tests; actual baseline Chromium still has zero controls/terrain rectangles
+and z=undefined. The finite baseline preview closed. The existing heartbeat now
+quietly monitors this already launched run every fifteen minutes, with duplicate
+launch forbidden; final export/behavior verification/cleanup and outcome are pending.
+Evidence and continuation live in the run's REPORT.md. No framework implementation
+or prior runtime state changed; this handoff does not claim product completion.
+
+Continuation handoff, 2026-10-27 23:42 Toronto: the first driver paused at 23:28:06
+on confirmed-stopped 4096-token output exhaustion, without uncertain effects or a
+development report. Supported exports, a database backup, resource records and
+private source were retained before one documented same-state CLI Resume at
+23:39:26. The worker's original identity/start/deadline remain; calls 52→55 and
+steps 90→95 verify no refill. Configuration/source pins and target hashes remain
+unchanged. The live report records the output/thinking-budget limitation and
+forbids identical exhausted recovery without a changed condition. This is testing
+and bounded continuation, not a framework fix or accepted gameplay claim.
+
+
+<a id="fix-0148"></a>
+## FIX-0148 — 2026-10-28 — Record the scheduled live result and preserve checked partial delivery
+
+Status: investigation/test completed; partial delivery, original product objective unmet.
+Related: [FIX-0147](#fix-0147), [FIX-0128](#fix-0128), [FIX-0132](#fix-0132), [FIX-0138](#fix-0138), [FIX-0144](#fix-0144).
+Evidence and exact review paths: [scheduled live investigation](minecraft-live-test-2026-10-28.md).
+
+### Problem
+
+The scheduled autonomous test needed a real local IQ1_M lane, actual Codex setup,
+long-run evidence and uncommitted morning delivery. Earlier unit/qualification
+success did not establish playable Minecraft or full original features through 2018.
+
+### What was wrong
+
+The original browser still used z against the x/y core. The fresh run improved
+entry/control/save behavior, but local tasks repeatedly stalled and needed bounded
+cloud coding. Its first pause was output exhaustion under the pinned 4096 raw target
+and thinking budget; the final loading recovery stopped on provider model capacity.
+No single model/quantization/context root cause is established. The application owns
+product convergence and browser integration; provider capacity is an external failure.
+The earlier small qualification gate covered narrower cases, not this full objective.
+
+### How it was fixed
+
+No framework implementation changed. Ran the exact prompt on a 320-file frozen copy
+of the dirty current source with fresh state, real Strata/Qwen 65536/one-slot serving
+and existing Codex login; no Haiku/simulation. Retained pre-resume exports, database
+and private source before one supported same-state continuation, with original worker
+identity/start/deadline and charged counters. Four automatic cloud coding recoveries
+completed; loading recovery failed on capacity and remained private/unreviewed.
+
+Supported final CLI/status/patch and full UI exports, exact reviewed/provisional
+source, private failed trees/diffs, canonical metrics and independent Chromium
+artifacts remain under the local run directory. After twelve original target hashes
+and new-path conflict checks, applied exact reviewed tree c24e088 uncommitted on
+unborn pi-dev. Six paths changed, including one new browser-entry test. No manual
+game implementation, model/config rewrite, budget refill, user commit or push occurred.
+Updated the investigation, issue/index/navigation pointers and retained AGENTS note.
+
+### Design principle enforced or reconstructed
+
+Task meaning, source reuse, acceptance and Git policy remain in the agent; generic
+execution certainty, grants and accounting remain in the OS; actual serving/capacity
+remain in providers. Keep execution, reviewed increments and full product acceptance
+distinct. Preserve immutable source/config pins, original root resources and failed
+private work. A useful partial delivery must not erase the failed live result.
+
+### Verification
+
+Final host Node checks passed all 44 tests. Real Chromium passed entry/movement,
+explicit window-blur, pause/timing, seed validation/determinism and thirteen save/
+storage assertions, including bytes surviving page reload. Repository API loading
+was a separate diagnostic; browser load/list and restored play are absent. Gravity
+and jumping are absent, and both text fields leak arrow input into movement. Native
+OS focus switching remains inconclusive in headless Chromium. Most requested
+Minecraft gameplay and UI remain unfinished; no final acceptance was attempted.
+
+Canonical final metrics report 280 submitted raw generations, 46 native jobs,
+26 response-validation failures and 214 raw context-omission receipts. Native jobs
+may contain multiple turns. The final NativeJobStopped effect is confirmed stopped;
+zero effects are uncertain. All five linked recoveries preserve predecessor/root,
+limits, deadlines and equal/narrower grants. Frozen source/config hashes match.
+Owned Strata stopped with exact owner/instance guards; previews/inhibitors ended.
+Documentation generation/check and whitespace checks passed. Adjacent setup/provider,
+configuration/export, reliability/qualification and boundary guides remain accurate;
+no interface change required edits. The full framework suite was not rerun for
+this investigation/documentation-only work. The one-time heartbeat was deleted.
+
+
+<a id="fix-0149"></a>
+## FIX-0149 — 2026-10-28 — Isolate Minecraft live failures against frozen source and canonical evidence
+
+Status: investigation complete; repairs proposed, no framework/game implementation changed.
+Related: [FIX-0148](#fix-0148), [FIX-0132](#fix-0132), [FIX-0136](#fix-0136), [FIX-0137](#fix-0137), [FIX-0144](#fix-0144).
+Detailed findings and proposed repair order: [failure isolation](minecraft-failure-isolation-2026-10-28.md).
+
+### Problem
+
+The final capacity error explained the stop but not the preceding hours of weak
+convergence, repeated recovery or the remaining broken gameplay. The user requested
+isolation of everything that went wrong using the retained live report.
+
+### What was wrong
+
+Canonical evidence identifies twelve areas with distinct owners/confidence. The raw
+4096 target caused thirteen cutoffs despite a 16384 hard allowance; 24 raw responses
+failed grammar/schema validation. The chat adapter sends no schema constraint on
+this path. Five later local tasks stagnated, including three read-only tasks with
+66 generations and no edit attempt. Conservative context packing used a 49152-byte
+bound on a real 65536-token server; 214 calls omitted optional history and actual
+prompt usage never exceeded 13839 tokens. No state byte eviction is demonstrated.
+
+A corrected search retained an obsolete path-specific tool error in worker memory.
+The diagnosis packet omitted the failing entry/test and granted no reads; it could
+not identify the harness's early clock restoration. Test.ok misuse and wrong blur
+event targets also undermined early integration tests. Final Node tests missed text
+field input leakage and did not supply real browser feedback to the workers.
+
+Clean failed model operations take the controller pause path rather than generating
+semantic exception packets for cloud takeover. The final native job's brokered
+effects correctly blocked generic replay, requiring an application continuation
+policy that was not automatic. Capacity, local quality, test coverage and recovery
+policy are separate findings; no single quantization/packing root cause is proven.
+
+### How it was fixed
+
+No implementation fix was applied. Added a maintained failure-isolation report and
+source/evidence-backed repair order, refreshed issue/index/navigation and retained
+AGENTS knowledge. A read-only analyzer and metadata under the original run's new
+`diagnosis-2026-10-28/` directory retain exact attempts, local trajectories, check/shell
+outcomes and two offline reproductions. The original REPORT, frozen runner, database,
+config, delivered/private source and budgets were preserved. No new inference,
+Resume, provider setup, game edit, commit or automation was performed.
+
+### Design principle enforced or reconstructed
+
+Separate observed failures, causal mechanisms and hypotheses. The agent owns task
+suitability, working memory, diagnosis, semantic continuation, browser-check purpose
+and full product acceptance. The OS must keep generic input/output bounds, original
+accounts/deadlines, source authority and native side effects safe. A retryable native
+terminal message does not authorize blind replay of executed writes. Provider
+capacity is external evidence, not proof of exhausted account quota or local OOM.
+
+### Verification
+
+Read-only reconstruction matches 280 raw generations/46 native jobs. The 37 rejected
+raw attempts consumed 46.5 of 178.3 local provider minutes (26.1%, not wall-clock
+waste). Action history contains 178 local reads, 84 exact repeats. Ten of eleven raw
+cutoff chains eventually recovered; one caused the first pause. The pre-resume
+snapshot confirms model_failure with zero semantic exception packets. The final
+retry reason explicitly requires caller continuation after brokered effects.
+
+Memory-only projection reproduces an obsolete error surviving a schema-correct
+search. Offline request preparation confirms no provider schema/JSON constraint for
+the chat path. Diagnostic source selection and exact failed check artifacts identify
+the clock/test.ok errors; the camera-coordinate suggestion was only an unconfirmed
+diagnostic hypothesis. Private loading had a 45-test intermediate pass and further
+edits/focused checks, without final report/review; it remains separate from delivery.
+
+Documentation generation/check and whitespace verification passed. Existing browser
+and 44-test results were analyzed, not rerun as new evidence. No full framework
+suite ran for this documentation/investigation-only task. Worker/retry/context,
+reliability/qualification and ownership guides were reviewed; behavior/interfaces
+were not changed, so no guide implementation update was needed. The new report
+explicitly distinguishes proposed fixes from implemented behavior. Retained project
+knowledge in AGENTS.md was read back; original source/run preservation was checked.
+
+
+<a id="fix-0150"></a>
+## FIX-0150 — 2026-10-28 — Verify no-edit task necessity and trace current context and worker-state behavior
+
+Status: investigation complete; current defects reproduced, no fixes implemented by explicit user instruction.
+Related: [FIX-0149](#fix-0149), [FIX-0136](#fix-0136), [FIX-0145](#fix-0145).
+Evidence and corrections: [focused follow-up](minecraft-failure-isolation-2026-10-28.md#convergence-context-memory-followup).
+
+### Problem
+
+The user asked whether the three local tasks that made no edits actually needed
+changes, what OS code restricted context despite a 64K model, and whether the
+reported memory error affected the current system. The user explicitly said not
+to implement fixes.
+
+### What was wrong
+
+All three tasks needed missing browser integration, despite existing generate and
+repository APIs. Their actual starting HTML/entry lacked seeded creation, Save copy
+or saved-world refresh/load controls and handlers respectively. All physical replies
+were read/list/search actions, including the malformed seed reply; all stopped
+workspace source remained byte-identical to each task's pinned base.
+
+The OS does not impose a fixed below-31K-token ceiling in this run. Kernel.measure
+counts serialized UTF-8 request bytes. ContextService caps them at
+min(400000,400000,65536-16384)=49152, with optional-group packing toward 48128 bytes.
+The 29491-byte compaction target is inactive because auto_compaction=false. The
+kernel sends a 4096 output target while context preparation reserves the 16384 hard
+ceiling. This conservative byte policy explains low actual prompt-token use; it
+does not show a smaller Strata window or actual tokenizer-based input counting.
+
+Current worker_memory.project has the path-key mismatch previously identified:
+a valid search without path does not retire an earlier invalid path-shaped search
+error. Seven live save-task model inputs after the corrected search retained that
+hint. Seed/load had no such error, so it cannot explain all three stalls. A second
+current defect skips observation=None entries before clearing protocol errors;
+valid candidate/assessment/needs_review replies can therefore leave old protocol
+errors active. The second defect is reproduced offline, not established as this
+run's cause. These are bounded working-state defects, not canonical-memory corruption.
+
+### How it was fixed
+
+No implementation, configuration or maintained test changed. Added a focused
+follow-up to the existing failure analysis, issue/history pointers and retained
+AGENTS context. Read-only scripts/RAM probes in the original run's new
+`followup-context-memory-2026-10-28/` folder retain pinned source comparisons,
+physical reply types, exact context replay and current projection cases.
+
+Corrected two earlier analysis claims explicitly: FileRead accepts both limit and
+max_bytes; that was not a contract mismatch. The earlier 178 reads/84 repeats came
+from worker-state trajectory snapshots that trail final tools at parking. Full
+canonical ordinary read effects total 182, with 88 repeats using model arguments
+and digest, or 85 including host-injected generation. Original evidence remains
+intact; only the earlier analysis's interpretation is corrected.
+
+### Design principle enforced or reconstructed
+
+Investigations must verify that assigned behavior is missing before treating no
+edits as failure, and distinguish actual tokens from conservative byte bounds.
+Agent working-state error lifecycle belongs to the application. Generic OS context
+bounds and original evidence remain authoritative. A stale derived view is not
+proof of canonical data loss. Respect the explicit analysis-only scope rather than
+expanding memory architecture or silently implementing even small fixes.
+
+### Verification
+
+Compared every tracked source file in all three stopped workspaces with their
+pinned Git trees and inspected all 66 physical replies. Current OS context code
+matches the frozen source and RAM replay exactly reproduces the saved prepared
+digest, omitted refs and byte receipt for worker-10/model-18. Six current projection
+cases reproduce the two defects with a successful-action clearing control and
+idempotent replay; FileRead accepts both byte-count argument names. Existing replay/
+invalidation tests do not cover these resolution cases; no new maintained tests
+were added or source fixed. Documentation generation/check and whitespace passed.
+Original report/config/database/frozen source and delivered game hashes were checked.
+Worker/context guides remain applicable; no behavior/interface changed. AGENTS
+retained knowledge was read back. No provider/browser run, Resume, commit or push.

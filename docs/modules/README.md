@@ -4,28 +4,31 @@
 
 Each feature has one primary guide naming every owned source file, its interface,
 ownership and design principles. Closely related Python modules share a guide.
+Names below are abbreviated; the JSON tree and each guide give exact paths.
 
 | Feature | Files |
 | --- | --- |
 | [Contracts and runtime ports](sdk.md) | __init__.py, contracts.py, workspace_contracts.py, execution_contracts.py, ports.py, primitives.py |
-| [Settings and example configurations](settings.md) | system_settings.py, config.py, system_settings.py, agent.mixed.json, agent.anthropic.json, agent.codex.json, agent.openai.json, agent.gemini.json |
-| [Coding controller, setup and task allocation](agent-workflow.md) | controller.py, setup.py, tasks.py, routing.py |
-| [Worker/senior graphs and reply grammar](agent-workers.md) | worker.py, senior.py, prompts.py, domain.py |
+| [Settings and example configurations](settings.md) | system_settings.py, config.py, agent/system_settings.py and five provider examples |
+| [Coding controller, setup and task allocation](agent-workflow.md) | controller.py, resume.py, setup.py, tasks.py, routing.py |
+| [Worker/senior graphs, module contracts and semantic review](agent-workers.md) | worker.py, senior.py, prompts.py, domain.py, architecture.py, review.py, diagnostics.py, schema.py |
+| [Worker exceptions and linked recovery](../../design-docs/implementation/WORKER_RECOVERY.md) | agent/exceptions.py, runtime/lifecycle.py |
+| [Execution observations and stagnation policy](../../design-docs/implementation/PROGRESS_MONITORING.md) | agent/progress.py, runtime/progress.py |
 | [Application services and runtime policy installation](agent-services.md) | __init__.py, services.py, runtime_policy.py, design_basis.py |
 | [Coding repository policy and retained source](repository.md) | repository.py, reports.py, os_contracts.py |
-| [Kernel and durable effect execution](kernel.md) | kernel.py, adapter.py, __init__.py |
+| [Kernel and durable effect execution](kernel.md) | kernel.py, runtime/resume.py, adapter.py, __init__.py |
 | [Process lifecycle](processes.md) | processes.py |
 | [Capability registration and tool ABI](capabilities.md) | capabilities.py, tool_contracts.py |
 | [Persistence, exclusive resources and blocking I/O](storage.md) | storage.py, exclusive.py, blocking.py |
-| [Endpoint admission and provider adapters](inference.md) | inference.py, codex.py |
+| [Endpoint admission and provider adapters](inference.md) | inference.py, inference_stream.py, codex.py |
 | [Optional application inference simulator](inference-simulation.md) | agent/inference_simulation.py |
 | [Optional context preparation](context.md) | context.py |
-| [Bounded OS model retries](retries.md) | model_retries.py |
+| [Bounded OS model retries](retries.md) | model_retries.py, retry.py |
 | [Optional workspaces and source classification](workspaces.md) | workspace.py, workspace_state.py |
 | [File tools, checks and foreground commands](commands.md) | tools.py, shell.py, commands.py, tool_environment.py |
 | [Artifact delivery and user messages](delivery.md) | outputs.py, messages.py |
 | [Command line and saved credentials](cli.md) | cli.py |
-| [Loopback UI and project selection](ui.md) | ui.py, ui.html, ui_repository.py |
+| [Loopback UI and project selection](ui.md) | ui.py, ui.html, ui_repository.py, agent/endpoint_probe.py |
 | [Inspection, snapshots, history and costs](inspection.md) | snapshots.py, history.py, ui_os.py, ui_agents.py, ui-monitor.js, costs.py |
 
 Supporting modules: [design tools](design-tools.md), [live smoke runner](live-smoke.md),

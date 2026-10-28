@@ -7,6 +7,7 @@ Generic safe inference retry and smaller-output adaptation filter eligible failu
 | File | Responsibility |
 | --- | --- |
 | [src/polyinference/runtime/model_retries.py](../../src/polyinference/runtime/model_retries.py) | Durable retry chains, delayed attempts, authorization, output feedback and effective-outcome projection. |
+| [src/polyinference/runtime/retry.py](../../src/polyinference/runtime/retry.py) | Registered response validation, physical attempt records and bounded caller replacement windows. |
 
 ## Interface and ownership
 
@@ -50,10 +51,6 @@ exhaustion does not restart it through ModelRetries. Transport/output recovery
 retains its separate existing guards. Unknown effects are never blindly retried.
 Physical attempts share model-call, token and inherited recovery accounts.
 
-Integrated source responsibilities:
-
-- [src/polyinference/runtime/retry.py](../../src/polyinference/runtime/retry.py) implements caller-registered response validation and physical attempt history.
-
 Physical-attempt indexes retain admission ownership across restart. Prepared
 bookkeeping is not termination evidence. If a later response-repair attempt is
 unknown, an older completed root response cannot settle it; explicit provider/host
@@ -62,3 +59,17 @@ reconciliation is required and releases only attested physical holds.
 Interruption while waiting for a response replacement preserves the prior settled
 physical receipt and any accepted replacement. Replay can continue that bounded
 repair without resubmitting the completed attempt or charging it again.
+
+Inspect `inference-attempt/<operation>/<index>` for physical outcomes and
+`retry/<operation>` for the replacement window. `offer_retry` accepts only the
+owning process, preserves required context pins, role/phase/schema/grants and
+cannot expand context authority. Without an accepted replacement, the bounded
+retry uses the original request. This response policy is distinct from transport
+retry and worker grammar correction; see [agent settings](../guides/agent-reliability.md).
+
+`register_response_repair(schema_ref, callback)` optionally installs a synchronous
+owning-application feedback builder. The waiting record is durable before it runs;
+the existing deadline/window and `offer_retry` authority checks still apply.
+Callback errors are separate diagnostics and cannot change an execution outcome.
+The coding agent pins bounded validation feedback and the current phase, retaining
+all required inputs. No extra model call or recursive repair allowance is added.

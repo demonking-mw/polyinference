@@ -5,8 +5,10 @@
 The OS first uses bounded native retries, then any additional attempts declared
 by the caller's InferencePolicy. Shared root deadlines, accounting and finishing
 reserves apply; see [endpoint lifecycle policy](endpoint-testing.md).
-Known stopped model failures that still need application recovery pause the agent
-with their structured diagnostics.
+Registered malformed responses also have a bounded
+[response-validation path](agent-reliability.md). Clean semantic worker exceptions
+can reach senior review for linked recovery; unresolved model failures can still
+pause with retained diagnostics.
 After correcting the reported problem, explicitly recover a task without repeating
 its private edits:
 

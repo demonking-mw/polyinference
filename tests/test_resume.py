@@ -8,6 +8,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+from conftest import static_schedule
 
 from polyinference.agent.controller import ProjectAgent
 from polyinference.agent.resume import COMPATIBLE_GRAPH
@@ -22,8 +23,8 @@ from polyinference.runtime.storage import Records
 from polyinference.ui import TestUI
 
 
-async def research(tmp_path, protocol="chat"):
-    endpoint = Endpoint(model="fixture", protocol=protocol, base_url="http://fixture/v1")
+async def research(tmp_path, protocol="chat", timeout=180):
+    endpoint = Endpoint(model="fixture", protocol=protocol, base_url="http://fixture/v1", timeout_seconds=timeout)
     config = RuntimeConfig(repository=str(tmp_path / "unused"), state_directory=str(tmp_path / "state"),
                            local=endpoint, cloud=endpoint, role_bindings={"researcher": "local"})
     runtime = await KernelRuntime(config).open()
@@ -39,7 +40,7 @@ async def research(tmp_path, protocol="chat"):
         "workspace_id": None, "input_refs": [prompt], "limits": config.limits,
         "output_schema_ref": "summary/1", "grant_ref": "grant/run", "budget_account_ref": "budget/run",
         "program": {**template["program"], "program_id": "research", "program_version": "1"},
-        "schedule": {**template["schedule"], "requirements": [], "conflict_keys": [], "locality_refs": []},
+        "schedule": static_schedule(template["schedule"], config, "researcher"),
     })
     runtime.processes.register(spec, "local")
     context = ContextView(view_id="facts", digest=digest(b"facts"),
@@ -317,9 +318,8 @@ async def test_ui_restores_activated_request_before_first_execution(config, tmp_
 
 
 async def test_generic_resume_retains_uncertainty_when_provider_lookup_times_out(tmp_path):
-    runtime, request = await research(tmp_path, "responses")
-    request = request.model_copy(update={"deadline": now() + timedelta(milliseconds=100)})
-    request = request.model_copy(update={"intent_digest": operation_fingerprint(request)})
+    # Bound lookup itself; fixture preparation must not consume the entire logical deadline.
+    runtime, request = await research(tmp_path, "responses", timeout=0.05)
     try:
         await runtime.clients["local"].close()
         runtime.clients["local"] = Disconnected()

@@ -2,6 +2,7 @@
 
 from ..contracts import CodeRevision, ProcessStatus
 from ..domain import canonical, digest, now
+from .routing import cloud_recovery
 
 
 def pending(app):
@@ -13,7 +14,15 @@ def pending(app):
 
 
 def review_view(app):
-    return [{**app.get(item["exception_ref"]), "action": item["action"]} for item in pending(app)]
+    result = [{**app.get(item["exception_ref"]), "action": item["action"]} for item in pending(app)]
+    for _, _, item in app.ports.records.scan("exception-queue/"):
+        if item["action"] != "retry":
+            continue
+        task = app.ports.records.get("task/" + (item.get("replacement_task_id") or ""))
+        if task and task[1]["execution"] == "pending" and task[1].get("previous_process_id"):
+            result.append({**app.get(item["exception_ref"]), "action": "retry",
+                           "pending_replacement_task_id": task[1]["assignment"]["task_id"]})
+    return result
 
 
 async def park(app, state):
@@ -72,6 +81,7 @@ async def park(app, state):
         "attempt_ref": attempt_key,
         "root_task_id": task.get("root_task_id", task["assignment"]["task_id"]),
         "recovery_depth": task.get("recovery_depth", 0),
+        "cloud_recoveries": task.get("cloud_recoveries", 0),
         "reason": (state.get("interrupted") or "needs_review")[:1200],
         "verdict": "uncertain",
         "execution_termination": "confirmed_stopped",
@@ -125,6 +135,43 @@ async def park(app, state):
     )
 
 
+def validate_allowance(app, packet):
+    """Original physical envelope; a backend change never refills it."""
+    if packet.get("execution_termination") != "confirmed_stopped" or packet.get("effects") != "known":
+        raise ValueError("Recovery requires confirmed stopped execution and known effects")
+    task = app.get("task/" + packet["task_id"])
+    if (task["execution"] != "interrupted" or task.get("report_ref")
+            or task.get("category", "development") != "development"
+            or task.get("exception_ref") != packet["exception_ref"]):
+        raise ValueError("Recovery requires an unpublished clean development exception")
+    control = app.ports.records.get("process-control/" + packet["process_id"])
+    if control and control[1].get("cancel_requested"):
+        raise ValueError("Explicit cancellation cannot become recovery")
+    if app.ports.operations.uncertain():
+        raise ValueError("Unsettled execution must be reconciled before handoff")
+    reserve = app.config.limits.final_phase_reserve
+    finishing = reserve.reconciliation_model_calls + reserve.assessment_model_calls if reserve else 2
+    used = app.ports.operations.inference_calls_used(packet["process_id"])
+    cutoff = app.ports.operations.process_deadline(packet["process_id"])
+    process = app.get("process/" + packet["process_id"])
+    if cutoff is None:
+        from datetime import datetime, timedelta
+
+        cutoff = datetime.fromisoformat(process["started_at"]) + timedelta(
+            milliseconds=app.config.limits.max_wall_time_ms
+        )
+    if used >= app.config.limits.max_model_calls - finishing or cutoff <= now():
+        raise ValueError("Original worker allowance exhausted; recovery cannot refill it")
+    resources = app.ports.operations.resource_state(packet["process_id"])
+    finishing_steps = finishing + (reserve.publication_steps + reserve.cleanup_steps if reserve else 2) + 1
+    if (
+        resources["remaining_operations"] < finishing_steps
+        or resources["remaining_tokens"]
+        < app.config.limits.max_input_tokens_per_call + app.config.limits.max_output_tokens_per_call
+    ):
+        raise ValueError("Original operation/token allowance cannot safely start replacement work")
+
+
 def validate(app, proposal, snapshot):
     visible = {e["exception_ref"]: e for e in snapshot.get("exceptions", [])}
     seen, replacements = set(), {}
@@ -133,16 +180,38 @@ def validate(app, proposal, snapshot):
             raise ValueError("Exception disposition must reference one pinned unresolved exception")
         seen.add(decision.exception_ref)
         packet = visible[decision.exception_ref]
+        pending_id = packet.get("pending_replacement_task_id")
+        if pending_id:
+            old = app.get("task/" + pending_id)
+            if (decision.action != "retry" or pending_id not in proposal.cancel_pending_task_ids
+                    or old["execution"] != "pending"
+                    or app.ports.records.get("process/" + old["process_id"])
+                    or any(row["request"]["scope"].get("process_id") == old["process_id"]
+                           for _, _, row in app.ports.records.scan("effect/"))):
+                raise ValueError("Pending recovery retarget requires an unstarted lineage-preserving replacement")
         if decision.action != "retry":
             continue
-        if packet["recovery_depth"] >= app.config.max_worker_recoveries:
-            raise ValueError("Semantic recovery allowance exhausted; defer or stop")
         assignment = next((t for t in proposal.tasks if t.task_id == decision.replacement_task_id), None)
         if assignment is None or assignment.task_id in replacements:
             raise ValueError("Recovery needs exactly one new linked assignment")
+        if pending_id:
+            before = dict(old["assignment"])
+            after = assignment.model_dump(mode="json")
+            for field in ("task_id", "dependencies"):
+                before.pop(field, None)
+                after.pop(field, None)
+            if before != after:
+                raise ValueError("Pending recovery retarget must preserve its contract and source")
+        if cloud_recovery(app.config, packet, assignment):
+            if packet.get("cloud_recoveries", 0) >= app.config.max_cloud_recoveries:
+                raise ValueError("Cloud recovery allowance exhausted; defer or stop")
+        elif (packet.get("cloud_recoveries", 0)
+              or packet["recovery_depth"] >= app.config.max_worker_recoveries):
+            raise ValueError("Semantic recovery allowance exhausted; defer or stop")
         source = app.get("task/" + packet["task_id"])["assignment"]
         if (
-            assignment.objective == source["objective"]
+            not cloud_recovery(app.config, packet, assignment)
+            and assignment.objective == source["objective"]
             and not assignment.resume_from
             and digest(
                 canonical(
@@ -157,34 +226,12 @@ def validate(app, proposal, snapshot):
             )
         ):
             raise ValueError("Renaming unchanged work is not a recovery condition")
-        reserve = app.config.limits.final_phase_reserve
-        finishing = reserve.reconciliation_model_calls + reserve.assessment_model_calls if reserve else 2
-        used = app.ports.operations.inference_calls_used(packet["process_id"])
-        cutoff = app.ports.operations.process_deadline(packet["process_id"])
-        process = app.get("process/" + packet["process_id"])
-        if cutoff is None:
-            from datetime import datetime, timedelta
-
-            cutoff = datetime.fromisoformat(process["started_at"]) + timedelta(
-                milliseconds=app.config.limits.max_wall_time_ms
-            )
-        if used >= app.config.limits.max_model_calls - finishing or cutoff <= now():
-            raise ValueError("Original worker allowance exhausted; recovery cannot refill it")
-        resources = app.ports.operations.resource_state(packet["process_id"])
-        finishing_steps = (
-            finishing + (reserve.publication_steps + reserve.cleanup_steps if reserve else 2) + 1
-        )
-        if (
-            resources["remaining_operations"] < finishing_steps
-            or resources["remaining_tokens"]
-            < app.config.limits.max_input_tokens_per_call + app.config.limits.max_output_tokens_per_call
-        ):
-            raise ValueError("Original operation/token allowance cannot safely start replacement work")
+        validate_allowance(app, packet)
         if not set(assignment.write_paths) <= set(source["write_paths"]):
             raise ValueError("Recovery cannot widen the original write grant")
         if assignment.resume_from not in {None, decision.exception_ref}:
             raise ValueError("Recovery may select only its predecessor's retained source")
-        replacements[assignment.task_id] = packet
+        replacements[assignment.task_id] = {**packet, "changed_condition": decision.changed_condition}
     for assignment in proposal.tasks:
         if assignment.resume_from and assignment.task_id not in replacements and not (app.repository and any(s["resume_from"] == assignment.resume_from and s["available"] for s in snapshot.get("retained_sources", []))):
             raise ValueError("Source reuse requires a linked exception disposition")

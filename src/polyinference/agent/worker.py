@@ -71,7 +71,9 @@ async def load(state, runtime: Runtime[AppContext]):
         state["task_spec_ref"],
         CodeRevision.model_validate(task["base"]),
         task["assignment"]["write_paths"],
-        task["assignment"]["read_paths"],
+        list(dict.fromkeys([*task["assignment"]["read_paths"],
+            *(path for check in app.check_definitions if check.name in task["assignment"]["checks"]
+              for path in check.required_paths)])),
         capabilities=[*app.get(task["spec_ref"])["allowed_capabilities"], "workspace.commit", "workspace.retain",
                       *(["coding.commit"] if app.repository else [])],
         check_names=task["assignment"]["checks"],
@@ -475,8 +477,9 @@ async def release(state, runtime: Runtime[AppContext]):
         await app.ports.exclusive.release(permit, state["process_id"])
     process = app.get("process/" + state["process_id"])
     app.update(
-        "process/" + state["process_id"], {**process, "state": "completed", "report_ref": state["report_ref"]}
+        "process/" + state["process_id"], {**process, "report_ref": state["report_ref"]}
     )
+    app.ports.processes.finish(state["process_id"], state="completed")
     app.process_status(
         state["process_id"],
         state="completed",

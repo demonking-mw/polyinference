@@ -128,6 +128,12 @@ class AgentServices:
             register("senior/1", lambda text, payload: SeniorProposal.model_validate_json(text))
             register("diagnosis/1", lambda text, payload: DiagnosisPlan.model_validate_json(text))
         register_schema = getattr(ports.operations, "register_response_schema", None)
+        register_repair = getattr(ports.operations, "register_response_repair", None)
+        if register_repair:
+            from .worker_memory import repair
+
+            for schema_ref in ("worker/1", "senior/1", "diagnosis/1"):
+                register_repair(schema_ref, lambda request, error: repair(self, request, error))
         if register_schema:
             register_schema("diagnosis/1", DiagnosisPlan.model_json_schema())
         ports.register_agent_protocol("runtime/readonly-query/1", DiagnosisPlan.model_json_schema())
@@ -139,6 +145,20 @@ class AgentServices:
             prompt_bundle_digest=digest((WORKER + SENIOR + SENIOR_IN_PLACE + SENIOR_ISOLATED + BOOTSTRAP + DIAGNOSIS_PROMPT).encode()),
         )
         self.runtime_policy = CodingRuntimePolicy(self)
+        capacities = {}
+        for binding in sorted(set(config.role_bindings.values())):
+            endpoint = getattr(config, binding)
+            raw = endpoint.protocol in {"chat", "responses", "anthropic", "gemini"}
+            output = min(config.model_output_target_tokens or config.limits.max_output_tokens_per_call,
+                         config.limits.max_output_tokens_per_call) if raw else config.limits.max_output_tokens_per_call
+            capacities[binding] = {"model": endpoint.model, "protocol": endpoint.protocol,
+                "configured_context": endpoint.max_context_tokens, "output_reservation": output,
+                "input_allowance": min(config.limits.max_input_tokens_per_call, endpoint.max_context_tokens - output),
+                "unit": "utf8_bytes_conservative_token_bound", "reasoning_effort": endpoint.reasoning_effort,
+                "validation": "Configuration only; each actual adapter packet is measured before submission"}
+            if capacities[binding]["input_allowance"] <= 0:
+                raise ValueError("Endpoint has no input capacity after output headroom: " + binding)
+        ports.records.put_once("coding/capacity-profile", capacities)
         for check in self.check_definitions:
             ports.tools.register_check(check)
         ports.register_capability("checks.configure", self.runtime_policy.configure_checks, input_type=CheckSelection,
@@ -261,8 +281,8 @@ class AgentServices:
             rule_id="static-role",
             roles=[role],
             phases=["*"],
-            axis="inference_location",
-            eligible_classes=[endpoint.physical_location],
+            axis="harness_class",
+            eligible_classes=[endpoint.protocol],
             target_weights={},
             enforcement="hard",
             unit="agent_jobs" if endpoint.protocol.startswith("codex") else "model_decisions",
@@ -284,10 +304,10 @@ class AgentServices:
                 minimum_residence_ms=0,
                 migration_boundaries=["before_start"],
             ),
-            data_policy=DataPolicy(
+            data_policy=self.config.data_policy or DataPolicy(
                 policy_ref="grant/run",
-                allowed_inference_locations=[endpoint.physical_location],
-                allowed_destination_classes=[endpoint_name],
+                allowed_inference_locations=["local", "cloud"],
+                allowed_destination_classes=sorted(set(self.config.role_bindings.values())),
                 maximum_classification="project",
             ),
             requirements=[],
@@ -741,6 +761,24 @@ class AgentServices:
                 data["repository_setup"] = self.get("repository/setup")
             data["write_authority"] = self.ports.workspaces.authority(manifest.workspace_id)
             data["available_tools"] = coding_tools(self.config, task.get("category") == "setup")
+            from .worker_memory import project
+
+            data["worker_state"] = project(self, state, current.model_dump(mode="json"))
+            data["resources"] = self.ports.operations.resource_state(pid)
+            data["finishing_reserve"] = self.config.limits.final_phase_reserve.model_dump(mode="json") \
+                if self.config.limits.final_phase_reserve else None
+            if task.get("previous_process_id"):
+                predecessor = self.get(self.get("attempt/" + task["attempt_id"])["previous_attempt_ref"])
+                packet_ref = "worker-exception/" + predecessor["record_id"].removeprefix("attempt/")
+                packet = self.get(packet_ref)
+                data["recovery_context"] = {
+                    "exception_ref": packet_ref, "reason": packet["reason"],
+                    "failed_phase": packet["phase"], "progress_attention": packet.get("progress_attention"),
+                    "changed_condition": task.get("recovery_condition"),
+                    "source_reused": bool(task.get("source_delta_ref")),
+                    "cloud_recoveries": task.get("cloud_recoveries", 0),
+                    "policy": "Repair the original contract using a changed approach; all original resource limits still apply",
+                }
         if self.repository:
             notes = self.ports.records.get("coding/startup-notes")
             data["startup_notes"] = notes[1]["notes"] if notes else []

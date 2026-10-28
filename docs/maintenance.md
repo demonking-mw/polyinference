@@ -33,8 +33,11 @@ When rules, design ownership, setup or automation change, update the
 JSON in `file-tree.html` and renders working links before JavaScript runs, so the
 tree works from `file://` without a server or fetch. Never edit generated HTML.
 The check rejects uncovered files, duplicate ownership, missing docs/paths,
-broken local Markdown links, unreachable docs and stale HTML. It does not prove
-the prose matches runtime semantics; reviewers must check that explicitly.
+broken local Markdown links, unreachable files and stale generated tree HTML.
+It checks Markdown, the generated tree and maintained documentation HTML/anchors.
+The raw tree template and application/upstream URL boundaries are explicitly excluded.
+It checks that source links exist, not that their
+explanations are correct. Prose accuracy and length require explicit review.
 The same check runs on pushes and pull requests through the
 [documentation workflow](../.github/workflows/docs.yml).
 
@@ -42,6 +45,15 @@ Keep new overview/module guides around 80 lines or less. Split long procedures
 into focused pages with obvious links. Existing specifications, append-only fix
 history and historical evidence retain their stable paths/anchors; concise hubs
 lead to them. Preserve earlier decisions and mark supersession explicitly.
+
+For semantic review, compare defaults/ranges with the owning schemas, follow the
+actual call path and distinguish configured ceilings from effective request
+values. Check adjacent overviews after merges; integrate new behavior into the
+guide rather than accumulating duplicate dated appendices. Link meaningful
+regressions and preserve their failure trigger/design rule in FIXES. Identify
+unimplemented requirements as code follow-ups; do not redefine them as policy.
+Report historical run outcomes separately from today's checks and distinguish
+task tests, accepted increments and product completion.
 
 The inventory includes repository-owned files and excludes ignored state,
 environments, builds, OS download metadata and upstream reference checkouts.
@@ -53,3 +65,7 @@ The root [AGENTS.md](../AGENTS.md) is also this repository's persistent Codex
 project instruction. Its completion rule applies to future Codex chats opened
 in the PolyInference checkout; it travels with the project.
 See the [official Codex instruction-loading guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
+
+After settings schema/default changes, run `python scripts/settings_docs.py` and
+`python scripts/settings_docs.py --check` in the activated project environment.
+The generated schema proves exported type/default agreement; prose still needs review.

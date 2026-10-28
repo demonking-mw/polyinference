@@ -7,6 +7,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import pytest
+from conftest import static_schedule
 
 from polyinference.config import Endpoint, RuntimeConfig
 from polyinference.contracts import (
@@ -68,7 +69,7 @@ async def test_non_coding_agent_returns_artifact_and_terminates_without_workspac
         "workspace_id": None, "input_refs": [prompt], "limits": config.limits,
         "output_schema_ref": "research-summary/1", "grant_ref": "grant/run", "budget_account_ref": "budget/run",
         "program": {**template["program"], "program_id": "research", "program_version": "1"},
-        "schedule": {**template["schedule"], "requirements": [], "conflict_keys": [], "locality_refs": []},
+        "schedule": static_schedule(template["schedule"], config, "researcher"),
     })
     runtime.processes.register(spec, "local")
     context = ContextView(
@@ -144,12 +145,17 @@ async def test_non_coding_agent_returns_artifact_and_terminates_without_workspac
         bounded = spec.model_copy(update={
             "record_id": "process-spec/bounded", "process_id": "bounded", "created_at": now(),
             "scope": scope.model_copy(update={"process_id": "bounded"}),
-            "limits": spec.limits.model_copy(update={"max_wall_time_ms": 50}),
+            "limits": spec.limits,
         })
         runtime.processes.register(bounded, "local")
+        key = "process/bounded"
+        revision, body = runtime.records.get(key)
+        runtime.records.compare_and_publish({key: revision}, {key: {**body, "started_at":
+            (now() - timedelta(milliseconds=spec.limits.max_wall_time_ms - 50)).isoformat()}})
         with pytest.raises(asyncio.TimeoutError):
             await runtime.processes.start("bounded", asyncio.Event().wait)
         assert (await runtime.processes.wait("bounded", timeout=1))["state"] == "paused"
+        runtime.processes.hibernate("bounded")
         # Other programs may use app/run for unrelated data; OS cancellation
         # must not interpret that record as a coding sprint.
         runtime.records.put_once("app/run", {"summary": "Research program state"})

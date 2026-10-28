@@ -33,7 +33,7 @@ async def test_sprint_briefs_and_worker_messages_reach_user(config, capsys, ui_m
                         "model": "fixture", "usage": {"total_tokens": 5}}
             response = await super().generate(messages, max_output, response_schema)
             if "assignment" not in data:
-                assert "On EVERY invocation" in messages[0]["content"]
+                assert "EVERY invocation" in messages[0]["content"] and "user_brief" in messages[0]["content"]
                 reply = json.loads(response["text"])
                 if not data["all_task_ids"]:
                     assert data["previous_user_brief"] is None

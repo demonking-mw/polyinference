@@ -15,3 +15,7 @@ jobs:
           python-version: '3.10'
       - name: Check coverage, links and generated tree
         run: python scripts/project_docs.py --check
+      - name: Install exported-schema dependencies
+        run: python -m pip install -e .
+      - name: Check exported settings schemas and defaults
+        run: python scripts/settings_docs.py --check

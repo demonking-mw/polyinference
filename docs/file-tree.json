@@ -188,6 +188,18 @@
             "title": "Endpoint lifecycle and testing",
             "doc": "docs/guides/endpoint-testing.md",
             "files": []
+          },
+          {
+            "id": "guide-checks",
+            "title": "Select setup, task and final checks",
+            "doc": "docs/guides/checks.md",
+            "files": []
+          },
+          {
+            "id": "guide-agent-reliability",
+            "title": "Coding-agent reliability settings",
+            "doc": "docs/guides/agent-reliability.md",
+            "files": []
           }
         ]
       },
@@ -242,7 +254,8 @@
               "src/polyinference/agent/resume.py",
               "src/polyinference/agent/setup.py",
               "src/polyinference/agent/tasks.py",
-              "src/polyinference/agent/routing.py"
+              "src/polyinference/agent/routing.py",
+              "src/polyinference/agent/cloud_recovery.py"
             ]
           },
           {
@@ -326,7 +339,8 @@
               "src/polyinference/runtime/kernel.py",
               "src/polyinference/runtime/resume.py",
               "src/polyinference/runtime/adapter.py",
-              "src/polyinference/runtime/__init__.py"
+              "src/polyinference/runtime/__init__.py",
+              "src/polyinference/runtime/process_policy.py"
             ]
           },
           {
@@ -387,7 +401,9 @@
               "examples/agent.anthropic.json",
               "examples/agent.codex.json",
               "examples/agent.openai.json",
-              "examples/agent.gemini.json"
+              "examples/agent.gemini.json",
+              "scripts/settings_docs.py",
+              "docs/settings-schema.json"
             ]
           },
           {
@@ -402,7 +418,8 @@
               "src/polyinference/agent/architecture.py",
               "src/polyinference/agent/review.py",
               "src/polyinference/agent/diagnostics.py",
-              "src/polyinference/agent/schema.py"
+              "src/polyinference/agent/schema.py",
+              "src/polyinference/agent/worker_memory.py"
             ]
           },
           {
@@ -461,7 +478,7 @@
           },
           {
             "id": "doc-design-docs-simplified-os-design-revisions",
-            "title": "Current design revisions â€” 2026-10-20",
+            "title": "Current design revisions \u00e2\u20ac\u201d 2026-10-20",
             "doc": "design-docs/simplified-os/DESIGN_REVISIONS.md",
             "files": []
           },
@@ -541,31 +558,31 @@
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-01-cs350-1-foundations",
-            "title": "Polyinference OS design â€” 1. Kernel boundary and the two-tier agent",
+            "title": "Polyinference OS design \u00e2\u20ac\u201d 1. Kernel boundary and the two-tier agent",
             "doc": "design-docs/polyinference-design/os-research/01-CS350-1-foundations.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-02-cs350-2-processes",
-            "title": "Polyinference OS design â€” 2. Processes, requests and tier handoffs",
+            "title": "Polyinference OS design \u00e2\u20ac\u201d 2. Processes, requests and tier handoffs",
             "doc": "design-docs/polyinference-design/os-research/02-CS350-2-processes.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-03-cs350-3-threads",
-            "title": "Polyinference OS design â€” 3. LangGraph execution and bounded host tasks",
+            "title": "Polyinference OS design \u00e2\u20ac\u201d 3. LangGraph execution and bounded host tasks",
             "doc": "design-docs/polyinference-design/os-research/03-CS350-3-threads.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-04-cs350-4-concurrency",
-            "title": "Polyinference OS design â€” 4. Synchronizing plans, work, memory and results",
+            "title": "Polyinference OS design \u00e2\u20ac\u201d 4. Synchronizing plans, work, memory and results",
             "doc": "design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-os-research-05-cs350-5-scalability-and-deadlocks",
-            "title": "Polyinference OS design â€” 5. Scaling the two-tier pipeline and preventing deadlocks",
+            "title": "Polyinference OS design \u00e2\u20ac\u201d 5. Scaling the two-tier pipeline and preventing deadlocks",
             "doc": "design-docs/polyinference-design/os-research/05-CS350-5-scalability-and-deadlocks.md",
             "files": []
           },
@@ -583,13 +600,13 @@
           },
           {
             "id": "doc-project-brief",
-            "title": "Polyinference â€” project brief",
+            "title": "Polyinference \u00e2\u20ac\u201d project brief",
             "doc": "PROJECT_BRIEF.md",
             "files": []
           },
           {
             "id": "doc-design-docs-polyinference-design-project-brief",
-            "title": "Polyinference â€” project brief",
+            "title": "Polyinference \u00e2\u20ac\u201d project brief",
             "doc": "design-docs/polyinference-design/PROJECT_BRIEF.md",
             "files": []
           },
@@ -607,7 +624,7 @@
           },
           {
             "id": "doc-design-docs-simplified-os-validation",
-            "title": "Simple OS v1 validation â€” 17 October 2026",
+            "title": "Simple OS v1 validation \u00e2\u20ac\u201d 17 October 2026",
             "doc": "design-docs/simplified-os/VALIDATION.md",
             "files": []
           },
@@ -635,7 +652,7 @@
           },
           {
             "id": "doc-design-docs-implementation-validation",
-            "title": "Validation record â€” 17 October 2026",
+            "title": "Validation record \u00e2\u20ac\u201d 17 October 2026",
             "doc": "design-docs/implementation/VALIDATION.md",
             "files": []
           }
@@ -646,8 +663,20 @@
         "title": "Development records and investigations",
         "children": [
           {
+            "id": "run-reliability-implementation-plan-20261027",
+            "title": "Run reliability implementation plan and historical failure coverage (2026-10-27)",
+            "doc": "development-docs/run-reliability-implementation-plan-2026-10-27.md",
+            "files": []
+          },
+          {
+            "id": "local-task-cloud-recovery-20261027",
+            "title": "Local task granularity and cloud worker recovery (2026-10-27)",
+            "doc": "development-docs/local-task-granularity-and-cloud-recovery-2026-10-27.md",
+            "files": []
+          },
+          {
             "id": "doc-development-docs-workspace-output-and-native-boundary",
-            "title": "Build outputs and native harness boundary â€” 19 October 2026",
+            "title": "Build outputs and native harness boundary \u00e2\u20ac\u201d 19 October 2026",
             "doc": "development-docs/workspace-output-and-native-boundary.md",
             "files": []
           },
@@ -659,7 +688,7 @@
           },
           {
             "id": "doc-development-docs-memory-implementation-report-2026-10-20",
-            "title": "Current memory implementation â€” 2026-10-20",
+            "title": "Current memory implementation \u00e2\u20ac\u201d 2026-10-20",
             "doc": "development-docs/memory-implementation-report-2026-10-20.md",
             "files": []
           },
@@ -703,7 +732,7 @@
           },
           {
             "id": "doc-development-docs-handoff-2026-10-20",
-            "title": "Handoff â€” 2026-10-20 â€” OS retries and pause audit",
+            "title": "Handoff \u00e2\u20ac\u201d 2026-10-20 \u00e2\u20ac\u201d OS retries and pause audit",
             "doc": "development-docs/HANDOFF-2026-10-20.md",
             "files": []
           },
@@ -717,13 +746,13 @@
           },
           {
             "id": "doc-development-docs-handoff-2026-10-20-io",
-            "title": "I/O safety implementation handoff â€” 2026-10-20",
+            "title": "I/O safety implementation handoff \u00e2\u20ac\u201d 2026-10-20",
             "doc": "development-docs/HANDOFF-2026-10-20-IO.md",
             "files": []
           },
           {
             "id": "doc-development-docs-io-safety-verification-2026-10-20",
-            "title": "I/O safety implementation verification â€” 2026-10-20",
+            "title": "I/O safety implementation verification \u00e2\u20ac\u201d 2026-10-20",
             "doc": "development-docs/io-safety-verification-2026-10-20.md",
             "files": []
           },
@@ -767,7 +796,7 @@
           },
           {
             "id": "doc-development-docs-pause-retry-audit-2026-10-20",
-            "title": "Pause and retry audit â€” 2026-10-20",
+            "title": "Pause and retry audit \u00e2\u20ac\u201d 2026-10-20",
             "doc": "development-docs/pause-retry-audit-2026-10-20.md",
             "files": []
           },
@@ -817,6 +846,48 @@
             "id": "branch-integration-audit",
             "title": "Reliability/simple OS integration audit",
             "doc": "development-docs/branch-integration-audit-2026-10-26.md",
+            "files": []
+          },
+          {
+            "id": "local-strata-live-test-20261026",
+            "title": "Real local Qwen/Strata Minecraft investigation",
+            "doc": "development-docs/local-strata-live-test-2026-10-26.md",
+            "files": []
+          },
+          {
+            "id": "minecraft-live-test-20261028",
+            "title": "Scheduled real-local Minecraft result and limits (2026-10-28)",
+            "doc": "development-docs/minecraft-live-test-2026-10-28.md",
+            "files": []
+          },
+          {
+            "id": "minecraft-failure-isolation-20261028",
+            "title": "Minecraft failure isolation and proposed repair order (2026-10-28)",
+            "doc": "development-docs/minecraft-failure-isolation-2026-10-28.md",
+            "files": []
+          },
+          {
+            "id": "documentation-reliability-audit-20261027",
+            "title": "Documentation compliance and workflow reliability review (2026-10-27)",
+            "doc": "development-docs/documentation-and-reliability-audit-2026-10-27.md",
+            "files": []
+          },
+          {
+            "id": "workflow-readiness-brief-20261027",
+            "title": "Workflow readiness management brief (2026-10-27)",
+            "doc": "development-docs/workflow-readiness-brief-2026-10-27.md",
+            "files": []
+          },
+          {
+            "id": "workflow-readiness-analysis-20261027",
+            "title": "Workflow readiness engineering analysis (2026-10-27)",
+            "doc": "development-docs/workflow-readiness-analysis-2026-10-27.md",
+            "files": []
+          },
+          {
+            "id": "reliability-implementation-20261027",
+            "title": "Reliability implementation and verification",
+            "doc": "development-docs/reliability-implementation-2026-10-27.md",
             "files": []
           }
         ]
@@ -896,7 +967,9 @@
             "id": "doc-docs-testing",
             "title": "Checks and verification",
             "doc": "docs/testing.md",
-            "files": []
+            "files": [
+              "tests/test_cloud_recovery.py"
+            ]
           },
           {
             "id": "feature-docs-modules-design-tools",
@@ -1022,6 +1095,23 @@
               "tests/test_validation_feedback.py",
               "tests/test_cli.py",
               "tests/test_branch_integration.py"
+            ]
+          }
+        ]
+      },
+      {
+        "id": "qualification",
+        "title": "Workflow qualification",
+        "children": [
+          {
+            "id": "workflow-qualification",
+            "title": "Small integrated workflow qualification",
+            "doc": "docs/guides/qualification.md",
+            "files": [
+              "src/polyinference/agent/qualification.py",
+              "scripts/qualify_workflow.py",
+              "scripts/browser_check.mjs",
+              "tests/test_reliability_plan.py"
             ]
           }
         ]

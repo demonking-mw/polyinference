@@ -19,6 +19,8 @@ Snapshot viewing makes no provider requests. Endpoint testing offers explicit
 cloud/local/buffered timing profiles and an on-click warm-up using an ordinary
 bounded query. Probes serialize with launches/resumes; unknown probe state remains
 a blocker across UI restart. See [endpoint testing](../guides/endpoint-testing.md). Picker observations are not acceptance.
+Probe scheduling declares the endpoint protocol, not guessed physical placement;
+the original run-wide data policy still blocks disallowed or unknown locations.
 Paused/interrupted runs show Resume with inline optional instructions. One click
 submits the run; no process selection or reconciliation form is required.
 POST /api/resume {id, text?, request_id?, process_id?} accepts a durable request

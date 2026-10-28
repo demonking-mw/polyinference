@@ -157,3 +157,15 @@ def test_embedded_tree_data_cannot_break_out_of_json_script(checkout):
     assert "<script>bad()" not in output
     embedded = output.split('type="application/json">')[1].split("</script>")[0]
     assert json.loads(embedded)["root"]["children"][1]["title"] == "</script><script>bad()</script>"
+
+
+def test_maintained_html_anchor_is_checked_and_template_is_not_a_rendered_page(checkout):
+    page = checkout / "docs/example.html"
+    page.write_text('<div id="actual"></div><a href="#missing">broken</a>')
+    change_tree(checkout, lambda d: d["root"]["children"][1]["files"].append("docs/example.html"))
+    with (checkout / "docs/module.md").open("a") as output:
+        output.write('\n[HTML](example.html)\n')
+    with pytest.raises(docs.DocumentationError, match="missing anchor"):
+        docs.run(checkout)
+    page.write_text('<div id="actual"></div><a href="#actual">working</a>')
+    assert docs.run(checkout).startswith("Documentation OK")

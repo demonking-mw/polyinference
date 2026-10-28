@@ -42,6 +42,9 @@ to programs running on the PolyInference OS.
    primary `doc`, related fixes and linked usage/settings/design guides. Review
    [current work](../development-docs/current-iter-issues.md) and
    [future work](../development-docs/next-iteration.md); a proposal is not implementation.
+   For reliability work, read the [current stage record](../development-docs/reliability-implementation-2026-10-27.md)
+   and [qualification procedure](guides/qualification.md). Keep fixture, browser
+   runner and actual live-model results separate; use fresh state for changed pins.
 5. **If you are an agent, you MUST add this project's rules, important information
    and design/preservation principles to your available memory, project rules or
    project-specific `content.md`.** Use the [memory checklist](project-memory.md),

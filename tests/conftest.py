@@ -14,6 +14,17 @@ def git(repo, *args):
     return subprocess.check_output(["git", "-C", str(repo), *args], stderr=subprocess.STDOUT).decode().strip()
 
 
+def static_schedule(template, config, role, binding="local"):
+    """General fixtures declare the static policy they actually exercise."""
+    rule = template["distribution"]["rules"][0]
+    return {**template, "requirements": [], "conflict_keys": [], "locality_refs": [],
+            "distribution": {**template["distribution"], "rules": [{**rule, "roles": [role],
+                "phases": ["*"], "axis": "harness_class", "eligible_classes": [getattr(config, binding).protocol],
+                "target_weights": {}}]},
+            "data_policy": {**template["data_policy"], "allowed_destination_classes": [binding],
+                            "allowed_inference_locations": ["local", "cloud"]}}
+
+
 def fixture_completion(data):
     """Deterministic reviewer response, not a live model's semantic validation."""
     return {

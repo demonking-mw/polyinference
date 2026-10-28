@@ -127,8 +127,8 @@ Authentication comes from the runtime principal, not caller-supplied JSON identi
 `KernelRuntime` is the implemented ports adapter; `StandaloneRuntime` is its
 compatibility alias. It uses configured providers/tools, persistent checkpoints,
 metadata and artifacts. Unsupported required feature IDs reject before effects.
-Semantic rejection of conflicting data policies and hard allocation is still an
-open gap (U01/U02), not permission to substitute weaker mandatory guarantees.
+Semantic rejection of conflicting data policies and unsupported hard allocation
+is implemented in the static profile (FIX-0134); unsupported guarantees still reject.
 
 The graph asks `exclusive.acquire(resource_key)` and `records.compare_and_publish()`, not `OS.shell_mutex` or SQLite transactions. Its manifest declares installation-wide shell exclusion and project-wide verification exclusion. A deployment can use wider exclusion, but cannot narrow global shell scope and still claim this concurrency protocol.
 
@@ -231,6 +231,15 @@ Each shell command separately acquires shell ownership, including Git/tests. Ver
 SeniorQueryGraph: `prepare -> submit -> consume -> validate -> return`. Modes: `initial`, `sprint_review`, `plan_correction`, `completion_review`, optional `doc_review`. Structured planning can use one raw generation with bounded correction attempts. Output is a proposal; model text cannot directly mutate authoritative records.
 
 A difficult coding assignment is a worker task with role `specialist`. With `model_query` execution it uses the same worker graph/tool/evidence path, bound to eligible cloud inference. This supplies the missing observation/repair loop without a new supervisor.
+
+Current application policy (27 October) requires one observable behavior and a
+focused check per local task; movement, collision and saving are separate tasks.
+Eligible clean local exceptions receive finite cloud-specialist coding recovery
+outside ordinary task-share rounding and semantic depth. Raw senior decisions
+remain distinct from effective policy; pending consumers are rewired atomically.
+Original grants/accounts/deadlines and unknown-effect guards remain authoritative.
+The planner sees actual tools and limitations: no browser/MCP/persistent service
+API. Details and limits: [worker recovery](../implementation/WORKER_RECOVERY.md).
 
 An `agent_job` backend owns its internal loop. LangGraph submits/tracks the bounded job once, consumes artifacts, then enforces reconciliation/assessment/report. Observational tool events must not be executed again. An endpoint must prove workspace scope, tool brokerage, bounded limits, phase control and evidence visibility. Otherwise it is incompatible with that profile; use the model-query worker. Cross-harness migration normally starts a linked new attempt.
 
@@ -439,8 +448,8 @@ Record parsing also rejects applied steering beyond received input, an open stee
 This section specifies richer future distribution semantics. The current OS
 uses static role bindings and FIFO admission; weighted scheduling, pressure-based
 rebindings and priority inheritance are not implemented. Mandatory unsupported
-semantics must still be rejected. Current semantic-validation gaps U01/U02 are
-listed in the [revision ledger](../simplified-os/DESIGN_REVISIONS.md#open-implementation-gaps).
+semantics are rejected by the current static process policy. Historical U01/U02
+and its bounded implementation are in the [revision ledger](../simplified-os/DESIGN_REVISIONS.md#open-implementation-gaps).
 
 **Fidelity is adherence to the declared execution distribution.** It is independent of model quality, priority, determinism and memory-summary accuracy.
 
@@ -607,7 +616,8 @@ The staged roadmap and broader scenarios below preserve the original proposal.
 Current raw/native jobs, non-coding processes, attached worktrees and optional
 context services are implemented as recorded in the revision ledger; weighted
 allocation, memory tiers, MCP and migration are not. Required behavior is not
-proof that all current paths enforce it: U01–U05 remain open.
+proof of every broader proposal. U01–U04 now have static/uniform-profile repairs;
+U05 was resolved earlier. Current verification remains in the revision ledger.
 
 Strict core parsing rejects unknown fields. Namespaced extensions declare required feature versions; unsupported mandatory meaning fails before dispatch. Optional extensions may be ignored only under documented optional semantics. Extensions cannot weaken core grants. Additive defaults can be minor versions; changed accounting/control semantics requires a major version. Running programs remain pinned; migrations are explicit and recorded. Unknown future enum values never become success by default.
 

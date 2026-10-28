@@ -32,8 +32,13 @@ class ProcessLifecycle:
         if (
             parent_spec["grant_ref"] != child_spec["grant_ref"]
             or parent_spec["limits"] != child_spec["limits"]
+            or parent_spec["schedule"]["data_policy"] != child_spec["schedule"]["data_policy"]
         ):
-            raise ValueError("Recovery cannot change grants or resource limits")
+            raise ValueError("Recovery cannot change grants, data policy or resource limits")
+        from ..contracts import ProcessSpec
+
+        self.process_policy.register(ProcessSpec.model_validate(child_spec),
+                                     self.config.role_bindings[child[1]["role"]])
         inherited = self.records.get("process-account/" + predecessor)
         cutoff = (
             inherited[1]["deadline"]
@@ -94,6 +99,7 @@ class ProcessLifecycle:
         key = "process-parked/" + process_id
         retained = self.records.get(key)
         if retained:
+            self.processes.hibernate(process_id)
             return retained[1]
         facts = self.settlement(process_id)
         if self.uncertain() or facts["pending_operations"] or facts["permit_refs"]:
@@ -110,6 +116,7 @@ class ProcessLifecycle:
             {process_key: {**process, "state": "paused", "owner_generation": receipt["owner_generation"]}},
             {key: receipt},
         )
+        self.processes.hibernate(process_id)
         return receipt
 
     def prepare_effect(self, request, effect_key, effect):

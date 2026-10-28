@@ -458,6 +458,8 @@ function renderAgents(data){
  else{const queries=(osState?.processes||[]).filter(row=>row.role==="senior"&&row.process_id!=="controller");if(queries.length)$("seniorActivity").append(buttonLink("Inspect latest senior query",()=>showProcess(queries.at(-1).process_id)))}
  $("planDetails").replaceChildren();if(run.plan_ref)$("planDetails").append(recordLink(run.plan_ref,"Current plan "+run.plan_ref));
  const allocation=data.development_allocation;
+ const quality=source.quality;
+ if(quality)$('planDetails').append(element('p',quality.physical_raw_generations+' raw generations · '+quality.native_jobs+' native jobs · '+quality.kept_nonempty_publications+' kept source contributions · '+quality.response_validation_failures+' validation failures · '+quality.raw_context_omissions+' context omissions. Source contributions do not certify product completion.','policy'));
  if(allocation)$("planDetails").append(element("p",allocation.junior_tasks+" junior / "+allocation.senior_tasks+" specialist started development tasks · specialist target "+Math.round(allocation.target_senior_fraction*100)+"%. Setup and management excluded.","policy"));
  renderTasks();renderNotes();renderAcceptance();
 }

@@ -9,6 +9,8 @@ One OS settings schema, adjacent coding defaults, and explicit application workf
 | [src/polyinference/system_settings.py](../../src/polyinference/system_settings.py) | Generic RuntimeConfig, endpoint, context and inference safety settings. |
 | [src/polyinference/config.py](../../src/polyinference/config.py) | AgentConfig workflow policy plus compatibility exports of OS settings. |
 | [src/polyinference/agent/system_settings.py](../../src/polyinference/agent/system_settings.py) | Coding OS defaults and UI provider/resource preset. |
+| [scripts/settings_docs.py](../../scripts/settings_docs.py) | Generate/check exact exported settings schemas and nested defaults. |
+| [docs/settings-schema.json](../settings-schema.json) | Generated current RuntimeConfig/AgentConfig schemas; check with the activated environment. |
 | [examples/agent.mixed.json](../../examples/agent.mixed.json) | Codex senior + Haiku worker sample; 27 sprints, streaming and a 4096 target inside the 32k output ceiling. |
 | [examples/agent.anthropic.json](../../examples/agent.anthropic.json) | Anthropic-only streaming sample with a smaller target inside its 32k ceiling. |
 | [examples/agent.codex.json](../../examples/agent.codex.json) | Brokered Codex sample. |
@@ -28,12 +30,11 @@ values without rereading ambient overrides. No simulation flag is serialized.
 The coding settings module owns the complete Haiku factory and pure simulation
 overlay (worker binding/cap, slots, full-context reservations), preserving custom
 Anthropic fields and other providers/bindings. OS admission remains generic.
-The optional [application simulator](inference-simulation.md) adds a separate
-SimulationAgentConfig only for explicitly enabled buggy/slow runs. Its saved
-inference_simulation block pins settings/seed for recovery; normal AgentConfig,
-RuntimeConfig remains generic; new optional Endpoint.lifecycle and agent inference
-policy fields are omitted when absent to preserve legacy serialization. --sim-inference
-itself is a UI invocation permission, not a persisted preference.
+The optional [application simulator](inference-simulation.md) uses
+SimulationAgentConfig for enabled buggy/slow runs; its saved inference_simulation
+block pins settings/seed for recovery. RuntimeConfig has no simulator policy.
+Absent Endpoint.lifecycle and agent inference_policy/model_output_target_tokens
+fields are omitted from serialization. --sim-inference is a UI invocation flag.
 
 Optional Endpoint.lifecycle selects explicit transport/connect/first-output/idle/
 total timing. The coding application chooses profiles; bare runtime fields contain
@@ -59,12 +60,17 @@ After a fix/feature, update this guide and all affected docs/settings/navigation
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
 Follow [documentation maintenance](../maintenance.md) in the same task.
 
-## Integrated reliability branch (2026-10-26)
+## Reliability settings
 
-New top-level agent fields are inference_retry (two maximum physical attempts and
-a one-second replacement window), check_diagnosis, acceptance_criteria,
-max_review_reads (4), max_worker_recoveries (1), and progress_monitor
-(enforce, warn_after=8, escalate_after=12). Progress supports observe/off modes.
-Endpoint fields supports_temperature (true) and reasoning_effort (medium) belong
-to the generic endpoint schema. Existing grouped system settings and separate
-prerequisite/task/acceptance checks retain their ownership.
+Top-level `inference_retry`, `check_diagnosis`, `acceptance_criteria`,
+`max_review_reads`, `max_worker_recoveries`, `max_cloud_recoveries` and
+`progress_monitor` are agent policy.
+Their defaults, ranges and recovery interactions are in the
+[agent reliability reference](../guides/agent-reliability.md).
+Endpoint `supports_temperature` defaults to true and rejects an explicit unsupported
+sampling request. `reasoning_effort` defaults to medium and is sent on native turns;
+the turn field takes precedence over a command-line startup default.
+The UI launcher no longer supplies a conflicting low-effort override.
+Optional `system.data_policy` constrains every process/replacement; narrower
+ProcessSpec policies remain enforceable. Explicit endpoint location is required
+to satisfy a local-only/cloud-only constraint. Fresh state pins these contracts.

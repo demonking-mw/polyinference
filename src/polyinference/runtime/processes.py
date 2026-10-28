@@ -79,13 +79,17 @@ def request_cancel(records, process_id, reason):
 
 
 class Processes:
-    def __init__(self, records, max_workers):
+    def __init__(self, records, max_workers, policy=None):
         self.records, self.max_workers = records, max_workers
+        self.policy = policy
         self.drivers = {}
         self.on_cancel = None
 
     def register(self, spec, binding_ref, *, management=False, capabilities=()):
         from ..contracts import ProcessStatus
+
+        if self.policy:
+            self.policy.register(spec, binding_ref)
 
         key = "process/" + spec.process_id
         status = ProcessStatus(
@@ -116,15 +120,7 @@ class Processes:
             raise ValueError("Unregistered process")
         if process[1]["state"] in {"completed", "failed", "cancelled", "paused"}:
             raise ValueError("Process is stopped; explicit recovery is required")
-        if not process[1].get("management", False):
-            residents = sum(
-                not task.done() and not self.records.get("process/" + pid)[1].get(
-                    "management", False
-                )
-                for pid, task in self.drivers.items()
-            )
-            if residents >= self.max_workers:
-                raise RuntimeError("Resident worker capacity is full")
+        self.admit(process_id)
         async def drive():
             try:
                 key = "process/" + process_id
@@ -135,7 +131,11 @@ class Processes:
                     from datetime import datetime
 
                     deadline = datetime.fromisoformat(process[1].get("started_at", spec[1]["created_at"]).replace("Z", "+00:00")).timestamp()
-                    remaining = deadline + spec[1]["limits"]["max_wall_time_ms"] / 1000 - now().timestamp()
+                    cutoff = deadline + spec[1]["limits"]["max_wall_time_ms"] / 1000
+                    inherited = self.records.get("process-account/" + process_id)
+                    if inherited:
+                        cutoff = min(cutoff, datetime.fromisoformat(inherited[1]["deadline"]).timestamp())
+                    remaining = cutoff - now().timestamp()
                     result = await asyncio.wait_for(factory(), max(0, remaining))
                 else:
                     result = await factory()
@@ -143,6 +143,12 @@ class Processes:
                 if status and status[1]["state"] not in {"completed", "cancelled", "failed", "paused"}:
                     control = self.records.get("process-control/" + process_id)
                     self.finish(process_id, state="cancelled" if control and control[1].get("cancel_requested") else "completed")
+                elif status and status[1]["state"] in {"completed", "cancelled", "failed"}:
+                    residency = self.records.get("process-residency/" + process_id)
+                    if residency and residency[1]["state"] == "resident":
+                        current = self.records.get("process/" + process_id)
+                        self.finish(process_id, state=status[1]["state"],
+                                    output_refs=current[1].get("output_refs", ()))
                 return result
             except BaseException:
                 status = self.records.get("process-status/" + process_id)
@@ -175,15 +181,64 @@ class Processes:
             body.get("process_id") == process_id for _, _, body in self.records.scan("permit/")
         ):
             raise ValueError("Process still owns a resource permit")
-        self.records.compare_and_publish(
-            {process_key: process[0], status_key: status[0]},
-            {
+        expected = {process_key: process[0], status_key: status[0]}
+        updates = {
                 process_key: {**process[1], "state": state,
                               "output_refs": [ref.model_dump(mode="json") if hasattr(ref, "model_dump") else ref
                                               for ref in output_refs]},
                 status_key: {**status[1], "state": state, "revision": status[1]["revision"] + 1,
                              "last_progress_at": now().isoformat()},
-            },
+            }
+        residency = self.records.get("process-residency/" + process_id)
+        if state != "paused" and residency:
+            expected["process-residency/" + process_id] = residency[0]
+            updates["process-residency/" + process_id] = {**residency[1], "state": "released"}
+        self.records.compare_and_publish(expected, updates)
+
+    def admit(self, process_id):
+        process = self.records.get("process/" + process_id)
+        if not process:
+            raise ValueError("Unknown process")
+        if process[1].get("management", False):
+            return
+        key = "process-residency/" + process_id
+        prior = self.records.get(key)
+        if prior and prior[1]["state"] == "resident":
+            return
+        residents = sum(row["state"] == "resident"
+                        for _, _, row in self.records.scan("process-residency/"))
+        if residents >= self.max_workers:
+            raise RuntimeError("Resident worker capacity is full; explicit safe hibernation is required")
+        self.records.compare_and_publish(
+            {key: prior[0] if prior else 0},
+            {key: {"state": "resident", "generation": (prior[1]["generation"] if prior else 0) + 1}},
+        )
+
+    def hibernate(self, process_id):
+        process = self.records.get("process/" + process_id)
+        if not process or process[1]["state"] != "paused":
+            raise ValueError("Only a paused process can hibernate")
+        driver = self.drivers.get(process_id)
+        if driver and not driver.done() and not self.records.get("process-parked/" + process_id):
+            raise ValueError("Active driver must settle or be explicitly fenced before hibernation")
+        if any(row["request"]["scope"].get("process_id") == process_id
+               and (not row.get("result") or row["result"]["execution_termination"] != "confirmed_stopped"
+                    or row["result"]["effects"] == "unknown")
+               for _, _, row in self.records.scan("effect/")):
+            raise ValueError("Hibernation requires settled effects")
+        if any(row.get("process_id") == process_id for _, _, row in self.records.scan("permit/")):
+            raise ValueError("Hibernation requires released resource permits")
+        if any(row.get("process_id") == process_id and row.get("state") in {"waiting", "held"}
+               for _, _, row in self.records.scan("reservation/")):
+            raise ValueError("Hibernation requires settled physical reservations")
+        key = "process-residency/" + process_id
+        prior = self.records.get(key)
+        if prior and prior[1]["state"] == "hibernated":
+            return
+        self.records.compare_and_publish(
+            {"process/" + process_id: process[0], key: prior[0] if prior else 0},
+            {key: {"state": "hibernated", "generation": prior[1]["generation"] if prior else 0,
+                   "continuation_ref": self.status(process_id).get("continuation_ref")}},
         )
 
     def status(self, process_id):

@@ -50,7 +50,7 @@ def ui_system_settings(source):
     endpoint = Endpoint(
         protocol="codex_app_server",
         model="gpt-6.1-sol",
-        command=["codex", "app-server", "-c", 'model_reasoning_effort="low"'],
+        command=["codex", "app-server"],
         max_context_tokens=128000,
         reserved_context_tokens=256000,
         max_inflight=1,

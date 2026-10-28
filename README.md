@@ -1,7 +1,15 @@
 # PolyInference
 
-PolyInference pairs a LangGraph coding agent with a small orchestration OS. The current version is mainly to support polycode-v1, a coding agent designed for concurrency and to leverage the power of cloud SOTA models with local inferencing. In the agent, senior (cloud) plans and reviews, (local inference) workers implement, and the runtime records bounded
-model/tool execution. The OS id designed to run any agents, many are/will be in development in v2. The current test system uses Codex for senior work and Anthropic Haiku as a local inference simulator for those without the hardware to run them.
+**Reliability implementation:** [Changes and verification](development-docs/reliability-implementation-2026-10-27.md).
+The [current issue record](development-docs/current-iter-issues.md#local-task-cloud-recovery)
+and [small workflow qualification guide](docs/guides/qualification.md) describe scope and limits.
+
+PolyInference pairs a LangGraph coding agent with a small orchestration OS.
+The current coding application, polycode-v1, combines cloud senior planning/review
+with local worker implementation and bounded, recorded model/tool execution.
+The OS also supports general agents; broader agent support is planned for v2.
+The default tester preset uses Codex seniors and remote Anthropic Haiku workers
+as a local-lane stand-in. Actual local serving uses an explicitly configured server.
 In the [UI](docs/guides/ui.md), OS processes and model operations expose a read-only
 Memory / context drawer for retained original/prepared input and its provenance.
 Use `polyinference ui --sim-batch 2` for an invocation-only remote Haiku simulation
@@ -21,10 +29,11 @@ inference with per-run TPS, batch and failure controls; see the
 change.** Agents: read [AGENTS.md](AGENTS.md) and the
 [fix history](development-docs/FIXES.md) before work.
 
-## Integrated reliability branch (2026-10-26)
-
-The reliability work is integrated with the simple OS runtime. Workers now support
+The integrated reliability implementation supports
 [bounded exception recovery](design-docs/implementation/WORKER_RECOVERY.md),
 [execution observations and stagnation warnings](design-docs/implementation/PROGRESS_MONITORING.md),
-source-backed semantic review, and versioned module contracts. See the
-[settings guide](docs/modules/settings.md) for controls and fresh-run requirements.
+source-backed review and versioned module contracts. See
+[agent reliability settings](docs/guides/agent-reliability.md) for controls and
+fresh-run requirements, and the
+[documentation/run review](development-docs/documentation-and-reliability-audit-2026-10-27.md)
+for current findings and historical limits.

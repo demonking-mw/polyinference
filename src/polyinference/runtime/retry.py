@@ -7,6 +7,7 @@ Effectful jobs/tools and uncertain execution never get blind re-execution.
 from __future__ import annotations
 
 import asyncio
+import inspect
 from datetime import datetime, timedelta
 
 from ..contracts import AgentJob, ErrorDetail, ModelQuery, OperationRequest, OperationResult, UsageMeasure
@@ -33,6 +34,13 @@ class InferenceRetries:
 
     def register_response_validator(self, schema_ref, validator):
         self.response_validators[schema_ref] = validator
+
+    def register_response_repair(self, schema_ref, repair):
+        """Optional synchronous owner callback; no model dispatch or retry allowance is added."""
+        if repair is None:
+            self.response_repairs.pop(schema_ref, None)
+        else:
+            self.response_repairs[schema_ref] = repair
 
     def register_response_schema(self, schema_ref, schema):
         fingerprint = digest(canonical(schema))
@@ -220,6 +228,22 @@ class InferenceRetries:
                     )
                 row = self.records.get(retry_key)[1]
                 until = min(request.deadline, datetime.fromisoformat(row["until"]))
+                repair = self.response_repairs.get(payload.response_schema_ref)
+                if repair and not row.get("replacement") and now() < until:
+                    try:
+                        replacement = repair(request, row["error"] or {})
+                        if inspect.isawaitable(replacement):
+                            if inspect.iscoroutine(replacement):
+                                replacement.close()
+                            raise TypeError("Response repair must be synchronous")
+                        if replacement is not None:
+                            await self.offer_retry(request.operation_id, replacement,
+                                                   process_id=request.scope.process_id)
+                    except Exception as exc:
+                        # Optional feedback cannot replace the physical execution outcome.
+                        self._update("response-repair-error/" + request.operation_id,
+                                     {"error": type(exc).__name__, "attempt": row["attempt"]})
+                    row = self.records.get(retry_key)[1]
                 if row["state"] == "waiting" and not row.get("replacement"):
                     try:
                         await asyncio.wait_for(event.wait(), max(0, (until - now()).total_seconds()))

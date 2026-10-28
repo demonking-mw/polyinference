@@ -2,10 +2,11 @@
 
 [Configuration](configuration.md) · [UI](ui.md) · [Runtime boundary](../../design-docs/simplified-os/RUNTIME_BOUNDARY.md)
 
-The local lane can serve a small cloud model or genuine local inference. Choose
-transport and timings explicitly; neither its name nor a loopback URL proves
-latency, capacity or safe replay. This version has offline fixture coverage, not
-live provider/GPU validation.
+Choose transport/timings explicitly for cloud or local inference; lane names and
+loopback URLs prove neither latency/capacity nor safe replay. Fixtures cover the contract.
+The [26 October local Strata test](../../development-docs/local-strata-live-test-2026-10-26.md)
+adds real local/native provider and GPU observations, with a failed product outcome;
+it does not validate every transport, timing/fault path or full-window capacity.
 
 | UI profile | Connect | First meaningful output | Output idle | Total logical request |
 | --- | --- | --- | --- | --- |
@@ -48,8 +49,9 @@ fresh coding-agent configs choose two. The agent can declare more at top level:
 Additional retries range from zero to three and follow the native allowance.
 Thus the fresh UI permits initial + two native + one caller retry for eligible
 failures. Output adaptation shares these counters, never resets them, and has its
-own existing adaptation limit. Grammar correction and explicit application
-recovery remain separate. Every attempt passes grants, cancellation, finishing
+own adaptation limit. Registered response validation, grammar correction and
+linked worker recovery have [separate agent settings](agent-reliability.md).
+Every attempt passes grants, cancellation, finishing
 reserve, capacity and token/spend admission. Hard output ceilings remain intact;
 the smaller target applies to raw queries. Saved explicit values win over defaults.
 
@@ -70,6 +72,8 @@ or probe in that manager. Use the saved generic RuntimeConfig with KernelRuntime
 actual termination evidence before further work; the UI observes settled records.
 Restarting the UI does not clear this guard. This
 is bring-up tooling, not a shared admission service across independent OS runs.
+Probe placement stays unspecified unless declared by the endpoint. Run-wide data
+policy remains mandatory; a local lane or URL cannot attest a constrained location.
 
 Inspect inference-progress/<operation> for last output, elapsed time and deadline;
 model-retry/<root>/<attempt> records source (native/caller), and retry outcomes

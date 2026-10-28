@@ -13,3 +13,4 @@ class Check(Wire):
     argv: Annotated[list[str], Field(min_length=1)]
     timeout_seconds: Annotated[float, Field(gt=0, le=600)] = 60
     output_paths: list[RelativePath] = Field(default_factory=list)
+    required_paths: list[RelativePath] = Field(default_factory=list, exclude_if=lambda value: not value)

@@ -21,27 +21,20 @@
 | Open snapshot | Inspect a saved version 2 JSON snapshot without live polling or provider requests; use Live runs to reconnect. |
 | Costs | View provider estimates for the run and totals across saved runs. |
 
-Failed startup attempts can be reopened and saved with **Save run · JSON**. The
-snapshot includes the exact error, error type, submitted launch inputs and startup
-process record, even when no agent nodes ran. They also enter the rolling history.
+Failed starts retain inputs, error type and startup process in Save and rolling
+history, even when no agent nodes ran.
 
-The OS uses cooperative cancellation and drain-before-review steering, rather than
-forced model-request pre-emption. Admission is FIFO within ordinary and finishing
-lanes, alternating between them when both have waiters. The process table shows
-declared priorities; they do not replace this admission policy. Critical sections
-show verification and shell permit ownership and ownership waiters. Entries in the
-activity view sharing a journal sequence committed in one atomic transaction.
-Use **Older transactions** to page through retained history and select an entry
-for its historical value, or use the record explorer for its current value.
+Admission is FIFO within ordinary/finishing lanes and alternates when both wait.
+Declared process priorities do not replace that policy. Critical sections show
+verification/shell owners and waiters. Activity entries sharing a journal sequence
+committed atomically. **Older transactions** opens retained historical values;
+the record explorer shows current values.
 
-New requests record admission queue/hold timestamps and ownership waits. Older
-runs may only have current records. The journal retains up to 10,000 transactions;
-the console and export report any pruned history and legacy telemetry gaps.
-Save captures records and events in one read transaction; checkpoints and artifacts
-are captured separately, so a running workload can advance during capture. The
-snapshot includes all retained diagnostic records and artifacts, including binary
-artifacts encoded as base64. It does not contain private Git objects and is not a
-runnable OS backup. Artifact read/integrity errors are listed in the snapshot.
+Queue/hold timing is recorded for new requests; older telemetry may be absent.
+The journal retains up to 10,000 transactions and reports pruning. Save captures
+records/events together, then checkpoints/artifacts separately: a running workload
+can advance during capture. Binary artifacts use base64; integrity/read errors are
+listed. Private Git objects are absent. See [snapshot limits](archives.md).
 
 Memory / context defaults to the newest outstanding caller invocation, otherwise
 its latest retained outcome; compaction helpers stay separate. An operation opens
@@ -52,33 +45,19 @@ provider token usage. This view omits hidden reasoning, KV state and some adapte
 framing. Node prompts label prepared/original origin and separate native transport
 observations. Saved JSON uses retained records/artifacts entirely offline.
 
-Steering closes new task starts immediately. Workers that have already started,
-including workers waiting for a gate or model slot, finish their original
-assignment before the senior consumes the update. The panel shows received and
-pending instructions. Steering is not an immediate worker interrupt.
+Steering closes new task starts. Started workers, including gate/model-slot waiters,
+finish their assignment before senior review consumes the update. Received/pending
+instructions remain visible; this does not immediately interrupt a worker.
 
-To continue a paused or interrupted run, select it, optionally fill in
-**Instructions for continuing**, then click **Resume**. There is no required
-process chooser or reconciliation form. The agent handles checkpoint continuation,
-known-failure retries, interrupted-task review and accepted-output delivery.
-Instructions enter its normal drain/review boundary once. Drafts and request
-identity survive lost acknowledgements and page restart; repeated submission of
-the same request does not start another run.
-
-**Resuming** means the request was accepted and execution is being prepared.
-Pending requests restore after server restart. Resume retains the run ID, private
-work, authority, configuration, budgets and deadlines. Launch-form/simulation
-changes apply only to new runs. An exact supported predecessor program can migrate
-with recorded provenance; other incompatible programs are rejected.
-
-The OS automatically uses retained host/completed-response evidence and retrieves
-supported provider results. If a provider cannot recover an unknown operation,
-the UI shows a plain failure while preserving it. This is not a request to edit
-journals or assert that remote work stopped. Old synchronous HTTP requests without
-a saved response handle and unknown native jobs may remain unrecoverable.
-Saved JSON snapshots are read-only. An external --state needs its saved config.json
-or matching --config. Restart the UI server after updating Python code, then reload
-its HTTP URL (default http://127.0.0.1:8765); opening ui.html with file:// has no API.
+**Resuming** means accepted intent and preparation; it does not prove remote
+termination. Drafts/request identity survive lost acknowledgements and restart;
+duplicate submission does not create a second run. Saved authority, config, source,
+budgets and deadlines persist. New-launch settings do not alter resumed runs.
+Unsupported provider recovery or incompatible program pins produce a plain error.
+See [recovery and compatibility](recovery.md) and [explicit retries](retrying.md).
+Snapshots are read-only; external --state needs saved config.json or matching
+--config. Restart after Python updates and use the HTTP URL (default
+http://127.0.0.1:8765); opening ui.html through file:// has no API.
 
 Development allocation targets **10% senior / 90% junior by task count** over the
 run. Setup, sprint planning and management calls do not count toward that split.

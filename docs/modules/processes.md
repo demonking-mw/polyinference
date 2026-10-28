@@ -28,7 +28,12 @@ independent. Control/management treatment is explicit rather than inferred from 
 - Cooperative cancellation preserves started effects and their certainty.
 - A finished process need not produce source, Git commits, reports or tests.
 - Do not hold an exclusive global execution lock while awaiting inference.
-- Narrow process-limit authority and paused-worker residency remain open U03/U04 gaps.
+- Registration rejects unequal process/runtime limits before effects.
+- Replacement drivers use the earlier process cutoff or inherited account deadline, including while waiting without effects.
+- Durable process-residency admissions survive a paused driver; finish alone does not hibernate it.
+- hibernate(process_id) requires pause, settled/fenced driver, known effects and released permits/reservations; start explicitly readmits.
+- Clean fenced parking performs safe hibernation. Unknown physical work never gains capacity from a lost driver.
+- Worker publication uses OS finish; returned terminal drivers also settle residency. Paused drivers retain it.
 
 ## Verification and related reading
 

@@ -11,8 +11,10 @@
 | Default senior provider | Codex CLI installed and signed in on the same macOS/Linux/WSL host as PolyInference. |
 | Project tools | Any compiler, interpreter, package manager and dependencies required by your target project's checks. |
 
-The implementation has been exercised on Ubuntu 22.04 in WSL with Python 3.10.12
-and Codex CLI 0.163.0. Keep the repository and runtime state on the Linux
+Historical testing includes Ubuntu 22.04/WSL, Python 3.10.12 and Codex 0.163.0;
+the [26 October live record](development-docs/local-strata-live-test-2026-10-26.md)
+adds the local Strata setup and its product-verification limits. These are tested
+snapshots, not a required version matrix. Keep repository/state on the Linux
 filesystem, for example `~/projects/polyinference`, rather than `/mnt/c/...`.
 Use Linux paths in the UI, such as `/home/yourname/projects/my-app`.
 

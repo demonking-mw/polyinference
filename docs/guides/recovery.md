@@ -27,6 +27,15 @@ The execution protocol is:
 4. Senior review keeps, reverts, retries or defers reports.
 5. Independent final checks guard project completion.
 
+Clean `needs_review` or sustained stagnation can instead park a settled worker
+and reach senior exception review. Eligible local failures now get bounded cloud
+specialist implementation, even after ordinary replacement depth is spent or a
+senior defers/stops/omits them. Actual cloud coding is protected from quota demotion.
+Linked replacements retain source evidence, original account/deadline and narrower
+grants. Ineligible defer/stop decisions leave an unresolved completion obligation;
+unknown effects and exhausted physical budgets remain blockers. See
+[agent reliability](agent-reliability.md).
+
 Steering follows the drain-before-review behavior described above. It does not
 reset budgets. UI Resume and CLI `resume CONFIG [--text instructions]` record a
 run-level intent. The agent clears a recoverable pause through checkpoint/model

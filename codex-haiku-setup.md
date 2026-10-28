@@ -2,15 +2,14 @@
 
 [Setup](setup.md) · [Documentation](docs/README.md) · [Developer onboarding](dev-readme.md)
 
-Use the requested testing branch. Record `git branch --show-current` and
-`git rev-parse HEAD` with your findings. Reuse or create the Linux/macOS test
-environment using [installation](docs/guides/install.md); install the lockfile
-before the editable package when reproducing the recorded environment.
+Record the requested testing branch and HEAD with `git branch --show-current`
+and `git rev-parse HEAD`. Follow [installation](docs/guides/install.md), including
+the lockfile recipe when reproducing a recorded Linux/macOS environment.
 
 | Lane / role | Pinned UI preset |
 | --- | --- |
 | `local` / `worker` | Anthropic `claude-haiku-5-5`, one in-flight request |
-| `cloud` / `senior`, `specialist` | `codex_app_server`, `gpt-6.1-sol`, low effort, brokered tools, one request |
+| `cloud` / `senior`, `specialist` | `codex_app_server`, `gpt-6.1-sol`, medium turn effort, brokered tools, one request |
 
 The lane names do not describe physical hosting. Haiku is a paid cloud stand-in
 for serial local admission; this is neither Anthropic's Batch API nor a hardware
@@ -31,8 +30,8 @@ comparing results.
    ```
 
    The variable applies only to this launch. The default UI has one worker,
-   trusted shell/check execution, 27 sprints and 32k output. Copying the mixed
-   JSON example selects different concurrency settings.
+   trusted shell/check execution and 27 sprints. Raw queries target 4096 tokens
+   inside a 32k hard ceiling. The mixed JSON example has different concurrency.
 4. Follow the [greeting smoke test](docs/guides/first-run.md). Inspect worker
    calls on `local` and senior/specialist calls on `cloud`; the saved config must
    show `max_workers:1` and both `max_inflight:1`. Require final acceptance/check
@@ -48,17 +47,13 @@ For concurrent remote simulation, use:
 polyinference ui --sim-batch 2
 ```
 
-N accepts 1..16 and applies to new runs on that UI server: worker binding local,
-N workers, N local inference slots, and at least N full-context reservations.
-The explicit flag overrides POLYINFERENCE_LOCAL_BATCH_SIZE, including stale or
-malformed values, without modifying the environment or future UI launches.
-With --config, a complete Anthropic local endpoint retains its custom model,
-URL, credential reference, timeout and price; another protocol selects the full
-default Haiku endpoint visibly. Senior/cloud settings and other bindings remain.
-Missing/blank referenced credentials produce an inspectable startup failure;
-opening the UI itself makes no billed request. Each new run saves its effective
-config. Old --state runs remain unchanged. Resume needs those saved settings and
-a matching environment; unset conflicting legacy capacity overrides first.
+N accepts 1..16: N workers/local slots and at least N full-context reservations.
+It overrides ambient capacity for this server's new runs without changing the
+environment or later launches. Custom Anthropic settings survive; another local
+protocol selects the full Haiku preset. Senior/cloud settings remain explicit.
+Opening the UI makes no billed request. New runs save effective configuration;
+Resume uses saved settings and suppresses ambient capacity overlays. See
+[configuration](docs/guides/configuration.md) and [recovery](docs/guides/recovery.md).
 
 Slots are maximums, not guaranteed occupancy. Use independent tasks to exercise
 overlap; the greeting asks for one. No-task-branch Git policy still permits only
@@ -68,14 +63,10 @@ quotas still apply. Model availability was rechecked against the
 [official Haiku overview](https://platform.claude.com/docs/en/models/haiku-5-5/overview);
 account access requires its own readiness evidence.
 
-For paced and unreliable inference experiments, launch `polyinference ui
---sim-inference` and select normal, normal and buggy, or slow and buggy before
-Start. Initial values are 30 shared output TPS, batch 2 and 5% incident rate.
-This is separate from the unchanged --sim-batch concurrency-only preset; with both
-flags, an active simulation's selected batch takes precedence, while normal mode
-retains --sim-batch. Seeded decisions, restart cooldowns and synthetic progress are
-saved per run; actual Haiku usage/cost remains recorded. See the complete
-[simulation guide](docs/guides/sim-inference.md) for scope, timing and recovery.
+For pacing/fault controls, use `polyinference ui --sim-inference`. Its active
+mode's batch takes precedence over --sim-batch; normal mode retains it. The
+[simulation guide](docs/guides/sim-inference.md) covers defaults, fault decisions,
+timing and recovery. Actual Haiku usage remains recorded.
 
 [Launch controls](docs/guides/launching.md) cover ports and stopping the idle server.
 Snapshots are diagnostic evidence, not complete Git backups or resumable state.
@@ -83,10 +74,10 @@ See [provider distinctions](docs/guides/providers.md) before selecting `codex_pr
 
 Report each finding in [current iteration](development-docs/current-iter-issues.md),
 [next iteration](development-docs/next-iteration.md), or [general issues](development-docs/general-issues.md)
-for later triage. Include branch/commit, OS/Python/Codex versions, objective/check,
-run ID, models, batch size, reproduction, expected/actual behavior, exact errors
-and snapshot location. Separate observations from suspected causes; include UX
-and setup friction. Review sensitive project content before sharing evidence.
+for triage. Include branch/commit, OS/Python/Codex versions, objective/check, run ID,
+models/batch, reproduction, expected/actual behavior, errors and snapshot location.
+Separate observations from suspected causes; include setup/UX friction and review
+sensitive content before sharing evidence.
 
 When implementing a fix/feature, update all related docs and navigation plus
 [FIXES.md](development-docs/FIXES.md) in the same task. Follow [maintenance](docs/maintenance.md).

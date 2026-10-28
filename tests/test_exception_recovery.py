@@ -134,14 +134,22 @@ class Recovering(ScriptedAgent):
         return await super().generate(messages, *args, **kwargs)
 
 
-async def test_clean_exception_recovers_with_source_lineage_and_shared_allowance(config):
-    config = config.model_copy(update={"check_diagnosis": CheckDiagnosis(max_rounds=0)})
+@pytest.mark.parametrize("repository_mode", ["isolated", "in_place"])
+async def test_clean_exception_recovers_with_source_lineage_and_shared_allowance(config, repository_mode):
+    config = config.model_copy(update={"check_diagnosis": CheckDiagnosis(max_rounds=0),
+                                       "repository_mode": repository_mode})
     runtime, app, engine = await connect(config, Recovering(two=False))
     try:
         await engine.run()
         assert app.get("app/run")["status"] == "completed"
         old, new = app.get("task/a"), app.get("task/a2")
         assert old["execution"] == "interrupted" and old["replacement_task_id"] == "a2"
+        assert new["assignment"]["role"] == "specialist" and new["cloud_recoveries"] == 1
+        assert app.get("process-status/" + new["process_id"])["binding_ref"] == "cloud"
+        proposal = app.get("proposal/senior-2")
+        assert proposal["model_proposal"]["tasks"][0]["role"] == "worker"
+        assert proposal["proposal"]["tasks"][0]["role"] == "specialist"
+        assert proposal["policy_adjustments"][0]["replacement_task_id"] == "a2"
         attempt = TaskAttempt.model_validate(app.get("attempt/" + old["attempt_id"]))
         assert attempt.stop_reason == "needs_review"
         assert app.get("attempt/" + new["attempt_id"])["previous_attempt_ref"] == attempt.record_id

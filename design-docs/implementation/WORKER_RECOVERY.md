@@ -19,15 +19,32 @@ New starts close while already running workers finish. Senior review receives
 exceptions separately from assessed reports and can `retry`, `defer` or `stop`:
 
 - `retry` needs a new task ID, a specific changed condition and a linked predecessor.
-  `max_worker_recoveries` defaults to one per root (allowed range zero through three).
+  `max_worker_recoveries` bounds ordinary replacements (default one, range zero to three).
   Explicit `resume_from=exception_ref` selects one retained development delta;
   otherwise the new assignment starts fresh. Reuse is checked against the current
   base and exact replacement write grant before planning and at materialization.
 - `defer` permits independent work but leaves an unresolved objective obligation.
-- `stop` pauses for steering. Neither defer nor stop permits project completion.
+- `stop` pauses for steering when no eligible cloud takeover remains. Neither
+  defer nor stop permits project completion.
+
+The 27 October application policy supersedes the original local retry-only limit:
+`max_cloud_recoveries` (default one, zero to three) supplies a separate, finite
+specialist/cloud coding allowance for clean stopped local lineages. Eligibility
+requires configured worker→local/specialist→cloud roles, unpublished development,
+no explicit cancellation/unknown effects, and original physical capacity remaining.
+The application converts eligible local retry/defer/stop/omitted decisions to
+specialist implementation before validation, records raw/effective decisions and
+protects recovery from task-share rounding. Cloud attempts never bounce to local
+or reset lineage counts. A stale/conflicting delta is retained as evidence while
+automatic repair starts at the current base within the original grant.
 
 Affected pending dependents must be cancelled and replaced together with their new
 dependency IDs. Started assignments and interface contract versions stay pinned.
+Automatic cloud fallback clones ordinary pending consumers transitively. A pending
+consumer that already has recovery lineage can be retargeted through its original
+exception only while unstarted and unadmitted, preserving contract/source/root,
+counts and deadline. An admitted consumer or incompatible lineage still blocks;
+it never loses its inherited account through an unsafe clone.
 Original interrupted attempts remain evidence and count as started work. Their
 obligations resolve only when linked replacement work is assessed and explicitly kept.
 New unlinked work overlapping an unresolved exception's write scope is rejected.
@@ -39,9 +56,9 @@ logical operation allowance and absolute deadline. Transport retries charge each
 physical attempt once; replay of a settled operation remains available after fencing.
 Senior management calls retain their separately bounded process/run allowance.
 
-This first version supports one replacement per disposition, not a split with
-multiple automatically resumed sources. Conflicting reuse requires an explicit
-repair plan. Unexpected host failures and unknown physical execution still fail
+This version supports one replacement per disposition, not a split with
+multiple automatically resumed sources. Explicit conflicting reuse requires a
+revised plan. Unexpected host failures and unknown physical execution still fail
 closed; no timer cancels a provider job or expires another owner's permit.
 
 Program/state pins changed; use fresh state for this implementation. Existing runs
@@ -69,4 +86,5 @@ branch. The local [fix log](FIXES.md) records the changes made here.
 Integrated source responsibilities:
 
 - [src/polyinference/agent/exceptions.py](../../src/polyinference/agent/exceptions.py) implements application exception packets and bounded linked recovery.
+- [src/polyinference/agent/cloud_recovery.py](../../src/polyinference/agent/cloud_recovery.py) normalizes eligible plans, reports capability/eligibility and rewires pending consumers.
 - [src/polyinference/runtime/lifecycle.py](../../src/polyinference/runtime/lifecycle.py) implements generic settlement, fencing and inherited resource accounts.

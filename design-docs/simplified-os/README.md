@@ -133,11 +133,10 @@ The controller starts registered worker/query entries with immutable inputs. Exp
 
 `W` counts claimed coding workers from setup through execution and necessary cleanup, including gate/model waiters and coding documentation tasks. A worker whose effects have ended and whose report is durably published releases its worker slot even while the report remains unresolved; retained records/artifacts have separate storage limits. Reserve bounded host/control capacity for the controller, recovery and one serialized senior query independently of W. A full worker pool must not prevent the review needed to unblock those workers. A paused worker retains its slot unless explicitly hibernated after settled effects, no held permits and a durable continuation; hibernation readmission must reserve it again.
 
-> **Open implementation gap U04:** this is the required residency model. Current
-> `Processes.start` counts unfinished driver tasks, so a stopped paused driver
-> drops out without an explicit hibernation transition. This discrepancy is not
-> approved by the documentation alignment. Similarly, U03 records the mismatch
-> between registered process limits and the global envelope used by operations.
+> **Implemented 2026-10-27 (FIX-0135):** durable residency survives paused drivers;
+> explicit settled hibernation/readmission controls the slot. The earlier U04
+> driver-count discrepancy is retained in the revision ledger. FIX-0134 rejects
+> unequal process/runtime limits rather than silently widening narrower authority.
 
 Every effect has a stable `(process, logical_step) -> operation_id` mapping and semantic input fingerprint. Persist intent before dispatch and submitting before sending. A retried node looks up the original effect; it does not mint a new ID and execute again. Repeated result delivery settles usage/resources once. A genuinely new repair/inference advances the logical step.
 
@@ -191,11 +190,10 @@ weighted-allocation feature flag. A soft preference may use a fixed eligible
 binding throughout the process. Configured role-to-endpoint bindings are static;
 a process cannot change them by editing its prompt.
 
-> **Open implementation gaps U01/U02:** registration currently stores schedules
-> without rejecting unsupported hard allocation semantics, and dispatch does not
-> enforce conflicting process data-location/destination/classification declarations.
-> The requirement to honor or reject mandatory constraints remains; static routing
-> does not justify silently accepting a contradictory contract.
+> **Implemented 2026-10-27 (FIX-0134):** registration and dispatch enforce mandatory
+> data-location/destination/classification policy and compatible static hard class
+> constraints. Unsupported weighted distributions reject without requiring a flag.
+> This static profile does not implement the broader weighted scheduler below.
 
 ### 5.3 Cloud execution
 

@@ -63,6 +63,7 @@ class AgentConfig(RuntimeConfig):
     acceptance_criteria: list[AcceptanceCriterion] = Field(default_factory=list)
     max_review_reads: Annotated[int, Field(ge=0, le=16)] = 4
     max_worker_recoveries: Annotated[int, Field(ge=0, le=3)] = 1
+    max_cloud_recoveries: Annotated[int, Field(ge=0, le=3)] = 1
     progress_monitor: ProgressMonitor = Field(default_factory=ProgressMonitor)
 
     max_protocol_corrections: Annotated[int, Field(ge=0, le=16)] = 3

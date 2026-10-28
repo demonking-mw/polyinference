@@ -14,8 +14,8 @@ from .primitives import now as now
 from .primitives import operation_fingerprint as operation_fingerprint
 from .workspace_contracts import RelativePath
 
-PROGRAM_VERSION = "agent-6-integrated-reliability"
-STATE_VERSION = "2.5"
+PROGRAM_VERSION = "agent-7-bounded-worker-state"
+STATE_VERSION = "2.6"
 
 
 class GitPolicy(Wire):
@@ -91,7 +91,8 @@ class Assignment(Wire):
     non_goals: list[ContractText] = Field(default_factory=list, max_length=12)
     provides: list[InterfaceRef] = Field(default_factory=list, max_length=16)
     consumes: list[InterfaceRef] = Field(default_factory=list, max_length=16)
-    resume_from: str | None = None
+    behavior: ContractText | None = Field(default=None, exclude_if=lambda value: value is None)
+    focused_check: str | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode="after")
     def unique(self):
@@ -109,6 +110,10 @@ class Assignment(Wire):
             raise ValueError("Task cannot depend on itself")
         if (self.provides or self.consumes) and not self.acceptance_criteria:
             raise ValueError("Module assignments require observable acceptance_criteria")
+        if bool(self.behavior) != bool(self.focused_check):
+            raise ValueError("A behavior contract needs one focused_check")
+        if self.focused_check and self.focused_check not in self.checks:
+            raise ValueError("Focused check must belong to the assignment's checks")
         return self
 
 

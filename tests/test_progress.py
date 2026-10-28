@@ -233,12 +233,20 @@ async def test_stalled_worker_enters_senior_exception_review_before_allowance_ex
         assert app.get("app/run")["status"] == "paused"
         assert not app.get("app/run")["active_workers"]
         assert task["execution"] == "interrupted" and not runtime.records.scan("report/")
-        assert runtime.inference_calls_used(task["process_id"]) == 5
+        # First stall transfers to cloud coding; a second stalled cloud attempt
+        # exhausts the dedicated allowance rather than looping or refilling it.
+        assert runtime.inference_calls_used(task["process_id"]) == 10
+        replacement = app.get("task/a_cloud")
+        assert replacement["assignment"]["role"] == "specialist"
+        assert replacement["cloud_recoveries"] == 1
+        assert replacement["execution"] == "interrupted"
+        assert "Cloud recovery allowance exhausted" in app.get("app/run")["blocker"]
+        assert runtime.account(replacement["process_id"]) == task["process_id"]
         packet = app.get(task["exception_ref"])
         assert packet["progress_attention"]["verdict"] == "uncertain"
         assert packet["execution_termination"] == "confirmed_stopped"
-        assert len(runtime.records.scan("progress-event/")) == 2
-        assert app.get("app/run")["senior_queries"] == 2
+        assert len(runtime.records.scan("progress-event/")) == 4
+        assert app.get("app/run")["senior_queries"] == 3
     finally:
         await runtime.close()
 

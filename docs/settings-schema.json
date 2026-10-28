@@ -1,0 +1,1775 @@
+{
+  "AgentConfig": {
+    "$defs": {
+      "AcceptanceCriterion": {
+        "additionalProperties": false,
+        "properties": {
+          "criterion_id": {
+            "pattern": "^[a-zA-Z0-9_-]{1,80}$",
+            "title": "Criterion Id",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "required_checks": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Required Checks",
+            "type": "array"
+          }
+        },
+        "required": [
+          "criterion_id",
+          "description"
+        ],
+        "title": "AcceptanceCriterion",
+        "type": "object"
+      },
+      "Check": {
+        "additionalProperties": false,
+        "properties": {
+          "argv": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Argv",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "output_paths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Output Paths",
+            "type": "array"
+          },
+          "required_paths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Required Paths",
+            "type": "array"
+          },
+          "timeout_seconds": {
+            "default": 60,
+            "exclusiveMinimum": 0,
+            "maximum": 600,
+            "title": "Timeout Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "argv"
+        ],
+        "title": "Check",
+        "type": "object"
+      },
+      "CheckDiagnosis": {
+        "additionalProperties": false,
+        "properties": {
+          "instructions": {
+            "default": "",
+            "title": "Instructions",
+            "type": "string"
+          },
+          "max_read_paths": {
+            "default": 16,
+            "maximum": 32,
+            "minimum": 1,
+            "title": "Max Read Paths",
+            "type": "integer"
+          },
+          "max_rounds": {
+            "default": 1,
+            "maximum": 3,
+            "minimum": 0,
+            "title": "Max Rounds",
+            "type": "integer"
+          },
+          "role": {
+            "default": "worker",
+            "enum": [
+              "worker",
+              "specialist",
+              "senior"
+            ],
+            "title": "Role",
+            "type": "string"
+          }
+        },
+        "title": "CheckDiagnosis",
+        "type": "object"
+      },
+      "ContextPolicy": {
+        "additionalProperties": false,
+        "description": "Caller-selected context assistance. Hard execution guards are unconditional.",
+        "properties": {
+          "auto_compaction": {
+            "default": false,
+            "title": "Auto Compaction",
+            "type": "boolean"
+          },
+          "auto_deal_context": {
+            "default": false,
+            "title": "Auto Deal Context",
+            "type": "boolean"
+          },
+          "compaction_output_tokens": {
+            "default": 1024,
+            "exclusiveMinimum": 0,
+            "title": "Compaction Output Tokens",
+            "type": "integer"
+          },
+          "compaction_summary_bytes": {
+            "default": 4096,
+            "exclusiveMinimum": 0,
+            "title": "Compaction Summary Bytes",
+            "type": "integer"
+          },
+          "compaction_target": {
+            "default": 0.6,
+            "exclusiveMaximum": 1,
+            "exclusiveMinimum": 0,
+            "title": "Compaction Target",
+            "type": "number"
+          },
+          "compaction_trigger": {
+            "default": 0.8,
+            "exclusiveMinimum": 0,
+            "maximum": 1,
+            "title": "Compaction Trigger",
+            "type": "number"
+          },
+          "max_compaction_calls": {
+            "default": 8,
+            "maximum": 32,
+            "minimum": 0,
+            "title": "Max Compaction Calls",
+            "type": "integer"
+          },
+          "recovery_headroom": {
+            "default": 1024,
+            "minimum": 0,
+            "title": "Recovery Headroom",
+            "type": "integer"
+          }
+        },
+        "title": "ContextPolicy",
+        "type": "object"
+      },
+      "DataPolicy": {
+        "additionalProperties": false,
+        "properties": {
+          "allowed_destination_classes": {
+            "items": {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Allowed Destination Classes",
+            "type": "array"
+          },
+          "allowed_inference_locations": {
+            "items": {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Allowed Inference Locations",
+            "type": "array"
+          },
+          "maximum_classification": {
+            "enum": [
+              "public",
+              "project",
+              "restricted"
+            ],
+            "title": "Maximum Classification",
+            "type": "string"
+          },
+          "policy_ref": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Policy Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "policy_ref",
+          "allowed_inference_locations",
+          "allowed_destination_classes",
+          "maximum_classification"
+        ],
+        "title": "DataPolicy",
+        "type": "object"
+      },
+      "Endpoint": {
+        "additionalProperties": false,
+        "properties": {
+          "api_key_env": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Api Key Env"
+          },
+          "base_url": {
+            "default": "http://127.0.0.1:8000/v1",
+            "title": "Base Url",
+            "type": "string"
+          },
+          "brokered_tools": {
+            "default": false,
+            "title": "Brokered Tools",
+            "type": "boolean"
+          },
+          "command": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Command",
+            "type": "array"
+          },
+          "estimated_microusd_per_token": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Estimated Microusd Per Token"
+          },
+          "inference_location": {
+            "anyOf": [
+              {
+                "enum": [
+                  "local",
+                  "cloud"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Inference Location"
+          },
+          "lifecycle": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/InferenceLifecycle"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_context_tokens": {
+            "default": 32000,
+            "exclusiveMinimum": 0,
+            "title": "Max Context Tokens",
+            "type": "integer"
+          },
+          "max_inflight": {
+            "default": 2,
+            "exclusiveMinimum": 0,
+            "maximum": 32,
+            "title": "Max Inflight",
+            "type": "integer"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "protocol": {
+            "default": "chat",
+            "enum": [
+              "chat",
+              "responses",
+              "gemini",
+              "anthropic",
+              "codex_app_server",
+              "codex_proxy"
+            ],
+            "title": "Protocol",
+            "type": "string"
+          },
+          "readonly_snapshot_root": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Readonly Snapshot Root"
+          },
+          "reasoning_effort": {
+            "default": "medium",
+            "enum": [
+              "none",
+              "minimal",
+              "low",
+              "medium",
+              "high",
+              "xhigh",
+              "max",
+              "ultra"
+            ],
+            "title": "Reasoning Effort",
+            "type": "string"
+          },
+          "reserved_context_tokens": {
+            "default": 64000,
+            "exclusiveMinimum": 0,
+            "title": "Reserved Context Tokens",
+            "type": "integer"
+          },
+          "supports_temperature": {
+            "default": true,
+            "title": "Supports Temperature",
+            "type": "boolean"
+          },
+          "timeout_seconds": {
+            "default": 180,
+            "exclusiveMinimum": 0,
+            "maximum": 1800,
+            "title": "Timeout Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "model"
+        ],
+        "title": "Endpoint",
+        "type": "object"
+      },
+      "InferenceLifecycle": {
+        "additionalProperties": false,
+        "description": "Explicit deployment timings; binding names and URLs imply no safety facts.",
+        "properties": {
+          "connect_seconds": {
+            "default": 10,
+            "exclusiveMinimum": 0,
+            "maximum": 1800,
+            "title": "Connect Seconds",
+            "type": "number"
+          },
+          "first_output_seconds": {
+            "default": 180,
+            "exclusiveMinimum": 0,
+            "maximum": 3600,
+            "title": "First Output Seconds",
+            "type": "number"
+          },
+          "idle_seconds": {
+            "default": 90,
+            "exclusiveMinimum": 0,
+            "maximum": 3600,
+            "title": "Idle Seconds",
+            "type": "number"
+          },
+          "total_seconds": {
+            "default": 600,
+            "exclusiveMinimum": 0,
+            "maximum": 7200,
+            "title": "Total Seconds",
+            "type": "number"
+          },
+          "transport": {
+            "default": "sse",
+            "enum": [
+              "sse",
+              "buffered"
+            ],
+            "title": "Transport",
+            "type": "string"
+          }
+        },
+        "title": "InferenceLifecycle",
+        "type": "object"
+      },
+      "InferencePolicy": {
+        "additionalProperties": false,
+        "description": "Caller consent, independent of OS-native retries and application recovery.",
+        "properties": {
+          "additional_retries": {
+            "default": 0,
+            "maximum": 3,
+            "minimum": 0,
+            "title": "Additional Retries",
+            "type": "integer"
+          },
+          "replace_undelivered": {
+            "default": false,
+            "title": "Replace Undelivered",
+            "type": "boolean"
+          }
+        },
+        "title": "InferencePolicy",
+        "type": "object"
+      },
+      "InferenceRetry": {
+        "additionalProperties": false,
+        "properties": {
+          "max_attempts": {
+            "default": 2,
+            "maximum": 8,
+            "minimum": 2,
+            "title": "Max Attempts",
+            "type": "integer"
+          },
+          "replacement_wait_seconds": {
+            "default": 1,
+            "maximum": 60,
+            "minimum": 0,
+            "title": "Replacement Wait Seconds",
+            "type": "number"
+          }
+        },
+        "title": "InferenceRetry",
+        "type": "object"
+      },
+      "InferenceSafety": {
+        "additionalProperties": false,
+        "description": "Common raw/native completion and response recovery settings.",
+        "properties": {
+          "output_recoveries": {
+            "default": 2,
+            "maximum": 3,
+            "minimum": 0,
+            "title": "Output Recoveries",
+            "type": "integer"
+          },
+          "require_completion_metadata": {
+            "const": true,
+            "default": true,
+            "title": "Require Completion Metadata",
+            "type": "boolean"
+          },
+          "require_output_token_enforcement": {
+            "default": false,
+            "title": "Require Output Token Enforcement",
+            "type": "boolean"
+          },
+          "smaller_response_bytes": {
+            "default": 4096,
+            "exclusiveMinimum": 0,
+            "title": "Smaller Response Bytes",
+            "type": "integer"
+          }
+        },
+        "title": "InferenceSafety",
+        "type": "object"
+      },
+      "Limits": {
+        "additionalProperties": false,
+        "properties": {
+          "cost_guarantee": {
+            "enum": [
+              "enforced",
+              "estimate"
+            ],
+            "title": "Cost Guarantee",
+            "type": "string"
+          },
+          "final_phase_reserve": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PhaseReserve"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_api_spend_microusd": {
+            "minimum": 0,
+            "title": "Max Api Spend Microusd",
+            "type": "integer"
+          },
+          "max_input_tokens_per_call": {
+            "exclusiveMinimum": 0,
+            "title": "Max Input Tokens Per Call",
+            "type": "integer"
+          },
+          "max_model_calls": {
+            "exclusiveMinimum": 0,
+            "title": "Max Model Calls",
+            "type": "integer"
+          },
+          "max_output_bytes": {
+            "exclusiveMinimum": 0,
+            "title": "Max Output Bytes",
+            "type": "integer"
+          },
+          "max_output_tokens_per_call": {
+            "exclusiveMinimum": 0,
+            "title": "Max Output Tokens Per Call",
+            "type": "integer"
+          },
+          "max_repairs": {
+            "minimum": 0,
+            "title": "Max Repairs",
+            "type": "integer"
+          },
+          "max_steps": {
+            "exclusiveMinimum": 0,
+            "title": "Max Steps",
+            "type": "integer"
+          },
+          "max_total_tokens": {
+            "exclusiveMinimum": 0,
+            "title": "Max Total Tokens",
+            "type": "integer"
+          },
+          "max_wall_time_ms": {
+            "exclusiveMinimum": 0,
+            "title": "Max Wall Time Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_steps",
+          "max_model_calls",
+          "max_repairs",
+          "max_input_tokens_per_call",
+          "max_output_tokens_per_call",
+          "max_total_tokens",
+          "max_output_bytes",
+          "max_wall_time_ms",
+          "max_api_spend_microusd",
+          "cost_guarantee"
+        ],
+        "title": "Limits",
+        "type": "object"
+      },
+      "PhaseReserve": {
+        "additionalProperties": false,
+        "properties": {
+          "assessment_model_calls": {
+            "exclusiveMinimum": 0,
+            "title": "Assessment Model Calls",
+            "type": "integer"
+          },
+          "cleanup_steps": {
+            "exclusiveMinimum": 0,
+            "title": "Cleanup Steps",
+            "type": "integer"
+          },
+          "publication_steps": {
+            "exclusiveMinimum": 0,
+            "title": "Publication Steps",
+            "type": "integer"
+          },
+          "reconciliation_model_calls": {
+            "exclusiveMinimum": 0,
+            "title": "Reconciliation Model Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "reconciliation_model_calls",
+          "assessment_model_calls",
+          "publication_steps",
+          "cleanup_steps"
+        ],
+        "title": "PhaseReserve",
+        "type": "object"
+      },
+      "ProgressMonitor": {
+        "additionalProperties": false,
+        "properties": {
+          "escalate_after": {
+            "default": 12,
+            "maximum": 256,
+            "minimum": 3,
+            "title": "Escalate After",
+            "type": "integer"
+          },
+          "mode": {
+            "default": "enforce",
+            "enum": [
+              "off",
+              "observe",
+              "enforce"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "warn_after": {
+            "default": 8,
+            "maximum": 128,
+            "minimum": 2,
+            "title": "Warn After",
+            "type": "integer"
+          }
+        },
+        "title": "ProgressMonitor",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "Policy of the bundled coding agent, separate from the runtime's contract.",
+    "properties": {
+      "acceptance_checks": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/Check"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Acceptance Checks"
+      },
+      "acceptance_criteria": {
+        "items": {
+          "$ref": "#/$defs/AcceptanceCriterion"
+        },
+        "title": "Acceptance Criteria",
+        "type": "array"
+      },
+      "allowed_write_paths": {
+        "items": {
+          "type": "string"
+        },
+        "minItems": 1,
+        "title": "Allowed Write Paths",
+        "type": "array"
+      },
+      "base_branch": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Base Branch"
+      },
+      "check_diagnosis": {
+        "$ref": "#/$defs/CheckDiagnosis"
+      },
+      "check_execution": {
+        "default": "disabled",
+        "enum": [
+          "disabled",
+          "trusted",
+          "bubblewrap"
+        ],
+        "title": "Check Execution",
+        "type": "string"
+      },
+      "checks": {
+        "items": {
+          "$ref": "#/$defs/Check"
+        },
+        "title": "Checks",
+        "type": "array"
+      },
+      "closure_paths": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Closure Paths",
+        "type": "array"
+      },
+      "cloud": {
+        "$ref": "#/$defs/Endpoint"
+      },
+      "context_policy": {
+        "$ref": "#/$defs/ContextPolicy"
+      },
+      "control_token_reserve": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Control Token Reserve",
+        "type": "integer"
+      },
+      "data_policy": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/DataPolicy"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "dependency_prepare": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Dependency Prepare",
+        "type": "array"
+      },
+      "git_policy": {
+        "anyOf": [
+          {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Git Policy"
+      },
+      "inference_policy": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/InferencePolicy"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "inference_retry": {
+        "$ref": "#/$defs/InferenceRetry"
+      },
+      "inference_safety": {
+        "$ref": "#/$defs/InferenceSafety"
+      },
+      "limits": {
+        "$ref": "#/$defs/Limits"
+      },
+      "local": {
+        "$ref": "#/$defs/Endpoint"
+      },
+      "max_artifact_bytes": {
+        "default": 134217728,
+        "exclusiveMinimum": 0,
+        "title": "Max Artifact Bytes",
+        "type": "integer"
+      },
+      "max_cloud_recoveries": {
+        "default": 1,
+        "maximum": 3,
+        "minimum": 0,
+        "title": "Max Cloud Recoveries",
+        "type": "integer"
+      },
+      "max_command_seconds": {
+        "default": 300,
+        "exclusiveMinimum": 0,
+        "maximum": 3600,
+        "title": "Max Command Seconds",
+        "type": "number"
+      },
+      "max_model_recoveries": {
+        "default": 2,
+        "minimum": 0,
+        "title": "Max Model Recoveries",
+        "type": "integer"
+      },
+      "max_model_response_bytes": {
+        "default": 4194304,
+        "exclusiveMinimum": 0,
+        "title": "Max Model Response Bytes",
+        "type": "integer"
+      },
+      "max_protocol_corrections": {
+        "default": 3,
+        "maximum": 16,
+        "minimum": 0,
+        "title": "Max Protocol Corrections",
+        "type": "integer"
+      },
+      "max_queued_operations": {
+        "default": 128,
+        "exclusiveMinimum": 0,
+        "maximum": 4096,
+        "title": "Max Queued Operations",
+        "type": "integer"
+      },
+      "max_repeated_model_failures": {
+        "default": 2,
+        "exclusiveMinimum": 0,
+        "title": "Max Repeated Model Failures",
+        "type": "integer"
+      },
+      "max_review_reads": {
+        "default": 4,
+        "maximum": 16,
+        "minimum": 0,
+        "title": "Max Review Reads",
+        "type": "integer"
+      },
+      "max_senior_corrections": {
+        "default": 1,
+        "maximum": 3,
+        "minimum": 0,
+        "title": "Max Senior Corrections",
+        "type": "integer"
+      },
+      "max_sprints": {
+        "default": 8,
+        "exclusiveMinimum": 0,
+        "maximum": 100,
+        "title": "Max Sprints",
+        "type": "integer"
+      },
+      "max_worker_recoveries": {
+        "default": 1,
+        "maximum": 3,
+        "minimum": 0,
+        "title": "Max Worker Recoveries",
+        "type": "integer"
+      },
+      "max_workers": {
+        "default": 2,
+        "exclusiveMinimum": 0,
+        "maximum": 16,
+        "title": "Max Workers",
+        "type": "integer"
+      },
+      "max_workspace_bytes": {
+        "default": 67108864,
+        "exclusiveMinimum": 0,
+        "title": "Max Workspace Bytes",
+        "type": "integer"
+      },
+      "max_workspace_total_bytes": {
+        "default": 1073741824,
+        "exclusiveMinimum": 0,
+        "title": "Max Workspace Total Bytes",
+        "type": "integer"
+      },
+      "model_call_retries": {
+        "default": 1,
+        "maximum": 3,
+        "minimum": 0,
+        "title": "Model Call Retries",
+        "type": "integer"
+      },
+      "model_output_target_tokens": {
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Model Output Target Tokens"
+      },
+      "model_retry_delay_ms": {
+        "default": 100,
+        "maximum": 60000,
+        "minimum": 0,
+        "title": "Model Retry Delay Ms",
+        "type": "integer"
+      },
+      "model_retry_max_delay_ms": {
+        "default": 60000,
+        "maximum": 3600000,
+        "minimum": 0,
+        "title": "Model Retry Max Delay Ms",
+        "type": "integer"
+      },
+      "objective": {
+        "minLength": 1,
+        "title": "Objective",
+        "type": "string"
+      },
+      "output_directory": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Output Directory"
+      },
+      "prepare_repository": {
+        "default": false,
+        "title": "Prepare Repository",
+        "type": "boolean"
+      },
+      "prerequisite_checks": {
+        "items": {
+          "$ref": "#/$defs/Check"
+        },
+        "title": "Prerequisite Checks",
+        "type": "array"
+      },
+      "progress_monitor": {
+        "$ref": "#/$defs/ProgressMonitor"
+      },
+      "repository": {
+        "title": "Repository",
+        "type": "string"
+      },
+      "repository_mode": {
+        "default": "in_place",
+        "enum": [
+          "in_place",
+          "isolated"
+        ],
+        "title": "Repository Mode",
+        "type": "string"
+      },
+      "role_bindings": {
+        "additionalProperties": {
+          "enum": [
+            "local",
+            "cloud"
+          ],
+          "type": "string"
+        },
+        "title": "Role Bindings",
+        "type": "object"
+      },
+      "run_spend_budget_microusd": {
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Run Spend Budget Microusd"
+      },
+      "run_token_budget": {
+        "default": 64000000,
+        "exclusiveMinimum": 0,
+        "title": "Run Token Budget",
+        "type": "integer"
+      },
+      "senior_development_fraction": {
+        "default": 0.1,
+        "maximum": 1,
+        "minimum": 0,
+        "title": "Senior Development Fraction",
+        "type": "number"
+      },
+      "shell_execution": {
+        "default": "disabled",
+        "enum": [
+          "disabled",
+          "trusted",
+          "bubblewrap"
+        ],
+        "title": "Shell Execution",
+        "type": "string"
+      },
+      "shell_fail_fast": {
+        "default": false,
+        "title": "Shell Fail Fast",
+        "type": "boolean"
+      },
+      "state_directory": {
+        "default": ".polyinference",
+        "title": "State Directory",
+        "type": "string"
+      },
+      "write_scope": {
+        "default": "explicit",
+        "enum": [
+          "explicit",
+          "project"
+        ],
+        "title": "Write Scope",
+        "type": "string"
+      }
+    },
+    "required": [
+      "repository",
+      "allowed_write_paths",
+      "local",
+      "cloud",
+      "objective"
+    ],
+    "title": "AgentConfig",
+    "type": "object"
+  },
+  "RuntimeConfig": {
+    "$defs": {
+      "Check": {
+        "additionalProperties": false,
+        "properties": {
+          "argv": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Argv",
+            "type": "array"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "output_paths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Output Paths",
+            "type": "array"
+          },
+          "required_paths": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Required Paths",
+            "type": "array"
+          },
+          "timeout_seconds": {
+            "default": 60,
+            "exclusiveMinimum": 0,
+            "maximum": 600,
+            "title": "Timeout Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "argv"
+        ],
+        "title": "Check",
+        "type": "object"
+      },
+      "ContextPolicy": {
+        "additionalProperties": false,
+        "description": "Caller-selected context assistance. Hard execution guards are unconditional.",
+        "properties": {
+          "auto_compaction": {
+            "default": false,
+            "title": "Auto Compaction",
+            "type": "boolean"
+          },
+          "auto_deal_context": {
+            "default": false,
+            "title": "Auto Deal Context",
+            "type": "boolean"
+          },
+          "compaction_output_tokens": {
+            "default": 1024,
+            "exclusiveMinimum": 0,
+            "title": "Compaction Output Tokens",
+            "type": "integer"
+          },
+          "compaction_summary_bytes": {
+            "default": 4096,
+            "exclusiveMinimum": 0,
+            "title": "Compaction Summary Bytes",
+            "type": "integer"
+          },
+          "compaction_target": {
+            "default": 0.6,
+            "exclusiveMaximum": 1,
+            "exclusiveMinimum": 0,
+            "title": "Compaction Target",
+            "type": "number"
+          },
+          "compaction_trigger": {
+            "default": 0.8,
+            "exclusiveMinimum": 0,
+            "maximum": 1,
+            "title": "Compaction Trigger",
+            "type": "number"
+          },
+          "max_compaction_calls": {
+            "default": 8,
+            "maximum": 32,
+            "minimum": 0,
+            "title": "Max Compaction Calls",
+            "type": "integer"
+          },
+          "recovery_headroom": {
+            "default": 1024,
+            "minimum": 0,
+            "title": "Recovery Headroom",
+            "type": "integer"
+          }
+        },
+        "title": "ContextPolicy",
+        "type": "object"
+      },
+      "DataPolicy": {
+        "additionalProperties": false,
+        "properties": {
+          "allowed_destination_classes": {
+            "items": {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Allowed Destination Classes",
+            "type": "array"
+          },
+          "allowed_inference_locations": {
+            "items": {
+              "maxLength": 256,
+              "minLength": 1,
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Allowed Inference Locations",
+            "type": "array"
+          },
+          "maximum_classification": {
+            "enum": [
+              "public",
+              "project",
+              "restricted"
+            ],
+            "title": "Maximum Classification",
+            "type": "string"
+          },
+          "policy_ref": {
+            "maxLength": 256,
+            "minLength": 1,
+            "title": "Policy Ref",
+            "type": "string"
+          }
+        },
+        "required": [
+          "policy_ref",
+          "allowed_inference_locations",
+          "allowed_destination_classes",
+          "maximum_classification"
+        ],
+        "title": "DataPolicy",
+        "type": "object"
+      },
+      "Endpoint": {
+        "additionalProperties": false,
+        "properties": {
+          "api_key_env": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Api Key Env"
+          },
+          "base_url": {
+            "default": "http://127.0.0.1:8000/v1",
+            "title": "Base Url",
+            "type": "string"
+          },
+          "brokered_tools": {
+            "default": false,
+            "title": "Brokered Tools",
+            "type": "boolean"
+          },
+          "command": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Command",
+            "type": "array"
+          },
+          "estimated_microusd_per_token": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Estimated Microusd Per Token"
+          },
+          "inference_location": {
+            "anyOf": [
+              {
+                "enum": [
+                  "local",
+                  "cloud"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Inference Location"
+          },
+          "lifecycle": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/InferenceLifecycle"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_context_tokens": {
+            "default": 32000,
+            "exclusiveMinimum": 0,
+            "title": "Max Context Tokens",
+            "type": "integer"
+          },
+          "max_inflight": {
+            "default": 2,
+            "exclusiveMinimum": 0,
+            "maximum": 32,
+            "title": "Max Inflight",
+            "type": "integer"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "protocol": {
+            "default": "chat",
+            "enum": [
+              "chat",
+              "responses",
+              "gemini",
+              "anthropic",
+              "codex_app_server",
+              "codex_proxy"
+            ],
+            "title": "Protocol",
+            "type": "string"
+          },
+          "readonly_snapshot_root": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Readonly Snapshot Root"
+          },
+          "reasoning_effort": {
+            "default": "medium",
+            "enum": [
+              "none",
+              "minimal",
+              "low",
+              "medium",
+              "high",
+              "xhigh",
+              "max",
+              "ultra"
+            ],
+            "title": "Reasoning Effort",
+            "type": "string"
+          },
+          "reserved_context_tokens": {
+            "default": 64000,
+            "exclusiveMinimum": 0,
+            "title": "Reserved Context Tokens",
+            "type": "integer"
+          },
+          "supports_temperature": {
+            "default": true,
+            "title": "Supports Temperature",
+            "type": "boolean"
+          },
+          "timeout_seconds": {
+            "default": 180,
+            "exclusiveMinimum": 0,
+            "maximum": 1800,
+            "title": "Timeout Seconds",
+            "type": "number"
+          }
+        },
+        "required": [
+          "model"
+        ],
+        "title": "Endpoint",
+        "type": "object"
+      },
+      "InferenceLifecycle": {
+        "additionalProperties": false,
+        "description": "Explicit deployment timings; binding names and URLs imply no safety facts.",
+        "properties": {
+          "connect_seconds": {
+            "default": 10,
+            "exclusiveMinimum": 0,
+            "maximum": 1800,
+            "title": "Connect Seconds",
+            "type": "number"
+          },
+          "first_output_seconds": {
+            "default": 180,
+            "exclusiveMinimum": 0,
+            "maximum": 3600,
+            "title": "First Output Seconds",
+            "type": "number"
+          },
+          "idle_seconds": {
+            "default": 90,
+            "exclusiveMinimum": 0,
+            "maximum": 3600,
+            "title": "Idle Seconds",
+            "type": "number"
+          },
+          "total_seconds": {
+            "default": 600,
+            "exclusiveMinimum": 0,
+            "maximum": 7200,
+            "title": "Total Seconds",
+            "type": "number"
+          },
+          "transport": {
+            "default": "sse",
+            "enum": [
+              "sse",
+              "buffered"
+            ],
+            "title": "Transport",
+            "type": "string"
+          }
+        },
+        "title": "InferenceLifecycle",
+        "type": "object"
+      },
+      "InferenceSafety": {
+        "additionalProperties": false,
+        "description": "Common raw/native completion and response recovery settings.",
+        "properties": {
+          "output_recoveries": {
+            "default": 2,
+            "maximum": 3,
+            "minimum": 0,
+            "title": "Output Recoveries",
+            "type": "integer"
+          },
+          "require_completion_metadata": {
+            "const": true,
+            "default": true,
+            "title": "Require Completion Metadata",
+            "type": "boolean"
+          },
+          "require_output_token_enforcement": {
+            "default": false,
+            "title": "Require Output Token Enforcement",
+            "type": "boolean"
+          },
+          "smaller_response_bytes": {
+            "default": 4096,
+            "exclusiveMinimum": 0,
+            "title": "Smaller Response Bytes",
+            "type": "integer"
+          }
+        },
+        "title": "InferenceSafety",
+        "type": "object"
+      },
+      "Limits": {
+        "additionalProperties": false,
+        "properties": {
+          "cost_guarantee": {
+            "enum": [
+              "enforced",
+              "estimate"
+            ],
+            "title": "Cost Guarantee",
+            "type": "string"
+          },
+          "final_phase_reserve": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/PhaseReserve"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
+          "max_api_spend_microusd": {
+            "minimum": 0,
+            "title": "Max Api Spend Microusd",
+            "type": "integer"
+          },
+          "max_input_tokens_per_call": {
+            "exclusiveMinimum": 0,
+            "title": "Max Input Tokens Per Call",
+            "type": "integer"
+          },
+          "max_model_calls": {
+            "exclusiveMinimum": 0,
+            "title": "Max Model Calls",
+            "type": "integer"
+          },
+          "max_output_bytes": {
+            "exclusiveMinimum": 0,
+            "title": "Max Output Bytes",
+            "type": "integer"
+          },
+          "max_output_tokens_per_call": {
+            "exclusiveMinimum": 0,
+            "title": "Max Output Tokens Per Call",
+            "type": "integer"
+          },
+          "max_repairs": {
+            "minimum": 0,
+            "title": "Max Repairs",
+            "type": "integer"
+          },
+          "max_steps": {
+            "exclusiveMinimum": 0,
+            "title": "Max Steps",
+            "type": "integer"
+          },
+          "max_total_tokens": {
+            "exclusiveMinimum": 0,
+            "title": "Max Total Tokens",
+            "type": "integer"
+          },
+          "max_wall_time_ms": {
+            "exclusiveMinimum": 0,
+            "title": "Max Wall Time Ms",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "max_steps",
+          "max_model_calls",
+          "max_repairs",
+          "max_input_tokens_per_call",
+          "max_output_tokens_per_call",
+          "max_total_tokens",
+          "max_output_bytes",
+          "max_wall_time_ms",
+          "max_api_spend_microusd",
+          "cost_guarantee"
+        ],
+        "title": "Limits",
+        "type": "object"
+      },
+      "PhaseReserve": {
+        "additionalProperties": false,
+        "properties": {
+          "assessment_model_calls": {
+            "exclusiveMinimum": 0,
+            "title": "Assessment Model Calls",
+            "type": "integer"
+          },
+          "cleanup_steps": {
+            "exclusiveMinimum": 0,
+            "title": "Cleanup Steps",
+            "type": "integer"
+          },
+          "publication_steps": {
+            "exclusiveMinimum": 0,
+            "title": "Publication Steps",
+            "type": "integer"
+          },
+          "reconciliation_model_calls": {
+            "exclusiveMinimum": 0,
+            "title": "Reconciliation Model Calls",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "reconciliation_model_calls",
+          "assessment_model_calls",
+          "publication_steps",
+          "cleanup_steps"
+        ],
+        "title": "PhaseReserve",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "description": "OS resources and optional file capabilities; no coding-agent requirements.",
+    "properties": {
+      "allowed_write_paths": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Allowed Write Paths",
+        "type": "array"
+      },
+      "base_branch": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Base Branch"
+      },
+      "check_execution": {
+        "default": "disabled",
+        "enum": [
+          "disabled",
+          "trusted",
+          "bubblewrap"
+        ],
+        "title": "Check Execution",
+        "type": "string"
+      },
+      "checks": {
+        "items": {
+          "$ref": "#/$defs/Check"
+        },
+        "title": "Checks",
+        "type": "array"
+      },
+      "closure_paths": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Closure Paths",
+        "type": "array"
+      },
+      "cloud": {
+        "$ref": "#/$defs/Endpoint"
+      },
+      "context_policy": {
+        "$ref": "#/$defs/ContextPolicy"
+      },
+      "control_token_reserve": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Control Token Reserve",
+        "type": "integer"
+      },
+      "data_policy": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/DataPolicy"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "inference_safety": {
+        "$ref": "#/$defs/InferenceSafety"
+      },
+      "limits": {
+        "$ref": "#/$defs/Limits"
+      },
+      "local": {
+        "$ref": "#/$defs/Endpoint"
+      },
+      "max_artifact_bytes": {
+        "default": 134217728,
+        "exclusiveMinimum": 0,
+        "title": "Max Artifact Bytes",
+        "type": "integer"
+      },
+      "max_command_seconds": {
+        "default": 300,
+        "exclusiveMinimum": 0,
+        "maximum": 3600,
+        "title": "Max Command Seconds",
+        "type": "number"
+      },
+      "max_model_recoveries": {
+        "default": 2,
+        "minimum": 0,
+        "title": "Max Model Recoveries",
+        "type": "integer"
+      },
+      "max_model_response_bytes": {
+        "default": 4194304,
+        "exclusiveMinimum": 0,
+        "title": "Max Model Response Bytes",
+        "type": "integer"
+      },
+      "max_queued_operations": {
+        "default": 128,
+        "exclusiveMinimum": 0,
+        "maximum": 4096,
+        "title": "Max Queued Operations",
+        "type": "integer"
+      },
+      "max_repeated_model_failures": {
+        "default": 2,
+        "exclusiveMinimum": 0,
+        "title": "Max Repeated Model Failures",
+        "type": "integer"
+      },
+      "max_workers": {
+        "default": 2,
+        "exclusiveMinimum": 0,
+        "maximum": 16,
+        "title": "Max Workers",
+        "type": "integer"
+      },
+      "max_workspace_bytes": {
+        "default": 67108864,
+        "exclusiveMinimum": 0,
+        "title": "Max Workspace Bytes",
+        "type": "integer"
+      },
+      "max_workspace_total_bytes": {
+        "default": 1073741824,
+        "exclusiveMinimum": 0,
+        "title": "Max Workspace Total Bytes",
+        "type": "integer"
+      },
+      "model_call_retries": {
+        "default": 1,
+        "maximum": 3,
+        "minimum": 0,
+        "title": "Model Call Retries",
+        "type": "integer"
+      },
+      "model_retry_delay_ms": {
+        "default": 100,
+        "maximum": 60000,
+        "minimum": 0,
+        "title": "Model Retry Delay Ms",
+        "type": "integer"
+      },
+      "model_retry_max_delay_ms": {
+        "default": 60000,
+        "maximum": 3600000,
+        "minimum": 0,
+        "title": "Model Retry Max Delay Ms",
+        "type": "integer"
+      },
+      "output_directory": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Output Directory"
+      },
+      "prepare_repository": {
+        "default": false,
+        "title": "Prepare Repository",
+        "type": "boolean"
+      },
+      "repository": {
+        "title": "Repository",
+        "type": "string"
+      },
+      "role_bindings": {
+        "additionalProperties": {
+          "enum": [
+            "local",
+            "cloud"
+          ],
+          "type": "string"
+        },
+        "title": "Role Bindings",
+        "type": "object"
+      },
+      "run_spend_budget_microusd": {
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Run Spend Budget Microusd"
+      },
+      "run_token_budget": {
+        "default": 64000000,
+        "exclusiveMinimum": 0,
+        "title": "Run Token Budget",
+        "type": "integer"
+      },
+      "shell_execution": {
+        "default": "disabled",
+        "enum": [
+          "disabled",
+          "trusted",
+          "bubblewrap"
+        ],
+        "title": "Shell Execution",
+        "type": "string"
+      },
+      "shell_fail_fast": {
+        "default": false,
+        "title": "Shell Fail Fast",
+        "type": "boolean"
+      },
+      "state_directory": {
+        "default": ".polyinference",
+        "title": "State Directory",
+        "type": "string"
+      },
+      "write_scope": {
+        "default": "explicit",
+        "enum": [
+          "explicit",
+          "project"
+        ],
+        "title": "Write Scope",
+        "type": "string"
+      }
+    },
+    "required": [
+      "repository",
+      "local",
+      "cloud"
+    ],
+    "title": "RuntimeConfig",
+    "type": "object"
+  }
+}

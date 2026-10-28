@@ -38,6 +38,9 @@ async def prepare(config, outputs, wait=0.01):
         }
     )
     runtime, app, _ = await setup(config)
+    # These fixtures exercise OS fallback/manual offers independently of the
+    # production application's automatic owner feedback builder.
+    runtime.register_response_repair("worker/1", None)
     await runtime.clients["local"].close()
     client = runtime.clients["local"] = Client(outputs)
     app.update(

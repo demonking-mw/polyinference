@@ -152,7 +152,8 @@ async def test_simulated_worker_requests_overlap_to_capacity_and_refill_without_
         name = json.loads(pinned.split("Pinned application inputs:\n", 1)[1])["identity"]
         assert str(request.url) == "https://api.anthropic.com/v1/messages"
         assert request.headers["x-api-key"] == "fixture-secret" and request.headers["anthropic-version"] == "2023-06-01"
-        assert body["model"] == "claude-haiku-5-5" and body["max_tokens"] == 32000
+        assert body["model"] == "claude-haiku-5-5"
+        assert body["max_tokens"] == config.model_output_target_tokens == 4096
         assert body["system"].startswith("Independent bounded task") and body["messages"][-1]["role"] == "user"
         active += 1
         peak = max(peak, active)
@@ -160,8 +161,16 @@ async def test_simulated_worker_requests_overlap_to_capacity_and_refill_without_
         changed.set()
         await released[name].wait()
         active -= 1
-        return httpx.Response(200, json={"model": body["model"], "stop_reason": "end_turn",
-            "content": [{"type": "text", "text": name}], "usage": {"input_tokens": 20, "output_tokens": 1}})
+        events = [
+            {"type": "message_start", "message": {"id": "msg-" + name, "model": body["model"],
+                                                   "usage": {"input_tokens": 20}}},
+            {"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}},
+            {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": name}},
+            {"type": "message_delta", "delta": {"stop_reason": "end_turn"}, "usage": {"output_tokens": 1}},
+            {"type": "message_stop"},
+        ]
+        return httpx.Response(200, headers={"content-type": "text/event-stream"},
+                              content=b"".join(b"data: " + json.dumps(e).encode() + b"\n\n" for e in events))
 
     client.client = httpx.AsyncClient(headers=headers, transport=httpx.MockTransport(handler))
     futures = []
@@ -199,6 +208,9 @@ async def test_simulated_worker_requests_overlap_to_capacity_and_refill_without_
     finally:
         for event in released.values():
             event.set()
+        for future in futures:
+            if not future.done():
+                future.cancel()
         await asyncio.gather(*futures, return_exceptions=True)
         await runtime.close()
 

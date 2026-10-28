@@ -6,7 +6,7 @@ from typing import Annotated, Literal
 
 from pydantic import AliasChoices, Field, ValidationInfo, model_validator
 
-from .contracts import Limits, Wire
+from .contracts import DataPolicy, Limits, Wire
 from .execution_contracts import Check
 from .primitives import runtime_limits
 from .workspace_contracts import RelativePath
@@ -96,6 +96,7 @@ class RuntimeConfig(Wire):
         default_factory=lambda: {"default": "local"}
     )
     prepare_repository: bool = False
+    data_policy: DataPolicy | None = Field(default=None, exclude_if=lambda value: value is None)
     output_directory: str | None = None
     base_branch: str | None = None
     write_scope: Literal["explicit", "project"] = "explicit"

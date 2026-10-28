@@ -7,6 +7,8 @@ Start at the [project README](../README.md). Choose a route:
 | Install on Linux, WSL or macOS | [Setup](../setup.md) |
 | First run and project selection | [First run](guides/first-run.md), [your project](guides/projects.md) |
 | Models, permissions and budgets | [Configuration](guides/configuration.md) |
+| Setup/task/final checks and generated outputs | [Check selection](guides/checks.md) |
+| Response repair, diagnosis and worker recovery | [Agent reliability settings](guides/agent-reliability.md) |
 | UI inspection and saved snapshots | [UI guide](guides/ui.md) |
 | Slow or unreliable local-inference stand-in | [Opt-in inference simulation](guides/sim-inference.md) |
 | CLI commands | [Command line](guides/cli.md) |

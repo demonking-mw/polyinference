@@ -1,11 +1,63 @@
 # Current iteration issues
 
+[Authorized reliability implementation](reliability-implementation-2026-10-27.md)
+tracks the OS/agent/qualification stages following FIX-0133. Changes require fresh
+state; retained live evidence and the earlier cloud takeover remain preserved.
+
+[27/28 October scheduled Minecraft live result](minecraft-live-test-2026-10-28.md):
+four automatic cloud coding recoveries produced checked increments; the loading
+recovery paused on provider model capacity. The partial browser foundation passes
+44 host tests but lacks loading, physics and most requested gameplay. Actual
+Chromium also finds text-field/game input leakage. No framework fix is claimed;
+original resources, failed source and uncommitted delivery remain preserved.
+
+[Failure isolation and proposed repair order](minecraft-failure-isolation-2026-10-28.md)
+traces clean model failures bypassing cloud recovery, the effective 4096 output
+target, prompt-only reply grammar, repeated local reads, conservative context
+packing, a reproduced stale-error projection defect, incomplete diagnostic source,
+browser-test gaps and the final effectful native-job stop. These are findings and
+proposals; no implementation was changed by this follow-up.
+
+[Task/context/memory follow-up](minecraft-failure-isolation-2026-10-28.md#convergence-context-memory-followup)
+confirms all three read-only tasks lacked their assigned browser integrations.
+Current OS replay reproduces a 49152-byte cap/48128-byte packing threshold, not a
+fixed below-31K token limit; 29491 is an inactive compaction target. Current compact
+worker-state probes confirm stale path-shaped tool errors and a second protocol
+error-retirement defect for non-action replies. The user explicitly forbids fixes
+in this investigation. Corrections to the earlier read counts and FileRead argument
+claim are recorded in the follow-up; all implementation remains unchanged.
+
+<a id="local-task-cloud-recovery"></a>
+## P1 — Local task granularity and cloud worker recovery — 2026-10-27
+
+**Status: implemented in the uncommitted tree; the small live gate passed, including actual cloud-worker resume. Combined framework results and limits are in the [implementation record](reliability-implementation-2026-10-27.md).**
+[Requirements, user judgments, evidence and verification plan](local-task-granularity-and-cloud-recovery-2026-10-27.md).
+Split coarse local assignments into independently testable behaviors; turn eligible
+local stalls into bounded cloud-worker repair, preserve that route outside normal
+task-share rounding, and tell the sprint planner the OS's actual capabilities.
+Keep original accounts/deadlines, source authority and unknown-effect safeguards.
+The earlier 227-case result belongs to FIX-0132. The authorized follow-up adds
+bounded worker state, error-conditioned repair, OS enforcement and qualification.
+Already-linked unstarted recovery consumers now support lineage-preserving
+retargeting, including transaction-conflict/restart coverage. Started contracts
+remain pinned. Read the current record before claiming long-run reliability.
+
+[Detailed proposed implementation plan and historical failure coverage](run-reliability-implementation-plan-2026-10-27.md)
+separates agent changes, OS guarantees, provider setup and verification.
+It records the earlier cloud takeover and pending-consumer limitation at planning
+time; its analysis-only scope was superseded by the user's implementation request.
+
 Read [the fix history and design principles](FIXES.md) before repository work, as
 required by [AGENTS.md](../AGENTS.md), and update it before finishing. This file
 retains detailed investigations and historical results. The fix history records
 subsequent corrections, including recoverable startup failures and the required
 agent/OS boundary; consult it before treating an older implementation note below
 as current behavior.
+
+Current cross-run assessment: [27 October documentation/reliability audit](documentation-and-reliability-audit-2026-10-27.md).
+Its historical recommendations distinguish orchestration mechanisms from product
+convergence. The authorized follow-up implements the selected plan and static
+U01–U04 repairs; current qualification limits remain in the implementation record.
 
 <a id="router-distillation-tutorial"></a>
 ## Agent-router distillation research tutorial — 2026-10-22

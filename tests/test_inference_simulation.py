@@ -284,22 +284,27 @@ async def test_pacing_holds_admission_refills_independently_and_exceeds_network_
     rt, app = await setup(config, tmp_path, mode="slow-buggy", tps=200, prefill_seconds=0,
                           prefill_tps=1000000, jitter=0, stall_rate=0)
     entered = []
+    pair_entered = asyncio.Event()
 
     async def handler(request):
         body = json.loads(request.content)
         name = "a" if '"identity": "a"' in str(body) else "b"
         # Different lengths ensure the next waiter starts before the longest finishes.
         entered.append(name)
+        ordinal = len(entered)
+        if len(entered) == 2:
+            pair_entered.set()
+        await pair_entered.wait()
         return httpx.Response(200, json={"model": "fixture", "stop_reason": "end_turn",
             "content": [{"type": "text", "text": "ok"}],
-            "usage": {"input_tokens": 1, "output_tokens": 30 if len(entered) == 1 else 90}})
+            "usage": {"input_tokens": 1, "output_tokens": 30 if ordinal == 1 else 90}})
 
     await transport(rt, handler)
     requests = [request_for(app, name) for name in ("a", "b", "c")]
     futures = [asyncio.create_task(rt._execute_once(request)) for request in requests]
     started = time.monotonic()
     try:
-        await asyncio.sleep(0.15)
+        await asyncio.wait_for(pair_entered.wait(), 5)
         assert len(entered) == rt.admission["local"].active == 2
         assert not futures[0].done() and not futures[1].done()
         while len(entered) < 3:

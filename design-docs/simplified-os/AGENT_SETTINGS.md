@@ -19,9 +19,10 @@ and [FIX-0058](../../development-docs/FIXES.md#fix-0058) for ownership and verif
 > contract, while unresolved code behavior must remain visible. The
 > [revision ledger](DESIGN_REVISIONS.md) explains optional services, static
 > routing, capability limits and the deferred shared library. In particular,
-> process-declared routing/classification/hard allocation, narrower process limits
-> and paused-worker residency are not fully enforced today (U01–U04). A stored
-> declaration is not proof that those constraints were validated.
+> the original U01–U04 gaps were repaired in the 27 October static/uniform profile:
+> mandatory data constraints and supported static rules are enforced, unsupported
+> weighted schedules/unequal limits reject, and paused residency requires explicit
+> safe hibernation/readmission. The revision ledger retains prior evidence/limits.
 
 Keep OS choices in one adjacent **system** block and workflow fields outside it.
 All [agent examples](../../examples/agent.mixed.json) use this layout.
@@ -135,8 +136,9 @@ Counts and capacities are positive unless stated otherwise.
 | write_scope | explicit | explicit grants or project-wide grant selection with project; operations still need granted paths. |
 | shell_execution | disabled | disabled, trusted or bubblewrap shell backend. |
 | shell_fail_fast | false | Prefix shell scripts with Bash set -e -o pipefail to expose failing commands/pipelines. |
-| max_workers | 2 | Active ordinary-driver cap, 1–16; separate from inference concurrency. Paused-worker residency remains open U04, not an implemented hibernation guarantee. |
-| limits | defaults below | Pinned RuntimeConfig operation envelope. A narrower registered ProcessSpec limit is not independently enforced today; see U03. |
+| max_workers | 2 | Durable ordinary resident cap, 1–16; paused residents keep admission until safe hibernation. Separate from provider concurrency. |
+| limits | defaults below | Uniform pinned RuntimeConfig operation envelope. Unequal registered process limits reject before effects. |
+| data_policy | null | Optional mandatory run-wide DataPolicy ceiling; process policy can narrow it. Explicit endpoint placement is needed for a constrained location. |
 | run_token_budget | 64000000 | Parent token reservation/usage allowance. |
 | control_token_reserve | 0 | Nonnegative token allowance protected for management processes; less than run budget. |
 | run_spend_budget_microusd | null | Optional estimated run ceiling in millionths of a US dollar. |
@@ -175,6 +177,8 @@ Linux sandbox. Neither backend grants additional source paths.
 | readonly_snapshot_root | null | Proxy's separately configured exact read-only snapshot root. |
 | brokered_tools | false | Native endpoint supports explicitly granted host callbacks. |
 | inference_location | null | Explicit local/cloud physical location. Otherwise localhost chat/Responses is inferred local; other cases cloud. |
+| supports_temperature | true | Reject an explicit sampling request when false; supported requests forward the requested temperature. |
+| reasoning_effort | medium | Native turn effort: none/minimal/low/medium/high/xhigh/max/ultra. The explicit turn value takes precedence over a startup command default. |
 | timeout_seconds | 180 | Legacy HTTP/native job timeout, at most 1800 seconds and bounded by original deadline. Raw lifecycle mode uses its shared total instead. |
 | lifecycle | omitted | Optional InferenceLifecycle: transport sse/buffered; connect_seconds=10 (0–1800], first_output_seconds=180 (0–3600], idle_seconds=90 (0–3600], total_seconds=600 (0–7200]. Original logical/process deadline still wins. |
 | estimated_microusd_per_token | null | Nonnegative token-price estimate for cloud spend admission; required for a configured spend bound on that cloud lane. |
@@ -333,6 +337,7 @@ Each checks entry has these fields:
 | argv | required | Nonempty executable/argument list, without shell interpolation. |
 | timeout_seconds | 60 | Positive timeout, at most 600 seconds. |
 | output_paths | [] | Declared relative generated-output directories; tracked/granted source retains source authority. |
+| required_paths | [] | Declared runner/fixture/entry source inputs. Coding planning covers their read closure or prerequisite ownership; worker materialization includes them after dependencies are kept. |
 
 The coding agent's adjacent defaults select senior/cloud, worker/local and
 specialist/cloud; enable repository preparation, shell fail-fast and automatic
@@ -341,15 +346,20 @@ above with max_repairs=2 and the finishing reserve above.
 UI preferences in the same module select endpoints, grants, checks, one worker,
 96000 input / 32000 output allowances and trusted shell/check backends. The Haiku
 examples use the same allowances with 128000-token endpoint context envelopes.
-The Anthropic adapter sends the OS output allowance as the Messages API's
-`max_tokens`, so Claude generation and OS enforcement use the same 32000 ceiling.
-Examples override these choices in their single system block.
+The Anthropic adapter sends the effective output target as `max_tokens`, bounded
+by the OS hard ceiling. Fresh UI/mixed/Anthropic examples request 4096 tokens
+inside the 32000 ceiling; custom configs without a smaller target use their
+ceiling. Native jobs have no enforced hard generation-token parameter.
 
 Coding-only fields remain outside system: objective, repository_mode, git_policy,
 dependency_prepare, prerequisite_checks, acceptance_checks,
 senior_development_fraction, max_sprints, max_senior_corrections and
-max_protocol_corrections, inference_policy and model_output_target_tokens.
-The two new optional fields are omitted when absent. inference_policy declares
+max_protocol_corrections, inference_policy, model_output_target_tokens,
+inference_retry, check_diagnosis, acceptance_criteria, max_review_reads,
+max_worker_recoveries, max_cloud_recoveries and progress_monitor. The
+[agent reliability reference](../../docs/guides/agent-reliability.md) gives all
+nested defaults, bounds, semantic criteria and recovery interactions.
+inference_policy and model_output_target_tokens are omitted when absent. The policy declares
 additional_retries (0–3, default 0) and replace_undelivered (default false), carried
 on model requests through the negotiated runtime/inference-policy extension.
 model_output_target_tokens selects a smaller raw-query target within the hard cap.
@@ -378,16 +388,3 @@ prerequisite-only criteria. All purposes use the generic Check fields above;
 shared names must retain identical definitions. Explicit criteria cannot be
 replaced and discovery closes after setup/planning. See the
 [configuration guide](../../docs/guides/configuration.md) for selection and fresh-state rules.
-
-## Integrated reliability branch (2026-10-26)
-
-Endpoint.supports_temperature defaults to true; explicit unsupported sampling
-fails. Endpoint.reasoning_effort defaults to medium for native turns. Coding-only
-inference_retry, check_diagnosis, acceptance_criteria, review/recovery bounds and
-progress_monitor stay in AgentConfig; see [current defaults](../../docs/modules/settings.md).
-They do not add coding policy to RuntimeConfig.
-
-| Endpoint field | Default and behavior |
-| --- | --- |
-| supports_temperature | true; reject an explicit unsupported sampling request |
-| reasoning_effort | medium; native turn reasoning selection |

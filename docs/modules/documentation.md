@@ -13,6 +13,14 @@
 | [tests/test_project_docs.py](../../tests/test_project_docs.py) | Coverage, invalid-tree/link/reachability, generation and offline rendering regressions. |
 | [.github/workflows/docs.yml](../../.github/workflows/docs.yml) | Run the dependency-free navigation check on pushes and pull requests. |
 
+Link validation reads maintained Markdown, generated file-tree.html and maintained
+documentation HTML/anchors under docs/, design-docs/ and development-docs/.
+The unrendered tree template and application UI routes have separate URL bases.
+Upstream reference boundaries remain explicit. Source-reference
+checks require a link; reviewers must assess the responsibility explanation,
+behavior/defaults, regression evidence and concision. These are current tooling
+limits, not guarantees supplied by the passing CI check.
+
 Every leaf has exactly one primary Markdown doc. Closely related code files may
 share it; each source file must be linked and explained there. Additional reading
 lives in the guide's normal links. Branches contain groups, never code-file leaves.

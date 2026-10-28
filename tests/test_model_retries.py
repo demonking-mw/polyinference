@@ -9,6 +9,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+from conftest import static_schedule
 
 from polyinference.config import Endpoint, RuntimeConfig
 from polyinference.contracts import (
@@ -26,11 +27,13 @@ from polyinference.runtime.inference import HTTPInference
 from polyinference.runtime.kernel import KernelRuntime, UncertainEffect
 
 
-async def setup(tmp_path, protocol="anthropic", binding="local", endpoint_options=None, **options):
+async def setup(tmp_path, protocol="anthropic", binding="local", endpoint_options=None, call_limit=None, **options):
     endpoint = Endpoint(model="fixture", protocol=protocol, brokered_tools=True, **(endpoint_options or {}))
     config = RuntimeConfig(repository=str(tmp_path / "unused"), state_directory=str(tmp_path / "state"),
                            local=endpoint, cloud=endpoint, role_bindings={"researcher": binding},
                            model_retry_delay_ms=0, **options)
+    if call_limit is not None:
+        config = config.model_copy(update={"limits": config.limits.model_copy(update={"max_model_calls": call_limit})})
     rt = await KernelRuntime(config).open()
     scope = rt.scope.model_copy(update={"process_id": "research"})
     prompt = rt.artifacts.put(b"Summarize facts", scope)
@@ -43,6 +46,7 @@ async def setup(tmp_path, protocol="anthropic", binding="local", endpoint_option
         "attempt_id": None, "workspace_id": None, "input_refs": [prompt], "limits": config.limits,
         "output_schema_ref": "summary/1", "grant_ref": "grant/run", "budget_account_ref": "budget/run",
         "program": {**template["program"], "program_id": "research", "program_version": "1"},
+        "schedule": static_schedule(template["schedule"], config, "researcher", binding),
     })
     rt.processes.register(spec, binding, capabilities=["user.notify"])
     context = ContextView(
@@ -259,13 +263,9 @@ async def test_transport_retry_classification_and_backoff(tmp_path, monkeypatch,
 
 @pytest.mark.parametrize("stop", ["cancel", "deadline", "allowance", "retry_after", "shutdown"])
 async def test_backoff_obeys_cancellation_deadlines_allowances_and_shutdown(tmp_path, monkeypatch, stop):
-    rt, request = await setup(tmp_path)
+    rt, request = await setup(tmp_path, call_limit=1 if stop == "allowance" else None)
     if stop == "deadline":
         request = request.model_copy(update={"deadline": now() + timedelta(milliseconds=100)})
-    if stop == "allowance":
-        request = request.model_copy(update={"limits": request.limits.model_copy(update={"max_model_calls": 1})})
-        rt.config = rt.config.model_copy(update={"limits": request.limits})
-        request = request.model_copy(update={"intent_digest": operation_fingerprint(request)})
     calls = 0
 
     async def handler(_):

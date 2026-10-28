@@ -36,6 +36,7 @@ async def main(model):
         reserved_context_tokens=128000,
     )
     config = AgentConfig(
+        repository_mode="isolated",
         repository=str(repo),
         state_directory=str(root / "state"),
         objective='Change greeting.py so greet() returns exactly "Hello, OS!". Use one small coding task. No setup or unrelated changes.',

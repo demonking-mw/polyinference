@@ -92,10 +92,10 @@ other workflows.
 The coding summary distinguishes ancestry, dirty/private source, publication and
 kept nonempty contributions; it never interprets inherited ancestry as new work.
 
-The coding program marker is `agent-5-in-place-repository`, state schema `2.3`.
+The current coding marker is `agent-7-bounded-worker-state`, state schema `2.6`.
 New runs require fresh state. Older layouts are not migrated. Updated 2026-10-23:
 the exact graph-only Resume compatibility path below preserves layout and prior outcomes.
-The OS remains `simple-os/2`; an artifact-only or workspace-none process still
+The OS marker is `simple-os/3`; an artifact-only or workspace-none process still
 requires no Git, coding task, check or code-writing finalization. MCP and shutdown
 recovery are not expanded by this change. The sections below describe shared
 mechanisms; private-copy details apply to the legacy optional provider.
@@ -110,7 +110,7 @@ task/evidence identities.
 
 | Function | OS responsibility | Calling agent responsibility |
 | --- | --- | --- |
-| Process lifecycle | Register identity, bound driver admission/deadlines, start/wait/cancel/finish and retain outputs/unfinished effects; process-limit and paused-residency gaps U03/U04 remain | Supply the program/continuation and decide what work to do; explicitly identify control processes |
+| Process lifecycle | Register identity, enforce uniform limits/resident admission/deadlines, start/wait/cancel/finish, safely hibernate/readmit and retain outputs/unfinished effects | Supply the program/continuation and decide what work to do; explicitly identify control processes |
 | Inference | Admission, context/output bounds, provider transport, usage, durable results and uncertainty | Supply context, role binding and response grammar; interpret the result |
 | Brokered tools | Check capability grants, input schema, effect class, identity and workspace preconditions; invoke the installed handler | Choose which existing capabilities to grant; supply application-specific handlers/instructions where needed |
 | Workspaces and commands | Optional private file views, scoped edits, shell exclusion, source evidence, Git operations and temporary tool environments | Select paths, read/build closure and checks; request authorized scope changes |
@@ -127,12 +127,13 @@ the inference server; agent continuation does not expose hidden reasoning state.
 
 ## Bootstrap and the capability boundary
 
-The implemented guards are not complete validation of every ProcessSpec field.
-Conflicting mandatory data policies/hard allocation schedules, narrower process
-limits and paused-worker residency remain U01–U04 in the
-[open-gap ledger](DESIGN_REVISIONS.md#open-implementation-gaps). They must be
-honored or rejected; this guide does not endorse silent weakening. Current
-RuntimeConfig.limits is the operation envelope, even when a stored spec differs.
+Static registration/dispatch now enforce mandatory data policy and supported hard
+class constraints; unsupported weights and unequal process/runtime limits reject.
+Paused residency persists until explicit safe hibernation/readmission. See the
+[gap history](DESIGN_REVISIONS.md#open-implementation-gaps) and
+[current verification](../../development-docs/reliability-implementation-2026-10-27.md).
+RuntimeConfig.limits remains the uniform supported envelope; arbitrary narrower
+per-process limits are rejected rather than silently widened.
 
 Trusted application code opens `KernelRuntime`, installs its handlers/protocols,
 and registers processes before issuing effects. Registration is a local Python
@@ -478,8 +479,8 @@ disconnect or local transport kill does not establish remote termination. An
 exception during an external-write handler or result recording is uncertain,
 so it cannot be silently repeated as a known failed tool invocation.
 
-The kernel compatibility marker is `simple-os/2`, with coding program
-`agent-5-in-place-repository` and state schema `2.3`. This identifies changed
+The kernel compatibility marker is `simple-os/3`, with coding program
+`agent-7-bounded-worker-state` and state schema `2.6`. This identifies changed
 registration/grant wiring within the current basic function set. It does not
 introduce the planned next-version integration platform. Use new run/state
 directories for incompatible implementations. Updated 2026-10-23: older runs
@@ -511,4 +512,6 @@ stagnation, diagnosis, semantic completion, module contracts and exception recov
 The adapter stays a compatibility alias; generic processes still require no coding
 services. See [worker recovery](../implementation/WORKER_RECOVERY.md),
 [progress monitoring](../implementation/PROGRESS_MONITORING.md) and the
-[merge record](../../development-docs/FIXES.md#fix-0127). Existing U01–U04 gaps remain.
+[merge record](../../development-docs/FIXES.md#fix-0127). U01–U04's historical
+gaps now have static/uniform-profile implementations in FIX-0134/0135; current
+verification and limits remain explicit in the implementation record.

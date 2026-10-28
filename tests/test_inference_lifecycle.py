@@ -161,14 +161,16 @@ async def test_pings_do_not_extend_first_output_watchdog(tmp_path):
 
 
 async def test_total_deadline_does_not_reset(tmp_path):
-    rt, request = await setup(tmp_path, endpoint_options={"lifecycle": {"total_seconds": .025}}, model_call_retries=2)
+    rt, request = await setup(tmp_path, endpoint_options={"lifecycle": {"total_seconds": 1}}, model_call_retries=2)
+    entered = asyncio.Event()
     async def handler(wire):
-        await asyncio.sleep(.03)
-        return httpx.Response(503, json={})
+        entered.set()
+        await asyncio.Event().wait()
     await install(rt, request, handler)
     try:
         with pytest.raises(UncertainEffect):
             await rt.execute(policy(request, additional=3, replace=True))
+        assert entered.is_set()  # Must test a submitted request, not pre-dispatch exhaustion.
         assert len(rt.records.scan("effect/")) == 1
     finally:
         await rt.close()
@@ -239,9 +241,12 @@ async def test_output_adaptation_does_not_reset_retry_allowance(tmp_path):
         await rt.close()
 
 
-async def test_endpoint_probe_is_bounded_and_has_no_git_or_tools(tmp_path, monkeypatch):
+@pytest.mark.parametrize("location, constrained", [(None, False), ("local", False), ("cloud", False),
+                                                  (None, True), ("cloud", True)])
+async def test_endpoint_probe_is_bounded_and_has_no_git_or_tools(tmp_path, monkeypatch, location, constrained):
     from polyinference.agent.endpoint_probe import probe_endpoint
     from polyinference.config import Endpoint, RuntimeConfig
+    from polyinference.contracts import DataPolicy
     from polyinference.runtime.inference import HTTPInference
     from polyinference.runtime.storage import Records
     original = HTTPInference.__init__
@@ -252,8 +257,15 @@ async def test_endpoint_probe_is_bounded_and_has_no_git_or_tools(tmp_path, monke
     def client(self, endpoint, client=None):
         original(self, endpoint, httpx.AsyncClient(transport=httpx.MockTransport(handler)))
     monkeypatch.setattr(HTTPInference, "__init__", client)
-    endpoint = Endpoint(model="fixture", protocol="anthropic", lifecycle={})
-    config = RuntimeConfig(repository=str(tmp_path / "not-a-repo"), local=endpoint, cloud=endpoint)
+    endpoint = Endpoint(model="fixture", protocol="anthropic", lifecycle={}, inference_location=location)
+    policy = DataPolicy(policy_ref="local-only", allowed_inference_locations=["local"],
+                        allowed_destination_classes=["local"], maximum_classification="project") if constrained else None
+    config = RuntimeConfig(repository=str(tmp_path / "not-a-repo"), local=endpoint, cloud=endpoint, data_policy=policy)
+    if constrained:
+        with pytest.raises(ValueError, match="Inference location"):
+            await probe_endpoint(config, tmp_path / "probe")
+        assert not calls and not config.repo_path.exists()
+        return
     result = await probe_endpoint(config, tmp_path / "probe")
     assert result["status"] == "succeeded" and len(calls) == 1 and calls[0]["max_tokens"] == 64
     assert not config.repo_path.exists()

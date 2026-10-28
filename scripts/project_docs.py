@@ -210,8 +210,18 @@ def resolve_link(origin, target):
 
 def validate_links(root, inventory, generated):
     sources = {path: (root / path).read_text(encoding="utf-8") for path in inventory if path.endswith(".md")}
+    # UI routes and the unrendered template have different URL bases. Only maintained
+    # documentation HTML is interpreted as repository-relative output here.
+    sources.update({path: (root / path).read_text(encoding="utf-8") for path in inventory
+                    if path.endswith(".html") and path.startswith(("docs/", "design-docs/", "development-docs/"))
+                    and path != "docs/tree-template.html" and path not in generated})
     sources.update(generated)
     document_anchors = {path: anchors(source) for path, source in sources.items() if path.endswith(".md")}
+    for path, source in sources.items():
+        if path.endswith(".html"):
+            parser = HTMLLinks()
+            parser.feed(source)
+            document_anchors[path] = parser.anchors
     graph = {}
     errors = []
     for origin, source in sources.items():
@@ -297,7 +307,13 @@ def run(root=ROOT, check=False):
             raise DocumentationError("Stale docs/file-tree.html; run python scripts/project_docs.py")
     else:
         target.write_text(output, encoding="utf-8", newline="\n")
-    return f"Documentation OK: {len(inventory)} files, {len(leaves)} feature/doc leaves; links and README reachability verified."
+    message = f"Documentation OK: {len(inventory)} files, {len(leaves)} feature/doc leaves; links and README reachability verified."
+    long_guides = sorted(p for p in inventory if p.endswith(".md")
+                         and p.startswith(("docs/modules/", "docs/guides/"))
+                         and len((root / p).read_text().splitlines()) > 80)
+    if long_guides:
+        message += "\nGuide length advisory (>80 lines): " + ", ".join(long_guides)
+    return message
 
 
 def main():

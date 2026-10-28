@@ -7,6 +7,7 @@ from langgraph.runtime import Runtime
 
 from ..domain import SeniorProposal
 from .architecture import catalog, validate_plan
+from .cloud_recovery import prepare
 from .exceptions import validate as validate_exceptions
 from .exceptions import validate_sources
 from .review import fit_snapshot, retrieve, validate_completion
@@ -22,6 +23,8 @@ class SeniorState(TypedDict, total=False):
     trajectory_ref: dict | None
     reply: dict
     proposal: dict
+    model_proposal: dict
+    policy_adjustments: list[dict]
     error: str | None
     review_reads_used: int
     corrections_used: int
@@ -36,6 +39,8 @@ async def validate(state, runtime: Runtime[AppContext]):
     app = runtime.context.services
     try:
         proposal = SeniorProposal.model_validate(state["reply"])
+        model_proposal = proposal.model_dump(mode="json")
+        proposal, adjustments = await prepare(app, proposal, state["input"])
         reports = {report["record_id"]: report for report in state["input"].get("reports", [])}
         for disposition in proposal.dispositions:
             report = reports.get(disposition.report_ref)
@@ -43,7 +48,22 @@ async def validate(state, runtime: Runtime[AppContext]):
                 raise ValueError("Disposition is not in the pinned review input")
             if report.get("code_location") == "private" and disposition.action == "keep":
                 raise ValueError("Private failed commit cannot be kept; reject it or assign a repair")
+        definitions = {c.name: c for c in app.task_check_definitions}
+        providers = {t["assignment"]["task_id"]: t["assignment"]["write_paths"]
+                     for _, _, t in app.ports.records.scan("task/")
+                     if t["assignment"]["task_id"] not in proposal.cancel_pending_task_ids
+                     and t["execution"] != "cancelled"}
+        providers.update({t.task_id: t.write_paths for t in proposal.tasks})
         for assignment in proposal.tasks:
+            coverage = set(assignment.read_paths) | set(assignment.write_paths) | set(app.config.closure_paths)
+            supplied = {path for dependency in assignment.dependencies for path in providers.get(dependency, [])}
+            for name in assignment.checks:
+                check = definitions.get(name)
+                if check:
+                    missing = set(check.required_paths) - coverage - supplied
+                    if missing:
+                        raise ValueError("Check source closure missing for " + assignment.task_id + ": "
+                                         + ", ".join(sorted(missing)))
             if app.config.write_scope == "explicit" and not set(assignment.write_paths) <= set(
                 app.config.allowed_write_paths
             ):
@@ -108,7 +128,8 @@ async def validate(state, runtime: Runtime[AppContext]):
         )
         if result.state != "succeeded":
             raise RuntimeError(str(output))
-    return {"proposal": proposal.model_dump(mode="json"), "error": None, "route": "done"}
+    return {"proposal": proposal.model_dump(mode="json"), "model_proposal": model_proposal,
+            "policy_adjustments": adjustments, "error": None, "route": "done"}
 
 
 async def read_context(state, runtime: Runtime[AppContext]):

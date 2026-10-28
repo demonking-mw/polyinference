@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from ..contracts import CodeRevision, Prerequisite, TaskAttempt, TaskSpec
 from .architecture import catalog, task_context
+from .routing import cloud_recovery
 
 
 def coding_tools(config, setup=False):
@@ -41,7 +42,11 @@ def make_task(
         "report_ref": None,
         "root_task_id": predecessor["root_task_id"] if predecessor else assignment.task_id,
         "recovery_depth": predecessor["recovery_depth"] + 1 if predecessor else 0,
+        "cloud_recoveries": (predecessor.get("cloud_recoveries", 0)
+                             + int(cloud_recovery(app.config, predecessor, assignment)))
+        if predecessor else 0,
         "previous_process_id": predecessor["process_id"] if predecessor else None,
+        "recovery_condition": predecessor.get("changed_condition") if predecessor else None,
         "source_delta_ref": predecessor["source_delta_ref"]
         if predecessor and assignment.resume_from
         else None,

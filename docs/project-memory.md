@@ -16,6 +16,20 @@ inference and concurrent work. The current tester path can use Codex seniors and
 remote Anthropic Haiku as a local-lane stand-in. Lane names do not prove physical
 location; simulated overlap or TPS does not establish measured GPU performance.
 
+The agent's [cloud recovery policy](guides/agent-reliability.md) gives eligible
+clean local exceptions a finite coding takeover with original resources. Planner
+guidance requires small behaviors and actual tool inventory; it adds no browser/MCP.
+Changed recovery/program pins require fresh state and fresh live qualification.
+
+The 27 October implementation uses runtime `simple-os/3`, agent-7 and state 2.6.
+Static data/allocation policy and uniform limits are enforced; paused residency
+requires explicit safe hibernation/readmission. Bounded worker facts and error-aware
+response repair retain original evidence and physical retry bounds. Pending linked
+recovery retargets preserve their original root. Read the current
+[implementation/verification record](../development-docs/reliability-implementation-2026-10-27.md)
+and [qualification guide](guides/qualification.md); fixture/browser-runner checks
+remain distinct from live model qualification and broad product completion.
+
 | Owner | Decisions and guarantees to preserve |
 | --- | --- |
 | Agent/application | Task meaning, decomposition/dependencies, Git/repository policy, source reuse, canonical memory, response grammar, check purpose, acceptance and continuation. |

@@ -7,6 +7,7 @@ KernelRuntime composes OS services and settles stable operation intents with ret
 | File | Responsibility |
 | --- | --- |
 | [src/polyinference/runtime/kernel.py](../../src/polyinference/runtime/kernel.py) | Bootstrap, effect dispatch, authority/budget checks, settlement, publication and reconciliation. |
+| [src/polyinference/runtime/process_policy.py](../../src/polyinference/runtime/process_policy.py) | Static registration/dispatch policy, declared location/destination/classification and uniform limits. |
 | [src/polyinference/runtime/resume.py](../../src/polyinference/runtime/resume.py) | Durable resume preparation/progress, completed response recovery and adapter recovery coordination without coding policy. |
 | [src/polyinference/runtime/adapter.py](../../src/polyinference/runtime/adapter.py) | Historical StandaloneRuntime compatibility alias. |
 | [src/polyinference/runtime/__init__.py](../../src/polyinference/runtime/__init__.py) | Runtime package boundary; sprint policy stays in the agent. |
@@ -41,7 +42,9 @@ no simulation settings or provider-specific pacing policy.
   physical holds remain, late delivery is fenced, and replacements need spare capacity.
 - Every actual submission consumes its own real resource reservation.
 - No coding-record names, verdict grammar or Git prerequisites enter generic policy.
-- Open process/data-policy guarantees remain documented gaps, not claimed enforcement.
+- Mandatory data constraints and compatible static hard rules are checked at registration and dispatch; unsupported weighted schedules reject.
+- Unspecified placement cannot satisfy a local-only/cloud-only constraint; URLs and lane names are not placement attestations.
+- Process limits must equal the runtime envelope; recovery cannot widen data policy or grants.
 
 ## Verification and related reading
 

@@ -19,10 +19,19 @@ from ..contracts import (
 from ..domain import SeniorProposal, canonical, digest, now
 from ..ports import RecordConflict
 from .architecture import catalog, validate_plan
+from .cloud_recovery import capabilities, policy_view
 from .design_basis import DESIGN_BASIS
 from .exceptions import obligation_satisfied, review_view, validate_sources
 from .exceptions import validate as validate_exceptions
-from .review import check_view, code_identity, contract, evidence_catalog, fit_snapshot, validate_completion
+from .review import (
+    check_view,
+    code_identity,
+    contract,
+    evidence_catalog,
+    fit_snapshot,
+    task_view,
+    validate_completion,
+)
 from .routing import allocate, development_history, was_started
 from .senior import build_senior
 from .services import ModelOperationFailure
@@ -755,9 +764,9 @@ class ProjectAgent:
             "exceptions": review_view(app),
             "steering": steering,
             "user_updates": app.user_updates(run["steering_received"]),
-            "pending_tasks": pending,
+            "pending_tasks": [task_view(task) for task in pending],
             "interrupted_tasks": [
-                v for _, _, v in app.ports.records.scan("task/") if v["execution"] == "interrupted"
+                task_view(v) for _, _, v in app.ports.records.scan("task/") if v["execution"] == "interrupted"
             ],
             "all_task_ids": [v["assignment"]["task_id"] for _, _, v in app.ports.records.scan("task/")],
             "allowed_write_paths": app.config.allowed_write_paths,
@@ -775,10 +784,12 @@ class ProjectAgent:
             "memory": app.memory_view(),
             "closure_paths": app.config.closure_paths,
             "configured_checks": [c.name for c in app.task_check_definitions],
+            "runtime_capabilities": capabilities(app.config),
             "acceptance_checks": [c.name for c in app.acceptance_check_definitions],
             "previous_acceptance": run.get("acceptance_failure"),
             "acceptance_contract": contract(app, head),
         }
+        snapshot["cloud_recovery_policy"] = await policy_view(app, snapshot["exceptions"], head)
         if app.repository:
             references = [r["candidate_commit_id"] for r in reports if r.get("code_location") == "private"]
             references += [v["preserved_source_ref"] for v in snapshot["interrupted_tasks"]
@@ -857,6 +868,8 @@ class ProjectAgent:
             {
                 "proposal/" + pid: {
                     "proposal": result["proposal"],
+                    "model_proposal": result.get("model_proposal", result["proposal"]),
+                    "policy_adjustments": result.get("policy_adjustments", []),
                     "head": head,
                     "steering_through": run["steering_received"],
                 }
@@ -904,8 +917,12 @@ class ProjectAgent:
             if body["assignment"]["task_id"] not in proposal.cancel_pending_task_ids or was_started(body)
         ]
         proposal = proposal.model_copy(
-            update={"tasks": allocate(proposal.tasks, retained, app.config.senior_development_fraction)}
+            update={"tasks": allocate(
+                proposal.tasks, retained, app.config.senior_development_fraction,
+                protected_task_ids=replacements,
+            )}
         )
+        replacements = validate_exceptions(app, proposal, snapshot)
         plan_ref = f"plan/{run['sprint'] + 1}"
         for assignment in proposal.tasks:
             if app.ports.records.get("task/" + assignment.task_id):
@@ -1070,8 +1087,12 @@ class ProjectAgent:
         app.update("review-batch/active", {**batch, "state": "done"})
         if (not proposal.complete and not proposal.dispositions and not self.ready()
                 and not app.get("app/run")["active_workers"]):
+            blocked = [item["reason"] for item in snapshot.get("cloud_recovery_policy", {}).get("offers", [])
+                       if not item["eligible"]]
+            reason = ("No runnable tasks; cloud recovery unavailable: " + "; ".join(dict.fromkeys(blocked))[:1200]
+                      if blocked else "No runnable tasks; resolve the blocker or supply new input")
             app.update("app/run", {**app.get("app/run"), "status": "paused", "starts_closed": True,
-                                   "blocker": "No runnable tasks; resolve the blocker or supply new input"})
+                                   "blocker": reason})
         app.process_status(pid, state="completed", phase="reviewed", terminal_result_ref="proposal/" + pid)
 
     async def review_checks(self, pid, query_index, head):

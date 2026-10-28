@@ -14,6 +14,22 @@ def code_identity(code):
     return {key: code[key] for key in ("commit_id", "effective_tree_digest", "environment_digest")}
 
 
+def task_view(task):
+    """Planner contract/lineage, not repeated workspace/base/dispatch envelopes.
+
+    The full task/spec remain durable. Current source and exception source offers
+    carry their own exact code pins; this view never rewrites canonical task state.
+    """
+    fields = (
+        "assignment", "category", "execution", "spec_ref", "attempt_id", "report_ref",
+        "exception_ref", "replacement_task_id", "root_task_id", "recovery_depth",
+        "cloud_recoveries", "previous_process_id", "preserved_source_ref", "exception",
+        "stop_reason", "model_failure",
+    )
+    return {"record_ref": "task/" + task["assignment"]["task_id"],
+            **{key: task[key] for key in fields if task.get(key) is not None}}
+
+
 def brief_ref(app, ref):
     """Full scoped reference remains durable; avoid repeating its wire envelope."""
     if hasattr(ref, "model_dump"):

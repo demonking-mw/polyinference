@@ -28,6 +28,16 @@ estimates, not provider billing or subscription allowance.
 Repository UI facts separate ancestry, private/dirty source, recorded publication
 and accepted contributions. Legacy merged fields prove no contribution; saved
 snapshots retain their original evidence and use the same cautious rendering.
+Schema-v2 snapshots also retain physical inference attempts, response-repair
+windows, worker exceptions/recovery lineage and progress observations. The UI
+shows the last worker progress observation; its novelty heuristic does not
+certify correctness. See [progress policy](../../design-docs/implementation/PROGRESS_MONITORING.md).
+The agent projection includes bounded worker-state views and the same canonical
+physical-attempt/kept-source quality metrics in live and saved data. Native jobs,
+raw generations and full product acceptance remain separate quantities; see
+[qualification](../guides/qualification.md).
+Direct effectful native jobs count once even without response-retry attempt rows;
+per-task summaries retain bounded lineage, resource and identical-query metrics.
 
 ## Principles to preserve
 

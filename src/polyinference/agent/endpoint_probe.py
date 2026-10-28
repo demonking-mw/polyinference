@@ -38,14 +38,14 @@ async def probe_endpoint(config, state_directory):
                         "aging_allowed": False, "deadline": None},
                 "distribution": {"policy_id": "probe/1", "version": 1, "fidelity": "strict",
                     "rules": [{"rule_id": "probe", "roles": ["probe"], "phases": ["*"],
-                        "axis": "inference_location", "eligible_classes": [endpoint.physical_location],
-                        "target_weights": {endpoint.physical_location: 1.0}, "enforcement": "hard",
+                        "axis": "harness_class", "eligible_classes": [endpoint.protocol],
+                        "target_weights": {endpoint.protocol: 1.0}, "enforcement": "hard",
                         "unit": "model_decisions", "accounting_scope": "process", "accounting_group_id": "probe",
                         "window_slots": 1, "max_total_variation": 0, "rounding_slack_slots": 0,
                         "infeasible_action": "reject"}], "max_rebindings": 0, "minimum_residence_ms": 0,
                     "migration_boundaries": ["before_start"]},
-                "data_policy": {"policy_ref": "probe/1", "allowed_inference_locations": [endpoint.physical_location],
-                    "allowed_destination_classes": ["local", "cloud"], "maximum_classification": "project"},
+                "data_policy": {"policy_ref": "probe/1", "allowed_inference_locations": ["local", "cloud"],
+                    "allowed_destination_classes": ["local"], "maximum_classification": "project"},
                 "requirements": [], "prerequisites": [], "resource_hints": [], "conflict_keys": [], "locality_refs": []},
             output_schema_ref="text/plain", resume_strategy="portable_context")
         rt.processes.register(spec, "local")

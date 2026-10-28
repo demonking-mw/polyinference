@@ -16,15 +16,29 @@ def development_history(retained, *, reserve_pending=False):
             and (was_started(task) or (reserve_pending and task["execution"] == "pending"))]
 
 
-def allocate(assignments, retained, fraction):
+def cloud_recovery(config, packet, assignment):
+    """A coding-role handoff, distinct from cloud management or read-only diagnosis."""
+    return (
+        assignment.role == "specialist"
+        and config.role_bindings["specialist"] == "cloud"
+        and (packet.get("cloud_recoveries", 0) > 0
+             or (packet["assignment"]["role"] == "worker"
+                 and config.role_bindings["worker"] == "local"))
+    )
+
+
+def allocate(assignments, retained, fraction, *, protected_task_ids=()):
     # Pending tasks reserve future quota but are not historical starts in accounting.
     prior = development_history(retained, reserve_pending=True)
     senior = sum(task["assignment"]["role"] == "specialist" for task in prior)
     quota = max(
         0, min(len(assignments), math.floor((len(prior) + len(assignments)) * fraction + 0.5) - senior)
     )
-    preferred = sorted(range(len(assignments)), key=lambda i: assignments[i].role != "specialist")
-    chosen = set(preferred[:quota])
+    fixed = {i for i, task in enumerate(assignments) if task.task_id in protected_task_ids}
+    chosen = {i for i in fixed if assignments[i].role == "specialist"}
+    preferred = sorted((i for i in range(len(assignments)) if i not in fixed),
+                       key=lambda i: assignments[i].role != "specialist")
+    chosen.update(preferred[:max(0, quota - len(chosen))])
     return [
         assignment.model_copy(update={"role": "specialist" if i in chosen else "worker"})
         for i, assignment in enumerate(assignments)

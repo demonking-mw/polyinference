@@ -64,14 +64,15 @@ remove the corresponding requirements merely to agree with current code.
 
 | ID | Required behavior and current gap | Owning path |
 | --- | --- | --- |
-| U01 | A process's mandatory inference-location, destination and classification constraints must be honored or rejected. Current dispatch follows configured role_bindings without validating conflicting ProcessSpec data-policy declarations. | [kernel dispatch](../../src/polyinference/runtime/kernel.py), [process registration](../../src/polyinference/runtime/processes.py) |
-| U02 | Unsupported hard allocation semantics must be rejected even when the caller omits a feature flag. Current process registration stores such schedules without that semantic rejection. Static routing remains a justified scope choice; silent acceptance does not. | [process registration](../../src/polyinference/runtime/processes.py) |
-| U03 | Registered process limits must match actual execution authority. Current registration accepts a narrower ProcessSpec.limits, while operations require RuntimeConfig.limits and use that global envelope. A uniform-limit profile would be reasonable if incompatible specs were rejected at registration. | [operation validation](../../src/polyinference/runtime/kernel.py) |
-| U04 | The original residency rule keeps paused workers counted until explicit safe hibernation/readmission. Current max_workers counts unfinished driver tasks; a stopped paused driver drops out without that transition. The difference is unresolved, not an approved automatic hibernation policy. | [driver accounting](../../src/polyinference/runtime/processes.py) |
+| U01 — implemented 2026-10-27 | Mandatory location/destination/classification policy is checked at registration and dispatch, including a run-wide ceiling. Unspecified placement cannot satisfy constrained placement. Previously role bindings bypassed ProcessSpec policy. | [FIX-0134](../../development-docs/FIXES.md#fix-0134), [process policy](../../src/polyinference/runtime/process_policy.py) |
+| U02 — implemented static profile | Unsupported hard distribution weights reject even without a feature flag. Static hard class constraints are enforced; no dynamic weighted scheduler is claimed. Previously schedules were stored without semantic rejection. | [FIX-0134](../../development-docs/FIXES.md#fix-0134) |
+| U03 — implemented uniform profile | ProcessSpec.limits must equal RuntimeConfig.limits; incompatible specs reject at registration and operations cannot widen authority. Arbitrary narrower per-process envelopes remain unsupported. | [FIX-0134](../../development-docs/FIXES.md#fix-0134) |
+| U04 — implemented 2026-10-27 | Durable resident admission survives paused driver termination. Explicit known-settled hibernation/readmission controls capacity; unknown physical effects retain holds. Previously max_workers counted only unfinished drivers. | [FIX-0135](../../development-docs/FIXES.md#fix-0135) |
 | U05 — resolved | Generic output recovery preserves caller grammar after [FIX-0085](../../development-docs/FIXES.md#fix-0085). Earlier feedback requested visible JSON even from plain-text callers; generic feedback now requests smaller response content under the same declared protocol. Internal compaction retains its own legitimate JSON contract. | [output recovery](../../src/polyinference/runtime/model_retries.py) |
 
-Until repaired, configuring consistent role bindings and one limits envelope is
-a caller-side precaution, not proof of OS enforcement. Setting
+The earlier consistent-role/uniform-limit precaution was not enforcement. The
+[new implementation record](../../development-docs/reliability-implementation-2026-10-27.md)
+distinguishes current verification from these historical probes. Setting
 inference_safety.output_recoveries to zero disables the generic smaller-response
 attempts; it does not weaken incomplete-output rejection.
 

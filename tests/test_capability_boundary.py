@@ -8,6 +8,7 @@ from datetime import timedelta
 from pathlib import Path
 
 import pytest
+from conftest import static_schedule
 from pydantic import Field
 
 from polyinference.config import Endpoint, RuntimeConfig
@@ -44,7 +45,7 @@ def process(runtime, *, capabilities=(), role="analyst", process_id="research"):
         "workspace_id": None, "input_refs": [prompt], "limits": runtime.config.limits,
         "output_schema_ref": "research-summary/1", "grant_ref": "grant/run", "budget_account_ref": "budget/run",
         "program": {**template["program"], "program_id": "research", "program_version": "1"},
-        "schedule": {**template["schedule"], "requirements": [], "conflict_keys": [], "locality_refs": []},
+        "schedule": static_schedule(template["schedule"], runtime.config, role),
     })
     runtime.processes.register(spec, "local", capabilities=capabilities)
     return spec, prompt
@@ -412,7 +413,7 @@ async def test_registered_workspace_handlers_share_source_preconditions(config):
         return {"checked": True}
 
     runtime.register_capability("example.inspect", inspect, input_type=dict[str, str], workspace=True)
-    spec, _ = process(runtime, capabilities=["example.inspect"])
+    spec, _ = process(runtime, capabilities=["example.inspect"], role="worker")
     try:
         base = await runtime.workspaces.initialize()
         manifest = await runtime.workspaces.create("view", spec.process_id, "opaque/provenance", base,

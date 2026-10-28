@@ -111,6 +111,8 @@ def task_context(app, assignment, contracts):
         app.artifact(
             {
                 "module_assignment": {
+                    "behavior": assignment.behavior or assignment.objective,
+                    "focused_check": assignment.focused_check or assignment.checks[0],
                     "acceptance_criteria": assignment.acceptance_criteria,
                     "non_goals": assignment.non_goals,
                     "provides": assignment.provides,
