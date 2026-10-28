@@ -23,6 +23,9 @@ policy consumes its ready state and retained results. InferencePolicy is a gener
 termination proof. OperationPorts.uncertain() reports blocking effects; explicit
 include_isolated=True also reports pending generation-only computation. WriteScopeError
 belongs to ports; runtime.workspace_state retains a compatibility re-export.
+ContextPart.retention_priority is an optional caller retention hint from 0 to 100; zero is omitted
+from serialization. Required parts and whole tool groups retain their protections. This generic
+mechanism conveys no task-completion or memory policy; see [context](context.md).
 Some shared wire types retain coding
 records for compatibility; their presence does not make coding mandatory.
 

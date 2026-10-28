@@ -12,9 +12,9 @@ Reusable application graphs turn model replies into development, reconciliation 
 | [src/polyinference/domain.py](../../src/polyinference/domain.py) | Git policy, assignments, senior proposals and typed worker replies. |
 | [src/polyinference/agent/architecture.py](../../src/polyinference/agent/architecture.py) | Immutable versioned interfaces, resulting-plan dependencies and pinned task contracts. |
 | [src/polyinference/agent/review.py](../../src/polyinference/agent/review.py) | Source/diff/check packets, bounded review reads and exact-tree semantic completion. |
-| [src/polyinference/agent/diagnostics.py](../../src/polyinference/agent/diagnostics.py) | Bounded read-only checking-agent diagnosis under the worker's resource account. |
+| [src/polyinference/agent/diagnostics.py](../../src/polyinference/agent/diagnostics.py) | Relevant source previews and a bounded frozen-source read capability for diagnosis under the worker's resource account. |
 | [src/polyinference/agent/schema.py](../../src/polyinference/agent/schema.py) | Compact displayed response schemas while retaining validation constraints. |
-| [src/polyinference/agent/worker_memory.py](../../src/polyinference/agent/worker_memory.py) | Bounded source-backed worker facts and deterministic validation-error feedback within existing retry bounds. |
+| [src/polyinference/agent/worker_memory.py](../../src/polyinference/agent/worker_memory.py) | Bounded source-backed facts, resolved-error retirement, replay-safe history and caller retention priorities within existing retry bounds. |
 
 ## Interface and ownership
 
@@ -37,18 +37,22 @@ digests/errors/evidence and original trajectory references. Source/generation ch
 facts. Interface references use `interface_id@version`; revisions must be sequential and existing versions
 are immutable. Pending consumers must depend on unfinished providers; changing an interface requires
 replacing affected pending tasks. Started tasks retain their original contract artifacts.
-Byte-eviction counts persist within the same source/generation so replay keeps the same ledger revision.
+Byte-eviction counts persist within the same source/generation. Corrected unscoped searches retire old
+search errors; valid replies clear protocol errors even without observations. Late prefixes cannot revive
+resolved errors. Canonical trajectories remain immutable; changed source invalidates file facts.
 
 Senior review separates worker claims from actual diffs, source and check evidence. Bounded `read_requests`
 retrieve more source. Completion must assess the reserved `objective` criterion and configured criteria
 against the exact reviewed tree; missing, uncertain or stale evidence cannot establish completion. Diagnosis
-can request bounded read expansion or advise continuation/review, without write tools or a new resource
-allowance. See [configuration](../guides/agent-reliability.md).
+uses failing paths/lines, assigned entry points and check files before unrelated source. Native diagnosis
+can page only its frozen input through coding.diagnostic_read; raw diagnosis retains bounded previews/read
+expansion. No write tools or new allowance are granted. See [configuration](../guides/agent-reliability.md).
 
 Automatic stagnation parks directly for senior review, bypassing read-only diagnosis. Eligible local
 exceptions now get a bounded cloud coding takeover protected from normal allocation. The senior graph
 validates this effective plan and retains raw model decisions separately. Workers receive predecessor
-failure/source context. Planner instructions require one behavior/check per local task and pin actual
+failure/source context and focused implementation evidence. Existing APIs do not establish consumer/UI
+integration; already-complete work needs source-backed evidence, without an edit quota. Planners pin actual
 capabilities: no browser/MCP/persistent service API. See [recovery](../guides/agent-reliability.md).
 
 ## Principles to preserve
@@ -71,7 +75,6 @@ fixes](../../tests/test_incident_fixes.py). Module/review/diagnosis coverage:
 After a fix/feature, update this guide and all affected docs/settings/navigation, then record actual
 verification in [FIXES.md](../../development-docs/FIXES.md). Follow [documentation
 maintenance](../maintenance.md) in the same task.
-
 See [worker recovery](../../design-docs/implementation/WORKER_RECOVERY.md) and [progress
 monitoring](../../design-docs/implementation/PROGRESS_MONITORING.md). Private in-place reports remain
 private until verified publication; a successful fixture response is not live product verification.

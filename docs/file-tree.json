@@ -206,6 +206,12 @@
             "title": "Model availability fallback configuration and guarantees",
             "doc": "docs/guides/model-fallback.md",
             "files": []
+          },
+          {
+            "id": "doc-docs-guides-context-measurement",
+            "title": "Input token measurement, byte ceilings and caller priorities",
+            "doc": "docs/guides/context-measurement.md",
+            "files": []
           }
         ]
       },
@@ -902,6 +908,12 @@
             "title": "Agent-selected model fallback and existing browser repair",
             "doc": "development-docs/model-fallback-browser-repair-2026-10-28.md",
             "files": []
+          },
+          {
+            "id": "doc-development-docs-four-repairs-2026-10-28",
+            "title": "Four scheduled repairs: implementation and verification",
+            "doc": "development-docs/four-repairs-implementation-2026-10-28.md",
+            "files": []
           }
         ]
       },
@@ -1108,7 +1120,8 @@
               "tests/test_validation_feedback.py",
               "tests/test_cli.py",
               "tests/test_branch_integration.py",
-              "tests/test_model_fallback.py"
+              "tests/test_model_fallback.py",
+              "tests/test_four_repairs.py"
             ]
           }
         ]

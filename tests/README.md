@@ -19,12 +19,13 @@ need separately stated checks. Update affected docs and FIXES.md with every fix.
 | [test_endpoints.py](test_endpoints.py) | Endpoint transport, admission, routing and concurrency. |
 | [test_history.py](test_history.py) | Shared snapshot archives, retention and failure isolation. |
 | [test_http_integration.py](test_http_integration.py) | Complete coding workflow over real local HTTP fixtures. |
-| [test_in_place_repository.py](test_in_place_repository.py) | Git setup, verified integration, concurrent/serial worktrees and source reuse. |
+| [test_in_place_repository.py](test_in_place_repository.py) | Git setup, verified integration, concurrent/serial worktrees, source reuse and retained current-source review evidence. |
 | [test_inference_simulation.py](test_inference_simulation.py) | Opt-in/normal parity, TPS sharing, faults/cooldowns, usage, durable replay, cancellation/deadlines and real coding runs. |
 | [test_incident_fixes.py](test_incident_fixes.py) | Incident-derived lifecycle, provider and recovery regressions. |
 | [test_inference_lifecycle.py](test_inference_lifecycle.py) | Split UTF-8/SSE terminals, heartbeat/idle/total deadlines, native/caller quotas, shared adaptation allowance, physical holds, late-result fencing, generic probes and real loopback streaming. |
 | [test_model_retries.py](test_model_retries.py) | Durable bounded retries, accounting and recovery composition. |
 | [test_model_fallback.py](test_model_fallback.py) | Availability routing/window/restart, trusted native continuation, callback replay and original resource guards. |
+| [test_four_repairs.py](test_four_repairs.py) | Corrected error lifecycle/replay, independent context units/counters/priorities, focused diagnosis authority/search novelty and actual linked source recovery. |
 | [test_native_events.py](test_native_events.py) | Bounded native telemetry and terminal evidence. |
 | [test_native_worker.py](test_native_worker.py) | Native brokered coding phases and source authority. |
 | [test_os.py](test_os.py) | Kernel resources, effects, publication and replay. |

@@ -362,6 +362,7 @@ class ContextPart(Wire):
     call_id: Identifier | None = None
     derived_from: list[Identifier] = Field(default_factory=list)
     compactable: bool = False
+    retention_priority: Annotated[int, Field(ge=0, le=100)] = Field(default=0, exclude_if=lambda value: value == 0)
 
 
 class ContextView(Wire):

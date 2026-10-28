@@ -26,8 +26,9 @@ with the ordering and limits of its full/focused runs. Neither record proves
 physical local-serving performance. Earlier agent-only WSL evidence remains in
 the [agent validation record](../design-docs/implementation/VALIDATION.md).
 
-The [current implementation record](../development-docs/reliability-implementation-2026-10-27.md)
-contains the new framework/qualification checks and their exact source limits.
+The [four-repair record](../development-docs/four-repairs-implementation-2026-10-28.md)
+contains current framework checks and source limits; the [27 October record](../development-docs/reliability-implementation-2026-10-27.md)
+retains the earlier qualification evidence.
 The historical [26 October integrated-tree audit](../development-docs/branch-integration-audit-2026-10-26.md#verification-record)
 recorded 585 passed, 5 baseline failures and 2 skips
 across a full run plus focused reruns, not one all-green suite. The separate

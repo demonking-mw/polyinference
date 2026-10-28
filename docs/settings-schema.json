@@ -276,6 +276,19 @@
             "default": null,
             "title": "Inference Location"
           },
+          "input_token_count_path": {
+            "anyOf": [
+              {
+                "pattern": "^/(?:[A-Za-z0-9_-]+/)*(?:input_tokens|count_tokens)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Input Token Count Path"
+          },
           "lifecycle": {
             "anyOf": [
               {
@@ -858,6 +871,19 @@
         "title": "Max Model Recoveries",
         "type": "integer"
       },
+      "max_model_request_bytes": {
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Max Model Request Bytes"
+      },
       "max_model_response_bytes": {
         "default": 4194304,
         "exclusiveMinimum": 0,
@@ -1299,6 +1325,19 @@
             "default": null,
             "title": "Inference Location"
           },
+          "input_token_count_path": {
+            "anyOf": [
+              {
+                "pattern": "^/(?:[A-Za-z0-9_-]+/)*(?:input_tokens|count_tokens)$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Input Token Count Path"
+          },
           "lifecycle": {
             "anyOf": [
               {
@@ -1731,6 +1770,19 @@
         "minimum": 0,
         "title": "Max Model Recoveries",
         "type": "integer"
+      },
+      "max_model_request_bytes": {
+        "anyOf": [
+          {
+            "exclusiveMinimum": 0,
+            "type": "integer"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Max Model Request Bytes"
       },
       "max_model_response_bytes": {
         "default": 4194304,

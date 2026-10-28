@@ -66,7 +66,7 @@ This does not authorize application task replacement or publish partial work.
 Inspect `model-selection/`, `model-fallback-state/<binding>` and
 `model-fallback/<root>` plus immutable effects, attempted backend and usage records.
 The agent still owns semantic continuation, private-source reuse and acceptance.
-Runtime `simple-os/4` requires fresh state; preserve old runs on their frozen source.
+Current runtime `simple-os/5` requires fresh state; preserve old runs on their frozen source.
 
 [Regression fixtures](../../tests/test_model_fallback.py) cover routing, restart,
 native continuation, callback deduplication, budgets, cancellation and deadlines.

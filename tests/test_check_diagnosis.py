@@ -196,8 +196,12 @@ async def test_definition_can_route_checker_to_cloud_native_with_current_readonl
 
     class Native:
         async def generate_job(self, messages, snapshot, schema, callback=None):
-            assert callback is None and "classification" in schema["properties"]
+            assert callback is not None and "classification" in schema["properties"]
             assert (Path(snapshot) / "a.py").read_text() == "VALUE = 2\n"
+            read = await callback("inspect-source", {"tool": "coding.diagnostic_read", "arguments": {"path": "a.py"}})
+            assert read["state"] == "succeeded" and read["observation"]["content"] == "VALUE = 2\n"
+            with pytest.raises(ValueError, match="outside grant"):
+                await callback("denied-write", {"tool": "files.write", "arguments": {"path": "a.py"}})
             return {
                 "text": '{"classification":"code_failure","guidance":"Repair inside the declared scope"}',
                 "model": "native-checker",
@@ -236,6 +240,6 @@ async def test_definition_can_route_checker_to_cloud_native_with_current_readonl
             v for _, _, v in runtime.records.scan("effect/") if v["request"]["payload"]["kind"] == "agent_job"
         ][0]
         assert model["request"]["payload"]["role"] == "specialist"
-        assert model["request"]["payload"]["allowed_capabilities"] == []
+        assert model["request"]["payload"]["allowed_capabilities"] == ["coding.diagnostic_read"]
     finally:
         await runtime.close()

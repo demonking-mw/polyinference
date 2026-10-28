@@ -36,6 +36,9 @@ async def test_default_real_repository_merges_concurrent_workers_before_completi
 
     async def observe(data):
         if "reports" in data and data["reports"]:
+            presented = {source["path"] for source in data["repository_context"]["contents"]
+                         if source["content"] and not source.get("presentation_omitted")}
+            assert {"a.py", "b.py"} <= presented
             assert (repo / "a.py").read_text() == "VALUE = 2\n"
             assert (repo / "b.py").read_text() == "VALUE = 2\n"
             assert app.get("app/run")["status"] != "completed"

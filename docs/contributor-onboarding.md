@@ -45,8 +45,10 @@ to programs running on the PolyInference OS.
    For reliability work, read the [current stage record](../development-docs/reliability-implementation-2026-10-27.md)
    and [qualification procedure](guides/qualification.md). Keep fixture, browser
    runner and actual live-model results separate; use fresh state for changed pins.
-   The [model fallback guide](guides/model-fallback.md) covers current simple-os/4;
-   agent-selected model preferences do not alter old runs or uncertainty rules.
+   Current pins are simple-os/5, agent-8-evidence-recovery/state 2.7. Read the
+   [four-repair record](../development-docs/four-repairs-implementation-2026-10-28.md),
+   [context measurement](guides/context-measurement.md) and [model fallback](guides/model-fallback.md);
+   caller preferences do not alter old runs, original resources or uncertainty rules.
 5. **If you are an agent, you MUST add this project's rules, important information
    and design/preservation principles to your available memory, project rules or
    project-specific `content.md`.** Use the [memory checklist](project-memory.md),

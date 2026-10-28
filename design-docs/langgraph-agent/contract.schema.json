@@ -1214,6 +1214,13 @@
           "default": false,
           "title": "Compactable",
           "type": "boolean"
+        },
+        "retention_priority": {
+          "default": 0,
+          "maximum": 100,
+          "minimum": 0,
+          "title": "Retention Priority",
+          "type": "integer"
         }
       },
       "required": [

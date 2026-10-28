@@ -5,6 +5,17 @@ If it cannot continue, parking preserves a scoped development delta and an immut
 snapshot of the abandoned view before releasing verification. Integration repairs
 remain separate from the original development delta. A durable parking intent allows
 replay after abort or fencing. Published work cannot be turned into an exception.
+Confirmed stopped, known-effect unusable development output after bounded OS repair
+can enter this same agent route (IncompleteGeneration, ModelResponseError or eligible
+NativeJobStopped with explicit invalid-output facts). ModelResponseError stop-reason
+rejections and generic native provider/RPC failures are excluded. The adapter reports
+output facts; the agent chooses recovery. The original failure stays in the immutable effect and
+exception, with actual partial source; no candidate/report is fabricated. Configured
+bounded read-only diagnosis precedes parking/replacement and its outcome stays in
+the exception. It shares the original account/deadline and honors zero/used rounds. Provider
+availability/auth/policy failures, cancellation, exhausted original resources/deadlines,
+unknown work and post-integration phases keep their existing explicit pause/recovery.
+Parking refreshes controller run revisions before removing the already parked worker.
 
 The runtime checks for unsettled effects, live futures and owned permits, then fences
 the process generation. The agent atomically publishes a validated interrupted
@@ -51,7 +62,7 @@ New unlinked work overlapping an unresolved exception's write scope is rejected.
 
 The OS owns generic process settlement, fencing and inherited resource accounts; it
 does not interpret task verdicts or decide what to retry. Replacements and diagnosis
-share the original root's physical inference calls, conservative token reservations,
+share the original root's physical inference calls, measured/bounded token reservations,
 logical operation allowance and absolute deadline. Transport retries charge each
 physical attempt once; replay of a settled operation remains available after fencing.
 Senior management calls retain their separately bounded process/run allowance.

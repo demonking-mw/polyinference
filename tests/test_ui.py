@@ -609,7 +609,7 @@ async def test_ui_selects_another_repository_and_exports_complete_json(config, t
             assert document["completion_reviews"][semantic["review_ref"]] == semantic
             assert document["review_artifacts"]
             assert "cost" in document["run"]
-            assert document["records"]["runtime/kernel"]["version"] == "simple-os/4"
+            assert document["records"]["runtime/kernel"]["version"] == "simple-os/5"
             assert document["record_revisions"]["app/run"] > 1
             assert document["checkpoints"] and document["artifacts"] and document["events"]
             assert document["capture"]["artifact_errors"] == 0

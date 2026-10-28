@@ -73,6 +73,8 @@ class Endpoint(Wire):
     supports_temperature: bool = True
     reasoning_effort: Literal["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"] = "medium"
     retry_model: RetryModel | None = Field(default=None, exclude_if=lambda value: value is None)
+    input_token_count_path: Annotated[str, Field(pattern=r"^/(?:[A-Za-z0-9_-]+/)*(?:input_tokens|count_tokens)$")] | None = Field(
+        default=None, exclude_if=lambda value: value is None)
     timeout_seconds: Annotated[float, Field(gt=0, le=1800)] = 180
     lifecycle: InferenceLifecycle | None = Field(default=None, exclude_if=lambda value: value is None)
     estimated_microusd_per_token: Annotated[float, Field(ge=0)] | None = None
@@ -86,6 +88,8 @@ class Endpoint(Wire):
 
     @model_validator(mode="after")
     def distinct_retry_model(self):
+        if self.input_token_count_path and self.protocol in {"codex_app_server", "codex_proxy"}:
+            raise ValueError("Native hidden context cannot be measured by a raw input counter")
         if self.retry_model and self.retry_model.model == self.model:
             raise ValueError("Retry model must differ from the primary model")
         if self.retry_model and self.protocol == "codex_proxy":
@@ -138,6 +142,7 @@ class RuntimeConfig(Wire):
     max_queued_operations: Annotated[int, Field(gt=0, le=4096)] = 128
     max_command_seconds: Annotated[float, Field(gt=0, le=3600)] = 300
     max_model_response_bytes: Annotated[int, Field(gt=0)] = 4 * 1024 * 1024
+    max_model_request_bytes: Annotated[int, Field(gt=0)] | None = Field(default=None, exclude_if=lambda value: value is None)
     context_policy: ContextPolicy = Field(default_factory=ContextPolicy)
     inference_safety: InferenceSafety = Field(default_factory=InferenceSafety)
     max_repeated_model_failures: Annotated[int, Field(gt=0)] = 2

@@ -21,7 +21,7 @@ from ..ports import RecordConflict
 from .architecture import catalog, validate_plan
 from .cloud_recovery import capabilities, policy_view
 from .design_basis import DESIGN_BASIS
-from .exceptions import obligation_satisfied, review_view, validate_sources
+from .exceptions import obligation_satisfied, park_model_failure, review_view, validate_sources
 from .exceptions import validate as validate_exceptions
 from .review import (
     check_view,
@@ -510,7 +510,8 @@ class ProjectAgent:
                     current_task = app.get(task_ref)
                     failure = ({"operation_id": exc.result.operation_id,
                                 "error": exc.result.error.model_dump(mode="json") if exc.result.error else None,
-                                "diagnostics": exc.result.extensions}
+                                "diagnostics": exc.result.extensions,
+                                "execution_termination": exc.result.execution_termination, "effects": exc.result.effects}
                                if isinstance(exc, ModelOperationFailure) else None)
                     app.update(task_ref, {**current_task, "execution": "interrupted",
                                           "exception": str(exc)[:2000], "model_failure": failure})
@@ -595,6 +596,12 @@ class ProjectAgent:
             version, run = app.ports.records.get("app/run")
             task_ref = tasks[pid]
             task = app.get(task_ref)
+            if failure and task.get("model_failure"):
+                checkpoint = await self.worker.aget_state({"configurable": {"thread_id": pid}})
+                if checkpoint.values and await park_model_failure(app, dict(checkpoint.values), task["model_failure"]):
+                    failure = None
+                    task = app.get(task_ref)
+                    version, run = app.ports.records.get("app/run")
             if failure or (task["execution"] == "interrupted" and not task.get("exception_ref")):
                 known = await self.settle_stopped_worker(task_ref, str(failure) if failure else task.get("exception", "needs review"))
                 unknown = not known or bool(app.ports.operations.uncertain())

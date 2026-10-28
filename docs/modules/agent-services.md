@@ -15,7 +15,9 @@ AgentServices assembles coding state and requests without making the OS interpre
 
 Trusted bootstrap installs application protocols, capabilities, cancellation and
 publication handlers. Processes receive explicit grants. Canonical memory and
-history selection belong here; optional OS preparation produces derived views.
+history selection belong here; optional OS preparation produces derived views. The agent assigns
+retention priorities to relevant source, unresolved failures and history, while required objective/
+contract/worker facts stay pinned. The OS handles only generic group ordering and bounds.
 CheckSelection adds agent-only prerequisite/task/acceptance purposes to the generic
 Check schema. Initial setup pins discovered criteria per purpose; explicit user
 criteria cannot be replaced. setup_check_definitions, task_check_definitions and
@@ -48,7 +50,8 @@ Follow [documentation maintenance](../maintenance.md) in the same task.
 ## Integrated reliability branch (2026-10-26)
 
 Services register caller-owned worker/senior/diagnosis validators and the read-only
-diagnosis protocol through existing OS extension APIs. Application-origin feedback
+diagnosis protocol and coding.diagnostic_read through existing OS extension APIs. Diagnostic processes
+receive only that capability over their own immutable source map, without write/shell authority. Application-origin feedback
 remains data, complete history pairs stay canonical, mode-specific repository rules
 remain present, and merged model failures retain bounded response-correction routes.
 Source-backed review and worker module/progress inputs coexist with cumulative user

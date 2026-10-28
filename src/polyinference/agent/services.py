@@ -137,6 +137,13 @@ class AgentServices:
         if register_schema:
             register_schema("diagnosis/1", DiagnosisPlan.model_json_schema())
         ports.register_agent_protocol("runtime/readonly-query/1", DiagnosisPlan.model_json_schema())
+        from .diagnostics import register_source_reader
+
+        register_source_reader(self)
+        ports.register_agent_protocol("polyinference/diagnosis-readonly/1", DiagnosisPlan.model_json_schema(),
+            workspace="snapshot", brokered=True,
+            instructions="Inspect frozen source with coding.diagnostic_read through polyinference_tool. "
+                         "No writes, native shell, publication or external tools. Return the diagnosis schema.")
         self.program = ProgramRef(
             program_id="polyinference",
             program_version=PROGRAM_VERSION,
@@ -154,7 +161,9 @@ class AgentServices:
             capacities[binding] = {"model": endpoint.model, "protocol": endpoint.protocol,
                 "configured_context": endpoint.max_context_tokens, "output_reservation": output,
                 "input_allowance": min(config.limits.max_input_tokens_per_call, endpoint.max_context_tokens - output),
-                "unit": "utf8_bytes_conservative_token_bound", "reasoning_effort": endpoint.reasoning_effort,
+                "unit": "input_token_capacity", "reasoning_effort": endpoint.reasoning_effort,
+                "configured_input_counter": endpoint.input_token_count_path,
+                "max_request_bytes": config.max_model_request_bytes or config.limits.max_input_tokens_per_call,
                 "validation": "Configuration only; each actual adapter packet is measured before submission"}
             if capacities[binding]["input_allowance"] <= 0:
                 raise ValueError("Endpoint has no input capacity after output headroom: " + binding)
@@ -338,7 +347,8 @@ class AgentServices:
         )
         self.ports.processes.register(
             spec, endpoint_name, management=role == "senior",
-            capabilities=[*coding_tools(self.config, task_data and task_data.get("category") == "setup"),
+            capabilities=["coding.diagnostic_read"] if entry_point == "check_diagnosis" else [
+                          *coding_tools(self.config, task_data and task_data.get("category") == "setup"),
                           "workspace.commit", "workspace.retain", "records.publish",
                           *(["coding.commit", "coding.publish"] if self.repository else []),
                           *(["coding.prepare", "coding.reconfigure"]
@@ -525,6 +535,7 @@ class AgentServices:
         text = instruction + "\nReturn JSON matching this schema: " + schema_text(schema)
         data = dict(data)
         memory = data.pop("memory", None)
+        focused_source = data.pop("focused_source", None)
         data_text = "Pinned application inputs:\n" + json.dumps(data)
         instruction_ref = self.ports.artifacts.put(text.encode(), self.scope(process_id), "text/plain")
         parts = [
@@ -553,11 +564,20 @@ class AgentServices:
                 content=self.ports.artifacts.put(canonical(memory), self.scope(process_id)),
                 part_kind="data", trust="retrieved", source_ref="agent/working-memory",
                 required=True, compactable=True))
+        if focused_source:
+            parts.append(ContextPart(part_id="focused-source", content=self.artifact(focused_source, process_id),
+                part_kind="data", trust="retrieved", source_ref="agent/source-focus", required=False,
+                retention_priority=90))
         omitted = []
         # Supply complete history; the OS applies the declared context policy.
         selected = history
-        for entry in selected:
+        from .worker_memory import history_priority
+
+        for index, entry in enumerate(selected):
             call_id = entry["id"]
+            active_errors = {e["event"] for e in data["worker_state"]["errors"]} if "worker_state" in data else None
+            priority = history_priority(entry, data.get("assignment", {}), recent=index >= len(selected) - 4,
+                                        active_errors=active_errors)
             if "feedback" in entry:
                 parts.append(
                     ContextPart(
@@ -567,6 +587,7 @@ class AgentServices:
                         trust="application",
                         source_ref=entry["source_ref"],
                         required=False,
+                        retention_priority=priority,
                     )
                 )
                 continue
@@ -580,6 +601,7 @@ class AgentServices:
                     trust="model",
                     source_ref=call_id,
                     required=False,
+                    retention_priority=priority,
                     call_id=call_id if action else None,
                 )
             )
@@ -595,6 +617,7 @@ class AgentServices:
                         trust="external_tool",
                         source_ref=call_id,
                         required=False,
+                        retention_priority=priority,
                         call_id=call_id,
                     )
                 )
@@ -764,6 +787,19 @@ class AgentServices:
             from .worker_memory import project
 
             data["worker_state"] = project(self, state, current.model_dump(mode="json"))
+            from .diagnostics import source_previews
+
+            failure = state.get("last_check_evidence") or next(
+                (e for e in reversed(state.get("evidence", [])) if e.get("status") != "passed"), None)
+            failure_text = self.evidence_view(failure).get("output_preview", "") if failure else ""
+            data["focused_source"] = source_previews(await self.ports.workspaces.private_tree(manifest.workspace_id),
+                task["assignment"], self.check_definitions, failure_text)
+            data["implementation_focus"] = {
+                "behavior": task["assignment"].get("behavior") or task["assignment"]["objective"],
+                "focused_check": task["assignment"].get("focused_check") or task["assignment"]["checks"],
+                "source_paths": [p["path"] for p in data["focused_source"]],
+                "completion_rule": "Verify the assigned consumer/entry behavior. An existing API alone is not "
+                    "an integrated feature. Already-complete work needs exact-source behavior evidence; edits are not mandatory."}
             data["resources"] = self.ports.operations.resource_state(pid)
             data["finishing_reserve"] = self.config.limits.final_phase_reserve.model_dump(mode="json") \
                 if self.config.limits.final_phase_reserve else None

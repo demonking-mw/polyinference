@@ -92,10 +92,13 @@ other workflows.
 The coding summary distinguishes ancestry, dirty/private source, publication and
 kept nonempty contributions; it never interprets inherited ancestry as new work.
 
-The current coding marker is `agent-7-bounded-worker-state`, state schema `2.6`.
+The current coding marker is `agent-8-evidence-recovery`, state schema `2.7`.
 New runs require fresh state. Older layouts are not migrated. Updated 2026-10-23:
 the exact graph-only Resume compatibility path below preserves layout and prior outcomes.
-The OS marker is `simple-os/4`; an artifact-only or workspace-none process still
+Context measurement separates input tokens/provenance, serialized bytes and output reservation; caller
+priorities are generic hints. Relevance, frozen-source diagnosis and semantic recovery of clean unusable
+output remain agent policy. See [the context contract](../../docs/guides/context-measurement.md).
+The OS marker is `simple-os/5`; an artifact-only or workspace-none process still
 requires no Git, coding task, check or code-writing finalization. MCP and shutdown
 recovery are not expanded by this change. The sections below describe shared
 mechanisms; private-copy details apply to the legacy optional provider.
@@ -471,7 +474,7 @@ Terminal app-server model failure may retain a trusted same-thread continuation,
 including completed tool results. The OS can resume that thread on the alternate,
 deduplicating old callback IDs; it cannot blindly replay effectful work or infer
 termination from lost transport. Task replacement, diagnosis, canonical memory,
-source reuse and acceptance remain agent policy. Fresh simple-os/4 state is
+source reuse and acceptance remain agent policy. Fresh simple-os/5 state is
 required; original frozen runs remain on their original source/configuration.
 
 ## Diagnosing a boundary failure
@@ -499,9 +502,10 @@ disconnect or local transport kill does not establish remote termination. An
 exception during an external-write handler or result recording is uncertain,
 so it cannot be silently repeated as a known failed tool invocation.
 
-The kernel compatibility marker is `simple-os/4`, with coding program
-`agent-7-bounded-worker-state` and state schema `2.6`. This identifies changed
-registration/grant wiring within the current basic function set. It does not
+The kernel compatibility marker is `simple-os/5`, with coding program
+`agent-8-evidence-recovery` and state schema `2.7`. These pins include context
+measurement/retention contracts and agent semantic-failure/error-lifecycle changes
+within the current basic function set. It does not
 introduce the planned next-version integration platform. Use new run/state
 directories for incompatible implementations. Updated 2026-10-23: older runs
 retain their original records; the explicit Resume section documents the sole

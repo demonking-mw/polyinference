@@ -35,6 +35,10 @@ def observe_tool(tool, arguments, observation, reads):
         return evidence_features(observation)
     if tool == "files.list" and "paths" in observation:
         return [["listing", sorted(observation["paths"])]]
+    if tool == "files.search":
+        # Credit discovered source, not renamed queries, output ordering or empty retries.
+        return [["search-hit", hit.get("path"), hit.get("line"), hit.get("text")]
+                for hit in observation.get("matches", []) if isinstance(hit, dict)]
     if tool != "files.read" or not observation.get("digest"):
         return []
     key = digest(canonical([observation.get("path", arguments.get("path")), observation["digest"]]))

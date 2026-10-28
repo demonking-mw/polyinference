@@ -148,6 +148,7 @@ Counts and capacities are positive unless stated otherwise.
 | max_queued_operations | 128 | Inference admission waiters per endpoint, 1–4096. |
 | max_command_seconds | 300 | Repository/workspace helper timeout, at most 3600 seconds. Shell/check operations have their own bounded timeout arguments. |
 | max_model_response_bytes | 4194304 (4 MiB) | HTTP transport-body cap and native terminal-message cap; transport cutoff without termination proof remains uncertain. |
+| max_model_request_bytes | null | Independent serialized UTF-8 request ceiling; absent retains min(context maximum_input_tokens, max_input_tokens_per_call) as the legacy byte ceiling. Token allowances remain separate. |
 | context_policy | defaults below | Optional input preparation/compaction preferences. |
 | inference_safety | defaults below | Output recovery and capability requirements. |
 | max_repeated_model_failures | 2 | Permanent-failure circuit threshold for the same pinned model intent. |
@@ -180,6 +181,7 @@ Linux sandbox. Neither backend grants additional source paths.
 | supports_temperature | true | Reject an explicit sampling request when false; supported requests forward the requested temperature. |
 | reasoning_effort | medium | Native turn effort: none/minimal/low/medium/high/xhigh/max/ultra. The explicit turn value takes precedence over a startup command default. |
 | retry_model | null | Optional caller-selected alternate on this provider/protocol. Fields: model (required), reasoning_effort (medium), fallback_calls (7; 1–32). Distinct primary required; codex_proxy unsupported. Explicit null survives serialization. |
+| input_token_count_path | null | Opt-in same-provider relative counting route, e.g. /chat/completions/input_tokens or /messages/count_tokens. Receives the prepared raw request body and must return integer input_tokens. Native hidden context is unsupported; failure uses a labeled conservative bound. |
 | timeout_seconds | 180 | Legacy HTTP/native job timeout, at most 1800 seconds and bounded by original deadline. Raw lifecycle mode uses its shared total instead. |
 | lifecycle | omitted | Optional InferenceLifecycle: transport sse/buffered; connect_seconds=10 (0–1800], first_output_seconds=180 (0–3600], idle_seconds=90 (0–3600], total_seconds=600 (0–7200]. Original logical/process deadline still wins. |
 | estimated_microusd_per_token | null | Nonnegative token-price estimate for cloud spend admission; required for a configured spend bound on that cloud lane. |
@@ -233,7 +235,7 @@ or token credit.
 | max_compaction_calls | 8 | Child inference intent allowance per parent, 0–32; zero prevents new summary calls. |
 | compaction_output_tokens | 1024 | Requested tokens per child, capped by parent output allowance. |
 | compaction_summary_bytes | 4096 | Maximum accepted UTF-8 bytes per chunk summary; joined summaries must be smaller than source. |
-| recovery_headroom | 1024 | Desired conservative input headroom. Packing reserves at most 10% of cap; compaction targets this and its target fraction. |
+| recovery_headroom | 1024 | Desired headroom applied separately in token/byte units. Packing reserves at most 10% of each cap; compaction also uses its target fraction. |
 
 Effective policy merges runtime defaults, then partial
 ProcessSpec.extensions["runtime/context-policy"], then partial
@@ -244,7 +246,7 @@ source authority or completion requirements.
 | Mode | Configuration / agent responsibility |
 | --- | --- |
 | Manual | Both switches false. Agent manages memory, paging and decomposition; OS always checks overflow. |
-| Packing | auto_deal_context=true, auto_compaction=false. OS omits eligible complete optional groups, oldest supplied groups first. |
+| Packing | auto_deal_context=true, auto_compaction=false. OS omits eligible complete optional groups by ascending retention_priority, oldest on ties. |
 | Assisted compaction | Both true. OS may also derive summaries above the pressure trigger. |
 | Hybrid | Agent manages its own summaries/protected blocks and opts selected other blocks or requests into assistance. |
 
@@ -257,6 +259,8 @@ Agents define each ContextPart:
 - required=true, compactable=true: retain representation; eligible data, summary
   or message blocks may be replaced with a derived summary.
 - required=false: permit whole-block omission.
+- retention_priority: generic 0–100 caller hint (default 0, omitted when zero);
+  retain higher-priority optional groups longer. Required parts stay protected.
 - call_id: keep tool-call/result groups together; a required member protects the
   group. Instructions and tool pairs are never summarized.
 
@@ -277,18 +281,28 @@ changes remain explicit agent decisions.
 
 Effective input allowance is the minimum of ContextView.maximum_input_tokens,
 Limits.max_input_tokens_per_call, and endpoint.max_context_tokens minus the
-parent output reservation. Sizing covers the known final adapter payload,
-including schemas, serialized messages, native instructions and recovery feedback.
-It uses a conservative UTF-8 byte bound, not an exact provider tokenizer or proof
-of hidden native-harness context. A stricter provider rejection becomes typed
-input-overflow evidence instead of an identical retry loop.
+parent output reservation. Raw protocols reserve the actual enforced output cap;
+native protocols reserve their configured hard allowance without claiming enforcement.
+Sizing covers the complete prepared adapter payload including schemas/recovery feedback.
+Optional Endpoint.input_token_count_path returns provider-reported input tokens for
+that exact raw body on the same provider. Unsupported/invalid/timed-out counters
+retain labeled conservative bytes-as-token bounds. Native hidden context is unmeasured.
+Independent max_model_request_bytes bounds serialized bytes; absent retains the old
+min(context maximum_input_tokens, max_input_tokens_per_call) byte ceiling. Admission
+reserves measured/bounded input tokens plus output, preserving original accounts.
+A stricter provider rejection becomes typed input-overflow evidence, not identical
+retry. See [measurement/configuration](../../docs/guides/context-measurement.md).
 
 Preparation records context-receipt/<operation_id>. Dispatched results expose
 extensions["runtime/context-receipt"]:
 - context_ref, prepared_context_ref, prepared_digest identify original/derived
   views and the adapter input fingerprint.
-- policy, original_bytes, submitted_bytes, required_bytes, input_allowance,
-  unit and pressure expose effective settings and measurements.
+- policy, original_bytes, submitted_bytes, required_bytes, max_request_bytes,
+  original/submitted/required_input_tokens, input_allowance, unit and pressure
+  separate byte and token measurements. measurement_provenance, tokenizer_ref
+  and measurement_issue label the provider count or conservative fallback.
+- output_reservation_tokens, output_token_enforced and native_context_scope
+  distinguish actual raw enforcement from unmeasured native hidden context.
 - omitted_refs, summaries, compaction_operations and intervened expose every
   intervention, source/summary links and charged child operations.
 

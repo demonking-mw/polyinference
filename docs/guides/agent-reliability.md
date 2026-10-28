@@ -52,21 +52,24 @@ unknown effects, explicit cancellation, publication, exhausted resources or unav
 [worker recovery](../../design-docs/implementation/WORKER_RECOVERY.md).
 
 Progress uses new tree identities, nonoverlapping file-read coverage and new check evidence. Repeated
-reads/checks, narration and rewritten memory do not reset stagnation. Active or unknown execution suppresses
+reads/checks, renamed/empty search queries, narration and rewritten memory do not reset stagnation. Active or unknown execution suppresses
 semantic escalation; native jobs are sampled between settled jobs. Thresholds are initial tuning values, not
 a measured guarantee that a worker will complete. See [progress
 policy](../../design-docs/implementation/PROGRESS_MONITORING.md).
 
 Planner inputs include actual tools/capability limits and cloud eligibility. Local planning requests one
 observable behavior and focused check per task: movement, collision, save/load and migration are separate
-work. This guidance is not a semantic task-size validator. Browser/MCP/persistent service APIs are
+work. Focused source/check evidence must establish consumer integration; existing APIs alone do not. Native
+diagnosis may read its frozen source through a bounded readonly capability; raw diagnosis uses previews.
+Resolved search/protocol errors retire from worker hints and retention priority; old histories stay immutable.
+Clean retryable output exhaustion after OS repair receives bounded diagnosis before linked recovery. This guidance is not a semantic task-size validator. Browser/MCP/persistent service APIs are
 unavailable; installed foreground test dependencies must be established with real evidence.
 
 The integrated reliability implementation requires fresh program/state pins. The exact historical graph-only
 Resume exception does not authorize arbitrary migration across this merge. Keep old runs with their original
 code and config. The [27 October stage](../../development-docs/reliability-implementation-2026-10-27.md)
-used runtime simple-os/3; current [model fallback](model-fallback.md) requires simple-os/4,
-with agent-7/state 2.6. Bounded worker memory, explicit finishing resources and error-conditioned physical response
+used runtime simple-os/3; current [four repairs](../../development-docs/four-repairs-implementation-2026-10-28.md)
+require simple-os/5, agent-8-evidence-recovery/state 2.7 and preserve [model fallback](model-fallback.md). Bounded worker memory, explicit finishing resources and error-conditioned physical response
 repair are included. An unstarted linked recovery consumer may be retargeted with its original
 predecessor/contract/account; started contracts and source authority stay pinned. See
 [qualification](qualification.md) for separate fixture/live completion gates. The [integration

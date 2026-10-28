@@ -6,7 +6,7 @@ Raw inference and native tool-using jobs have different wire/effect behavior and
 
 | File | Responsibility |
 | --- | --- |
-| [src/polyinference/runtime/inference.py](../../src/polyinference/runtime/inference.py) | Async FIFO admission/reservations, prepared HTTP payloads, provider normalization, completion/usage/error facts. |
+| [src/polyinference/runtime/inference.py](../../src/polyinference/runtime/inference.py) | Async FIFO admission/reservations, prepared HTTP payloads, provider normalization, input counting and completion/usage/error facts. |
 | [src/polyinference/runtime/inference_stream.py](../../src/polyinference/runtime/inference_stream.py) | Incremental UTF-8/SSE framing, provider terminal assembly and meaningful-progress facts without delivering partial output. |
 | [src/polyinference/runtime/codex.py](../../src/polyinference/runtime/codex.py) | Native app-server stdio jobs, broker callbacks, read-only input verification, bounded telemetry and optional query proxy. |
 
@@ -15,6 +15,10 @@ Raw inference and native tool-using jobs have different wire/effect behavior and
 HTTPInference supports chat/Responses/Anthropic/Gemini protocols. CodexAppServer
 uses registered application schemas/instructions and explicit brokered tools;
 CodexProxy forwards query-only work to a separately installed service.
+HTTPInference.count_input optionally posts the exact prepared raw body to an explicitly declared
+same-provider counting route. Response size/type/deadline are bounded, redirects remain disabled,
+and failures retain conservative measurement provenance. No generation is issued or charged. See
+[context measurement](../guides/context-measurement.md).
 HTTPInference.recover_operation retrieves a Responses result only with a retained
 response ID, verifies its identity and terminal state, and applies normal output
 validation. Lookup failures and unknown status preserve uncertainty. Resume bounds
@@ -38,7 +42,7 @@ See [profiles, retry policy and testing](../guides/endpoint-testing.md).
 ## Principles to preserve
 
 - Known-unsubmitted, confirmed stopped and unknown execution are distinct facts.
-- Incomplete/unusable output must retain diagnostics/usage without executing partial content.
+- Incomplete/unusable output retains diagnostics/usage; native invalid output is distinct from provider/RPC rejection, without application recovery policy.
 - Native permissions and observed source views matter more than prompt promises.
 - Bound streaming telemetry without losing terminal/tool evidence.
 - Native hard generation-token caps are unsupported; expose or strictly reject that requirement.

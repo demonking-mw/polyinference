@@ -225,9 +225,9 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
             raise RuntimeError("Configuration changed: start a new run/state directory")
         self.records.put_once("runtime/config", {"digest": fingerprint, "run_id": self.run_id})
         kernel = self.records.get("runtime/kernel")
-        if kernel and kernel[1].get("version") != "simple-os/4":
+        if kernel and kernel[1].get("version") != "simple-os/5":
             raise RuntimeError("Runtime authority/residency changed: use original source or fresh state")
-        self.records.put_once("runtime/kernel", {"version": "simple-os/4"})
+        self.records.put_once("runtime/kernel", {"version": "simple-os/5"})
         from ..contracts import ProcessSpec
 
         for _, _, process in self.records.scan("process/"):
@@ -722,7 +722,8 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                 if not isinstance(output_tokens, int) or isinstance(output_tokens, bool) or output_tokens < 1:
                     raise ValueError("Invalid output-token allowance")
                 protocol = self.agent_protocols.get(payload.required_phase_protocol) if isinstance(payload, AgentJob) else None
-                def measure(messages):
+                measurement_cache = {}
+                async def measure(messages):
                     if isinstance(client, HTTPInference):
                         prepared = client.prepare(messages, output_tokens, temperature=getattr(payload, "temperature", None))
                     elif isinstance(client, CodexProxy):
@@ -735,16 +736,32 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                             instructions=protocol["instructions"], max_output=output_tokens)
                     else:
                         prepared = messages
-                    return prepared, len(canonical(prepared))
+                    size = len(canonical(prepared))
+                    measured = {"bytes": size, "tokens": size, "provenance": "conservative_bytes"}
+                    byte_cap = self.config.max_model_request_bytes or min(
+                        payload.context.maximum_input_tokens, request.limits.max_input_tokens_per_call)
+                    if isinstance(client, HTTPInference) and endpoint.input_token_count_path and size <= byte_cap:
+                        fingerprint = digest(canonical(prepared))
+                        if fingerprint not in measurement_cache:
+                            try:
+                                counted = await asyncio.wait_for(client.count_input(prepared),
+                                    min(endpoint.timeout_seconds, max(0, (model_deadline - now()).total_seconds())))
+                                measurement_cache[fingerprint] = counted
+                            except Exception as exc:
+                                measurement_cache[fingerprint] = {"issue": type(exc).__name__}
+                        counted = measurement_cache[fingerprint]
+                        if counted:
+                            measured.update(counted)
+                    return prepared, measured
                 if (self.config.inference_safety.require_output_token_enforcement
                         and endpoint.protocol in {"codex_app_server", "codex_proxy"}):
                     raise EndpointError("Selected native adapter cannot enforce a hard output-token limit")
-                messages, prepared, receipt = await self.contexts.prepare(request, measure)
+                messages, prepared, receipt = await self.contexts.prepare(request, measure, output_tokens=output_tokens)
                 if self.uncertain():
                     raise EndpointError("Context preparation left uncertain effects; reconcile before submission")
                 extensions["runtime/context-receipt"] = receipt
                 extensions["runtime/output-token-enforcement"] = endpoint.protocol in {"chat", "responses", "gemini", "anthropic"}
-                input_bound = receipt["submitted_bytes"]
+                input_bound = receipt["submitted_input_tokens"]
                 reserved = input_bound + output_tokens
                 manifest_ref = request.extensions.get("polyinference/workspace-view")
                 if manifest_ref:
@@ -1058,6 +1075,8 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                 extensions["runtime/io-error"] = exc.diagnostics
             if isinstance(exc, ProviderError) and exc.diagnostics["category"] == "input_overflow":
                 extensions["runtime/io-error"] = exc.diagnostics
+            if getattr(exc, "diagnostics", {}).get("category") == "model_output":
+                extensions["polyinference/model-output-error"] = exc.diagnostics
             failed_response = exc.response if isinstance(exc, (IncompleteGeneration, ModelResponseError)) else None
             total = (failed_response.get("usage") or {}).get("total_tokens") if failed_response else None
             if not isinstance(total, int) or isinstance(total, bool) or total < 0:

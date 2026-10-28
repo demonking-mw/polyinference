@@ -387,6 +387,26 @@ class HTTPInference:
                 payload["stream_options"] = {"include_usage": True}
         return {"path": path, "payload": payload}
 
+    async def count_input(self, prepared):
+        """Opt-in same-provider counting route; no generation or tool invocation."""
+        path = self.endpoint.input_token_count_path
+        if not path:
+            return None
+        async with self.client.stream("POST", self.endpoint.base_url.rstrip("/") + path,
+                                      json=prepared["payload"]) as response:
+            if response.status_code != 200:
+                raise EndpointError(f"Input counter HTTP {response.status_code}")
+            raw = bytearray()
+            async for chunk in response.aiter_bytes():
+                raw.extend(chunk)
+                if len(raw) > min(self.output_cap, 65536):
+                    raise EndpointError("Input counter response exceeds its byte bound")
+            count = json.loads(raw).get("input_tokens")
+            if isinstance(count, bool) or not isinstance(count, int) or count < 0:
+                raise EndpointError("Input counter must return a nonnegative integer input_tokens")
+            return {"tokens": count, "provenance": "provider_reported",
+                    "tokenizer_ref": self.endpoint.model + ":" + path}
+
     async def recover_operation(self, request, retained):
         """Retrieve a Responses operation only when its actual response ID survived."""
         provider = retained.get("provider") or {}

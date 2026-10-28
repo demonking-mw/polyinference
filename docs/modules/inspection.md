@@ -46,6 +46,7 @@ per-task summaries retain bounded lineage, resource and identical-query metrics.
 - Snapshots contain artifact bytes, not private Git stores or a restorable backup.
 - Observer/archive failures never replace primary outcomes.
 - Memory / context reads original/prepared views and receipts by exact operation identity.
+- Show serialized bytes/ceiling, input tokens/provenance and output reserve separately; label native hidden context as unmeasured.
 - Retry roots/outcomes group attempts; compaction helpers never replace caller input.
 - Node prompts label their origin, retain originals and separate native transport observations.
 - Load artifact text on demand; discard stale reads/errors after navigation or close.

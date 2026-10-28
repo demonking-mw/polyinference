@@ -8,7 +8,8 @@ design and issue docs in the same change; follow [maintenance](../docs/maintenan
 
 | Need | Record |
 | --- | --- |
-| Current model fallback/browser repair and four-area plan | [28 October implementation](model-fallback-browser-repair-2026-10-28.md) |
+| Current four-repair implementation and verification | [28 October scheduled batch](four-repairs-implementation-2026-10-28.md) |
+| Committed model fallback/browser repair and original four-area plan | [28 October implementation](model-fallback-browser-repair-2026-10-28.md) |
 | Authorized reliability implementation and checks | [27 October implementation record](reliability-implementation-2026-10-27.md) |
 | Latest broad real-local product test | [27/28 October Minecraft result and limits](minecraft-live-test-2026-10-28.md) |
 | Causes and proposed repairs for that test | [28 October failure isolation](minecraft-failure-isolation-2026-10-28.md) |

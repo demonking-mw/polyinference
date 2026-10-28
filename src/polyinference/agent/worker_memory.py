@@ -9,6 +9,21 @@ def clipped(value, size=600):
     return str(value).encode()[:size].decode(errors="ignore")
 
 
+def history_priority(entry, assignment, recent=False, active_errors=None):
+    """The agent ranks relevance; the OS only preserves complete caller groups."""
+    reply, observation = entry.get("reply") or {}, entry.get("observation") or {}
+    if not isinstance(observation, dict):
+        observation = {}
+    priority = 30 if recent else 0
+    if ((entry.get("feedback") or observation.get("error") or observation.get("status") == "failed")
+            and (active_errors is None or entry["id"] in active_errors)):
+        priority = 70
+    path = observation.get("path", reply.get("arguments", {}).get("path"))
+    if path and path in [*assignment.get("write_paths", []), *assignment.get("read_paths", [])]:
+        priority = max(priority, 50)
+    return priority
+
+
 def project(app, state, code):
     attempt = (state.get("attempt_id") or app.get(state["task_ledger_ref"]).get("attempt_id")
                or "process-" + state["process_id"])
@@ -21,15 +36,26 @@ def project(app, state, code):
     files = dict(prior.get("files", {})) if same else {}
     errors = list(prior.get("errors", []))
     entries = app.history(state.get("trajectory_ref"))
+    history_ref = state.get("trajectory_ref")
     cursor = prior.get("through")
+    if cursor and cursor not in {entry["id"] for entry in entries}:
+        previous = app.history(prior.get("trajectory_ref"))
+        ids = [entry["id"] for entry in entries]
+        if ids == [entry["id"] for entry in previous][:len(ids)]:
+            # A late checkpoint cannot resurrect an error retired by a later turn.
+            if same:
+                return prior
+            entries, history_ref = previous, prior.get("trajectory_ref")
+        else:
+            raise ValueError("Worker history diverged; refresh the owning attempt")
     start = next((i + 1 for i, entry in enumerate(entries) if entry["id"] == cursor), 0)
     for entry in entries[start:]:
         action, observation = entry.get("reply", {}), entry.get("observation", {})
-        if not isinstance(observation, dict):
-            continue
         tool = action.get("tool")
         if action.get("kind") in {"action", "candidate", "assessment", "needs_review"}:
             errors = [e for e in errors if e.get("kind") != "protocol"]
+        if not isinstance(observation, dict):
+            continue
         if tool == "shell.run" and observation.get("changed"):
             files.clear()
         path = observation.get("path", action.get("arguments", {}).get("path"))
@@ -41,7 +67,8 @@ def project(app, state, code):
         problem = observation.get("error") or entry.get("feedback", {}).get("error")
         if tool and not problem:
             errors = [e for e in errors if not (e.get("kind") == "tool" and e.get("tool") == tool
-                                                and e.get("path") == path)]
+                                                and (e.get("path") == path or
+                                                     tool == "files.search" and path is None))]
         if tool == "checks.run":
             criterion = observation.get("criterion_ref")
             errors = [e for e in errors if e.get("criterion") != criterion]
@@ -61,7 +88,7 @@ def project(app, state, code):
     errors = [e for e in errors if e.get("criterion") not in passed]
     body = {"source": identity, "phase": state["phase"],
             "through": entries[-1]["id"] if entries else None,
-            "trajectory_ref": state.get("trajectory_ref"), "files": files, "errors": errors,
+            "trajectory_ref": history_ref, "files": files, "errors": errors,
             "evidence": [{k: e.get(k) for k in ("criterion_ref", "status", "output", "checked_code")}
                          for e in state.get("evidence", [])[-4:]],
             "next_step": "Resolve current error, then run the focused check" if errors else

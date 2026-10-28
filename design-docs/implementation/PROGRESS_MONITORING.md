@@ -22,6 +22,8 @@ The coding agent calls this interface between settled decisions. Its policy trac
 - New file/document read coverage, identified by path, actual content digest and
   merged byte ranges. `files.read` accepts bounded `offset` and `max_bytes`.
 - New configured-check outcomes for the exact tree and environment.
+- Previously unseen search hits keyed by path/line/text; renamed queries, reordered
+  matches and repeated empty searches add no evidence.
 
 It tracks both ordinary tool history and journaled broker callbacks. Repeating a
 read, overlapping already read ranges, rechecking unchanged code, returning to a

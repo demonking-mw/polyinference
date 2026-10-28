@@ -19,6 +19,9 @@ processes before dispatch. execute(original) follows retained OS retry outcomes;
 individual attempts remain immutable. Generic publication invokes installed policy.
 Endpoint retry_model is caller-selected; the kernel runs durable availability
 routing through [ModelFallback](retries.md) without choosing a coding model default.
+Context preparation measures the complete adapter body, bounds counting by the original deadline,
+enforces a separate byte ceiling and reserves measured/bounded input tokens plus output. The
+OS accepts caller priorities without interpreting coding relevance; see [context](context.md).
 prepare_resume accepts a retained intent under the runtime coordinator lease,
 recovers host receipts/completed query artifacts or an adapter-retrievable response,
 and records OS-owned resume-preparation/ readiness separately from agent progress.

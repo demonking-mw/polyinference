@@ -194,6 +194,14 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0149](#fix-0149) | 2026-10-28 | Isolate Minecraft live failures against frozen source and canonical evidence |
 | [FIX-0150](#fix-0150) | 2026-10-28 | Verify no-edit task necessity and trace current context and worker-state behavior |
 
+| [FIX-0151](#fix-0151) | 2026-10-28 | Repair existing browser keyboard isolation and actual regression coverage |
+| [FIX-0152](#fix-0152) | 2026-10-28 | Agent-selected provider fallback with durable OS routing |
+| [FIX-0153](#fix-0153) | 2026-10-28 | Focus local implementation and bound diagnostic source access |
+| [FIX-0154](#fix-0154) | 2026-10-28 | Separate context tokens, bytes and actual output reservation |
+| [FIX-0155](#fix-0155) | 2026-10-28 | Hand clean unusable output to existing semantic recovery |
+| [FIX-0156](#fix-0156) | 2026-10-28 | Retire resolved worker errors without replay resurrection |
+| [FIX-0157](#fix-0157) | 2026-10-28 | Audit simple-OS branch ancestry and unmerged profile work |
+
 
 ## Entry template
 
@@ -7384,3 +7392,243 @@ docs/navigation, examples, Ruff and broader suite evidence are finalized in the
 [implementation record](model-fallback-browser-repair-2026-10-28.md). No live
 provider outage was induced, real model called, historical run resumed or source
 committed. Setup/authentication remain existing configuration, without new login.
+
+<a id="fix-0153"></a>
+## FIX-0153 — 2026-10-28 — Focus local implementation and bound diagnostic source access
+
+**Status:** implemented in the authorized scheduled batch; fresh agent-8/state 2.7.
+Related: FIX-0127/0132/0149/0150; [implementation record](four-repairs-implementation-2026-10-28.md).
+
+### Problem
+
+Three investigated read-only tasks still needed consumer/UI edits. Existing APIs
+did not establish assigned behavior; diagnosis omitted the failing entry/test.
+
+### What was wrong
+
+The coding agent supplied alphabetic previews and weak integration focus. Native
+read-only diagnosis had no source tool. Search novelty credited request-shaped
+observations instead of discovered source. These are application policy defects.
+
+### How it was fixed
+
+Agent prompts/services supply one behavior/check and relevant source. diagnostics
+prioritizes failing paths/nearby lines and check/entry files. The application
+registers coding.diagnostic_read over the calling diagnostic principal's frozen
+artifact map, with validated paths/offsets/bytes and no write/shell grants. Raw
+diagnosis retains bounded previews/read expansion. Search novelty uses unseen
+path/line/text hits; renamed queries/order/empty retries add no evidence.
+
+### Design principle enforced or reconstructed
+
+The agent owns relevance, decomposition, stagnation and source-backed acceptance;
+the OS supplies generic grants/effects. Existing APIs do not prove integration.
+Already-complete assignments need evidence, without an arbitrary edit quota.
+
+### Verification
+
+Regressions cover noisy source, failing-line/check relevance, novel/repeated
+searches and frozen-source reads denying foreign paths/writes. The native fixture
+actually reads source. All 38 four-repair cases pass. A full run found four in-place
+regressions: expanded guidance consumed review headroom and removed tiny source
+views. Equivalent compact guidance restores all four in RAM with both current
+source views intact; the fixture now requires those views. No bound or acceptance
+rule is relaxed. The next broad run exposed two explicit every-invocation user_brief
+prompt assertions; mandatory brief wording was restored without enlarging the
+compact guidance. Final suite/pins/limits are in the linked record; no live
+convergence or new Minecraft generation is claimed.
+
+<a id="fix-0154"></a>
+## FIX-0154 — 2026-10-28 — Separate context tokens, bytes and actual output reservation
+
+**Status:** implemented for fresh simple-os/5; old configurations remain frozen.
+Related: FIX-0128/0149/0150; [context contract](../docs/guides/context-measurement.md).
+
+### Problem
+
+The actual 49152-byte packing ceiling yielded far fewer prompt tokens on a 65536
+server. A fixed 31K-token limit did not exist. Raw output reserve exceeded its cap.
+
+### What was wrong
+
+ContextService compared serialized bytes to token-named limits and subtracted the
+hard output ceiling instead of the submitted raw cap. Optional groups had no
+caller relevance priority. Configured capacity alone was not a tokenizer count.
+
+### How it was fixed
+
+Optional Endpoint.input_token_count_path counts the exact prepared raw body on
+the same provider/client, with bounded response type/bytes/deadline and no redirects.
+Absent/invalid counters retain labeled conservative bounds. max_model_request_bytes
+is separate; null retains the legacy byte ceiling. Raw subtraction uses actual
+enforced output; native hidden context/enforcement remain unsupported and labeled.
+Admission reserves measured/bounded input tokens plus output. Portable design
+Python/JSON schema mirrors retention_priority; its compatibility test caught the
+initial missing design field. Receipts/inspector
+show both units/provenance. Whole optional groups follow caller retention_priority,
+oldest on ties; required groups stay protected. Agent services rank current
+source/active failures. Cached preparations reject changed wire/token/provenance.
+
+### Design principle enforced or reconstructed
+
+The OS enforces generic measured bounds; the agent supplies semantic priorities.
+Provider facts retain provenance; no token ratio or hidden context is invented.
+Independent byte/token/output bounds preserve original accounts and canonical input.
+
+### Verification
+
+Fixture raw requests exceed the old byte ceiling while fitting measured 64K
+capacity with smaller actual output reserve. Malformed/negative/boolean counters,
+independent byte caps and whole-group priorities are covered. Final generic OS,
+schema/docs checks are in the [record](four-repairs-implementation-2026-10-28.md).
+Older Strata counting-route support and live utilization remain unqualified.
+
+<a id="fix-0155"></a>
+## FIX-0155 — 2026-10-28 — Hand clean unusable output to existing semantic recovery
+
+**Status:** implemented as agent policy; provider fallback remains intact.
+Related: FIX-0027/0030/0132/0149 and [worker recovery](../design-docs/implementation/WORKER_RECOVERY.md).
+
+### Problem
+
+Confirmed stopped unusable output after finite OS repair paused outside semantic
+recovery, despite real private source and original resources remaining.
+
+### What was wrong
+
+The controller treated every ModelOperationFailure as generic pause and omitted
+certainty facts needed for an application handoff. Existing exception/cloud/source
+reuse already supplied the appropriate bounded mechanism.
+
+### How it was fixed
+
+The agent retains certainty and parks only eligible retryable IncompleteGeneration,
+empty/unexpected ModelResponseError or explicitly invalid NativeJobStopped output.
+The native adapter reports generic output facts; raw stop-reason and generic native
+provider/RPC failures cannot become semantic repair. It preserves the actual
+delta and immutable failure. Configured bounded read-only diagnosis precedes parking
+and replacement, sharing the original account/deadline and retaining its outcome.
+Clearing the active task error follows parking and
+replays idempotently. The controller refreshes app/run after parking to avoid the
+CAS conflict uncovered by its regression. Existing source/conflict/grant checks,
+finite lineage/account/deadline policy remain. Provider errors, cancellation,
+unknown effects, exhausted resources and published/post-integration work keep
+existing pause/recovery. No partial JSON executes or TaskReport is fabricated.
+
+### Design principle enforced or reconstructed
+
+OS repair/routing stops at execution facts; the agent interprets semantic failure.
+A linked new identity never means new allowance or erasure of failed evidence.
+
+### Verification
+
+The actual controller fixture writes partial source, exhausts repair and finishes
+a linked cloud replacement with the same account/effective original deadline and
+reused source. Direct parking/replay and unknown/provider/nonretryable controls
+pass. The final affected 82-case run includes native provider/output classification,
+wire compatibility and existing fallback/diagnosis. A mistaken generate stub made
+two actual Codex requests, rejected as unsupported fixture model with no completion
+or subordinate tools; it now overrides generate_job with a non-executable command.
+Earlier failed expectations, those journals and the real CAS failure remain in the
+[record](four-repairs-implementation-2026-10-28.md). Fixture takeover is not live
+model convergence or product acceptance.
+
+<a id="fix-0156"></a>
+## FIX-0156 — 2026-10-28 — Retire resolved worker errors without replay resurrection
+
+**Status:** implemented in bounded agent worker_state; no memory redesign.
+Related: FIX-0136/0145/0150 and [worker protocol](../docs/modules/agent-workers.md).
+
+### Problem
+
+Corrected unscoped search retained its old path-shaped error. Valid non-action
+replies with observation=None retained protocol hints in subsequent model input.
+
+### What was wrong
+
+Projection cleared errors only by exact path and skipped missing observations
+before processing valid replies. An older history prefix could resurrect retired
+errors across source generations. Canonical history was not corrupted.
+
+### How it was fixed
+
+worker_memory processes valid replies before observation filtering. Successful
+unscoped search retires old search errors; unrelated file failures keep path
+specificity. Late prefixes keep newer history/cursor and source invalidation;
+divergent histories reject. Only unresolved errors gain failure retention priority.
+Original trajectories, 8192-byte bound, byte-eviction replay and repair limits remain.
+
+### Design principle enforced or reconstructed
+
+The application owns derived hint lifecycle. Resolution must retire active errors
+without erasing immutable evidence or unrelated failures. Replay cannot move
+projection backward; changed source still invalidates CAS facts. OS storage stays generic.
+
+### Verification
+
+RAM replay of exact committed worker_memory fails five resolution/replay cases
+and passes one generation control; no working file was reverted. Regressions cover
+corrected search, three non-action kinds, repeated/older/new-generation histories,
+divergence and active-error priority. All 38 four-repair cases pass. Final broad
+checks/pins/limits are in the [record](four-repairs-implementation-2026-10-28.md).
+
+
+Final shared verification for FIX-0153–0156: all **720 tests passed in 1970.19s**
+on the unchanged 329-file full-suite-05 pin, with Node 24/npm and no skips. The
+final six-case prompt gate jointly covers mandatory briefs and all four in-place
+source regressions. Documentation/navigation, settings schema, Ruff and whitespace
+checks pass. All 15 old evidence, 320 frozen source and 14 game hashes remain
+unchanged; both HEADs and empty indexes are preserved. This batch is uncommitted.
+The unrelated historical design memoryGraph validator mismatch and two unintended
+unsupported-model fixture requests are disclosed in the linked implementation
+record, with original failure journals/logs retained. No live convergence or new
+Minecraft run is claimed; the one-time automation and owned fixture processes ended.
+
+
+<a id="fix-0157"></a>
+## FIX-0157 — 2026-10-28 — Audit simple-OS branch ancestry and unmerged profile work
+
+**Status:** investigated only; no implementation or branch merge changed.
+Related: FIX-0127 and [the integration audit](branch-integration-audit-2026-10-26.md).
+
+### Problem
+
+The user asked whether codex/simple-os-v1 strictly contains all other branch work.
+
+### What was wrong
+
+A larger/recent branch tip does not prove ancestry or inclusion of other worktrees'
+uncommitted files. Patch-equivalent cherry-picks must also be distinguished from
+unmerged commits. The existing integration audit excludes execution-profile work.
+
+### How it was fixed
+
+Fetched origin successfully and compared every local/remote ref. Simple-OS is
+28 commits ahead of main and 17 ahead of the local reliability branch, with zero
+missing commits from either. Against codex/agent-execution-profiles it is 14 ahead
+and one behind: a07f007 adds standalone read-only diagnostic execution, CLI/UI
+selection, tests and an execution-policy report. git cherry confirms no equivalent
+patch in simple-OS. Its execution_profile/DiagnosticAgent implementation is absent
+from the current source; bounded checking diagnosis is a distinct feature.
+
+The profiles worktree also has five modified documentation files and two new
+reports absent from simple-OS: current-iter-status-audit-2026-10-25.md and
+worker-progress-exception-recovery-plan-2026-10-25.md. These are investigations/plans,
+not additional uncommitted runtime code. Simple-OS is two commits ahead of its
+fetched origin tip; the new four-repair batch remains uncommitted. No code, branch,
+staging, historical run or other worktree edit was performed.
+
+### Design principle enforced or reconstructed
+
+Use ancestry plus patch/content evidence, not commit counts or similar feature
+names, to claim integration. Preserve user work and separate branch commits from
+working-tree changes. This investigation authorizes no merge or behavior change.
+
+### Verification
+
+Fresh fetch, rev-list/merge-base comparisons, git cherry, unique-commit inspection
+and both worktree statuses establish these findings. Evidence is retained under
+`../testing/branch-audit-2026-10-28/audit.json` relative to this checkout. Existing
+module/setup/settings guides need no change because behavior/interfaces are
+unchanged. Documentation generation/check and whitespace checks validate this
+history update; no runtime tests or live workload were needed for an ancestry audit.

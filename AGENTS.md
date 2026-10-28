@@ -241,3 +241,30 @@ retained; no gameplay feature was added. Convergence, context-unit sizing and
 worker-state error-retirement changes remain plans. Read the current implementation
 record for actual checks/limits; preserved runs/pins stay untouched and uncommitted.
 This project-rule save was read back; it installs no automation or runtime hook.
+
+Scheduled repairs, 2026-10-28 (FIX-0153–0156): current pins are simple-os/5,
+agent-8-evidence-recovery/state 2.7; use fresh state. The agent owns source/failure
+relevance, read-only frozen diagnosis, search novelty, resolved-error retirement
+and clean unusable-output semantic recovery after configured bounded diagnosis.
+The OS separates input tokens and
+provenance, serialized byte ceilings, actual raw output reserve and whole-group
+caller priorities. Provider counters are explicit same-origin opt-in; unavailable
+routes retain conservative bounds and native hidden context stays unmeasured.
+Original exceptions/trajectories, grants, root accounts/deadlines and uncertainty
+remain authoritative. Existing Terra/high/seven routing is unchanged. Read the
+[four-repair record](development-docs/four-repairs-implementation-2026-10-28.md)
+for actual checks and limits; no live convergence or historical Resume is claimed.
+The game and frozen run evidence remain untouched; this batch stays uncommitted.
+The exact one-time development automation was deleted. This project-rule save
+was read back; it installs no runtime hook or new automation.
+
+Final four-repair verification, 2026-10-28: all 720 tests passed on the unchanged
+full-suite-05 source; docs/schema/Ruff checks pass. Fifteen old evidence, 320 frozen
+source and 14 game hashes, both HEADs and empty indexes are verified unchanged.
+This new batch stays uncommitted. The implementation record discloses the legacy
+historical graph-validator mismatch and two accidentally rejected native fixture
+requests; no live convergence claim follows. Owned test processes and the exact
+automation ended. This final project-rule save was read back.
+
+The user subsequently authorized committing and pushing this batch on 2026-10-28.
+Earlier uncommitted descriptions record its delivery state before that authorization.

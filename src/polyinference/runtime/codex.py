@@ -30,9 +30,11 @@ STREAMED_TEXT_METHODS = (
 class NativeJobStopped(EndpointError):
     """The app-server rejected dispatch or explicitly confirmed a terminal turn."""
 
-    def __init__(self, message, *, retryable=True):
+    def __init__(self, message, *, retryable=True, output_failure=False):
         super().__init__(message)
         self.retryable = retryable
+        self.diagnostics = ({"category": "model_output", "fault_scope": "response",
+                             "reason": "invalid_native_output"} if output_failure else {})
 
 
 class NativeEventLog:
@@ -390,7 +392,7 @@ class CodexAppServer:
                 texts = [i["text"] for i in turn.get("items", []) if i.get("type") == "agentMessage"]
                 final_text = texts[-1] if texts else None
             if final_text is None:
-                raise NativeJobStopped("No terminal Codex agent message")
+                raise NativeJobStopped("No terminal Codex agent message", output_failure=True)
             if len(final_text.encode()) > self.output_cap:
                 total = ((usage_event or {}).get("params", {}).get("tokenUsage") or {}).get("total") or {}
                 raise IncompleteGeneration({
@@ -403,7 +405,7 @@ class CodexAppServer:
                 try:
                     final_text = json.dumps(json.loads(final_text)["reply"])
                 except (ValueError, KeyError, TypeError) as exc:
-                    raise NativeJobStopped("Terminal Codex reply has an invalid phase envelope") from exc
+                    raise NativeJobStopped("Terminal Codex reply has an invalid phase envelope", output_failure=True) from exc
             usage = None
             if usage_event:
                 params = usage_event["params"]

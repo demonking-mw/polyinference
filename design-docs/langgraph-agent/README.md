@@ -368,8 +368,10 @@ class RuntimePorts(Protocol):
 
 ## 6. Data model
 
-The implementation adds optional ContextPart.compactable (default false), synchronized
-in the design Python/JSON schema. Explicit eligibility permits a derived input
+The implementation adds optional ContextPart.compactable (default false) and
+retention_priority (0–100, default zero and omitted when zero), synchronized in the
+design Python/JSON schema. Numeric priority is caller policy; the generic OS keeps
+whole groups and required parts, without interpreting coding relevance. Explicit eligibility permits a derived input
 summary, never canonical-memory rewriting; instructions and tool pairs remain
 protected. See the [current OS settings reference](../simplified-os/AGENT_SETTINGS.md).
 Historical audit statements below describe their original baseline.

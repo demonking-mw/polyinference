@@ -1,10 +1,16 @@
 # Current iteration issues
 
+[Scheduled four-repair implementation](four-repairs-implementation-2026-10-28.md)
+implements agent source focus/diagnostic reads/search novelty, generic OS measurement
+and caller priorities, agent-owned clean-output semantic handoff and replay-safe error
+retirement. Fresh simple-os/5, agent-8/state 2.7 is required. No new live generation or
+historical Resume is performed; final test/evidence limits are in the linked record.
+
 [Authorized model fallback and existing-browser repair](model-fallback-browser-repair-2026-10-28.md)
 implements agent-selected Terra/high/seven through the OS retry_model option and
-trusted native continuation, with fresh simple-os/4 state. Existing text-field
-input leakage is repaired and actual Chromium checks retained. Convergence,
-context-unit sizing and worker-state defects remain plan-only; old runs stay frozen.
+trusted native continuation, initially with simple-os/4 state. Existing text-field
+input leakage is repaired and actual Chromium checks retained. Its four-area plan
+is now implemented in the scheduled batch above; old run evidence stays frozen.
 
 [Authorized reliability implementation](reliability-implementation-2026-10-27.md)
 tracks the OS/agent/qualification stages following FIX-0133. Changes require fresh

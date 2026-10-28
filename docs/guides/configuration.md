@@ -63,9 +63,10 @@ saved configuration pins. [Model fallback](model-fallback.md) covers agent
 `default_retry_model` (Terra/high/seven), endpoint overrides and disabling.
 
 For mixed native/local runs, size each endpoint from its actual model/server metadata. Context preparation
-uses the smaller of the shared input limit and that endpoint's context minus output headroom. Its UTF-8 byte
-bound is deliberately conservative; a server advertising 65,536 tokens does not mean the agent submits
-65,536 tokenizer-counted tokens. A shared limit sized only for the local lane can unnecessarily stop native
+uses the smaller of the shared input limit and that endpoint's context minus actual raw output headroom.
+Optional input_token_count_path counts the complete raw body on the same provider; absent/failed counters
+retain a conservative byte/token bound. Separate max_model_request_bytes must also fit. See [measurement
+and independent ceilings](context-measurement.md); configured 65,536 capacity alone does not prove utilization. A shared limit sized only for the local lane can unnecessarily stop native
 review. Changing a saved limit is not a supported way to rewrite an existing run's pinned configuration or
 replenish its accounts.
 
@@ -73,7 +74,6 @@ For uncommitted delivery, select `repository_mode: "isolated"` before starting; 
 not commit the user's branch. Review export status, baseline and conflicts before applying a patch. A
 provisional export is not product acceptance. See [exports](exports.md) and the [local Strata
 investigation](../../development-docs/local-strata-live-test-2026-10-26.md).
-
 Optional `system.data_policy` sets mandatory run-wide location/destination/classification ceilings.
 ProcessSpec can narrow them. Constrained endpoints need explicit `inference_location`; URLs do not attest it.
 Static hard classes are supported; unsupported weights or unequal process/runtime limits reject before effects.

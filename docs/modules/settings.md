@@ -67,13 +67,14 @@ Top-level `inference_retry`, `check_diagnosis`, `acceptance_criteria`,
 `progress_monitor` are agent policy.
 Their defaults, ranges and recovery interactions are in the
 [agent reliability reference](../guides/agent-reliability.md).
-Endpoint `supports_temperature` defaults to true and rejects an explicit unsupported
-sampling request. `reasoning_effort` defaults to medium and is sent on native turns;
-the turn field takes precedence over a command-line startup default.
-The UI launcher no longer supplies a conflicting low-effort override.
+Endpoint supports_temperature defaults true; unsupported explicit sampling rejects.
+Native reasoning_effort defaults medium; the turn overrides command-line startup.
+The UI launcher supplies no conflicting low-effort override.
 Agent `default_retry_model` selects the native cloud alternate (Terra/high/seven).
 Generic Endpoint.retry_model is optional with no OS default. Explicit null disables
 and survives serialization; see [fallback configuration](../guides/model-fallback.md).
-Optional `system.data_policy` constrains every process/replacement; narrower
-ProcessSpec policies remain enforceable. Explicit endpoint location is required
-to satisfy a local-only/cloud-only constraint. Fresh state pins these contracts.
+Endpoint.input_token_count_path opts raw endpoints into same-provider measurement.
+System max_model_request_bytes separates the byte ceiling from token allowances;
+null retains the legacy byte ceiling. See [measurement](../guides/context-measurement.md).
+Optional system.data_policy constrains processes/replacements; ProcessSpec can narrow it.
+Constrained endpoints need declared location. Fresh state pins these contracts.

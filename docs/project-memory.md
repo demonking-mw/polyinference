@@ -21,7 +21,11 @@ clean local exceptions a finite coding takeover with original resources. Planner
 guidance requires small behaviors and actual tool inventory; it adds no browser/MCP.
 Changed recovery/program pins require fresh state and fresh live qualification.
 
-The current implementation uses runtime `simple-os/4`, agent-7 and state 2.6.
+The current implementation uses runtime `simple-os/5`, agent-8-evidence-recovery/state 2.7.
+[Four scheduled repairs](../development-docs/four-repairs-implementation-2026-10-28.md)
+keep source relevance, error retirement and semantic recovery in the agent. The OS
+separates token/provenance, byte ceilings and output reservation with caller priorities;
+provider counting is explicit opt-in. Native hidden context remains unmeasured.
 The OS exposes optional retry_model; the agent selects Terra/high/seven through
 default_retry_model. Caller input overrides OS defaults. Availability routing and
 trusted same-thread continuation preserve original accounts and tool receipts;

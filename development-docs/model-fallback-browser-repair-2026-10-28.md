@@ -7,6 +7,10 @@ missed browser behavior, with no new gameplay. Earlier analysis-only restriction
 remain historical; convergence, context sizing and worker-memory fixes below are
 **plans only**. No old run was resumed, model/config pins changed or account refilled.
 
+The plan below records this earlier batch. The later authorized [scheduled four-repair
+implementation](four-repairs-implementation-2026-10-28.md) supersedes its plan-only status;
+the original evidence and routing policy remain intact.
+
 ## Four-area plan and ownership
 
 | Area | Agent implementation plan | OS implementation plan | Current status |

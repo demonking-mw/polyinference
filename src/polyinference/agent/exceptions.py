@@ -53,6 +53,8 @@ async def park(app, state):
                     "trajectory_ref": state.get("trajectory_ref"),
                     "evidence": state.get("evidence", []),
                     "last_check_evidence": state.get("last_check_evidence"),
+                    "model_failure": state.get("model_failure"),
+                    "diagnosis": state.get("model_failure_diagnosis"),
                 }
             ).model_dump(mode="json"),
         }
@@ -93,6 +95,8 @@ async def park(app, state):
         "progress_attention": state.get("progress_attention"),
         "progress_ref": "worker-progress/" + pid if app.ports.records.get("worker-progress/" + pid) else None,
         "cleanup_receipt_ref": "process-parked/" + pid,
+        "model_failure": state.get("model_failure"),
+        "diagnosis": state.get("model_failure_diagnosis"),
         **{k: v for k, v in intent.items() if k != "manifest"},
     }
     run_version, run = app.ports.records.get("app/run")
@@ -133,6 +137,57 @@ async def park(app, state):
         },
         {ref: packet},
     )
+
+
+async def park_model_failure(app, state, failure):
+    """Application handoff after bounded I/O repair, never another transport retry."""
+    if not failure or failure.get("execution_termination") != "confirmed_stopped" or failure.get("effects") != "known":
+        return False
+    error = failure.get("error") or {}
+    if (error.get("code") not in {"IncompleteGeneration", "ModelResponseError", "NativeJobStopped"}
+            or error.get("retryable_after_reconciliation") is False
+            or failure.get("diagnostics", {}).get("polyinference/model-unavailable")):
+        return False
+    reason = failure.get("diagnostics", {}).get("polyinference/model-output-error", {}).get("reason")
+    if (error.get("code") == "NativeJobStopped" and reason != "invalid_native_output"
+            or error.get("code") == "ModelResponseError" and reason not in {"empty_text", "unexpected_content"}):
+        return False
+    task = app.get(state["task_ledger_ref"])
+    if task.get("exception_ref") and task.get("semantic_model_failure") == failure:
+        return True
+    control = app.ports.records.get("process-control/" + state["process_id"])
+    if (state.get("phase") != "development" or task.get("category", "development") != "development"
+            or task.get("report_ref") or (control and control[1].get("cancel_requested"))
+            or app.ports.operations.uncertain()):
+        return False
+    reserve = app.config.limits.final_phase_reserve
+    finishing = reserve.reconciliation_model_calls + reserve.assessment_model_calls if reserve else 2
+    cutoff = app.ports.operations.process_deadline(state["process_id"])
+    if cutoff is None:
+        from datetime import datetime, timedelta
+
+        cutoff = datetime.fromisoformat(app.get("process/" + state["process_id"])["started_at"]) + timedelta(
+            milliseconds=app.config.limits.max_wall_time_ms)
+    if (app.ports.operations.inference_calls_used(state["process_id"]) >= app.config.limits.max_model_calls - finishing
+            or cutoff <= now()):
+        return False
+    resources = app.ports.operations.resource_state(state["process_id"])
+    finishing_steps = finishing + (reserve.publication_steps + reserve.cleanup_steps if reserve else 2) + 1
+    if (resources["remaining_operations"] < finishing_steps or resources["remaining_tokens"]
+            < app.config.limits.max_input_tokens_per_call + app.config.limits.max_output_tokens_per_call):
+        return False
+    if app.ports.operations.settlement(state["process_id"])["pending_operations"]:
+        return False
+    from .diagnostics import diagnose
+
+    reason = "Stopped unusable model output after bounded OS repair: " + str(error.get("message", ""))[:900]
+    diagnosis = await diagnose(app, state, "model_output", reason=reason)
+    await park(app, {**state, "model_failure": failure,
+        "model_failure_diagnosis": diagnosis, "interrupted": reason})
+    current = app.get(state["task_ledger_ref"])
+    app.update(state["task_ledger_ref"], {**current, "model_failure": None,
+        "semantic_model_failure": failure})
+    return True
 
 
 def validate_allowance(app, packet):

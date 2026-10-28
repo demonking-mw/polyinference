@@ -21,7 +21,9 @@ reattaches eligible checkpoints, retries a known model failure or reopens senior
 review/output delivery. Every stopped worker remains represented; retained source
 and interrupted tasks reach review. Instructions have an atomic steering receipt,
 so interrupted activation cannot apply them twice. Plans/outcomes survive restart;
-ordinary failures leave a paused run with a durable error. The documented exact
+ordinary host/provider/unknown failures leave a paused run with a durable error. Confirmed stopped,
+retryable development output classified unusable after bounded OS repair enters the existing agent exception/cloud
+route after configured bounded diagnosis, preserving partial source, outcome and the failed effect. A stopped exception is not a report. The exact
 predecessor migration does not apply to changed recovery policy. Old manifests/
 effects remain unchanged. Unknown graph/prompt/schema changes are rejected. Grants,
 budgets and deadlines are preserved.
@@ -73,7 +75,6 @@ accounts/deadlines. Existing steering, check-preparation dependencies, historica
 started-task allocation and retained private-source offers remain authoritative.
 These combined graph/schema changes use fresh program/state pins; old live runs
 must use their original pinned source.
-
 Operator-prepared model recovery may resume at the progress node inserted before
 the model node, retaining its linked recovery identity and original allowance.
 Explicit cancellation remains cancelled rather than becoming a semantic exception.

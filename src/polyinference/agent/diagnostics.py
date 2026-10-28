@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
+import fnmatch
+import re
 from typing import Literal
 
 from pydantic import Field
 
-from ..contracts import AgentJob, CheckEvidence, ModelQuery, OperationRequest, Wire
+from ..contracts import AgentJob, ArtifactRef, CheckEvidence, ModelQuery, OperationRequest, Wire
 from ..domain import canonical, digest
 from ..workspace_contracts import RelativePath
 
@@ -26,6 +28,54 @@ class DiagnosisPlan(Wire):
     classification: Literal["missing_inputs", "code_failure", "environment", "uncertain"]
     read_paths: list[RelativePath] = Field(default_factory=list, max_length=32)
     guidance: str = Field(min_length=1, max_length=4000)
+
+
+class DiagnosticRead(Wire):
+    path: RelativePath
+    offset: int = Field(default=0, ge=0)
+    max_bytes: int = Field(default=3000, ge=1, le=4096)
+
+
+def source_previews(tree, assignment, checks, failure="", budget=6000):
+    """Application relevance only; logs select existing paths, never authority."""
+    relevant = [path for path in tree if path in failure]
+    for check in checks:
+        if check.name in assignment.get("checks", []):
+            for pattern in [*check.required_paths, *check.argv]:
+                relevant.extend(path for path in sorted(tree) if fnmatch.fnmatch(path, pattern))
+    relevant.extend(assignment.get("write_paths", []))
+    relevant.extend(assignment.get("read_paths", []))
+    previews = []
+    for path in dict.fromkeys(relevant):
+        if path not in tree or budget <= 0:
+            continue
+        content = tree[path][1]
+        match = re.search(re.escape(path) + r":(\d+)", failure)
+        offset = 0
+        if match:
+            lines = content.splitlines(keepends=True)
+            offset = sum(map(len, lines[:max(0, int(match[1]) - 10)]))
+        excerpt = content[offset:offset + min(2000, budget)]
+        previews.append({"path": path, "content": excerpt.decode(errors="replace"), "offset": offset,
+                         "digest": digest(content), "truncated": offset > 0 or len(excerpt) < len(content)})
+        budget -= len(excerpt)
+    return previews
+
+
+def register_source_reader(app):
+    async def read(request, arguments):
+        snapshot = app.get("diagnosis-input/" + request.scope.process_id)
+        ref = snapshot["files"].get(arguments["path"])
+        if ref is None:
+            raise ValueError("Path is not in this diagnostic process's frozen input")
+        raw = app.ports.artifacts.read(ArtifactRef.model_validate(ref))
+        offset, maximum = arguments.get("offset", 0), arguments.get("max_bytes", 3000)
+        excerpt = raw[offset:offset + maximum]
+        return {"path": arguments["path"], "content": excerpt.decode(errors="replace"), "digest": digest(raw),
+                "offset": offset, "returned_bytes": len(excerpt), "total_bytes": len(raw),
+                "truncated": offset + len(excerpt) < len(raw), "input_code": snapshot["code"]}
+    app.ports.register_capability("coding.diagnostic_read", read, input_type=DiagnosticRead,
+                                  description="Read bounded bytes from this diagnosis's immutable source input")
 
 
 def _paths(values, cap=2500):
@@ -95,20 +145,9 @@ async def diagnose(app, state, trigger, evidence=None, reason=None):
             manifest = app.ports.workspaces.current(state["workspace_id"])
             base = await app.ports.workspaces.tree(manifest.original_base.commit_id, pid)
             tree = await app.ports.workspaces.private_tree(manifest.workspace_id)
-            previews, remaining = [], 5000
-            for path, (_, content) in sorted(tree.items()):
-                if remaining <= 0:
-                    break
-                excerpt = content[: min(1000, remaining)]
-                previews.append(
-                    {
-                        "path": path,
-                        "content": excerpt.decode(errors="replace"),
-                        "digest": digest(content),
-                        "truncated": len(excerpt) < len(content),
-                    }
-                )
-                remaining -= len(excerpt)
+            assignment = app.get(state["task_ledger_ref"])["assignment"]
+            failure = app.evidence_view(evidence).get("output_preview", "") if evidence else (reason or "")
+            previews = source_previews(tree, assignment, app.check_definitions, failure)
             packet = {
                 "check_diagnosis": True,
                 "phase": "check_diagnosis",
@@ -125,7 +164,12 @@ async def diagnose(app, state, trigger, evidence=None, reason=None):
                 "materialized_paths": _paths(tree),
                 "materialized_path_count": len(tree),
                 "source_previews": previews,
+                "available_tools": ["coding.diagnostic_read"] if
+                    getattr(app.config, app.config.role_bindings[definition.role]).protocol == "codex_app_server" else [],
             }
+            app.ports.records.put_once("diagnosis-input/" + pid, {"code": packet["current_code"],
+                "files": {path: app.ports.artifacts.put(content, app.scope(pid), "text/plain").model_dump(mode="json")
+                          for path, (_, content) in tree.items()}})
             context = app.context(
                 DIAGNOSIS_PROMPT + definition.instructions, packet, [], pid, DiagnosisPlan.model_json_schema()
             )
@@ -145,8 +189,8 @@ async def diagnose(app, state, trigger, evidence=None, reason=None):
                     objective=app.artifact(packet, pid),
                     context=context,
                     workspace_id=pid,
-                    allowed_capabilities=[],
-                    required_phase_protocol="runtime/readonly-query/1",
+                    allowed_capabilities=["coding.diagnostic_read"],
+                    required_phase_protocol="polyinference/diagnosis-readonly/1",
                     required_guarantees=[],
                     response_schema_ref="diagnosis/1",
                     session_ref=None,

@@ -14,8 +14,8 @@ from .primitives import now as now
 from .primitives import operation_fingerprint as operation_fingerprint
 from .workspace_contracts import RelativePath
 
-PROGRAM_VERSION = "agent-7-bounded-worker-state"
-STATE_VERSION = "2.6"
+PROGRAM_VERSION = "agent-8-evidence-recovery"
+STATE_VERSION = "2.7"
 
 
 class GitPolicy(Wire):
