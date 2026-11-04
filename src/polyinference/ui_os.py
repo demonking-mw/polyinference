@@ -8,16 +8,63 @@ import json
 import re
 import sqlite3
 from collections import Counter
+from contextlib import contextmanager
 from datetime import datetime, timezone
 from pathlib import Path
 
+from .os_config import DEFAULT_TUNING, OSTuning
 
-def read_snapshot(state):
+
+def inspection_tuning(configuration, records=None):
+    if records and "runtime/os-tuning" in records:
+        return OSTuning.model_validate(records["runtime/os-tuning"])
+    system = configuration.get("system", configuration)
+    return OSTuning.model_validate(system.get("tuning", {}))
+
+
+def resolve_inspection_tuning(state, tuning=None):
+    """Use known startup settings, then the original run's saved effective policy."""
+    if tuning is not None:
+        return tuning if isinstance(tuning, OSTuning) else OSTuning.model_validate(tuning)
+    state = Path(state)
+    config_path = state.parent / "config.json"
+    try:
+        initial = inspection_tuning(json.loads(config_path.read_text())) if config_path.is_file() else DEFAULT_TUNING
+    except (OSError, ValueError):
+        initial = DEFAULT_TUNING  # A stale external config cannot replace the saved run policy.
+    path = state / "records.sqlite"
+    if not path.is_file():
+        return initial
+    # A standalone historical database has no external bootstrap settings. Only
+    # this metadata lookup uses the canonical fallback before its policy is known.
+    db = sqlite3.connect(path.as_uri() + "?mode=ro", uri=True, timeout=initial.sqlite_timeout_seconds)
+    try:
+        if db.execute("SELECT 1 FROM sqlite_master WHERE name='records'").fetchone():
+            row = db.execute("SELECT body FROM records WHERE key='runtime/os-tuning'").fetchone()
+            if row:
+                return OSTuning.model_validate_json(row[0])
+        return initial
+    finally:
+        db.close()
+
+
+@contextmanager
+def inspection_connection(path, tuning=None):
+    path = Path(path)
+    tuning = resolve_inspection_tuning(path.parent, tuning)
+    db = sqlite3.connect(path.as_uri() + "?mode=ro", uri=True, timeout=tuning.sqlite_timeout_seconds)
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+def read_snapshot(state, tuning=None):
     result = {"records": {}, "revisions": {}, "events": [], "captured_at": datetime.now(timezone.utc).isoformat()}
     path = Path(state) / "records.sqlite"
     if not path.is_file():
         return result
-    with sqlite3.connect(path.as_uri() + "?mode=ro", uri=True) as db:
+    with inspection_connection(path, tuning) as db:
         db.execute("BEGIN")
         tables = {row[0] for row in db.execute("SELECT name FROM sqlite_master WHERE type='table'")}
         if "records" in tables:
@@ -117,6 +164,7 @@ def invocation_root(oid, operations, visiting=None):
 
 def runtime_view(snapshot, configuration, running=False):
     records, events = snapshot["records"], snapshot["events"]
+    tuning = inspection_tuning(configuration, records)
 
     def group(prefix):
         return [{**value, "key": key} for key, value in records.items() if key.startswith(prefix)]
@@ -150,7 +198,9 @@ def runtime_view(snapshot, configuration, running=False):
         lanes.append({
             "name": name, "model": endpoint.get("model"), "protocol": endpoint.get("protocol"),
             "lifecycle": endpoint.get("lifecycle"),
-            "limit": endpoint.get("max_inflight"), "token_limit": endpoint.get("reserved_context_tokens"),
+            "limit": endpoint.get("max_inflight"),
+            "token_limit": endpoint.get("reserved_context_tokens") if name == "local" else None,
+            "token_limit_owner": "os_local_pair" if name == "local" and endpoint.get("reserved_context_tokens") is not None else "provider",
             "held": len(held), "reserved_tokens": sum(r.get("tokens", 0) for r in held),
             "ordinary_waiters": sum(r.get("lane") == "ordinary" for r in waiting),
             "finishing_waiters": sum(r.get("lane") == "finishing" for r in waiting),
@@ -205,9 +255,10 @@ def runtime_view(snapshot, configuration, running=False):
             "pruned_events": max(0, (first or 1) - 1),
             "legacy_events": sum("at" not in event or any("value" not in change
                                  for change in event.get("changes", {}).values()) for event in events),
-            "retention_limit": 10000,
+            "retention_limit": tuning.journal_retention_events,
         },
-        "activity": activity(events[-120:], records),
+        "activity_page_size": tuning.inspector_activity_events,
+        "activity": activity(events[-tuning.inspector_activity_events:], records),
     }
 
 

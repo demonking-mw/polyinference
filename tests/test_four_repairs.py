@@ -147,6 +147,7 @@ async def test_measured_tokens_use_64k_window_and_actual_raw_output_reserve(tmp_
             "input_token_count_path": "/chat/completions/input_tokens",
         },
         limits=limits,
+        local_token_limits={"input_tokens": 61440, "output_tokens": 4096},
     )
     request = request.model_copy(
         update={
@@ -155,7 +156,7 @@ async def test_measured_tokens_use_64k_window_and_actual_raw_output_reserve(tmp_
                     "context": request.payload.context.model_copy(update={"maximum_input_tokens": 400000})
                 }
             ),
-            "extensions": {"runtime/output-tokens": 4096},
+            "extensions": {},
         }
     )
     request = with_parts(rt, request, [part(rt, request, "large", "useful source " * 9000)])
@@ -553,7 +554,7 @@ async def test_diagnostic_reader_is_scoped_to_its_frozen_input_and_has_no_write_
             state, "read", "coding.diagnostic_read", {"path": "a.py", "max_bytes": 4}, "read"
         )
         assert result.state == "succeeded" and obs["content"] == "read" and obs["returned_bytes"] == 4
-        assert app.get("process/diag")["capabilities"] == ["coding.diagnostic_read"]
+        assert app.get("process/diag")["capabilities"] == ["coding.diagnostic_read", "coding.diagnostic_evidence_read"]
         result, _ = await app.capability(
             state, "foreign", "coding.diagnostic_read", {"path": "other.py"}, "read"
         )

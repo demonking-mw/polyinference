@@ -142,7 +142,8 @@ class AgentServices:
         register_source_reader(self)
         ports.register_agent_protocol("polyinference/diagnosis-readonly/1", DiagnosisPlan.model_json_schema(),
             workspace="snapshot", brokered=True,
-            instructions="Inspect frozen source with coding.diagnostic_read through polyinference_tool. "
+            instructions="Inspect frozen source with coding.diagnostic_read and cataloged check outputs with "
+                         "coding.diagnostic_evidence_read through polyinference_tool. "
                          "No writes, native shell, publication or external tools. Return the diagnosis schema.")
         self.program = ProgramRef(
             program_id="polyinference",
@@ -155,17 +156,17 @@ class AgentServices:
         capacities = {}
         for binding in sorted(set(config.role_bindings.values())):
             endpoint = getattr(config, binding)
-            raw = endpoint.protocol in {"chat", "responses", "anthropic", "gemini"}
-            output = min(config.model_output_target_tokens or config.limits.max_output_tokens_per_call,
-                         config.limits.max_output_tokens_per_call) if raw else config.limits.max_output_tokens_per_call
+            pair = config.token_limits_for_binding(binding)
+            output = pair.output_tokens if pair else None
             capacities[binding] = {"model": endpoint.model, "protocol": endpoint.protocol,
-                "configured_context": endpoint.max_context_tokens, "output_reservation": output,
-                "input_allowance": min(config.limits.max_input_tokens_per_call, endpoint.max_context_tokens - output),
+                "configured_context": pair.context_tokens if pair else None, "output_reservation": output,
+                "input_allowance": pair.input_tokens if pair else None,
+                "token_limit_owner": "os_local_pair" if pair else "provider",
                 "unit": "input_token_capacity", "reasoning_effort": endpoint.reasoning_effort,
                 "configured_input_counter": endpoint.input_token_count_path,
-                "max_request_bytes": config.max_model_request_bytes or config.limits.max_input_tokens_per_call,
+                "max_request_bytes": config.request_byte_limit(),
                 "validation": "Configuration only; each actual adapter packet is measured before submission"}
-            if capacities[binding]["input_allowance"] <= 0:
+            if pair and capacities[binding]["input_allowance"] <= 0:
                 raise ValueError("Endpoint has no input capacity after output headroom: " + binding)
         ports.records.put_once("coding/capacity-profile", capacities)
         for check in self.check_definitions:
@@ -347,7 +348,7 @@ class AgentServices:
         )
         self.ports.processes.register(
             spec, endpoint_name, management=role == "senior",
-            capabilities=["coding.diagnostic_read"] if entry_point == "check_diagnosis" else [
+            capabilities=["coding.diagnostic_read", "coding.diagnostic_evidence_read"] if entry_point == "check_diagnosis" else [
                           *coding_tools(self.config, task_data and task_data.get("category") == "setup"),
                           "workspace.commit", "workspace.retain", "records.publish",
                           *(["coding.commit", "coding.publish"] if self.repository else []),
@@ -395,6 +396,7 @@ class AgentServices:
         )
         return {
             "criterion": evidence["criterion_ref"],
+            "evidence_id": evidence["evidence_id"],
             "status": evidence["status"],
             "exit_code": evidence["exit_code"],
             "checked_code": evidence["checked_code"],
@@ -453,9 +455,6 @@ class AgentServices:
             extensions={
                 **({"runtime/inference-policy": self.config.inference_policy.model_dump(mode="json")}
                    if isinstance(payload, (ModelQuery, AgentJob)) and self.config.inference_policy else {}),
-                **({"runtime/output-tokens": min(self.config.model_output_target_tokens,
-                                                limits.max_output_tokens_per_call)}
-                   if isinstance(payload, ModelQuery) and self.config.model_output_target_tokens else {}),
                 **({"polyinference/workspace-view": view} if view else {}),
                 **({"polyinference/recovery-of": recovery["operation_id"],
                     "polyinference/recovery-reason": recovery["reason"]} if recovery else {}),
@@ -745,6 +744,31 @@ class AgentServices:
             data = dict(state["input"])
             schema, instruction, phase = SeniorProposal.model_json_schema(), SENIOR, state["mode"]
             instruction += SENIOR_IN_PLACE if self.repository else SENIOR_ISOLATED
+            reads_used = state.get("review_reads_used", 0)
+            corrections_used = state.get("corrections_used", 0)
+            data["review_limits"] = {
+                "max_review_reads": self.config.max_review_reads,
+                "review_reads_used": reads_used,
+                "remaining_review_reads": max(0, self.config.max_review_reads - reads_used),
+                "max_read_requests_per_proposal": schema["properties"]["read_requests"]["maxItems"],
+                "max_bytes_per_read": schema["$defs"]["ReviewRead"]["properties"]["max_bytes"]["maximum"],
+                "max_senior_corrections": self.config.max_senior_corrections,
+                "corrections_used": corrections_used,
+                "remaining_corrections": max(0, self.config.max_senior_corrections - corrections_used),
+            }
+            run = self.get("app/run")
+            data["planning_limits"] = {
+                "max_sprints": self.config.max_sprints,
+                "sprints_used": run["sprint"],
+                "remaining_sprints": max(0, self.config.max_sprints - run["sprint"]),
+                "max_workers": self.config.max_workers,
+                "max_worker_recoveries": self.config.max_worker_recoveries,
+                "max_cloud_recoveries": self.config.max_cloud_recoveries,
+                "max_protocol_corrections": self.config.max_protocol_corrections,
+                "inference_retry": self.config.inference_retry.model_dump(mode="json"),
+                "check_diagnosis": self.config.check_diagnosis.model_dump(mode="json"),
+                "progress_monitor": self.config.progress_monitor.model_dump(mode="json"),
+            }
         else:
             task = self.get(state["task_ledger_ref"])
             manifest = self.ports.workspaces.current(state["workspace_id"])
@@ -800,9 +824,6 @@ class AgentServices:
                 "source_paths": [p["path"] for p in data["focused_source"]],
                 "completion_rule": "Verify the assigned consumer/entry behavior. An existing API alone is not "
                     "an integrated feature. Already-complete work needs exact-source behavior evidence; edits are not mandatory."}
-            data["resources"] = self.ports.operations.resource_state(pid)
-            data["finishing_reserve"] = self.config.limits.final_phase_reserve.model_dump(mode="json") \
-                if self.config.limits.final_phase_reserve else None
             if task.get("previous_process_id"):
                 predecessor = self.get(self.get("attempt/" + task["attempt_id"])["previous_attempt_ref"])
                 packet_ref = "worker-exception/" + predecessor["record_id"].removeprefix("attempt/")
@@ -821,11 +842,22 @@ class AgentServices:
             data["preparation_issues"] = self.repository.preparation_issues(
                 None if senior else state["workspace_id"])
         endpoint = getattr(self.config, self.config.role_bindings[role])
+        pair = self.config.token_limits(role)
+        limits = self.get(process["spec_ref"])["limits"]
+        data["resource_limits"] = {
+            **limits,
+            "max_input_tokens_per_call": pair.input_tokens if pair else None,
+            "max_output_tokens_per_call": pair.output_tokens if pair else None,
+            "token_limit_owner": "os_local_pair" if pair else "provider",
+            "max_model_request_bytes": self.config.request_byte_limit(),
+            "max_model_response_bytes": self.config.max_model_response_bytes,
+        }
+        data["resources"] = self.ports.operations.resource_state(pid)
+        data["finishing_reserve"] = limits.get("final_phase_reserve")
         data["response_budget"] = {
-            "max_output_tokens": min(self.config.model_output_target_tokens or self.config.limits.max_output_tokens_per_call,
-                                     self.config.limits.max_output_tokens_per_call)
-                if endpoint.protocol in {"chat", "responses", "anthropic", "gemini"}
-                else self.config.limits.max_output_tokens_per_call,
+            "max_output_tokens": pair.output_tokens if pair else None,
+            "max_input_tokens": pair.input_tokens if pair else None,
+            "token_limit_owner": "os_local_pair" if pair else "provider",
             "max_output_bytes": self.config.limits.max_output_bytes,
             "recommended_response_bytes": min(4096, self.config.limits.max_output_bytes),
             "policy": "Includes thinking. Use small complete responses and incremental edits across turns.",

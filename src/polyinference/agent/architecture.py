@@ -5,6 +5,33 @@ from __future__ import annotations
 from ..domain import Assignment, InterfaceContract
 
 
+def validate_local_tasks(proposal, config):
+    """Coding application policy, checked after effective lane allocation."""
+    from pathlib import PurePosixPath
+
+    for assignment in proposal.tasks:
+        if assignment.cloud_only_reason:
+            if assignment.role != "specialist" or config.role_bindings[assignment.role] != "cloud":
+                raise ValueError("Cloud-only work requires a specialist bound to cloud")
+        if config.role_bindings[assignment.role] != "local":
+            continue
+        contract = assignment.local_contract
+        if not contract or contract.implementation_path not in assignment.write_paths:
+            raise ValueError(f"Local task {assignment.task_id} needs a local_contract for exactly one implementation file")
+        if not assignment.behavior or not assignment.focused_check or not assignment.acceptance_criteria:
+            raise ValueError(f"Local task {assignment.task_id} needs behavior, focused_check and acceptance_criteria")
+        for path in assignment.write_paths:
+            if path == contract.implementation_path:
+                continue
+            p = PurePosixPath(path)
+            test = (bool({"test", "tests", "__tests__"} & set(p.parts[:-1]))
+                    or p.name.startswith("test_") or p.name == "conftest.py"
+                    or ".test." in p.name or ".spec." in p.name or p.stem.endswith("_test"))
+            documentation = p.suffix in {".md", ".rst"}
+            if not (test or documentation):
+                raise ValueError(f"Local task {assignment.task_id} grants a second production file: {path}; split it or use cloud_only_reason")
+
+
 def catalog(app):
     return {
         contract.reference: contract
@@ -117,6 +144,7 @@ def task_context(app, assignment, contracts):
                     "non_goals": assignment.non_goals,
                     "provides": assignment.provides,
                     "consumes": assignment.consumes,
+                    "local_contract": assignment.local_contract.model_dump(mode="json") if assignment.local_contract else None,
                 },
                 "interface_contracts": [contracts[ref].model_dump(mode="json") for ref in refs],
             }

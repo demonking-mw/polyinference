@@ -21,7 +21,7 @@ clean local exceptions a finite coding takeover with original resources. Planner
 guidance requires small behaviors and actual tool inventory; it adds no browser/MCP.
 Changed recovery/program pins require fresh state and fresh live qualification.
 
-The current implementation uses runtime `simple-os/5`, agent-8-evidence-recovery/state 2.7.
+The current implementation uses runtime `simple-os/6`, agent-9-local-contracts/state 2.8.
 [Four scheduled repairs](../development-docs/four-repairs-implementation-2026-10-28.md)
 keep source relevance, error retirement and semantic recovery in the agent. The OS
 separates token/provenance, byte ceilings and output reservation with caller priorities;
@@ -50,6 +50,20 @@ Optional OS packing/compaction transforms only permitted input; the application
 owns canonical memory and semantics. Contributor setup belongs to developer tooling,
 not every program hosted on the OS. Read the [boundary](../design-docs/simplified-os/RUNTIME_BOUNDARY.md)
 and [revisions/open gaps](../design-docs/simplified-os/DESIGN_REVISIONS.md) before changing these layers.
+
+Current P0 policy requires a single production file and explicit local_contract per local development
+assignment, enforced after lane allocation and at task construction. cloud_only_reason protects coupled
+specialist work from task-share demotion. One system.local_token_limits input/output pair drives local
+provider requests, packing and admission; cloud agents have no OS per-call token cap. Strata startup JSON
+can be synchronized before restart without launching inference. Optional agent
+local_strata_profile lets the UI start/reuse a named Strata runtime, validate live
+model/context/slots and wait before restoration/HTTP serving; provider lifecycle
+remains in Strata. UI-started instances use --die-with-pid plus guarded exit/startup
+cleanup; reused runtimes stay separately owned. The machine's fresh UI token pair
+is 114688 input + 16384 output = 131072 (128K), one worker/slot. Completed local budget overages remain
+complete-output evidence; exact-tree passing/failing checks reach diagnosis and senior exception review.
+See [current P0 record](../development-docs/p0-repairs-2026-10-29.md) and
+[remaining current-version fixes](../development-docs/current-iter-issues.md#p0-repairs-2026-10-29).
 
 ## Preservation rules to apply
 
@@ -103,3 +117,7 @@ is unavailable, report that limitation, retain session context and reload on res
 Reading a page does not install hooks, schedule automation, configure another agent
 or guarantee platform memory. Refresh changed rules and pass this route in authorized
 handoffs. Maintain this checklist when rules, ownership, setup or automation change.
+
+For generic OS defaults/operational limits, edit the canonical
+[OS configuration](guides/os-tuning.md) and trace nondefault values to consumers.
+Keep application presets and protocol/safety invariants in their existing ownership.

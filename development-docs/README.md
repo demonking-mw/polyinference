@@ -8,12 +8,14 @@ design and issue docs in the same change; follow [maintenance](../docs/maintenan
 
 | Need | Record |
 | --- | --- |
+| First current implementation plan, audited | [Prompting audit and corrected plan](agent-prompting-audit-2026-11-04.md) — unimplemented; [PROMPT-01](current-iter-issues.md#prompt-01); [earlier proposal](agent-prompting-proposal-2026-11-04.md) |
 | Current four-repair implementation and verification | [28 October scheduled batch](four-repairs-implementation-2026-10-28.md) |
 | Committed model fallback/browser repair and original four-area plan | [28 October implementation](model-fallback-browser-repair-2026-10-28.md) |
 | Authorized reliability implementation and checks | [27 October implementation record](reliability-implementation-2026-10-27.md) |
-| Latest broad real-local product test | [27/28 October Minecraft result and limits](minecraft-live-test-2026-10-28.md) |
+| Latest broad real-local continuation result | [28 October, 19:30 run](minecraft-live-test-2026-10-28-1930.md) — paused, partial; Downloads delivery |
+| Previous broad real-local product test | [27/28 October Minecraft result and limits](minecraft-live-test-2026-10-28.md) |
 | Causes and proposed repairs for that test | [28 October failure isolation](minecraft-failure-isolation-2026-10-28.md) |
-| Highest-priority current fix | [Local task granularity and cloud recovery](local-task-granularity-and-cloud-recovery-2026-10-27.md) |
+| Earlier task-granularity/cloud-recovery proposal | [Local task granularity and cloud recovery](local-task-granularity-and-cloud-recovery-2026-10-27.md) |
 | Proposed implementation sequence and past-failure coverage | [Run reliability plan](run-reliability-implementation-plan-2026-10-27.md) — report only; no fixes implemented by this plan |
 | Durable fixes and design principles | [Fix history](FIXES.md) |
 | Work/defects for this version | [Current iteration](current-iter-issues.md) |

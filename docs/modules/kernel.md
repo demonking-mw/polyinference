@@ -25,6 +25,11 @@ OS accepts caller priorities without interpreting coding relevance; see [context
 prepare_resume accepts a retained intent under the runtime coordinator lease,
 recovers host receipts/completed query artifacts or an adapter-retrievable response,
 and records OS-owned resume-preparation/ readiness separately from agent progress.
+Cloud AgentJob calls use the OS cloud_agent_timeout_interrupt boolean (default false).
+False logs once at endpoint.timeout_seconds and awaits the same job under its
+original deadline, retaining admission and accounting. True enforces interruption.
+Warnings are stored under runtime/warning/cloud-agent-timeout/ and sent to Python
+logging; they do not change effect/process status or authorize replacement.
 Completion receipts store artifact references, not duplicate response bodies. Unknown work keeps reservations; strict effects block dispatch, while explicitly isolated query-only computation is separately accounted for;
 unsupported recovery is a bounded failure, never an inferred remote stop.
 Recovered accounting and application notification are restartable. Explicit Resume
@@ -38,6 +43,10 @@ their old call path. Admission/grants/budgets/completion bounds still surround i
 terminal_call retrieves cancellation outcomes before settlement. The
 [application simulator](inference-simulation.md) is one caller; the kernel imports
 no simulation settings or provider-specific pacing policy.
+
+The resolved [OS tuning](../guides/os-tuning.md) reaches records, primary/fallback
+adapters, tools and context/recovery helpers and is retained for independent writers.
+Kernel diagnostics and the durable version pin use one identity constant.
 
 ## Principles to preserve
 

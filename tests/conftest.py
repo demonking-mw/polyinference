@@ -10,6 +10,12 @@ from polyinference.config import AgentConfig, Endpoint
 from polyinference.domain import Check
 
 
+@pytest.fixture(autouse=True)
+def isolated_machine_preferences(tmp_path, monkeypatch):
+    """UI fixtures must not inherit the developer's real model deployment."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg-config"))
+
+
 def git(repo, *args):
     return subprocess.check_output(["git", "-C", str(repo), *args], stderr=subprocess.STDOUT).decode().strip()
 
@@ -43,9 +49,33 @@ def fixture_completion(data):
 
 def fixture_review_reply(reply, data):
     """Adapt deterministic legacy reviewers to the current exact-tree protocol."""
+    if reply.get("tasks"):
+        reply = {**reply, "tasks": [fixture_task(task) for task in reply["tasks"]]}
     if reply.get("complete") and "acceptance_contract" in data:
         return {**reply, "completion_assessment": fixture_completion(data)}
     return reply
+
+
+def fixture_task(task):
+    """Explicit boundary of the deterministic VALUE-file test program."""
+    task = dict(task)
+    paths = task["write_paths"]
+    task.setdefault("behavior", task["objective"])
+    task.setdefault("focused_check", task["checks"][0])
+    task.setdefault("acceptance_criteria", [task["objective"]])
+    task.setdefault("local_contract", {"implementation_path": paths[0],
+        "inputs": "Pinned Python module with VALUE: int and the supplied read-only dependencies",
+        "outputs": "The assigned module with the requested VALUE and preserved imports/signatures",
+        "provided_symbols": ["VALUE: int; preserve the module's existing public functions"],
+        "state_ownership": "Only the assigned implementation file owns its source; dependencies are read-only",
+        "side_effects": "Scoped file edits and the named check only",
+        "errors": "Report scope, syntax and dependency failures with their host observations"})
+    return task
+
+
+def fixture_assignment(**values):
+    from polyinference.domain import Assignment
+    return Assignment.model_validate(fixture_task(values))
 
 
 @pytest.fixture
@@ -170,7 +200,7 @@ class ScriptedAgent:
                 else:
                     reply = {"kind": "candidate", "summary": "Inspected incoming changes"}
             return {
-                "text": json.dumps(reply),
+                "text": json.dumps(fixture_review_reply(reply, data)),
                 "usage": {"total_tokens": 50},
                 "model": "fixture",
                 "events": [],

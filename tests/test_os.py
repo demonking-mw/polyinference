@@ -232,6 +232,7 @@ async def test_four_workers_failure_retains_commit_drains_and_replans(config):
             "max_workers": 4,
             "senior_development_fraction": 0,
             "limits": config.limits.model_copy(update={"max_input_tokens_per_call": 64000}),
+            "local_token_limits": config.local_token_limits.model_copy(update={"input_tokens": 64000}),
             "local": config.local.model_copy(
                 update={"max_inflight": 4, "max_context_tokens": 128000, "reserved_context_tokens": 512000}
             ),

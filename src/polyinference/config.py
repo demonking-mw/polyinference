@@ -49,9 +49,9 @@ class AgentConfig(RuntimeConfig):
         model="gpt-6.1-terra", reasoning_effort="high"))
 
     inference_policy: InferencePolicy | None = Field(default=None, exclude_if=lambda value: value is None)
-    model_output_target_tokens: Annotated[int, Field(gt=0)] | None = Field(
-        default=None, exclude_if=lambda value: value is None)
     objective: Annotated[str, Field(min_length=1)]
+    local_strata_config: str | None = None
+    local_strata_profile: Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$")] | None = None
     repository_mode: Literal["in_place", "isolated"] = "in_place"
     git_policy: dict | None = None
     dependency_prepare: list[str] = Field(default_factory=list)
@@ -64,7 +64,7 @@ class AgentConfig(RuntimeConfig):
     inference_retry: InferenceRetry = Field(default_factory=InferenceRetry)
     check_diagnosis: CheckDiagnosis = Field(default_factory=CheckDiagnosis)
     acceptance_criteria: list[AcceptanceCriterion] = Field(default_factory=list)
-    max_review_reads: Annotated[int, Field(ge=0, le=16)] = 4
+    max_review_reads: Annotated[int, Field(ge=0, le=16)] = 16
     max_worker_recoveries: Annotated[int, Field(ge=0, le=3)] = 1
     max_cloud_recoveries: Annotated[int, Field(ge=0, le=3)] = 1
     progress_monitor: ProgressMonitor = Field(default_factory=ProgressMonitor)

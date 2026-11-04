@@ -5,7 +5,10 @@ JSON callers can override these in one adjacent `system` object. No shared agent
 library is required; this module belongs to the coding application.
 """
 
+import json
+import os
 import sys
+from pathlib import Path
 
 from ..domain import Check, default_limits
 from ..system_settings import ContextPolicy, Endpoint, InferenceLifecycle
@@ -28,7 +31,6 @@ def haiku_endpoint():
     """Complete remote stand-in, shared by the ordinary UI and launch overlay."""
     return Endpoint(protocol="anthropic", base_url="https://api.anthropic.com/v1",
                     model="claude-haiku-5-5", api_key_env="ANTHROPIC_API_KEY",
-                    max_context_tokens=128000, reserved_context_tokens=256000,
                     max_inflight=1, timeout_seconds=180, inference_location="cloud",
                     lifecycle=InferenceLifecycle())
 
@@ -37,9 +39,9 @@ def simulation_config(config, slots):
     """Pure invocation policy; the OS receives ordinary fully validated settings."""
     if type(slots) is not int or not 1 <= slots <= 16:
         raise ValueError("--sim-batch requires an integer from 1 to 16")
-    endpoint = config.local if config.local.protocol == "anthropic" else haiku_endpoint()
-    local = {**endpoint.model_dump(), "max_inflight": slots,
-             "reserved_context_tokens": max(endpoint.reserved_context_tokens, slots * endpoint.max_context_tokens)}
+    endpoint = (config.local if config.local.protocol == "anthropic"
+                and config.local.inference_location != "local" else haiku_endpoint())
+    local = {**endpoint.model_dump(), "max_inflight": slots}
     return type(config).model_validate({**config.model_dump(), "local": local, "max_workers": slots,
         "role_bindings": {**config.role_bindings, "worker": "local"}},
         context={"resolve_environment_capacity": False})
@@ -51,13 +53,11 @@ def ui_system_settings(source):
         protocol="codex_app_server",
         model="gpt-6.1-sol",
         command=["codex", "app-server"],
-        max_context_tokens=128000,
-        reserved_context_tokens=256000,
         max_inflight=1,
-        timeout_seconds=180,
+        timeout_seconds=1800,
         inference_location="cloud",
     )
-    return {**coding_system_defaults(), **dict(
+    settings = {**coding_system_defaults(), **dict(
         shell_execution="trusted",
         repository=str(source),
         allowed_write_paths=["greeting.py"],
@@ -67,10 +67,23 @@ def ui_system_settings(source):
         local=haiku_endpoint(),
         cloud=endpoint.model_copy(update={"brokered_tools": True}),
         max_workers=1,
-        limits=default_limits().model_copy(
-            update={"max_input_tokens_per_call": 96000, "max_output_tokens_per_call": 32000}
-        ),
+        limits=default_limits(),
     )}
+    directory = Path(os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config") / "polyinference"
+    path = directory / "ui-defaults.json"
+    if path.is_file():
+        preferences = json.loads(path.read_text())
+        allowed = {"local", "local_token_limits", "max_workers", "local_strata_config", "local_strata_profile"}
+        if not isinstance(preferences, dict) or preferences.keys() - allowed:
+            raise ValueError(f"{path}: expected only {', '.join(sorted(allowed))}")
+        # Replace the whole endpoint: a local server must not inherit Haiku credentials.
+        if "local" in preferences:
+            preferences["local"] = Endpoint.model_validate(preferences["local"])
+        if preferences.get("local_strata_config") is not None:
+            preferences["local_strata_config"] = str(
+                (directory / preferences["local_strata_config"]).resolve())
+        settings.update(preferences)
+    return settings
 
 
 def endpoint_profile(config, profile=None):

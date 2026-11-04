@@ -105,7 +105,7 @@ class ExecutionProgress:
             "deadline": resources["deadline"],
             "resources": resources,
             "effect_count": len(effects),
-            "recent_effects": effects[-32:],
+            "recent_effects": effects[-self.config.tuning.progress_recent_effects:],
             "endpoints": endpoints,
             "sources": sources,
         }

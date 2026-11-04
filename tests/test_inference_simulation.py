@@ -534,6 +534,7 @@ async def test_real_coding_execute_installs_only_when_explicit_and_completes(con
             await super().close()
 
     monkeypatch.setattr(cli, "KernelRuntime", FixtureRuntime)
-    monkeypatch.setattr(httpx, "AsyncHTTPTransport", lambda **kwargs: httpx.MockTransport(handler))
+    monkeypatch.setattr(httpx.AsyncClient, "_init_transport", lambda self, **kwargs: httpx.MockTransport(handler))
+    monkeypatch.setattr(httpx.AsyncClient, "_get_proxy_map", lambda self, *args, **kwargs: {})
     outcome = await cli.execute(selected, save_history=False)
     assert outcome["status"] == "completed" and len(observed) == 1

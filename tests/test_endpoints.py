@@ -281,3 +281,25 @@ def test_native_context_preserves_instruction_data_boundary_and_order():
     assert "Recorded assistant output" in inputs[1]["text"]
     assert inputs[2]["text"].endswith(messages[3]["content"])
     assert json.dumps(messages) == before
+
+
+@pytest.mark.parametrize("enforce", [False, True])
+async def test_proxy_cloud_agent_transport_follows_timeout_policy(tmp_path, enforce):
+    seen = []
+
+    async def handler(request):
+        seen.append(request.extensions["timeout"])
+        await asyncio.sleep(0.05)
+        return httpx.Response(200, json={"choices": [{
+            "finish_reason": "stop", "message": {"content": '{"ok":true}'}}]})
+
+    adapter = CodexProxy(Endpoint(protocol="codex_proxy", model="fixture",
+                                 readonly_snapshot_root=str(tmp_path), timeout_seconds=0.01))
+    await adapter.http.client.aclose()
+    adapter.http.client = httpx.AsyncClient(transport=httpx.MockTransport(handler), timeout=0.01)
+    try:
+        result = await adapter.generate_job([], tmp_path, {"type": "object"}, enforce_timeout=enforce)
+        assert json.loads(result["text"]) == {"ok": True}
+        assert seen[0]["read"] == (0.01 if enforce else None)
+    finally:
+        await adapter.close()

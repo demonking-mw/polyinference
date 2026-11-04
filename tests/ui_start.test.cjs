@@ -711,3 +711,47 @@ test('endpoint testing submits only on click and projects pending probe guards',
   assert.equal($('start').disabled,true);
   assert.match($('endpointTestStatus').textContent,/waiting_first_output/);
 });
+
+test('offline activity paging and label use the resolved OS setting without a local page default', async () => {
+  const app = await ui({monitoring:true}), $ = id => app.elements.get(id);
+  app.context.fixture = {...osFixture(), activity_page_size:2,
+    activity:[{sequence:8,key:'effect/current',category:'operations'}],
+    journal:{count:8,first_sequence:1,last_sequence:8}};
+  vm.runInContext(`current="saved";osState=fixture;activityPage=null;
+    savedDocument={events:Array.from({length:7},(_,i)=>({sequence:i+1,at:"2026-10-29T00:00:00Z",
+      changes:{["effect/"+(i+1)]:{revision:1,state:"succeeded",value:{}}}}))};renderOS({id:"saved",os:fixture,processes:[]});`, app.context);
+  assert.match($('journalInfo').textContent,/latest 2 transactions/);
+  await $('olderActivity').onclick();
+  const page=JSON.parse(vm.runInContext('JSON.stringify(activityPage)',app.context));
+  assert.deepEqual(page.rows.map(row=>row.sequence),[6,7]);
+  assert.equal(page.has_older,true);
+  assert.equal(vm.runInContext('activityPageSize({activity:[{sequence:4},{sequence:4},{sequence:5}]})',app.context),2);
+});
+
+test('resume text uses the canonical server bound and retains rejected input', async () => {
+  const app=await ui(),panel=pausedProcess(app);let posts=0;
+  panel.text.value='x'.repeat(17000);panel.text.oninput();
+  app.setHandler(async (url,options)=>{
+    if(options?.method==='POST'){
+      posts++;assert.equal(JSON.parse(options.body).text.length,17000);
+      return response({error:'Configured server text bound exceeded'},400);
+    }
+    return response(url==='/api/runs'?listing([view('old','paused')]):view('old','paused'));
+  });
+  await panel.button.onclick();
+  assert.equal(posts,1);
+  assert.match(panel.status.textContent,/Configured server text bound/);
+  assert.equal(panel.text.value.length,17000);
+});
+
+test('cloud capacity is provider-managed and does not display a synthetic token ceiling', async () => {
+  const app=await ui({monitoring:true});
+  app.context.fixture={...osFixture(),lanes:[{name:'cloud',model:'fixture',protocol:'codex_app_server',
+    held:0,limit:1,reserved_tokens:42,token_limit:null,token_limit_owner:'provider',ordinary_waiters:0,finishing_waiters:0}]};
+  vm.runInContext('renderOS({id:"saved",os:fixture,processes:[]})',app.context);
+  const texts=[];
+  function collect(node){if(node?.textContent)texts.push(node.textContent);for(const child of node?.children||[])collect(child)}
+  collect(app.elements.get('admissionLanes'));
+  assert.match(texts.join(' '),/provider manages token capacity/);
+  assert.doesNotMatch(texts.join(' '),/42 \/ 0 reserved/);
+});

@@ -39,6 +39,12 @@ raw generations and full product acceptance remain separate quantities; see
 Direct effectful native jobs count once even without response-retry attempt rows;
 per-task summaries retain bounded lineage, resource and identical-query metrics.
 
+Journal retention and activity pages use resolved [OS tuning](../guides/os-tuning.md)
+instead of independent constants. Live/offline activity paging shares the resolved
+page size; old snapshots derive it from their retained visible event sequences.
+Saved old events are not reconstructed; unbounded
+retention affects future events only.
+
 ## Principles to preserve
 
 - Separate process completion, verdict, senior acceptance and project completion.
@@ -61,3 +67,5 @@ per-task summaries retain bounded lineage, resource and identical-query metrics.
 After a fix/feature, update this guide and all affected docs/settings/navigation,
 then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
 Follow [documentation maintenance](../maintenance.md) in the same task.
+
+Cloud lane token capacity is labeled provider-managed; its visible-input reservation is not shown as a token ceiling. Native cloud harnesses retain that policy even on the local worker binding.

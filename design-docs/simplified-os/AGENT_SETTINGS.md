@@ -1,8 +1,11 @@
 # OS settings for agent developers
 
 This is the consolidated reference for OS settings exported to agents.
-The schema and generic defaults live in
-[system_settings.py](../../src/polyinference/system_settings.py).
+The schema lives in [system_settings.py](../../src/polyinference/system_settings.py);
+all generic values and operational ceilings come from
+[os_config.py](../../src/polyinference/os_config.py).
+See [central tuning](../../docs/guides/os-tuning.md) and the
+[file-by-file inventory](../../docs/os-config-inventory.md).
 Wire resource types remain in [contracts.py](../../src/polyinference/contracts.py)
 and command definitions in [execution_contracts.py](../../src/polyinference/execution_contracts.py);
 the central schema uses those types, rather than separate configuration stores.
@@ -123,14 +126,17 @@ Counts and capacities are positive unless stated otherwise.
 | Field | Default | Meaning / units |
 | --- | --- | --- |
 | repository | required | Workspace root; an artifact agent need not invoke repository operations. |
+| tuning | Canonical OSTuning defaults | Journal/paging/buffers/timing/tool/workspace controls; resolved and pinned. See [central tuning](../../docs/guides/os-tuning.md). |
 | state_directory | .polyinference | Durable records, artifacts, checkpoints and workspaces. |
 | allowed_write_paths | [] | Exact repository-relative source grants, using POSIX paths. |
 | closure_paths | [] | Additional relative inputs for workspace views. |
 | checks | [] | Optional named command resources, defined below; acceptance stays agent policy. |
+| local_token_limits | {"input_tokens":24000,"output_tokens":4000} | Single local worker-lane pair, including API stand-ins. Derives local context and admission. Cloud caps are provider-owned. |
 | local | required | Endpoint lane using the Endpoint fields below. |
 | cloud | required | Second endpoint lane; names do not determine physical inference location. |
 | role_bindings | {"default":"local"} | Agent role to lane; at least one role is required. |
 | prepare_repository | false | Optional repository-provider preference; the coding agent implements setup. |
+| cloud_agent_timeout_interrupt | false | Strict boolean. Cloud AgentJob endpoint timeouts only log a warning and keep the same job running when false; true interrupts as before. Physical location selects cloud regardless of lane. Native stdio/proxy transport follows this choice; raw/local calls, original deadlines and explicit cancellation retain their limits. |
 | output_directory | null | Optional output destination used by the coding application. |
 | base_branch | null | Optional repository-provider baseline selection. |
 | write_scope | explicit | explicit grants or project-wide grant selection with project; operations still need granted paths. |
@@ -148,7 +154,7 @@ Counts and capacities are positive unless stated otherwise.
 | max_queued_operations | 128 | Inference admission waiters per endpoint, 1–4096. |
 | max_command_seconds | 300 | Repository/workspace helper timeout, at most 3600 seconds. Shell/check operations have their own bounded timeout arguments. |
 | max_model_response_bytes | 4194304 (4 MiB) | HTTP transport-body cap and native terminal-message cap; transport cutoff without termination proof remains uncertain. |
-| max_model_request_bytes | null | Independent serialized UTF-8 request ceiling; absent retains min(context maximum_input_tokens, max_input_tokens_per_call) as the legacy byte ceiling. Token allowances remain separate. |
+| max_model_request_bytes | 4194304 | Independent serialized UTF-8 request ceiling; legacy null uses the same canonical default. Token allowances remain separate. |
 | context_policy | defaults below | Optional input preparation/compaction preferences. |
 | inference_safety | defaults below | Output recovery and capability requirements. |
 | max_repeated_model_failures | 2 | Permanent-failure circuit threshold for the same pinned model intent. |
@@ -173,8 +179,8 @@ Linux sandbox. Neither backend grants additional source paths.
 | api_key_env | null | Credential variable name, never the secret value. |
 | command | ["codex","app-server"] | Native adapter executable and arguments. |
 | max_inflight | 2 | Admitted concurrent requests/jobs, 1–32. |
-| max_context_tokens | 32000 | Configured total input/output context allowance per request. |
-| reserved_context_tokens | 64000 | Aggregate context capacity; must fit one maximum-size context. |
+| max_context_tokens | null standalone/cloud | Local compatibility projection of input_tokens + output_tokens; omitted for cloud. |
+| reserved_context_tokens | null standalone/cloud | Local projection of context sum × max_inflight; cloud has no token-pool ceiling. |
 | readonly_snapshot_root | null | Proxy's separately configured exact read-only snapshot root. |
 | brokered_tools | false | Native endpoint supports explicitly granted host callbacks. |
 | inference_location | null | Explicit local/cloud physical location. Otherwise localhost chat/Responses is inferred local; other cases cloud. |
@@ -182,7 +188,7 @@ Linux sandbox. Neither backend grants additional source paths.
 | reasoning_effort | medium | Native turn effort: none/minimal/low/medium/high/xhigh/max/ultra. The explicit turn value takes precedence over a startup command default. |
 | retry_model | null | Optional caller-selected alternate on this provider/protocol. Fields: model (required), reasoning_effort (medium), fallback_calls (7; 1–32). Distinct primary required; codex_proxy unsupported. Explicit null survives serialization. |
 | input_token_count_path | null | Opt-in same-provider relative counting route, e.g. /chat/completions/input_tokens or /messages/count_tokens. Receives the prepared raw request body and must return integer input_tokens. Native hidden context is unsupported; failure uses a labeled conservative bound. |
-| timeout_seconds | 180 | Legacy HTTP/native job timeout, at most 1800 seconds and bounded by original deadline. Raw lifecycle mode uses its shared total instead. |
+| timeout_seconds | 180 | HTTP/native job timeout or cloud-agent warning threshold (see cloud_agent_timeout_interrupt), at most 1800 seconds and bounded by original deadline. Raw lifecycle mode uses its shared total instead. |
 | lifecycle | omitted | Optional InferenceLifecycle: transport sse/buffered; connect_seconds=10 (0–1800], first_output_seconds=180 (0–3600], idle_seconds=90 (0–3600], total_seconds=600 (0–7200]. Original logical/process deadline still wins. |
 | estimated_microusd_per_token | null | Nonnegative token-price estimate for cloud spend admission; required for a configured spend bound on that cloud lane. |
 
@@ -204,8 +210,8 @@ requires all non-optional fields; its default factory supplies this full envelop
 | max_steps | 2048 | Process operation count, including OS child/recovery operations. |
 | max_model_calls | 512 | Process inference operation count, including compaction/recovery. |
 | max_repairs | 0 | Application repair allowance; interpreted by the coding agent. |
-| max_input_tokens_per_call | 24000 | Input allowance; current adapters conservatively account prepared UTF-8 bytes against it. |
-| max_output_tokens_per_call | 4000 | Requested generation ceiling; see adapter limitations above. |
+| max_input_tokens_per_call | 24000 | Legacy input projection of local_token_limits.input_tokens; not a cloud cap. |
+| max_output_tokens_per_call | 4000 | Legacy output projection of local_token_limits.output_tokens; not a cloud cap. |
 | max_total_tokens | 16000000 | Process token reservation/usage allowance. |
 | max_output_bytes | 262144 (256 KiB) | Visible model/tool output bound; cut model output cannot become actionable success. |
 | max_wall_time_ms | 3600000 | Process lifetime allowance in milliseconds. |
@@ -233,7 +239,6 @@ or token credit.
 | compaction_trigger | 0.8 | Proactive trigger fraction of input allowance, greater than 0 and at most 1. |
 | compaction_target | 0.6 | Best-effort target fraction, greater than 0 and below trigger. |
 | max_compaction_calls | 8 | Child inference intent allowance per parent, 0–32; zero prevents new summary calls. |
-| compaction_output_tokens | 1024 | Requested tokens per child, capped by parent output allowance. |
 | compaction_summary_bytes | 4096 | Maximum accepted UTF-8 bytes per chunk summary; joined summaries must be smaller than source. |
 | recovery_headroom | 1024 | Desired headroom applied separately in token/byte units. Packing reserves at most 10% of each cap; compaction also uses its target fraction. |
 
@@ -279,19 +284,15 @@ changes remain explicit agent decisions.
 
 ## Mandatory I/O safety and receipts
 
-Effective input allowance is the minimum of ContextView.maximum_input_tokens,
-Limits.max_input_tokens_per_call, and endpoint.max_context_tokens minus the
-parent output reservation. Raw protocols reserve the actual enforced output cap;
-native protocols reserve their configured hard allowance without claiming enforcement.
-Sizing covers the complete prepared adapter payload including schemas/recovery feedback.
-Optional Endpoint.input_token_count_path returns provider-reported input tokens for
-that exact raw body on the same provider. Unsupported/invalid/timed-out counters
-retain labeled conservative bytes-as-token bounds. Native hidden context is unmeasured.
-Independent max_model_request_bytes bounds serialized bytes; absent retains the old
-min(context maximum_input_tokens, max_input_tokens_per_call) byte ceiling. Admission
-reserves measured/bounded input tokens plus output, preserving original accounts.
-A stricter provider rejection becomes typed input-overflow evidence, not identical
-retry. See [measurement/configuration](../../docs/guides/context-measurement.md).
+Local input allowance comes from local_token_limits.input_tokens, narrowed only by an explicitly smaller
+caller context. Local raw protocols submit the paired output_tokens directly. Local context capacity and
+admission derive from their sum. Cloud inference has no OS per-call token caps and its receipts identify
+provider ownership. Native hidden context remains unmeasured; cumulative native thread usage is not final
+response length. Completed local overages retain complete output as CompletedBudgetExceeded without
+smaller-response replay; actual cutoff remains IncompleteGeneration and never executes partial actions.
+Provider counters measure the exact raw body; unsupported counters retain labeled conservative bounds.
+Independent max_model_request_bytes bounds serialized bytes, defaulting to 4194304 independently of response bytes.
+Campaign accounting and original authority/deadlines still apply. See [one local pair and startup](../../docs/guides/local-token-limits.md).
 
 Preparation records context-receipt/<operation_id>. Dispatched results expose
 extensions["runtime/context-receipt"]:
@@ -369,21 +370,28 @@ ceiling. Native jobs have no enforced hard generation-token parameter.
 Coding-only fields remain outside system: objective, repository_mode, git_policy,
 dependency_prepare, prerequisite_checks, acceptance_checks,
 senior_development_fraction, max_sprints, max_senior_corrections and
-max_protocol_corrections, inference_policy, model_output_target_tokens,
+max_protocol_corrections, inference_policy, local_strata_config, local_strata_profile,
 inference_retry, check_diagnosis, acceptance_criteria, max_review_reads,
 max_worker_recoveries, max_cloud_recoveries, default_retry_model and progress_monitor. The
 [agent reliability reference](../../docs/guides/agent-reliability.md) gives all
 nested defaults, bounds, semantic criteria and recovery interactions.
+`max_review_reads` defaults to 16 (0–16), with eight source ranges per proposal.
+Application planner messages expose total/used/remaining read and correction allowances,
+schema read bounds, planning limits and process resources. The generic OS does not own this policy.
 Agent default_retry_model selects Terra/high/seven for native cloud when the
 endpoint has no explicit retry_model; null disables the default. The OS has no
 model default. Agent input overrides OS defaults; explicit endpoint configuration
 overrides the agent's default preference. See [model fallback](../../docs/guides/model-fallback.md).
-inference_policy and model_output_target_tokens are omitted when absent. The policy declares
-additional_retries (0–3, default 0) and replace_undelivered (default false), carried
-on model requests through the negotiated runtime/inference-policy extension.
-model_output_target_tokens selects a smaller raw-query target within the hard cap.
-Fresh UI chooses one caller retry, replacement consent and 4096 output tokens;
-custom/saved configs retain explicit choices. See [endpoint lifecycle/testing](../../docs/guides/endpoint-testing.md).
+Absent inference_policy is omitted. Its additional_retries (0–3, default 0) and
+replace_undelivered (default false) travel through runtime/inference-policy. The former
+model_output_target_tokens input migrates to local_token_limits.output_tokens and is not serialized.
+Local Strata startup settings can be synchronized with configure-local; cloud native jobs receive no
+output-token allowance. local_strata_profile opts the UI into named-runtime startup;
+new instances are bound to its process and cleaned up at exit, while reused ones
+remain separately owned. See [launch lifecycle](../../docs/guides/launching.md).
+Fresh UI chooses one caller retry and the canonical 24000/4000 local pair unless
+machine preferences replace it; this machine selects 114688/16384 (128K total).
+See [endpoint lifecycle/testing](../../docs/guides/endpoint-testing.md).
 max_protocol_corrections defaults to 3
 consecutive malformed-reply corrections (0–16); valid replies reset the count.
 The agent owns full evidence inspection, canonical memory and repository-aware

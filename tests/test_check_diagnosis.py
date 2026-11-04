@@ -200,6 +200,16 @@ async def test_definition_can_route_checker_to_cloud_native_with_current_readonl
             assert (Path(snapshot) / "a.py").read_text() == "VALUE = 2\n"
             read = await callback("inspect-source", {"tool": "coding.diagnostic_read", "arguments": {"path": "a.py"}})
             assert read["state"] == "succeeded" and read["observation"]["content"] == "VALUE = 2\n"
+            packet = json.loads(next(m["content"] for m in messages if "Pinned application inputs:" in m["content"])
+                                .split("Pinned application inputs:\n", 1)[1])
+            receipt = packet["check_evidence"][0]
+            assert receipt["status"] == "passed"
+            output = await callback("inspect-check-output", {"tool": "coding.diagnostic_evidence_read",
+                "arguments": {"evidence_id": receipt["evidence_id"], "max_bytes": 4096}})
+            assert output["state"] == "succeeded" and output["observation"]["input_code"] == packet["current_code"]
+            denied = await callback("uncataloged-output", {"tool": "coding.diagnostic_evidence_read",
+                "arguments": {"evidence_id": "unrelated-private-output"}})
+            assert denied["state"] == "failed"
             with pytest.raises(ValueError, match="outside grant"):
                 await callback("denied-write", {"tool": "files.write", "arguments": {"path": "a.py"}})
             return {
@@ -234,12 +244,48 @@ async def test_definition_can_route_checker_to_cloud_native_with_current_readonl
             },
             "private_write",
         )
+        checked, evidence = await app.capability(state, "private-check", "checks.run", {"name": "syntax"}, "private_write")
+        assert checked.state == "succeeded" and evidence["status"] == "passed"
         outcome = await diagnose(app, state, "exception", reason="inspect this change")
         assert outcome["classification"] == "code_failure"
         model = [
             v for _, _, v in runtime.records.scan("effect/") if v["request"]["payload"]["kind"] == "agent_job"
         ][0]
         assert model["request"]["payload"]["role"] == "specialist"
-        assert model["request"]["payload"]["allowed_capabilities"] == ["coding.diagnostic_read"]
+        assert model["request"]["payload"]["allowed_capabilities"] == [
+            "coding.diagnostic_read", "coding.diagnostic_evidence_read"]
+    finally:
+        await runtime.close()
+
+
+async def test_output_failure_diagnosis_receives_exact_tree_passing_receipt_and_rejects_stale_code(config):
+    from polyinference.agent.check_evidence import matching_checks
+
+    runtime, app, state, client = await prepared(config, {
+        "classification": "uncertain", "guidance": "Host checks passed; reconciliation is still required"})
+    packets = []
+    original = client.generate
+    async def capture(messages, *args, **kwargs):
+        packets.append(json.loads(next(m["content"] for m in messages if "Pinned application inputs:" in m["content"])
+                                  .split("Pinned application inputs:\n", 1)[1]))
+        return await original(messages, *args, **kwargs)
+    client.generate = capture
+    try:
+        await app.capability(state, "read-dependency", "files.read", {"path": "b.py"}, "read")
+        result, receipt = await app.capability(state, "passing-check", "checks.run", {"name": "syntax"}, "private_write")
+        assert result.state == "succeeded" and receipt["status"] == "passed"
+        outcome = await diagnose(app, state, "model_output", reason="Completed provider job exceeded old allowance")
+        packet = packets[0]
+        assert packet["failure"] is None
+        assert packet["check_evidence"][0]["evidence_id"] == receipt["evidence_id"]
+        assert packet["check_evidence"][0]["status"] == "passed"
+        assert packet["check_evidence"][0]["checked_code"] == packet["current_code"]
+        assert not outcome["can_continue"]  # A check is not automatic publication authority.
+        changed = {**packet["current_code"], "environment_digest": digest(b"different environment")}
+        assert not matching_checks(app, state["process_id"], changed, ["syntax"])
+        await app.capability(state, "source-change", "files.write", {"path": "a.py", "content": "VALUE = 99\n",
+            "expected_digest": digest(b"VALUE = 1\n")}, "private_write")
+        code = (await runtime.workspaces.revision(state["workspace_id"])).model_dump(mode="json")
+        assert not matching_checks(app, state["process_id"], code, ["syntax"])
     finally:
         await runtime.close()

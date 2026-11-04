@@ -20,7 +20,8 @@ async def tool_environment(workspaces, sandboxed=False):
         await workspaces.blocking.run(_prepare, Path(temporary.name))
         visible = Path("/tool-environment") if sandboxed else Path(temporary.name)
         environment = {
-            "PATH": os.environ.get("PATH", ""), "LANG": "C.UTF-8",
+            **workspaces.config.tuning.tool_environment,
+            "PATH": os.environ.get("PATH", ""),
             "HOME": str(visible / "home"),
             "XDG_CACHE_HOME": str(visible / "cache"),
             "XDG_CONFIG_HOME": str(visible / "config"),
@@ -29,7 +30,6 @@ async def tool_environment(workspaces, sandboxed=False):
             "TMPDIR": str(visible / "tmp"), "TMP": str(visible / "tmp"), "TEMP": str(visible / "tmp"),
             "npm_config_cache": str(visible / "cache/npm"),
             "PIP_CACHE_DIR": str(visible / "cache/pip"),
-            "PYTHONDONTWRITEBYTECODE": "1", "PYTEST_ADDOPTS": "-p no:cacheprovider",
         }
         mounts = ["--bind", temporary.name, str(visible)] if sandboxed else []
         yield environment, mounts

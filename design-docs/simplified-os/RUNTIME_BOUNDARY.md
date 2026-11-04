@@ -92,13 +92,13 @@ other workflows.
 The coding summary distinguishes ancestry, dirty/private source, publication and
 kept nonempty contributions; it never interprets inherited ancestry as new work.
 
-The current coding marker is `agent-8-evidence-recovery`, state schema `2.7`.
+The current coding marker is `agent-9-local-contracts`, state schema `2.8`.
 New runs require fresh state. Older layouts are not migrated. Updated 2026-10-23:
 the exact graph-only Resume compatibility path below preserves layout and prior outcomes.
 Context measurement separates input tokens/provenance, serialized bytes and output reservation; caller
 priorities are generic hints. Relevance, frozen-source diagnosis and semantic recovery of clean unusable
 output remain agent policy. See [the context contract](../../docs/guides/context-measurement.md).
-The OS marker is `simple-os/5`; an artifact-only or workspace-none process still
+The OS marker is `simple-os/6`; an artifact-only or workspace-none process still
 requires no Git, coding task, check or code-writing finalization. MCP and shutdown
 recovery are not expanded by this change. The sections below describe shared
 mechanisms; private-copy details apply to the legacy optional provider.
@@ -357,7 +357,8 @@ rejected; there is no blanket historical migration or allowance reset.
 
 The OS schema and all exported settings are documented together in
 [AGENT_SETTINGS.md](AGENT_SETTINGS.md). Definitions live in
-`system_settings.py`; the coding agent's defaults and UI choices live together in
+`system_settings.py`, with generic values/operational bounds in `os_config.py`;
+the coding agent's defaults and UI choices live together in
 `agent/system_settings.py`. JSON examples group OS preferences under `system`.
 The coding UI's invocation-only --sim-batch N overlay owns provider selection and
 worker/slot/reservation sizing. Generic validation supports resolving capacity
@@ -444,7 +445,11 @@ Endpoint.lifecycle explicitly selects SSE/buffered transport and connect, first
 meaningful output, output-idle and total timings. Pings do not count as output.
 The total logical budget includes preparation, queueing, retries and backoff,
 capped by the original process deadline. Without lifecycle, legacy timeout_seconds
-and strict uncertainty behavior remain. Native jobs retain their existing protocol.
+and strict uncertainty behavior remain. Cloud AgentJob endpoint timeouts follow the generic OS boolean
+cloud_agent_timeout_interrupt (default false): false logs once and continues the
+same physical job; true interrupts. Direct stdio reads and proxy HTTP transport
+follow this policy. Original deadlines/cancellation, grants, holds and terminal
+evidence remain authoritative. Raw queries and local agents keep their timeouts.
 Profiles and bounded on-click warm-up belong to the testing application, with no
 Git/check/coding prerequisite. GPU/token scheduling remains backend-owned.
 
@@ -474,7 +479,7 @@ Terminal app-server model failure may retain a trusted same-thread continuation,
 including completed tool results. The OS can resume that thread on the alternate,
 deduplicating old callback IDs; it cannot blindly replay effectful work or infer
 termination from lost transport. Task replacement, diagnosis, canonical memory,
-source reuse and acceptance remain agent policy. Fresh simple-os/5 state is
+source reuse and acceptance remain agent policy. Fresh simple-os/6 state is
 required; original frozen runs remain on their original source/configuration.
 
 ## Diagnosing a boundary failure
@@ -502,8 +507,8 @@ disconnect or local transport kill does not establish remote termination. An
 exception during an external-write handler or result recording is uncertain,
 so it cannot be silently repeated as a known failed tool invocation.
 
-The kernel compatibility marker is `simple-os/5`, with coding program
-`agent-8-evidence-recovery` and state schema `2.7`. These pins include context
+The kernel compatibility marker is `simple-os/6`, with coding program
+`agent-9-local-contracts` and state schema `2.8`. These pins include context
 measurement/retention contracts and agent semantic-failure/error-lifecycle changes
 within the current basic function set. It does not
 introduce the planned next-version integration platform. Use new run/state
@@ -539,3 +544,22 @@ services. See [worker recovery](../implementation/WORKER_RECOVERY.md),
 [merge record](../../development-docs/FIXES.md#fix-0127). U01–U04's historical
 gaps now have static/uniform-profile implementations in FIX-0134/0135; current
 verification and limits remain explicit in the implementation record.
+
+## Central operational configuration
+
+Generic defaults/operational bounds have one source in `os_config.py`; the validated
+`RuntimeConfig.tuning` block is part of the immutable run fingerprint. Independent
+record writers inherit the durable effective tuning. See the [usage guide](../../docs/guides/os-tuning.md)
+and [file inventory](../../docs/os-config-inventory.md). Application presets remain agent-owned;
+protocol, authority, certainty and accounting invariants are not deployment controls.
+
+## Current local and cloud policy
+
+The coding agent requires a single production file with explicit ports for every local assignment;
+cloud_only_reason protects coupled specialist work from ordinary quota demotion. These are agent rules,
+not prerequisites for a generic OS process. The OS resolves one local token pair; cloud per-call token
+caps are provider-owned. Strata launch-file synchronization belongs to the coding application and never
+controls a live server. See [token settings](../../docs/guides/local-token-limits.md).
+Matching private check receipts reach diagnosis/senior review without becoming publication or completion
+permits. Completed local budget overages retain full output as a distinct budget fact. Actual truncation
+and unknown execution retain their existing non-execution and reconciliation guards.

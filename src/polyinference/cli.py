@@ -18,6 +18,8 @@ from .agent.controller import ProjectAgent
 from .agent.services import AgentServices
 from .config import AgentConfig
 from .history import save_run_history
+from .os_config import BOUNDS
+from .primitives import canonical
 from .runtime.kernel import KernelRuntime
 from .runtime.storage import Conflict, Records
 
@@ -60,6 +62,8 @@ def load_config(path, *, context=None):
         update={
             "repository": str((source.parent / config.repository).resolve()),
             "state_directory": str((source.parent / config.state_directory).resolve()),
+            **({"local_strata_config": str((source.parent / config.local_strata_config).resolve())}
+               if config.local_strata_config is not None else {}),
             **({"output_directory": str((source.parent / config.output_directory).resolve())}
                if config.output_directory is not None else {}),
         }
@@ -85,6 +89,15 @@ async def execute(config, *, save_history=True, retry_task=None, retry_reason=No
     runtime = KernelRuntime(config)
     try:
         await runtime.open()
+        if config.local_strata_config:
+            from .agent.local_provider import sync_local_provider
+            facts = sync_local_provider(config)
+            key = "coding/local-provider-startup"
+            prior = runtime.records.get(key)
+            runtime.records.compare_and_publish({key: prior[0] if prior else 0}, {key: facts})
+            if facts["restart_required"]:
+                raise ValueError("Local Strata startup configuration updated from local_token_limits; "
+                                 "restart Strata before starting this fresh run")
         if getattr(config, "inference_simulation", None) is not None:
             from .agent.inference_simulation import install_simulation
 
@@ -103,7 +116,7 @@ async def execute(config, *, save_history=True, retry_task=None, retry_reason=No
         await engine.run()
         return app.get("app/run")
     except BaseException as exc:
-        metadata["error"] = str(exc)[:4000] or type(exc).__name__
+        metadata["error"] = str(exc)[:config.tuning.diagnostic_error_chars] or type(exc).__name__
         raise
     finally:
         try:
@@ -117,14 +130,25 @@ async def execute(config, *, save_history=True, retry_task=None, retry_reason=No
 async def probe_endpoint(config, name):
     """One small readiness request; never starts an application run."""
     from .runtime.codex import CodexAppServer
-    from .runtime.inference import HTTPInference
+    from .runtime.inference import CompletedBudgetExceeded, HTTPInference
 
     endpoint = getattr(config, name)
     messages = [{"role": "user", "content": 'Return only {"status":"ready"}. Use no tools.'}]
     if endpoint.protocol == "codex_proxy":
         raise ValueError("Probe the proxy through its separately pinned snapshot configuration")
-    client = CodexAppServer(endpoint) if endpoint.protocol == "codex_app_server" else HTTPInference(endpoint)
+    client = CodexAppServer(endpoint, tuning=config.tuning) if endpoint.protocol == "codex_app_server" else HTTPInference(endpoint, tuning=config.tuning)
+    client.output_cap = config.max_model_response_bytes
+    pair = config.token_limits_for_binding(name)
     try:
+        if pair and endpoint.protocol != "codex_app_server":
+            prepared = client.prepare(messages, pair.output_tokens)
+            size = len(canonical(prepared))
+            if size > config.request_byte_limit():
+                raise ValueError("Readiness probe exceeds the request byte ceiling")
+            measured = await asyncio.wait_for(client.count_input(prepared), endpoint.timeout_seconds) if endpoint.input_token_count_path else None
+            tokens = measured["tokens"] if measured else size
+            if tokens > pair.input_tokens:
+                raise ValueError("Readiness probe exceeds the local input token cap")
         if endpoint.protocol == "codex_app_server":
             with tempfile.TemporaryDirectory(prefix="polyinference-probe-") as directory:
                 result = await client.generate_job(
@@ -138,7 +162,10 @@ async def probe_endpoint(config, name):
                     },
                 )
         else:
-            result = await client.generate(messages, 64)
+            result = await client.generate(messages, pair.output_tokens if pair else None)
+        emitted = (result.get("usage") or {}).get("outputTokens")
+        if pair and isinstance(emitted, int) and emitted > pair.output_tokens:
+            raise CompletedBudgetExceeded(result, pair.output_tokens, scope="native_thread_total")
         return {
             "endpoint": name,
             "protocol": endpoint.protocol,
@@ -152,8 +179,8 @@ async def probe_endpoint(config, name):
 
 def record_steering(state_directory, text):
     """Share the same atomic steering write between the CLI and local UI."""
-    if not isinstance(text, str) or not text.strip() or len(text) > 16000:
-        raise ValueError("Enter steering instructions of 1–16000 characters")
+    if not isinstance(text, str) or not text.strip() or len(text) > BOUNDS["resume_chars"]:
+        raise ValueError(f"Enter steering instructions of 1–{BOUNDS['resume_chars']} characters")
     path = Path(state_directory).resolve() / "records.sqlite"
     if not path.is_file():
         raise ValueError("Wait until the run has initialized")
@@ -219,6 +246,9 @@ def main():
     item = sub.add_parser("probe")
     item.add_argument("config")
     item.add_argument("--endpoint", choices=["local", "cloud"], default="cloud")
+    item = sub.add_parser("configure-local")
+    item.add_argument("config")
+    item.add_argument("--strata-config", help="Existing Strata launch JSON to synchronize before restarting Strata")
     item = sub.add_parser("status")
     item.add_argument("state_directory")
     item = sub.add_parser("steer")
@@ -257,6 +287,10 @@ def main():
     args = parser.parse_args()
     try:
         load_saved_credentials()
+        if args.command == "configure-local":
+            from .agent.local_provider import sync_local_provider
+            print(json.dumps(sync_local_provider(load_config(args.config), args.strata_config), indent=2))
+            return
         if args.command == "retry-output":
             result = asyncio.run(execute(load_config(args.config), retry_output_reason=args.reason))
             print(json.dumps(result, indent=2))

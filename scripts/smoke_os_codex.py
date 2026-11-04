@@ -32,7 +32,6 @@ async def main(model):
         model=model,
         brokered_tools=True,
         max_inflight=1,
-        max_context_tokens=128000,
         reserved_context_tokens=128000,
     )
     config = AgentConfig(
@@ -51,7 +50,7 @@ async def main(model):
         local=Endpoint(model="unused"),
         cloud=endpoint,
         role_bindings={"senior": "cloud", "worker": "cloud", "specialist": "cloud"},
-        limits=default_limits().model_copy(update={"max_input_tokens_per_call": 64000}),
+        limits=default_limits(),
         max_workers=1,
         max_sprints=3,
         check_execution="trusted",

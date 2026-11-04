@@ -8,7 +8,11 @@ preserves original accounts and can continue a trusted native thread after tools
 The default per-process allowance is 512 model calls, 2,048 steps and a one-hour
 wall-clock deadline, with reserved reconciliation, assessment, publication and
 cleanup capacity. Context reservations and the parent token allowance also limit
-work. Native Codex jobs have their own deadline/event bounds; there is no
+work. Cloud native jobs default to warning-only endpoint timeouts through
+system.cloud_agent_timeout_interrupt=false; true restores endpoint interruption.
+Warnings keep the same live job and reservations, without entering recovery.
+Original deadlines, explicit cancellation and terminal-evidence requirements still apply.
+Native Codex jobs have their own deadline/event bounds; there is no
 provider-enforced dollar or subscription spend cap. Optional token-priced spend
 estimates can bound admission; they are not a provider billing guarantee.
 

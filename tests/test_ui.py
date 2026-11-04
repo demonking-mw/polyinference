@@ -6,18 +6,317 @@ import asyncio
 import base64
 import hashlib
 import json
+import os
+import signal
 import threading
 
 import httpx
 import pytest
-from conftest import ScriptedAgent, fixture_completion
+from conftest import ScriptedAgent, fixture_completion, fixture_review_reply
 
 from polyinference.agent.controller import ProjectAgent
 from polyinference.agent.services import AgentServices
+from polyinference.os_config import LocalTokenLimits
 from polyinference.runtime.adapter import StandaloneRuntime
 from polyinference.runtime.storage import Records
 from polyinference.snapshots import run_summary
 from polyinference.ui import TestUI, make_server, read_artifact, read_records
+
+
+def test_machine_ui_defaults_preserve_project_selection_and_explicit_config(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "preferences"))
+    monkeypatch.delenv("POLYINFERENCE_LOCAL_BATCH_SIZE", raising=False)
+    directory = tmp_path / "preferences" / "polyinference"
+    directory.mkdir(parents=True)
+    manager = TestUI(tmp_path / "ui")
+    original = manager.configuration()
+    preferences = {
+        "local": {"protocol": "anthropic", "base_url": "http://127.0.0.1:8080/v1",
+                  "model": "qwen3.8-flash-next-coder-iq1_m", "api_key_env": None,
+                  "inference_location": "local", "max_inflight": 1},
+        "local_token_limits": {"input_tokens": 114688, "output_tokens": 16384},
+        "max_workers": 1, "local_strata_config": "strata.json", "local_strata_profile": "ui-local",
+    }
+    path = directory / "ui-defaults.json"
+    path.write_text(json.dumps(preferences))
+    effective = manager.configuration()
+    assert effective.local.model == preferences["local"]["model"]
+    assert effective.local.api_key_env is None
+    assert effective.local.max_context_tokens == effective.local.reserved_context_tokens == 131072
+    assert effective.local_token_limits.input_tokens == 114688
+    assert effective.limits.max_output_tokens_per_call == 16384
+    assert effective.local.max_inflight == effective.max_workers == 1
+    assert effective.local_strata_config == str(directory / "strata.json")
+    assert effective.local_strata_profile == "ui-local"
+    assert effective.cloud == original.cloud
+    project = tmp_path / "other-project"
+    project.mkdir()
+    (project / "app.py").write_text("print('ready')\n")
+    selected = manager.configure_run(str(project))
+    assert selected.write_scope == "project" and selected.repository == str(project)
+    assert selected.local == effective.local
+    explicit = tmp_path / "explicit.json"
+    explicit.write_text(original.model_dump_json())
+    assert TestUI(tmp_path / "explicit-ui", config_path=explicit).configuration().local == original.local
+    simulated = TestUI(tmp_path / "simulation-ui", sim_batch=2).configuration()
+    assert simulated.local.inference_location == "cloud" and simulated.local.api_key_env == "ANTHROPIC_API_KEY"
+    assert simulated.local.max_inflight == simulated.max_workers == 2
+    path.write_text('{"repository": "/unexpected"}')
+    with pytest.raises(ValueError, match="expected only"):
+        manager.configuration()
+    path.write_text('{"local": {"model": "qwen", "max_inflight": 0}}')
+    with pytest.raises(ValueError):
+        manager.configuration()
+
+
+@pytest.mark.parametrize("initial", ["stopped", "ready", "starting", "failed", "mismatch", "start-failed"])
+def test_ui_strata_autostart_reuses_and_checks_runtime(config, monkeypatch, initial):
+    from polyinference.agent.local_provider import ensure_ui_local_provider
+
+    config = config.model_copy(update={"local_strata_profile": "ui-local", "local": config.local.model_copy(
+        update={"base_url": "http://127.0.0.1:8080/v1", "inference_location": "local"})})
+    calls = []
+    ready = {"ok": True, "state": "ready", "generation_ready": True,
+             "owner_id": "a" * 32, "instance_id": "b" * 32}
+
+    def run(argv, **kwargs):
+        from subprocess import CompletedProcess
+
+        calls.append(argv[2])
+        state = initial if len(calls) == 1 else "ready"
+        state = "stopped" if state == "start-failed" else state
+        result = ready if state in {"ready", "mismatch"} else {"state": state}
+        if argv[2] == "start" and initial == "start-failed":
+            return CompletedProcess(argv, 6, json.dumps({**ready, "state": "failed", "error": "load failed"}))
+        if argv[2] == "start":
+            assert argv[argv.index("--die-with-pid") + 1] == str(os.getpid())
+            assert argv[argv.index("--shutdown-timeout") + 1] == "10"
+        if argv[2] == "stop":
+            assert argv[argv.index("--if-owner-id") + 1] == ready["owner_id"]
+            assert argv[argv.index("--if-instance-id") + 1] == ready["instance_id"]
+            result = {"ok": True, "state": "stopped"}
+        return CompletedProcess(argv, 0, json.dumps(result))
+
+    telemetry = {"model": {"id": config.local.model, "loaded": True,
+                           "context": config.local_token_limits.context_tokens},
+                 "work": {"slots_effective": config.local.max_inflight}}
+    if initial == "mismatch":
+        telemetry["model"]["context"] += 1
+    real_client = httpx.Client
+    monkeypatch.setattr("polyinference.agent.local_provider.shutil.which", lambda name: "/bin/strata")
+    monkeypatch.setattr("polyinference.agent.local_provider.subprocess.run", run)
+    monkeypatch.setattr("polyinference.agent.local_provider.time.sleep", lambda seconds: None)
+    monkeypatch.setattr("polyinference.agent.local_provider.httpx.Client", lambda **kwargs: real_client(
+        **kwargs, transport=httpx.MockTransport(lambda request: httpx.Response(200, json=telemetry))))
+    if initial in {"failed", "mismatch", "start-failed"}:
+        with pytest.raises(ValueError):
+            ensure_ui_local_provider(config)
+    else:
+        owned = ensure_ui_local_provider(config)
+        if initial == "stopped":
+            assert owned is not None
+            owned.close()
+            owned.close()
+        else:
+            assert owned is None
+    assert calls == (["status", "start", "stop"] if initial in {"stopped", "start-failed"}
+                     else ["status", "status"] if initial == "starting" else ["status"])
+    # Remote simulation and configurations without explicit opt-in never touch Strata.
+    calls.clear()
+    ensure_ui_local_provider(config.model_copy(update={"local_strata_profile": None}))
+    ensure_ui_local_provider(config.model_copy(update={"local": config.local.model_copy(
+        update={"inference_location": "cloud"})}))
+    assert not calls
+
+
+@pytest.mark.parametrize("sim_batch", [None, 2])
+def test_ui_prepares_provider_before_restoring_runs(config, monkeypatch, sim_batch):
+    from types import SimpleNamespace
+
+    from polyinference.ui import serve
+
+    events = []
+    monkeypatch.setattr("polyinference.ui.greeting_config", lambda root: config)
+    monkeypatch.setattr("polyinference.agent.local_provider.ensure_ui_local_provider",
+                        lambda selected: events.append(("provider", selected.local.model)))
+    monkeypatch.setattr("polyinference.ui.TestUI", lambda *args, **kwargs: events.append(("manager", None)) or
+                        SimpleNamespace(configuration=lambda: config, simulation_label=lambda c: "simulation"))
+    def interrupt():
+        raise KeyboardInterrupt
+    monkeypatch.setattr("polyinference.ui.make_server", lambda *args: SimpleNamespace(
+        server_port=8765, serve_forever=interrupt, server_close=lambda: None))
+    serve(sim_batch=sim_batch)
+    assert events == [("provider", config.local.model if sim_batch is None else "claude-haiku-5-5"),
+                      ("manager", None)]
+
+
+@pytest.mark.parametrize("ending", ["return", "interrupt", "term", "hup", "restore-failed", "bind-failed"])
+def test_ui_cleans_owned_provider_on_exit_and_startup_errors(config, monkeypatch, ending):
+    from types import SimpleNamespace
+
+    from polyinference.ui import serve
+
+    events = []
+    if ending == "hup" and not hasattr(signal, "SIGHUP"):
+        pytest.skip("SIGHUP is unavailable on this platform")
+    signals = [signal.SIGTERM] + ([signal.SIGHUP] if hasattr(signal, "SIGHUP") else [])
+    previous = {sig: signal.getsignal(sig) for sig in signals}
+    monkeypatch.setattr("polyinference.ui.greeting_config", lambda root: config)
+    monkeypatch.setattr("polyinference.agent.local_provider.ensure_ui_local_provider",
+                        lambda config: SimpleNamespace(close=lambda: events.append("provider-close")))
+
+    def manager(*args, **kwargs):
+        if ending == "restore-failed":
+            raise ValueError("restore failed")
+        return object()
+
+    def run():
+        if ending == "interrupt":
+            raise KeyboardInterrupt
+        if ending in {"term", "hup"}:
+            signum = signal.SIGTERM if ending == "term" else signal.SIGHUP
+            signal.getsignal(signum)(signum, None)
+
+    def server(*args):
+        if ending == "bind-failed":
+            raise OSError("port occupied")
+        return SimpleNamespace(server_port=8765, serve_forever=run,
+                               server_close=lambda: events.append("server-close"))
+
+    monkeypatch.setattr("polyinference.ui.TestUI", manager)
+    monkeypatch.setattr("polyinference.ui.make_server", server)
+    if ending in {"restore-failed", "bind-failed"}:
+        with pytest.raises((ValueError, OSError), match="failed|occupied"):
+            serve()
+    elif ending in {"term", "hup"}:
+        with pytest.raises(SystemExit) as error:
+            serve()
+        assert error.value.code == 128 + (signal.SIGTERM if ending == "term" else signal.SIGHUP)
+    else:
+        serve()
+    assert events == (["provider-close"] if ending in {"restore-failed", "bind-failed"}
+                      else ["server-close", "provider-close"])
+    assert all(signal.getsignal(sig) == handler for sig, handler in previous.items())
+
+
+@pytest.mark.parametrize("failure", ["telemetry", "not-ready", "racing-start", "replaced-owner",
+                                    "replaced-instance", "interrupt"])
+def test_ui_provider_failed_start_only_cleans_captured_owner(config, monkeypatch, failure):
+    from subprocess import CompletedProcess
+
+    from polyinference.agent.local_provider import ensure_ui_local_provider
+
+    config = config.model_copy(update={"local_strata_profile": "ui-local", "local": config.local.model_copy(
+        update={"base_url": "http://127.0.0.1:8080/v1", "inference_location": "local"})})
+    owner = "a" * 32
+    instance = "b" * 32
+    calls = []
+
+    def run(argv, **kwargs):
+        action = argv[2]
+        calls.append(action)
+        result = {"ok": True, "state": "stopped"}
+        if action == "start":
+            result = {"ok": True, "state": "ready", "generation_ready": True,
+                      "owner_id": owner, "instance_id": instance}
+            if failure == "racing-start":
+                return CompletedProcess(argv, 6, json.dumps({"ok": False, "error": "profile already live"}))
+            if failure == "not-ready":
+                result["generation_ready"] = False
+            if failure in {"replaced-owner", "replaced-instance", "interrupt"}:
+                result["state"] = "starting"
+        elif action == "status" and len(calls) > 1:
+            result = {"ok": True, "state": "ready", "generation_ready": True,
+                      "owner_id": owner if failure == "replaced-instance" else "c" * 32,
+                      "instance_id": "d" * 32}
+        elif action == "stop":
+            assert argv[argv.index("--if-owner-id") + 1] == owner
+            assert argv[argv.index("--if-instance-id") + 1] == instance
+        return CompletedProcess(argv, 0, json.dumps(result))
+
+    def sleep(seconds):
+        if failure == "interrupt":
+            raise KeyboardInterrupt
+
+    real_client = httpx.Client
+    monkeypatch.setattr("polyinference.agent.local_provider.shutil.which", lambda name: "/bin/strata")
+    monkeypatch.setattr("polyinference.agent.local_provider.subprocess.run", run)
+    monkeypatch.setattr("polyinference.agent.local_provider.time.sleep", sleep)
+    monkeypatch.setattr("polyinference.agent.local_provider.httpx.Client", lambda **kwargs: real_client(
+        **kwargs, transport=httpx.MockTransport(lambda request: httpx.Response(503))))
+    with pytest.raises(KeyboardInterrupt if failure == "interrupt" else ValueError):
+        ensure_ui_local_provider(config)
+    assert ("stop" in calls) == (failure != "racing-start")
+
+
+def test_ui_provider_cleanup_failure_is_reported_without_unguarded_retry(monkeypatch, capsys):
+    from subprocess import CompletedProcess
+
+    from polyinference.agent.local_provider import OwnedStrataRuntime
+
+    calls = []
+
+    def run(argv, **kwargs):
+        calls.append(argv)
+        return CompletedProcess(argv, 6, '{"ok":false,"error":"owner_changed"}')
+
+    monkeypatch.setattr("polyinference.agent.local_provider.subprocess.run", run)
+    owned = OwnedStrataRuntime("strata", "ui-local", "a" * 32, "b" * 32)
+    owned.close()
+    owned.close()
+    assert len(calls) == 1
+    assert "owner_changed" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("termination", ["SIGINT", "SIGTERM", "SIGHUP"])
+def test_ui_process_signal_closes_its_provider(tmp_path, termination):
+    import subprocess
+    import sys
+    import time
+
+    if not hasattr(signal, termination):
+        pytest.skip(f"{termination} is unavailable on this platform")
+    if sys.platform == "win32":
+        pytest.skip("POSIX process signals; handler/cleanup cases run on all platforms")
+    script = '''
+import sys
+from pathlib import Path
+from types import SimpleNamespace
+from polyinference import ui
+from polyinference.agent import local_provider
+
+root = Path(sys.argv[1])
+ui.greeting_config = lambda root: SimpleNamespace()
+local_provider.ensure_ui_local_provider = lambda config: SimpleNamespace(
+    close=lambda: (root / "closed").write_text("owned provider closed"))
+ui.TestUI = lambda *args, **kwargs: object()
+
+def run():
+    import time
+    (root / "ready").write_text("serving")
+    while True:
+        time.sleep(0.05)
+
+ui.make_server = lambda *args: SimpleNamespace(
+    server_port=0, serve_forever=run, server_close=lambda: None)
+ui.serve()
+'''
+    with (tmp_path / "process.log").open("w") as log:
+        proc = subprocess.Popen([sys.executable, "-c", script, str(tmp_path)], cwd=tmp_path,
+                                stdout=log, stderr=subprocess.STDOUT)
+        try:
+            deadline = time.monotonic() + 15
+            while not (tmp_path / "ready").exists() and proc.poll() is None and time.monotonic() < deadline:
+                time.sleep(0.02)
+            assert (tmp_path / "ready").exists(), (tmp_path / "process.log").read_text()
+            proc.send_signal(getattr(signal, termination))
+            expected = 0 if termination == "SIGINT" else 128 + getattr(signal, termination)
+            assert proc.wait(timeout=15) == expected, (tmp_path / "process.log").read_text()
+            assert (tmp_path / "closed").read_text() == "owned provider closed"
+        finally:
+            if proc.poll() is None:
+                proc.kill()
+            proc.wait(timeout=15)
 
 
 async def fixture_runner(config):
@@ -30,6 +329,7 @@ async def fixture_runner(config):
             reply = json.loads(result["text"])
             for task in reply.get("tasks", []):
                 task["checks"] = [config.checks[0].name]
+                task["focused_check"] = config.checks[0].name
             result["text"] = json.dumps(reply)
             return result
 
@@ -609,7 +909,8 @@ async def test_ui_selects_another_repository_and_exports_complete_json(config, t
             assert document["completion_reviews"][semantic["review_ref"]] == semantic
             assert document["review_artifacts"]
             assert "cost" in document["run"]
-            assert document["records"]["runtime/kernel"]["version"] == "simple-os/5"
+            from polyinference.os_config import KERNEL_VERSION
+            assert document["records"]["runtime/kernel"]["version"] == KERNEL_VERSION
             assert document["record_revisions"]["app/run"] > 1
             assert document["checkpoints"] and document["artifacts"] and document["events"]
             assert document["capture"]["artifact_errors"] == 0
@@ -744,7 +1045,7 @@ def test_repository_picker_rejects_subdirectories_and_non_repositories(config, t
         repository(str(subdir))
 
 
-@pytest.mark.parametrize("output_target", [4096, 12000])
+@pytest.mark.parametrize("output_target", [LocalTokenLimits().output_tokens, 12000])
 async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_sprint_cap(
     config, tmp_path, monkeypatch
 , output_target):
@@ -778,7 +1079,7 @@ async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_spri
                 )
                 return {
                     "model": "gpt-6.1-sol",
-                    "text": json.dumps(reply),
+                    "text": json.dumps(fixture_review_reply(reply, data)),
                     "usage": {"inputTokens": 100, "outputTokens": 20, "total_tokens": 120},
                     "events": [],
                 }
@@ -810,7 +1111,7 @@ async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_spri
                     reply["completion_assessment"] = fixture_completion(data)
             return {
                 "model": "gpt-6.1-sol",
-                "text": json.dumps(reply),
+                "text": json.dumps(fixture_review_reply(reply, data)),
                 "usage": {"inputTokens": 100, "outputTokens": 20, "total_tokens": 120},
                 "events": [],
             }
@@ -859,10 +1160,13 @@ async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_spri
             await runtime.close()
 
     manager = TestUI(tmp_path / "ui", runner=mixed_run)
-    if output_target != 4096:
+    if output_target != LocalTokenLimits().output_tokens:
         default_configuration = manager.configuration
-        manager.configuration = lambda: default_configuration().model_copy(
-            update={"model_output_target_tokens": output_target})
+        def configuration_with_local_pair():
+            selected = default_configuration()
+            return type(selected).model_validate({**selected.model_dump(), "local_token_limits": {
+                "input_tokens": selected.local_token_limits.input_tokens, "output_tokens": output_target}})
+        manager.configuration = configuration_with_local_pair
     server = make_server(manager, 0)
     thread = threading.Thread(target=server.serve_forever, daemon=True)
     thread.start()
@@ -870,7 +1174,8 @@ async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_spri
     try:
         async with httpx.AsyncClient(base_url=origin, headers={"Origin": origin}) as client:
             settings = (await client.get("/api/runs")).json()
-            assert "Haiku juniors + Codex setup/senior" in settings["configuration"]
+            assert "claude-haiku-5-5 workers (cloud)" in settings["configuration"]
+            assert "27 sprints" in settings["configuration"]
             reply = await client.post(
                 "/api/run",
                 json={
@@ -885,7 +1190,7 @@ async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_spri
             assert view["status"] == "completed", view
             document = (await client.get("/api/export", params={"id": run_id})).json()
             assert document["configuration"]["max_sprints"] == 27
-            assert document["configuration"]["limits"]["max_output_tokens_per_call"] == 32000
+            assert document["configuration"]["limits"]["max_output_tokens_per_call"] == output_target
             assert document["run_record"]["sprint"] == len(senior_requests) == 4
             assert worker_requests
             effects = document["effects"]
@@ -893,7 +1198,7 @@ async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_spri
             assert len(models) == len(worker_requests)
             assert all(e["result"]["actual_backend"]["model_version"] == "claude-haiku-5-5" for e in models)
             assert all(e["request"]["payload"]["role"] == "worker" for e in models)
-            assert all(e["request"]["limits"]["max_output_tokens_per_call"] == 32000 for e in models)
+            assert all(e["request"]["limits"]["max_output_tokens_per_call"] == output_target for e in models)
             jobs = [e for e in effects if e["request"]["payload"]["kind"] == "agent_job"]
             assert len(jobs) == len(senior_requests) + len(setup_requests) + len(policy_requests)
             assert {e["request"]["payload"]["role"] for e in jobs} == {"senior", "specialist"}

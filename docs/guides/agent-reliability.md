@@ -17,7 +17,8 @@ settings.
 | `check_diagnosis.max_read_paths` | 16; 1–32 | Maximum requested read-expansion paths. No write expansion is granted. |
 | `check_diagnosis.instructions` | empty string | Additional application diagnosis instructions. |
 | `acceptance_criteria` | [] | Additional semantic criteria; the full objective always remains a required criterion. |
-| `max_review_reads` | 4; 0–16 | Total requested source ranges per senior invocation, not model rounds; at most eight ranges per proposal, within the remaining allowance. |
+| `max_review_reads` | 16; 0–16 | Total requested source ranges per senior invocation, not model rounds; at most eight ranges per proposal, within the remaining allowance. |
+| `max_senior_corrections` | 1; 0–3 | Additional proposal corrections after validation failures; source retrieval does not refill this allowance. |
 | `max_worker_recoveries` | 1; 0–3 | Ordinary semantic replacement depth per root; cloud takeover has its separate limit below. |
 | `max_cloud_recoveries` | 1; 0–3 | Dedicated specialist/cloud attempts per local exception lineage, outside ordinary depth and task-share quota. Zero disables this route. |
 | `progress_monitor.mode` | enforce; off/observe/enforce | Disable policy, record only, or escalate persistent stagnation. |
@@ -30,6 +31,16 @@ names must be configured in task or final checks. See [check purposes](checks.md
 cannot replace the source-backed assessment of every criterion on the exact reviewed tree. Each read range
 has a relative path, offset (default 0) and max_bytes (default 2000; 1–4000). Requested ranges consume the
 allowance even within one proposal.
+
+Every planner message includes `review_limits`: configured, used and remaining reads and corrections,
+the eight-range proposal ceiling, and the 4000-byte range ceiling. These counters refresh after retrieval
+and validation failures. An oversized batch is rejected before retrieval and does not consume reads.
+`planning_limits` exposes sprint/worker/recovery, diagnosis, progress and response-retry settings.
+Planner and worker inputs also carry `resource_limits`, current `resources`, `finishing_reserve` and
+`response_budget` for process calls, operations, tokens, deadline, bytes and final phases. Native cloud
+per-call token limits remain provider-owned and appear as null; byte and aggregate resource bounds still
+apply. Explicit configurations and saved runs keep their pinned limits; the new default applies to fresh
+configurations.
 
 Response validation, transport retry, output adaptation and worker grammar correction are separate
 mechanisms. `inference_retry` is not an extra transport budget for every failed attempt: response-repair
@@ -57,19 +68,23 @@ semantic escalation; native jobs are sampled between settled jobs. Thresholds ar
 a measured guarantee that a worker will complete. See [progress
 policy](../../design-docs/implementation/PROGRESS_MONITORING.md).
 
-Planner inputs include actual tools/capability limits and cloud eligibility. Local planning requests one
+Planner inputs include actual tools/capability limits and cloud eligibility. Local planning requires one production file plus an explicit local_contract, one
 observable behavior and focused check per task: movement, collision, save/load and migration are separate
 work. Focused source/check evidence must establish consumer integration; existing APIs alone do not. Native
-diagnosis may read its frozen source through a bounded readonly capability; raw diagnosis uses previews.
+diagnosis may read its frozen source and cataloged check outputs through bounded readonly capabilities;
+matching passing/failing receipts also reach senior exception review. Raw diagnosis uses previews.
 Resolved search/protocol errors retire from worker hints and retention priority; old histories stay immutable.
-Clean retryable output exhaustion after OS repair receives bounded diagnosis before linked recovery. This guidance is not a semantic task-size validator. Browser/MCP/persistent service APIs are
+Clean retryable output exhaustion after OS repair receives bounded diagnosis before linked recovery. Local assignments now require the explicit single-file contract and focused check at planning and dispatch;
+actual semantic task difficulty still needs qualification. cloud_only_reason protects irreducible work from
+ordinary quota demotion; all existing accounts and authority still apply. Browser/MCP/persistent service APIs are
 unavailable; installed foreground test dependencies must be established with real evidence.
 
 The integrated reliability implementation requires fresh program/state pins. The exact historical graph-only
 Resume exception does not authorize arbitrary migration across this merge. Keep old runs with their original
 code and config. The [27 October stage](../../development-docs/reliability-implementation-2026-10-27.md)
 used runtime simple-os/3; current [four repairs](../../development-docs/four-repairs-implementation-2026-10-28.md)
-require simple-os/5, agent-8-evidence-recovery/state 2.7 and preserve [model fallback](model-fallback.md). Bounded worker memory, explicit finishing resources and error-conditioned physical response
+historically required simple-os/5, agent-8-evidence-recovery/state 2.7; current P0 work
+requires simple-os/6, agent-9-local-contracts/state 2.8 and preserve [model fallback](model-fallback.md). Bounded worker memory, explicit finishing resources and error-conditioned physical response
 repair are included. An unstarted linked recovery consumer may be retargeted with its original
 predecessor/contract/account; started contracts and source authority stay pinned. See
 [qualification](qualification.md) for separate fixture/live completion gates. The [integration

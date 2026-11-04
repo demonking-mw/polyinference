@@ -610,6 +610,7 @@ async def test_ten_development_tasks_include_one_cloud_coder_with_shared_shell_t
             "closure_paths": [name + ".py" for name in names],
             "shell_execution": "trusted",
             "limits": config.limits.model_copy(update={"max_input_tokens_per_call": 96000}),
+            "local_token_limits": config.local_token_limits.model_copy(update={"input_tokens": 96000}),
             "local": config.local.model_copy(
                 update={"max_context_tokens": 128000, "reserved_context_tokens": 256000}
             ),

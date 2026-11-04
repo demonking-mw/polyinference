@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 
 import pytest
-from conftest import ScriptedAgent
+from conftest import ScriptedAgent, fixture_task
 
 from polyinference.agent.controller import ProjectAgent
 from polyinference.agent.exceptions import park, validate
@@ -24,6 +24,8 @@ def inputs(messages):
 
 
 def output(reply):
+    if reply.get("tasks"):
+        reply = {**reply, "tasks": [fixture_task(task) for task in reply["tasks"]]}
     return {"text": json.dumps(reply), "usage": {"total_tokens": 10}, "model": "fixture", "events": []}
 
 
@@ -40,7 +42,8 @@ async def connect(config, client=None):
 
 
 async def seed(app, engine):
-    assignment = Assignment(task_id="a", objective="Update a", write_paths=["a.py"], checks=["syntax"])
+    assignment = Assignment.model_validate(fixture_task({"task_id": "a", "objective": "Update a",
+        "write_paths": ["a.py"], "checks": ["syntax"]}))
     task, specs = make_task(app, assignment, "plan/test", app.get("head/provisional")["code"], "1-a")
     task["execution"] = "in_progress"
     app.ports.records.compare_and_publish(
@@ -77,6 +80,25 @@ async def seed(app, engine):
         "evidence": [],
         "verification_permit_ref": None,
     }
+
+
+async def test_senior_exception_packet_keeps_private_passing_checks_without_publication(config):
+    from polyinference.agent.exceptions import review_view
+
+    runtime, app, engine = await connect(config)
+    try:
+        state = await seed(app, engine)
+        result, check = await app.capability(state, "private-check", "checks.run", {"name": "syntax"}, "private_write")
+        assert result.state == "succeeded" and check["status"] == "passed"
+        await park(app, state)
+        packet = review_view(app)[0]
+        evidence = packet["retained_check_evidence"][0]
+        assert evidence["evidence_id"] == check["evidence_id"] and evidence["status"] == "passed"
+        assert evidence["checked_code"] == packet["retained_code"]
+        assert not runtime.records.scan("report/")
+        assert app.get("app/run")["status"] != "completed"
+    finally:
+        await runtime.close()
 
 
 class Recovering(ScriptedAgent):

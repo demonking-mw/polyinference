@@ -9,7 +9,7 @@ from collections import defaultdict
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
-from conftest import fixture_completion
+from conftest import fixture_completion, fixture_review_reply
 
 from polyinference.agent.controller import ProjectAgent
 from polyinference.agent.services import AgentServices
@@ -103,7 +103,7 @@ async def test_complete_agent_over_real_http(config, protocol, monkeypatch):
             response = {
                 "id": "http-fixture",
                 "model": "http-fixture",
-                "choices": [{"finish_reason": "stop", "message": {"content": json.dumps(reply)}}],
+                "choices": [{"finish_reason": "stop", "message": {"content": json.dumps(fixture_review_reply(reply, data))}}],
                 "usage": {"total_tokens": 25},
             }
             if protocol == "responses":
@@ -112,7 +112,7 @@ async def test_complete_agent_over_real_http(config, protocol, monkeypatch):
                     "status": "completed",
                     "model": "http-fixture",
                     "output": [
-                        {"type": "message", "content": [{"type": "output_text", "text": json.dumps(reply)}]}
+                        {"type": "message", "content": [{"type": "output_text", "text": json.dumps(fixture_review_reply(reply, data))}]}
                     ],
                     "usage": {"total_tokens": 25},
                 }
@@ -121,7 +121,7 @@ async def test_complete_agent_over_real_http(config, protocol, monkeypatch):
                     "id": "msg-fixture",
                     "model": "http-fixture",
                     "stop_reason": "end_turn",
-                    "content": [{"type": "text", "text": json.dumps(reply)}],
+                    "content": [{"type": "text", "text": json.dumps(fixture_review_reply(reply, data))}],
                     "usage": {"input_tokens": 20, "output_tokens": 5},
                 }
             body = json.dumps(response).encode()

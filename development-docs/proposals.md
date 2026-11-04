@@ -7,6 +7,8 @@ a runtime guarantee; completion reports and later FIX entries establish outcomes
 
 | Topic | Document |
 | --- | --- |
+| Audited agent prompting and contract-preserving implementation | [4 November audit and corrected plan](agent-prompting-audit-2026-11-04.md) — unimplemented; [PROMPT-01](current-iter-issues.md#prompt-01) |
+| Earlier agent prompting/work-organization proposal | [4 November proposal](agent-prompting-proposal-2026-11-04.md) — audit corrections supersede workflow shortcuts |
 | Actual-repository coding | [In-place plan](in-place-repository-plan.md) |
 | Initial overflow recovery proposal | [OS overflow safety](inference-overflow-safety-proposal-2026-10-20.md) |
 | Historical three-layer placement | [Responsibility proposal](agent-os-overflow-responsibility-proposal-2026-10-20.md) |

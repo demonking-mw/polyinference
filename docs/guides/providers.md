@@ -3,7 +3,8 @@
 [Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
 
 `local` and `cloud` are the names of two endpoint **lanes**. They do not guarantee
-where inference happens: the default `local` lane points to Anthropic's cloud API.
+where inference happens: the bundled `local` preset points to Anthropic's cloud API.
+Plain UI launches can replace it using [machine defaults](configuration.md).
 Physical inference location is recorded separately.
 
 The default bindings are:
@@ -17,12 +18,17 @@ The default bindings are:
 All three bindings must be present in a custom configuration. They are pinned
 for a run. To change models, providers or bindings, start a fresh state directory.
 
+One system.local_token_limits input/output pair configures the local lane,
+including API stand-ins and Strata startup preparation. Cloud agents own their
+per-call token limits; Codex has no OS token cap even on the local worker binding.
+See [token settings and required-field API differences](local-token-limits.md).
+
 | Backend | Endpoint configuration | Authentication / example |
 | --- | --- | --- |
 | Anthropic | `protocol: "anthropic"`, `base_url: "https://api.anthropic.com/v1"` | `api_key_env: "ANTHROPIC_API_KEY"`; [Claude example](../../examples/agent.anthropic.json) |
 | OpenAI API | `protocol: "responses"` or `"chat"`, `base_url: "https://api.openai.com/v1"` | `api_key_env: "OPENAI_API_KEY"`; [OpenAI example](../../examples/agent.openai.json) |
 | Gemini | `protocol: "gemini"`, `base_url: "https://generativelanguage.googleapis.com/v1beta"` | `api_key_env: "GEMINI_API_KEY"`; [Gemini example](../../examples/agent.gemini.json) |
-| Local compatible server | `protocol: "chat"` or `"responses"`, URL of your running server | Set its served model ID and any required credential variable. |
+| Local compatible server | `protocol: "chat"`, `"responses"` or `"anthropic"` (e.g. Strata), URL of your running server | Set its served model ID and any required credential variable. |
 | Codex subscription | `protocol: "codex_app_server"`, `command: ["codex", "app-server"]` | Codex CLI login; [Codex example](../../examples/agent.codex.json) |
 | Default mixed setup | Haiku `local` lane and Codex `cloud` lane | [Mixed example](../../examples/agent.mixed.json) |
 

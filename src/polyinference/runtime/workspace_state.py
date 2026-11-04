@@ -6,26 +6,26 @@ import os
 import shutil
 from pathlib import Path
 
+from ..os_config import DEFAULT_TUNING
 from ..ports import WriteScopeError as WriteScopeError  # compatibility re-export
 from ..primitives import canonical, digest
 
-ENVIRONMENT_DIRS = {"node_modules", ".venv", ".venv-linux"}
-DEPENDENCY_FILES = {"package.json", "package-lock.json", "npm-shrinkwrap.json", "yarn.lock",
-                    "pnpm-lock.yaml", "pyproject.toml", "uv.lock", "poetry.lock", "Pipfile.lock"}
+# Historical import views; runtime callers pass their resolved per-run tuning.
+ENVIRONMENT_DIRS = frozenset(DEFAULT_TUNING.environment_directory_names)
+DEPENDENCY_FILES = frozenset(DEFAULT_TUNING.dependency_file_names)
 
 
-
-def dependency_digest(tree):
+def dependency_digest(tree, tuning=DEFAULT_TUNING):
     return digest(canonical({path: digest(data) for path, (_, data) in tree.items()
-                             if Path(path).name in DEPENDENCY_FILES
-                             or Path(path).name.startswith("requirements") and path.endswith(".txt")}))
+                             if Path(path).name in tuning.dependency_file_names
+                             or Path(path).name.startswith(tuning.dependency_requirements_prefix) and path.endswith(tuning.dependency_requirements_suffix)}))
 
 
-def environment_dirs(root, protected=()):
+def environment_dirs(root, protected=(), tuning=DEFAULT_TUNING):
     for directory, names, _ in os.walk(root, followlinks=False):
         for name in list(names):
             path = Path(directory) / name
-            if name in ENVIRONMENT_DIRS:
+            if name in tuning.environment_directory_names:
                 names.remove(name)
                 relative = path.relative_to(root).as_posix()
                 if not any(source == relative or source.startswith(relative + "/") for source in protected):
@@ -34,8 +34,8 @@ def environment_dirs(root, protected=()):
                 names.remove(name)
 
 
-def discard_environment(root, protected=()):
-    for path in environment_dirs(root, protected):
+def discard_environment(root, protected=(), tuning=DEFAULT_TUNING):
+    for path in environment_dirs(root, protected, tuning):
         if path.is_symlink():
             path.unlink()
         else:
@@ -54,11 +54,11 @@ def storage_bytes(state_root):
     return sum(disk_bytes(state_root / name) for name in ("workspaces", "snapshots", "proxy-snapshot", "native"))
 
 
-def copy_environment(source, destination, state_root, limit, protected=()):
-    directories = list(environment_dirs(source, protected))
+def copy_environment(source, destination, state_root, limit, protected=(), tuning=DEFAULT_TUNING):
+    directories = list(environment_dirs(source, protected, tuning))
     if storage_bytes(state_root) + sum(disk_bytes(path) for path in directories) > limit:
         raise RuntimeError("Retained workspace storage budget exceeded")
-    discard_environment(destination, protected)
+    discard_environment(destination, protected, tuning)
     for path in directories:
         if path.is_symlink():
             raise ValueError("Execution environment root cannot be a symlink")

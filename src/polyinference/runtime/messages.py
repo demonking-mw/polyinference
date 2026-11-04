@@ -5,11 +5,12 @@ from __future__ import annotations
 from pydantic import Field, field_validator
 
 from ..contracts import Wire
+from ..os_config import BOUNDS
 from ..primitives import now
 
 
 class UserNotification(Wire):
-    text: str = Field(min_length=1, max_length=16000)
+    text: str = Field(min_length=1, max_length=BOUNDS["notification_chars"])
 
     @field_validator("text")
     @classmethod

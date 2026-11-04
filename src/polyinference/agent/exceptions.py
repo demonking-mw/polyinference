@@ -2,6 +2,7 @@
 
 from ..contracts import CodeRevision, ProcessStatus
 from ..domain import canonical, digest, now
+from .check_evidence import matching_checks, presented_checks
 from .routing import cloud_recovery
 
 
@@ -22,6 +23,16 @@ def review_view(app):
         if task and task[1]["execution"] == "pending" and task[1].get("previous_process_id"):
             result.append({**app.get(item["exception_ref"]), "action": "retry",
                            "pending_replacement_task_id": task[1]["assignment"]["task_id"]})
+    for packet in result:
+        diagnosis = packet.get("diagnosis") or {}
+        retained = app.ports.records.get(diagnosis.get("record_ref", "")) if diagnosis.get("record_ref") else None
+        if retained and retained[1].get("input_code"):
+            code = retained[1]["input_code"]
+        else:
+            code = packet.get("retained_code")
+        if code:
+            packet["retained_check_evidence"] = presented_checks(app, matching_checks(
+                app, packet["process_id"], code, packet["assignment"]["checks"]))
     return result
 
 
@@ -43,6 +54,7 @@ async def park(app, state):
         # Integration already sealed the original delta. Never flatten H-relative repairs into it.
         delta_ref = await app.ports.workspaces.preserve_delta(state["workspace_id"])
         intent = {
+            "retained_code": (await app.ports.workspaces.revision(state["workspace_id"])).model_dump(mode="json"),
             "source_delta_ref": delta_ref,
             "abandoned_view_ref": snapshot,
             "phase": state["phase"],

@@ -78,7 +78,7 @@ footer{padding-top:15px;font-size:11px;color:#86919c;overflow-wrap:anywhere}
 <button id="start" type="button">Start run</button>
 </div><p id="launchStatus" role="status" aria-live="polite" hidden></p><div id="launchError" role="alert" hidden></div></div>
 <div class="runbar"><select id="runs" aria-label="Choose a run"><option value="">No runs yet</option></select><a id="export" class="button" aria-disabled="true" download>Save run · JSON</a><button id="openSnapshot" type="button">Open snapshot</button><input id="snapshotFile" type="file" accept=".json,application/json" hidden><button id="returnLive" type="button" hidden>Live runs</button><span id="status" class="badge">Ready</span><button id="resumeRun" type="button" hidden>Resume</button><span id="message">Ready to start the configured workload.</span><button id="inspectIssue" class="quiet" type="button" hidden>Inspect issue</button></div>
-<div id="resumeFields" class="steering" hidden><label for="resumeText">Instructions for continuing (optional)</label><textarea id="resumeText" rows="2" maxlength="16000" placeholder="Add instructions, or leave empty and click Resume"></textarea><p id="resumeStatus" class="hint" role="status"></p></div>
+<div id="resumeFields" class="steering" hidden><label for="resumeText">Instructions for continuing (optional)</label><textarea id="resumeText" rows="2" placeholder="Add instructions, or leave empty and click Resume"></textarea><p id="resumeStatus" class="hint" role="status"></p></div>
 <div class="costbar"><strong id="runCost">Run ≈ $0.0000</strong><span id="codexCost">Codex ≈ $0.0000</span><span id="haikuCost">Haiku ≈ $0.0000</span><span id="allCost"></span></div>
 <details style="margin:-3px 0 16px"><summary>About cost estimates</summary><p class="hint" id="costNote">Standard USD API estimates. Codex is shown as an API-equivalent value, not a subscription charge.</p></details>
 <details class="steering" id="steeringPanel"><summary>Steering · update this run's instructions</summary><textarea id="steeringText" aria-label="Steering instructions" rows="2" placeholder="Describe a correction or new instruction for this run…"></textarea><button id="sendSteering" type="button" disabled>Send update</button><small id="steeringStatus">Start a run to send instructions.</small></details>
@@ -389,7 +389,7 @@ $("olderActivity").onclick=async()=>{
  try{
   let page;
   if(savedDocument){
-   const events=savedDocument.events.filter(event=>event.sequence<before),recent=events.slice(-120),rows=[];
+   const events=savedDocument.events.filter(event=>event.sequence<before),recent=events.slice(-activityPageSize(osState)),rows=[];
    for(const event of recent){
     const append=(key,revision,state,value)=>rows.push({sequence:event.sequence,at:event.at,key,category:osState.record_index.find(row=>row.key===key)?.category||"workspace & records",revision,state,value,process_id:value?.process_id||value?.scope?.process_id||value?.request?.scope?.process_id,resource:value?.resource});
     for(const [key,change] of Object.entries(event.changes||{}))append(key,change.revision,change.state,change.value);

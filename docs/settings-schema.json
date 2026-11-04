@@ -124,12 +124,6 @@
             "title": "Auto Deal Context",
             "type": "boolean"
           },
-          "compaction_output_tokens": {
-            "default": 1024,
-            "exclusiveMinimum": 0,
-            "title": "Compaction Output Tokens",
-            "type": "integer"
-          },
           "compaction_summary_bytes": {
             "default": 4096,
             "exclusiveMinimum": 0,
@@ -301,10 +295,17 @@
             "default": null
           },
           "max_context_tokens": {
-            "default": 32000,
-            "exclusiveMinimum": 0,
-            "title": "Max Context Tokens",
-            "type": "integer"
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Context Tokens"
           },
           "max_inflight": {
             "default": 2,
@@ -358,10 +359,17 @@
             "type": "string"
           },
           "reserved_context_tokens": {
-            "default": 64000,
-            "exclusiveMinimum": 0,
-            "title": "Reserved Context Tokens",
-            "type": "integer"
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reserved Context Tokens"
           },
           "retry_model": {
             "anyOf": [
@@ -594,6 +602,529 @@
         "title": "Limits",
         "type": "object"
       },
+      "LocalTokenLimits": {
+        "additionalProperties": false,
+        "description": "One local-lane input/output pair, including API stand-ins for local workers.",
+        "properties": {
+          "input_tokens": {
+            "default": 24000,
+            "exclusiveMinimum": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "default": 4000,
+            "exclusiveMinimum": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          }
+        },
+        "title": "LocalTokenLimits",
+        "type": "object"
+      },
+      "OSTuning": {
+        "additionalProperties": false,
+        "description": "Generic operational settings, resolved and pinned with each runtime config.",
+        "properties": {
+          "anthropic_version": {
+            "default": "2023-06-01",
+            "title": "Anthropic Version",
+            "type": "string"
+          },
+          "check_excerpt_chars": {
+            "default": 3000,
+            "exclusiveMinimum": 0,
+            "title": "Check Excerpt Chars",
+            "type": "integer"
+          },
+          "command_chunk_bytes": {
+            "default": 65536,
+            "exclusiveMinimum": 0,
+            "title": "Command Chunk Bytes",
+            "type": "integer"
+          },
+          "command_error_chars": {
+            "default": 1000,
+            "exclusiveMinimum": 0,
+            "title": "Command Error Chars",
+            "type": "integer"
+          },
+          "compaction_chunk_divisor": {
+            "default": 8,
+            "exclusiveMinimum": 0,
+            "title": "Compaction Chunk Divisor",
+            "type": "integer"
+          },
+          "compaction_min_chunk_bytes": {
+            "default": 64,
+            "exclusiveMinimum": 0,
+            "title": "Compaction Min Chunk Bytes",
+            "type": "integer"
+          },
+          "compaction_reserve_tokens": {
+            "default": 2000,
+            "minimum": 0,
+            "title": "Compaction Reserve Tokens",
+            "type": "integer"
+          },
+          "compaction_temperature": {
+            "default": 0,
+            "maximum": 2,
+            "minimum": 0,
+            "title": "Compaction Temperature",
+            "type": "number"
+          },
+          "context_headroom_divisor": {
+            "default": 10,
+            "exclusiveMinimum": 0,
+            "title": "Context Headroom Divisor",
+            "type": "integer"
+          },
+          "dependency_file_names": {
+            "default": [
+              "package.json",
+              "package-lock.json",
+              "npm-shrinkwrap.json",
+              "yarn.lock",
+              "pnpm-lock.yaml",
+              "pyproject.toml",
+              "uv.lock",
+              "poetry.lock",
+              "Pipfile.lock"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Dependency File Names",
+            "type": "array"
+          },
+          "dependency_requirements_prefix": {
+            "default": "requirements",
+            "title": "Dependency Requirements Prefix",
+            "type": "string"
+          },
+          "dependency_requirements_suffix": {
+            "default": ".txt",
+            "title": "Dependency Requirements Suffix",
+            "type": "string"
+          },
+          "diagnostic_error_chars": {
+            "default": 4000,
+            "exclusiveMinimum": 0,
+            "maximum": 4000,
+            "title": "Diagnostic Error Chars",
+            "type": "integer"
+          },
+          "diagnostic_preview_chars": {
+            "default": 2000,
+            "exclusiveMinimum": 0,
+            "title": "Diagnostic Preview Chars",
+            "type": "integer"
+          },
+          "empty_baseline_gitignore": {
+            "default": ".polyinference/\n.env\n.venv/\nnode_modules/\n__pycache__/\n",
+            "title": "Empty Baseline Gitignore",
+            "type": "string"
+          },
+          "environment_directory_names": {
+            "default": [
+              "node_modules",
+              ".venv",
+              ".venv-linux"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Environment Directory Names",
+            "type": "array"
+          },
+          "events_page_max": {
+            "default": 1000,
+            "exclusiveMinimum": 0,
+            "title": "Events Page Max",
+            "type": "integer"
+          },
+          "events_page_size": {
+            "default": 100,
+            "exclusiveMinimum": 0,
+            "title": "Events Page Size",
+            "type": "integer"
+          },
+          "exclusive_wait_seconds": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Exclusive Wait Seconds"
+          },
+          "file_list_default": {
+            "default": 1000,
+            "exclusiveMinimum": 0,
+            "title": "File List Default",
+            "type": "integer"
+          },
+          "file_list_max": {
+            "default": 1000,
+            "exclusiveMinimum": 0,
+            "title": "File List Max",
+            "type": "integer"
+          },
+          "http_content_type_items": {
+            "default": 32,
+            "exclusiveMinimum": 0,
+            "title": "Http Content Type Items",
+            "type": "integer"
+          },
+          "http_counter_body_bytes": {
+            "default": 65536,
+            "exclusiveMinimum": 0,
+            "title": "Http Counter Body Bytes",
+            "type": "integer"
+          },
+          "http_error_body_bytes": {
+            "default": 16384,
+            "exclusiveMinimum": 0,
+            "title": "Http Error Body Bytes",
+            "type": "integer"
+          },
+          "http_error_chars": {
+            "default": 1024,
+            "exclusiveMinimum": 0,
+            "title": "Http Error Chars",
+            "type": "integer"
+          },
+          "http_keepalive_expiry_seconds": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 5,
+            "title": "Http Keepalive Expiry Seconds"
+          },
+          "http_max_connections": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 100,
+            "title": "Http Max Connections"
+          },
+          "http_max_keepalive_connections": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 20,
+            "title": "Http Max Keepalive Connections"
+          },
+          "http_progress_interval_seconds": {
+            "default": 0.25,
+            "exclusiveMinimum": 0,
+            "title": "Http Progress Interval Seconds",
+            "type": "number"
+          },
+          "http_recovery_poll_seconds": {
+            "default": 0.25,
+            "exclusiveMinimum": 0,
+            "title": "Http Recovery Poll Seconds",
+            "type": "number"
+          },
+          "http_retry_after_max_ms": {
+            "default": 3600000,
+            "exclusiveMinimum": 0,
+            "title": "Http Retry After Max Ms",
+            "type": "integer"
+          },
+          "http_trust_environment": {
+            "default": true,
+            "title": "Http Trust Environment",
+            "type": "boolean"
+          },
+          "initial_excluded_globs": {
+            "default": [
+              "**/.env*",
+              "**/*.pem",
+              "**/*.key"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Initial Excluded Globs",
+            "type": "array"
+          },
+          "initial_excluded_names": {
+            "default": [
+              ".git",
+              ".polyinference",
+              "node_modules",
+              ".npm",
+              ".venv",
+              ".venv-linux",
+              "__pycache__"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Initial Excluded Names",
+            "type": "array"
+          },
+          "inspector_activity_events": {
+            "default": 120,
+            "exclusiveMinimum": 0,
+            "title": "Inspector Activity Events",
+            "type": "integer"
+          },
+          "journal_retention_events": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 10000,
+            "title": "Journal Retention Events"
+          },
+          "lock_poll_seconds": {
+            "default": 0.05,
+            "exclusiveMinimum": 0,
+            "title": "Lock Poll Seconds",
+            "type": "number"
+          },
+          "native_error_chars": {
+            "default": 1500,
+            "exclusiveMinimum": 0,
+            "title": "Native Error Chars",
+            "type": "integer"
+          },
+          "native_event_limit": {
+            "default": 2000,
+            "exclusiveMinimum": 0,
+            "title": "Native Event Limit",
+            "type": "integer"
+          },
+          "native_line_bytes": {
+            "default": 1048576,
+            "exclusiveMinimum": 0,
+            "title": "Native Line Bytes",
+            "type": "integer"
+          },
+          "native_method_buckets": {
+            "default": 32,
+            "exclusiveMinimum": 0,
+            "title": "Native Method Buckets",
+            "type": "integer"
+          },
+          "native_method_chars": {
+            "default": 120,
+            "exclusiveMinimum": 0,
+            "title": "Native Method Chars",
+            "type": "integer"
+          },
+          "native_recent_events": {
+            "default": 24,
+            "exclusiveMinimum": 0,
+            "title": "Native Recent Events",
+            "type": "integer"
+          },
+          "native_shutdown_seconds": {
+            "default": 5,
+            "exclusiveMinimum": 0,
+            "title": "Native Shutdown Seconds",
+            "type": "number"
+          },
+          "progress_recent_effects": {
+            "default": 32,
+            "exclusiveMinimum": 0,
+            "title": "Progress Recent Effects",
+            "type": "integer"
+          },
+          "progress_time_decimals": {
+            "default": 3,
+            "maximum": 9,
+            "minimum": 0,
+            "title": "Progress Time Decimals",
+            "type": "integer"
+          },
+          "publication_git_date": {
+            "default": "2000-01-01T00:00:00+0000",
+            "title": "Publication Git Date",
+            "type": "string"
+          },
+          "publication_git_email": {
+            "default": "agent@polyinference.local",
+            "title": "Publication Git Email",
+            "type": "string"
+          },
+          "publication_git_name": {
+            "default": "PolyInference",
+            "title": "Publication Git Name",
+            "type": "string"
+          },
+          "response_recovery_seconds": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "title": "Response Recovery Seconds",
+            "type": "number"
+          },
+          "response_shrink_divisor": {
+            "default": 2,
+            "minimum": 2,
+            "title": "Response Shrink Divisor",
+            "type": "integer"
+          },
+          "retry_backoff_multiplier": {
+            "default": 2,
+            "minimum": 1,
+            "title": "Retry Backoff Multiplier",
+            "type": "number"
+          },
+          "sandbox_readonly_paths": {
+            "default": [
+              "/usr",
+              "/bin",
+              "/lib",
+              "/lib64",
+              "/etc"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Sandbox Readonly Paths",
+            "type": "array"
+          },
+          "search_line_chars": {
+            "default": 1000,
+            "exclusiveMinimum": 0,
+            "title": "Search Line Chars",
+            "type": "integer"
+          },
+          "search_matches": {
+            "default": 100,
+            "exclusiveMinimum": 0,
+            "title": "Search Matches",
+            "type": "integer"
+          },
+          "search_pattern_chars": {
+            "default": 1000,
+            "exclusiveMinimum": 0,
+            "title": "Search Pattern Chars",
+            "type": "integer"
+          },
+          "setup_git_email": {
+            "default": "agent@localhost",
+            "title": "Setup Git Email",
+            "type": "string"
+          },
+          "setup_git_name": {
+            "default": "PolyInference",
+            "title": "Setup Git Name",
+            "type": "string"
+          },
+          "shell_command": {
+            "default": [
+              "bash",
+              "-c"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Shell Command",
+            "type": "array"
+          },
+          "shell_default_seconds": {
+            "default": 60,
+            "exclusiveMinimum": 0,
+            "title": "Shell Default Seconds",
+            "type": "number"
+          },
+          "shell_max_seconds": {
+            "default": 600,
+            "exclusiveMinimum": 0,
+            "maximum": 600,
+            "title": "Shell Max Seconds",
+            "type": "number"
+          },
+          "shell_script_chars": {
+            "default": 16000,
+            "exclusiveMinimum": 0,
+            "title": "Shell Script Chars",
+            "type": "integer"
+          },
+          "sqlite_timeout_seconds": {
+            "default": 5,
+            "exclusiveMinimum": 0,
+            "title": "Sqlite Timeout Seconds",
+            "type": "number"
+          },
+          "subprocess_stream_bytes": {
+            "default": 65536,
+            "exclusiveMinimum": 0,
+            "title": "Subprocess Stream Bytes",
+            "type": "integer"
+          },
+          "tool_chunk_bytes": {
+            "default": 8192,
+            "exclusiveMinimum": 0,
+            "title": "Tool Chunk Bytes",
+            "type": "integer"
+          },
+          "tool_environment": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {
+              "LANG": "C.UTF-8",
+              "PYTEST_ADDOPTS": "-p no:cacheprovider",
+              "PYTHONDONTWRITEBYTECODE": "1"
+            },
+            "title": "Tool Environment",
+            "type": "object"
+          },
+          "workspace_ignored_names": {
+            "default": [
+              "__pycache__",
+              ".pytest_cache",
+              ".ruff_cache",
+              ".mypy_cache",
+              "node_modules",
+              ".venv",
+              ".venv-linux"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Workspace Ignored Names",
+            "type": "array"
+          }
+        },
+        "title": "OSTuning",
+        "type": "object"
+      },
       "PhaseReserve": {
         "additionalProperties": false,
         "properties": {
@@ -772,6 +1303,12 @@
       "cloud": {
         "$ref": "#/$defs/Endpoint"
       },
+      "cloud_agent_timeout_interrupt": {
+        "default": false,
+        "description": "Interrupt cloud AgentJob calls at endpoint.timeout_seconds; false logs a warning and keeps the job running. Original deadlines and explicit cancellation still apply.",
+        "title": "Cloud Agent Timeout Interrupt",
+        "type": "boolean"
+      },
       "context_policy": {
         "$ref": "#/$defs/ContextPolicy"
       },
@@ -845,6 +1382,34 @@
       "local": {
         "$ref": "#/$defs/Endpoint"
       },
+      "local_strata_config": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Local Strata Config"
+      },
+      "local_strata_profile": {
+        "anyOf": [
+          {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Local Strata Profile"
+      },
+      "local_token_limits": {
+        "$ref": "#/$defs/LocalTokenLimits"
+      },
       "max_artifact_bytes": {
         "default": 134217728,
         "exclusiveMinimum": 0,
@@ -881,7 +1446,7 @@
             "type": "null"
           }
         ],
-        "default": null,
+        "default": 4194304,
         "title": "Max Model Request Bytes"
       },
       "max_model_response_bytes": {
@@ -911,7 +1476,7 @@
         "type": "integer"
       },
       "max_review_reads": {
-        "default": 4,
+        "default": 16,
         "maximum": 16,
         "minimum": 0,
         "title": "Max Review Reads",
@@ -963,19 +1528,6 @@
         "minimum": 0,
         "title": "Model Call Retries",
         "type": "integer"
-      },
-      "model_output_target_tokens": {
-        "anyOf": [
-          {
-            "exclusiveMinimum": 0,
-            "type": "integer"
-          },
-          {
-            "type": "null"
-          }
-        ],
-        "default": null,
-        "title": "Model Output Target Tokens"
       },
       "model_retry_delay_ms": {
         "default": 100,
@@ -1093,6 +1645,9 @@
         "title": "State Directory",
         "type": "string"
       },
+      "tuning": {
+        "$ref": "#/$defs/OSTuning"
+      },
       "write_scope": {
         "default": "explicit",
         "enum": [
@@ -1172,12 +1727,6 @@
             "default": false,
             "title": "Auto Deal Context",
             "type": "boolean"
-          },
-          "compaction_output_tokens": {
-            "default": 1024,
-            "exclusiveMinimum": 0,
-            "title": "Compaction Output Tokens",
-            "type": "integer"
           },
           "compaction_summary_bytes": {
             "default": 4096,
@@ -1350,10 +1899,17 @@
             "default": null
           },
           "max_context_tokens": {
-            "default": 32000,
-            "exclusiveMinimum": 0,
-            "title": "Max Context Tokens",
-            "type": "integer"
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Context Tokens"
           },
           "max_inflight": {
             "default": 2,
@@ -1407,10 +1963,17 @@
             "type": "string"
           },
           "reserved_context_tokens": {
-            "default": 64000,
-            "exclusiveMinimum": 0,
-            "title": "Reserved Context Tokens",
-            "type": "integer"
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Reserved Context Tokens"
           },
           "retry_model": {
             "anyOf": [
@@ -1602,6 +2165,529 @@
         "title": "Limits",
         "type": "object"
       },
+      "LocalTokenLimits": {
+        "additionalProperties": false,
+        "description": "One local-lane input/output pair, including API stand-ins for local workers.",
+        "properties": {
+          "input_tokens": {
+            "default": 24000,
+            "exclusiveMinimum": 0,
+            "title": "Input Tokens",
+            "type": "integer"
+          },
+          "output_tokens": {
+            "default": 4000,
+            "exclusiveMinimum": 0,
+            "title": "Output Tokens",
+            "type": "integer"
+          }
+        },
+        "title": "LocalTokenLimits",
+        "type": "object"
+      },
+      "OSTuning": {
+        "additionalProperties": false,
+        "description": "Generic operational settings, resolved and pinned with each runtime config.",
+        "properties": {
+          "anthropic_version": {
+            "default": "2023-06-01",
+            "title": "Anthropic Version",
+            "type": "string"
+          },
+          "check_excerpt_chars": {
+            "default": 3000,
+            "exclusiveMinimum": 0,
+            "title": "Check Excerpt Chars",
+            "type": "integer"
+          },
+          "command_chunk_bytes": {
+            "default": 65536,
+            "exclusiveMinimum": 0,
+            "title": "Command Chunk Bytes",
+            "type": "integer"
+          },
+          "command_error_chars": {
+            "default": 1000,
+            "exclusiveMinimum": 0,
+            "title": "Command Error Chars",
+            "type": "integer"
+          },
+          "compaction_chunk_divisor": {
+            "default": 8,
+            "exclusiveMinimum": 0,
+            "title": "Compaction Chunk Divisor",
+            "type": "integer"
+          },
+          "compaction_min_chunk_bytes": {
+            "default": 64,
+            "exclusiveMinimum": 0,
+            "title": "Compaction Min Chunk Bytes",
+            "type": "integer"
+          },
+          "compaction_reserve_tokens": {
+            "default": 2000,
+            "minimum": 0,
+            "title": "Compaction Reserve Tokens",
+            "type": "integer"
+          },
+          "compaction_temperature": {
+            "default": 0,
+            "maximum": 2,
+            "minimum": 0,
+            "title": "Compaction Temperature",
+            "type": "number"
+          },
+          "context_headroom_divisor": {
+            "default": 10,
+            "exclusiveMinimum": 0,
+            "title": "Context Headroom Divisor",
+            "type": "integer"
+          },
+          "dependency_file_names": {
+            "default": [
+              "package.json",
+              "package-lock.json",
+              "npm-shrinkwrap.json",
+              "yarn.lock",
+              "pnpm-lock.yaml",
+              "pyproject.toml",
+              "uv.lock",
+              "poetry.lock",
+              "Pipfile.lock"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Dependency File Names",
+            "type": "array"
+          },
+          "dependency_requirements_prefix": {
+            "default": "requirements",
+            "title": "Dependency Requirements Prefix",
+            "type": "string"
+          },
+          "dependency_requirements_suffix": {
+            "default": ".txt",
+            "title": "Dependency Requirements Suffix",
+            "type": "string"
+          },
+          "diagnostic_error_chars": {
+            "default": 4000,
+            "exclusiveMinimum": 0,
+            "maximum": 4000,
+            "title": "Diagnostic Error Chars",
+            "type": "integer"
+          },
+          "diagnostic_preview_chars": {
+            "default": 2000,
+            "exclusiveMinimum": 0,
+            "title": "Diagnostic Preview Chars",
+            "type": "integer"
+          },
+          "empty_baseline_gitignore": {
+            "default": ".polyinference/\n.env\n.venv/\nnode_modules/\n__pycache__/\n",
+            "title": "Empty Baseline Gitignore",
+            "type": "string"
+          },
+          "environment_directory_names": {
+            "default": [
+              "node_modules",
+              ".venv",
+              ".venv-linux"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Environment Directory Names",
+            "type": "array"
+          },
+          "events_page_max": {
+            "default": 1000,
+            "exclusiveMinimum": 0,
+            "title": "Events Page Max",
+            "type": "integer"
+          },
+          "events_page_size": {
+            "default": 100,
+            "exclusiveMinimum": 0,
+            "title": "Events Page Size",
+            "type": "integer"
+          },
+          "exclusive_wait_seconds": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Exclusive Wait Seconds"
+          },
+          "file_list_default": {
+            "default": 1000,
+            "exclusiveMinimum": 0,
+            "title": "File List Default",
+            "type": "integer"
+          },
+          "file_list_max": {
+            "default": 1000,
+            "exclusiveMinimum": 0,
+            "title": "File List Max",
+            "type": "integer"
+          },
+          "http_content_type_items": {
+            "default": 32,
+            "exclusiveMinimum": 0,
+            "title": "Http Content Type Items",
+            "type": "integer"
+          },
+          "http_counter_body_bytes": {
+            "default": 65536,
+            "exclusiveMinimum": 0,
+            "title": "Http Counter Body Bytes",
+            "type": "integer"
+          },
+          "http_error_body_bytes": {
+            "default": 16384,
+            "exclusiveMinimum": 0,
+            "title": "Http Error Body Bytes",
+            "type": "integer"
+          },
+          "http_error_chars": {
+            "default": 1024,
+            "exclusiveMinimum": 0,
+            "title": "Http Error Chars",
+            "type": "integer"
+          },
+          "http_keepalive_expiry_seconds": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 5,
+            "title": "Http Keepalive Expiry Seconds"
+          },
+          "http_max_connections": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 100,
+            "title": "Http Max Connections"
+          },
+          "http_max_keepalive_connections": {
+            "anyOf": [
+              {
+                "minimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 20,
+            "title": "Http Max Keepalive Connections"
+          },
+          "http_progress_interval_seconds": {
+            "default": 0.25,
+            "exclusiveMinimum": 0,
+            "title": "Http Progress Interval Seconds",
+            "type": "number"
+          },
+          "http_recovery_poll_seconds": {
+            "default": 0.25,
+            "exclusiveMinimum": 0,
+            "title": "Http Recovery Poll Seconds",
+            "type": "number"
+          },
+          "http_retry_after_max_ms": {
+            "default": 3600000,
+            "exclusiveMinimum": 0,
+            "title": "Http Retry After Max Ms",
+            "type": "integer"
+          },
+          "http_trust_environment": {
+            "default": true,
+            "title": "Http Trust Environment",
+            "type": "boolean"
+          },
+          "initial_excluded_globs": {
+            "default": [
+              "**/.env*",
+              "**/*.pem",
+              "**/*.key"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Initial Excluded Globs",
+            "type": "array"
+          },
+          "initial_excluded_names": {
+            "default": [
+              ".git",
+              ".polyinference",
+              "node_modules",
+              ".npm",
+              ".venv",
+              ".venv-linux",
+              "__pycache__"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Initial Excluded Names",
+            "type": "array"
+          },
+          "inspector_activity_events": {
+            "default": 120,
+            "exclusiveMinimum": 0,
+            "title": "Inspector Activity Events",
+            "type": "integer"
+          },
+          "journal_retention_events": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": 10000,
+            "title": "Journal Retention Events"
+          },
+          "lock_poll_seconds": {
+            "default": 0.05,
+            "exclusiveMinimum": 0,
+            "title": "Lock Poll Seconds",
+            "type": "number"
+          },
+          "native_error_chars": {
+            "default": 1500,
+            "exclusiveMinimum": 0,
+            "title": "Native Error Chars",
+            "type": "integer"
+          },
+          "native_event_limit": {
+            "default": 2000,
+            "exclusiveMinimum": 0,
+            "title": "Native Event Limit",
+            "type": "integer"
+          },
+          "native_line_bytes": {
+            "default": 1048576,
+            "exclusiveMinimum": 0,
+            "title": "Native Line Bytes",
+            "type": "integer"
+          },
+          "native_method_buckets": {
+            "default": 32,
+            "exclusiveMinimum": 0,
+            "title": "Native Method Buckets",
+            "type": "integer"
+          },
+          "native_method_chars": {
+            "default": 120,
+            "exclusiveMinimum": 0,
+            "title": "Native Method Chars",
+            "type": "integer"
+          },
+          "native_recent_events": {
+            "default": 24,
+            "exclusiveMinimum": 0,
+            "title": "Native Recent Events",
+            "type": "integer"
+          },
+          "native_shutdown_seconds": {
+            "default": 5,
+            "exclusiveMinimum": 0,
+            "title": "Native Shutdown Seconds",
+            "type": "number"
+          },
+          "progress_recent_effects": {
+            "default": 32,
+            "exclusiveMinimum": 0,
+            "title": "Progress Recent Effects",
+            "type": "integer"
+          },
+          "progress_time_decimals": {
+            "default": 3,
+            "maximum": 9,
+            "minimum": 0,
+            "title": "Progress Time Decimals",
+            "type": "integer"
+          },
+          "publication_git_date": {
+            "default": "2000-01-01T00:00:00+0000",
+            "title": "Publication Git Date",
+            "type": "string"
+          },
+          "publication_git_email": {
+            "default": "agent@polyinference.local",
+            "title": "Publication Git Email",
+            "type": "string"
+          },
+          "publication_git_name": {
+            "default": "PolyInference",
+            "title": "Publication Git Name",
+            "type": "string"
+          },
+          "response_recovery_seconds": {
+            "default": 30,
+            "exclusiveMinimum": 0,
+            "title": "Response Recovery Seconds",
+            "type": "number"
+          },
+          "response_shrink_divisor": {
+            "default": 2,
+            "minimum": 2,
+            "title": "Response Shrink Divisor",
+            "type": "integer"
+          },
+          "retry_backoff_multiplier": {
+            "default": 2,
+            "minimum": 1,
+            "title": "Retry Backoff Multiplier",
+            "type": "number"
+          },
+          "sandbox_readonly_paths": {
+            "default": [
+              "/usr",
+              "/bin",
+              "/lib",
+              "/lib64",
+              "/etc"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Sandbox Readonly Paths",
+            "type": "array"
+          },
+          "search_line_chars": {
+            "default": 1000,
+            "exclusiveMinimum": 0,
+            "title": "Search Line Chars",
+            "type": "integer"
+          },
+          "search_matches": {
+            "default": 100,
+            "exclusiveMinimum": 0,
+            "title": "Search Matches",
+            "type": "integer"
+          },
+          "search_pattern_chars": {
+            "default": 1000,
+            "exclusiveMinimum": 0,
+            "title": "Search Pattern Chars",
+            "type": "integer"
+          },
+          "setup_git_email": {
+            "default": "agent@localhost",
+            "title": "Setup Git Email",
+            "type": "string"
+          },
+          "setup_git_name": {
+            "default": "PolyInference",
+            "title": "Setup Git Name",
+            "type": "string"
+          },
+          "shell_command": {
+            "default": [
+              "bash",
+              "-c"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Shell Command",
+            "type": "array"
+          },
+          "shell_default_seconds": {
+            "default": 60,
+            "exclusiveMinimum": 0,
+            "title": "Shell Default Seconds",
+            "type": "number"
+          },
+          "shell_max_seconds": {
+            "default": 600,
+            "exclusiveMinimum": 0,
+            "maximum": 600,
+            "title": "Shell Max Seconds",
+            "type": "number"
+          },
+          "shell_script_chars": {
+            "default": 16000,
+            "exclusiveMinimum": 0,
+            "title": "Shell Script Chars",
+            "type": "integer"
+          },
+          "sqlite_timeout_seconds": {
+            "default": 5,
+            "exclusiveMinimum": 0,
+            "title": "Sqlite Timeout Seconds",
+            "type": "number"
+          },
+          "subprocess_stream_bytes": {
+            "default": 65536,
+            "exclusiveMinimum": 0,
+            "title": "Subprocess Stream Bytes",
+            "type": "integer"
+          },
+          "tool_chunk_bytes": {
+            "default": 8192,
+            "exclusiveMinimum": 0,
+            "title": "Tool Chunk Bytes",
+            "type": "integer"
+          },
+          "tool_environment": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "default": {
+              "LANG": "C.UTF-8",
+              "PYTEST_ADDOPTS": "-p no:cacheprovider",
+              "PYTHONDONTWRITEBYTECODE": "1"
+            },
+            "title": "Tool Environment",
+            "type": "object"
+          },
+          "workspace_ignored_names": {
+            "default": [
+              "__pycache__",
+              ".pytest_cache",
+              ".ruff_cache",
+              ".mypy_cache",
+              "node_modules",
+              ".venv",
+              ".venv-linux"
+            ],
+            "items": {
+              "type": "string"
+            },
+            "title": "Workspace Ignored Names",
+            "type": "array"
+          }
+        },
+        "title": "OSTuning",
+        "type": "object"
+      },
       "PhaseReserve": {
         "additionalProperties": false,
         "properties": {
@@ -1723,6 +2809,12 @@
       "cloud": {
         "$ref": "#/$defs/Endpoint"
       },
+      "cloud_agent_timeout_interrupt": {
+        "default": false,
+        "description": "Interrupt cloud AgentJob calls at endpoint.timeout_seconds; false logs a warning and keeps the job running. Original deadlines and explicit cancellation still apply.",
+        "title": "Cloud Agent Timeout Interrupt",
+        "type": "boolean"
+      },
       "context_policy": {
         "$ref": "#/$defs/ContextPolicy"
       },
@@ -1751,6 +2843,9 @@
       },
       "local": {
         "$ref": "#/$defs/Endpoint"
+      },
+      "local_token_limits": {
+        "$ref": "#/$defs/LocalTokenLimits"
       },
       "max_artifact_bytes": {
         "default": 134217728,
@@ -1781,7 +2876,7 @@
             "type": "null"
           }
         ],
-        "default": null,
+        "default": 4194304,
         "title": "Max Model Request Bytes"
       },
       "max_model_response_bytes": {
@@ -1913,6 +3008,9 @@
         "default": ".polyinference",
         "title": "State Directory",
         "type": "string"
+      },
+      "tuning": {
+        "$ref": "#/$defs/OSTuning"
       },
       "write_scope": {
         "default": "explicit",

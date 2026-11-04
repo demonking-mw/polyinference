@@ -80,6 +80,7 @@ async def runtime_fixture(config, handler):
     config = config.model_copy(update={
         "local": endpoint,
         "limits": config.limits.model_copy(update={"max_output_tokens_per_call": 8000}),
+        "local_token_limits": config.local_token_limits.model_copy(update={"output_tokens": 8000}),
     })
     runtime = await StandaloneRuntime(config).open()
     app = AgentServices(runtime, config)

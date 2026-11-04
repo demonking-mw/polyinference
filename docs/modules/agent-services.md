@@ -24,6 +24,10 @@ criteria cannot be replaced. setup_check_definitions, task_check_definitions and
 acceptance_check_definitions select phase policy without changing OS check execution.
 Senior context includes shared check commands/source previews and read-only
 retained-source offers; these guide explicit dependencies and resume_from grants.
+Each planner message refreshes `review_limits` (read/correction totals, usage, remaining allowance and
+schema bounds) and `planning_limits`. Both planners and workers receive process `resource_limits`,
+current `resources`, `finishing_reserve` and `response_budget`. Per-call token fields reflect the actual
+local pair or provider ownership, not legacy cloud token placeholders. See [reliability settings](../guides/agent-reliability.md).
 Mode-specific prompts distinguish in-place private uncertainty from legacy publication.
 The agent optionally pins InferencePolicy as runtime/inference-policy version 1
 on model requests. It owns additional retry consent and smaller raw-query output

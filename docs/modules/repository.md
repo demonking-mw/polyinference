@@ -24,6 +24,10 @@ Repository summaries separate tip/candidate ancestry, dirty source, publication
 receipts and kept nonempty contributions. An inherited tip or empty publication
 does not establish an accepted task contribution; review remains a separate fact.
 
+The repository provider consumes the resolved OS workspace ignore names from
+[central tuning](../guides/os-tuning.md); branch/commit/acceptance policy remains
+owned by this application.
+
 ## Principles to preserve
 
 - The user-selected path is authoritative, including new/nested projects.

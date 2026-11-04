@@ -12,8 +12,9 @@ The OS measures prepared adapter input and can derive a smaller view under calle
 
 ContextPolicy resolves defaults, process preferences and request overrides. Async or
 synchronous adapter measurements separate input tokens/provenance from serialized
-bytes. Raw output reservation uses the enforced submitted cap; native hidden context
-remains unmeasured. An opt-in same-provider counter never generates output; failure
+bytes. The [local pair](../guides/local-token-limits.md) supplies local input/output limits; cloud per-call token
+capacity belongs to the provider and receipts label it accordingly. Serialized byte guards remain independent;
+native hidden context remains unmeasured. An opt-in same-provider counter never generates output; failure
 retains a labeled conservative bound. See [measurement and configuration](../guides/context-measurement.md).
 `auto_deal_context` permits optional-group omission; `auto_compaction` separately
 permits eligible summaries. Hard bounds always apply, including manual mode.
@@ -22,6 +23,10 @@ receipts and helper provenance without changing this service or canonical memory
 
 Summary helpers inherit the effective parent lifecycle cutoff, including queue/
 preparation time; they cannot extend a logical call by receiving a fresh timer.
+
+Packing headroom and compaction input/chunk/temperature controls now use
+[central OS tuning](../guides/os-tuning.md); caller eligibility/trust and original
+resource envelopes retain their prior meaning.
 
 ## Principles to preserve
 

@@ -17,6 +17,11 @@ policy. General processes may use no workspace. Compatibility task refs are opaq
 WriteScopeError is defined in public ports; workspace_state re-exports the same
 class for existing callers, preserving structured details and catch identity.
 
+Ignore/exclusion lists, dependency/environment classification and compatibility
+Git identity defaults use [central OS tuning](../guides/os-tuning.md). The coding
+provider consumes the resolved ignore list; protected source still takes precedence.
+Resolved tuning also participates in the environment digest used by check evidence.
+
 ## Principles to preserve
 
 - Current generation/content and source scope remain authoritative.

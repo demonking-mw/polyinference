@@ -201,6 +201,26 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0155](#fix-0155) | 2026-10-28 | Hand clean unusable output to existing semantic recovery |
 | [FIX-0156](#fix-0156) | 2026-10-28 | Retire resolved worker errors without replay resurrection |
 | [FIX-0157](#fix-0157) | 2026-10-28 | Audit simple-OS branch ancestry and unmerged profile work |
+| [FIX-0158](#fix-0158) | 2026-10-28 | Start the scheduled local Minecraft continuation with measured context |
+| [FIX-0159](#fix-0159) | 2026-10-28 | Measure recent local TPS without changing live inference |
+| [FIX-0160](#fix-0160) | 2026-10-29 | Finalize the single local continuation and retain its failed acceptance evidence |
+| [FIX-0161](#fix-0161) | 2026-10-29 | Centralize OS defaults and operational tuning |
+| [FIX-0162](#fix-0162) | 2026-10-29 | Require explicit single-file local coding contracts |
+| [FIX-0163](#fix-0163) | 2026-10-29 | Make tuning immutable and propagate operational settings |
+| [FIX-0164](#fix-0164) | 2026-10-29 | Preserve required cloud coding placement |
+| [FIX-0165](#fix-0165) | 2026-10-29 | Separate provider completion from local budget violations |
+| [FIX-0166](#fix-0166) | 2026-10-29 | Carry exact-source passing and failing check evidence |
+| [FIX-0169](#fix-0169) | 2026-11-02 | Automatically start the configured Strata engine with the UI |
+| [FIX-0170](#fix-0170) | 2026-11-02 | Investigate a native setup interruption at the cloud timeout |
+| [FIX-0171](#fix-0171) | 2026-11-02 | Make cloud agent endpoint timeouts warning-only by default |
+| [FIX-0172](#fix-0172) | 2026-11-02 | Keep coding presets warning-only with a 1800-second cloud timeout |
+| [FIX-0173](#fix-0173) | 2026-11-02 | Use a 112K input and 16K output coding preference within 128K |
+| [FIX-0174](#fix-0174) | 2026-11-02 | Clean up UI-owned Strata runtimes on exit and process death |
+| [FIX-0175](#fix-0175) | 2026-11-04 | Expose planner allowances and default senior source retrieval to 16 ranges |
+| [FIX-0176](#fix-0176) | 2026-11-04 | Record the revised agent prompting proposal and first current implementation issue |
+| [FIX-0177](#fix-0177) | 2026-11-04 | Audit the prompting proposal against prior fixes and correct unsafe workflow shortcuts |
+| [FIX-0168](#fix-0168) | 2026-11-02 | Persist machine-local Qwen/Strata UI defaults |
+| [FIX-0167](#fix-0167) | 2026-10-29 | Unify local token settings and remove cloud per-call caps |
 
 
 ## Entry template
@@ -7632,3 +7652,990 @@ and both worktree statuses establish these findings. Evidence is retained under
 module/setup/settings guides need no change because behavior/interfaces are
 unchanged. Documentation generation/check and whitespace checks validate this
 history update; no runtime tests or live workload were needed for an ancestry audit.
+
+
+<a id="fix-0158"></a>
+## FIX-0158 — 2026-10-28 — Start the scheduled local Minecraft continuation with measured context
+
+Status: setup/readiness verified; fresh live run launched, final outcome pending.
+Related: [FIX-0147](#fix-0147), [FIX-0148](#fix-0148), [FIX-0152](#fix-0152), [FIX-0153](#fix-0153), [FIX-0154](#fix-0154).
+Record: [19:30 continuation](minecraft-live-test-2026-10-28-1930.md).
+
+### Problem
+
+The user requested a new autonomous real-local continuation test at 19:30 Toronto,
+using Qwen IQ1_M/Strata, 64K and batch one, with uncommitted morning delivery.
+The prior failed run and narrow passing tests do not establish current convergence.
+
+### What was wrong
+
+No new framework defect is established. The current target already has a committed
+pi-dev baseline; historical unborn-branch descriptions are obsolete for this new run.
+Default in-place publication would commit user-facing changes. Prior output cutoffs
+and conservative byte-only context sizing also require explicit fresh-run settings.
+
+### How it was fixed
+
+No framework/game implementation changed. Read the fix history/current instructions,
+refreshed retained knowledge, froze 329 current framework files and 14 target files,
+and launched fresh isolated state after verified local/Codex readiness. Actual setup
+began on the 19:30:21 trigger; CLI started at 19:36:31.048444 Toronto. The exact prompt
+continues the selected incomplete minecraft-v1 path. Private runtime commits remain
+isolated from the user's branches; no target/framework staging, commit or push.
+
+Installed Strata reports the exact local model, 65536 context and one requested/effective
+sequence. Its Anthropic-compatible local wire dialect supports exact-body counting;
+configured that dialect with no API credential and verified /messages/count_tokens.
+No Anthropic/Haiku service is used. Explicit raw target 8192 fits the unchanged 16384
+hard ceiling; original documented resource/recovery limits and Terra/high/seven remain.
+The technical gate runs existing finite Chromium regressions, with required closure
+and explicit dependencies, inside the live feedback loop. Source, configs, readiness,
+metadata, baseline, process identity and observation logs are retained in the local
+run directory. A supervisor-helper constructor typo was corrected before its successful
+counter check; this was not a provider or framework failure.
+
+### Design principle enforced or reconstructed
+
+The application owns task/Git/source/acceptance policy; the OS enforces generic
+context/effect/resource boundaries and providers own actual serving/tokenization.
+Wire protocol does not identify model provider or physical placement. Fresh setup
+cannot change old pins, replenish accounts, erase failures or accept partial work.
+A verified launch and narrow browser checks do not prove full product completion.
+
+### Verification
+
+Existing ChatGPT login, Python pip check and real local/Codex readiness pass. Local
+metadata confirms model/context/concurrency; the no-generation counter reports 62
+provider tokens. Configuration validation passes. Baseline 46 Node tests and eight
+actual Chromium checks pass. Frozen source and original target hashes are verified
+before launch. Final live outcome/export/browser checks, reviewed uncommitted delivery
+and owned-service cleanup remain pending. Navigation/docs/whitespace checks are
+recorded with the run handoff. No full framework suite is rerun for setup/doc changes.
+
+Setup/provider, configuration/export, reliability/qualification, context and boundary
+guides remain accurate and require no interface/default/schema edits. New run-record
+ownership, current-work/investigation links and retained AGENTS knowledge are updated.
+Earlier source, runs, FIX bodies and branches remain preserved. The explicit heartbeat
+continues only the already launched run; final evidence must replace pending status.
+
+<a id="fix-0159"></a>
+## FIX-0159 — 2026-10-28 — Measure recent local TPS without changing live inference
+
+Status: measurement/investigation only; no framework/game implementation changed.
+Related: [FIX-0158](#fix-0158) and the [active run record](minecraft-live-test-2026-10-28-1930.md).
+
+### Problem
+The user requested average local-model TPS over recent minute windows, with special
+care to preserve the active test.
+
+### What was wrong
+No runtime defect is established. Repeated last-request telemetry must be deduplicated;
+an arithmetic mean of per-request rates also misweights unequal generation durations.
+Provider output counts and the engine's generated-token counts can differ slightly.
+
+### How it was fixed
+Inspected installed Strata source, then made one GET to its read-only JSON
+`/metrics?requests=all` endpoint. No generation, benchmark, configuration, reload or
+process-control request was issued. The local run directory retains `read_tps.py`,
+the raw metrics snapshot and summary under `telemetry/`. The helper accepts arbitrary
+positive `--minutes` windows and uses engine-generated tokens / decode seconds for
+completed requests ending in each window. It includes thinking and accepted draft
+tokens, excludes rejected drafts and reports a separate rate including prompt time.
+Running requests and tool/cloud/idle time are excluded from these rates.
+
+### Design principle enforced or reconstructed
+Measure provider-owned execution facts without changing the experiment. Keep decode
+speed, prompt processing and elapsed workflow throughput distinct; retain raw evidence
+and the window definition rather than manufacturing an exact live-window utilization.
+
+### Verification
+At 22:05:38 Toronto, all requested windows are covered by retained request history:
+10/30/60-minute decode rates are 44.80/47.93/47.57 TPS across 6/17/38 requests;
+including prompt processing they are 26.92/29.63/30.31 TPS. The same supervisor/CLI
+remain alive and the application remains active. Configuration, all 329 frozen files
+and 14 target files match their launch hashes. No stop, restart or inference request
+was used for measurement. Documentation/navigation and whitespace checks accompany
+this record; no framework suite was rerun for this measurement-only work. Existing
+provider/context/configuration guides need no interface/default edits. Navigation
+ownership is unchanged because no maintained framework file was added or moved.
+
+<a id="fix-0160"></a>
+## FIX-0160 — 2026-10-29 — Finalize the single local continuation and retain its failed acceptance evidence
+
+Status: investigation/delivery only; no supervisor framework or game implementation fix.
+Related: [FIX-0158](#fix-0158), [FIX-0159](#fix-0159), [result/delivery pointers](minecraft-live-test-2026-10-28-1930.md).
+This terminal receipt supersedes FIX-0158's historical pending-outcome statements.
+
+### Problem
+The authorized one-time test stopped without product acceptance. Its final recovery
+and review failures must remain visible alongside the useful partial output.
+
+### What was wrong
+The final cloud recovery reached the original output ceiling and exhausted its
+lineage allowance. The final independent gate also retained a test failure.
+Detailed causes, reproduction and remaining feature gaps are in Downloads analysis;
+this record does not redefine the requested scope or claim a framework repair.
+
+### How it was fixed
+Preserved stopped state, supported exports and private failed work; independently
+tested the exact reviewed tree and integrated only that partial tree uncommitted.
+The user requested final analysis and full supported JSON in Downloads, so the
+project retains only status and delivery pointers. No identical resume, new run,
+resource refill, user-facing commit, staging or push was performed.
+
+### Design principle enforced or reconstructed
+Keep agent-owned implementation/acceptance separate from supervisor observation.
+Preserve original limits and failed evidence; narrow passing checks cannot certify
+the full objective. Supported diagnostic export retains the application's journal
+retention limits rather than reconstructing events already pruned by the runtime.
+
+### Verification
+The Downloads delivery retains actual browser checks/screenshots, the historical
+gate failure and its diagnostic reproduction, source/configuration/hash receipts,
+consistent database/private-history backups and owned-service cleanup evidence.
+Setup/provider, export/recovery, reliability and maintenance guides were reviewed;
+their interfaces/defaults are unchanged. Navigation and whitespace checks accompany
+the final receipt. Read the linked result for the final delivery paths and status;
+no new full framework suite or broad Minecraft acceptance is claimed.
+
+<a id="fix-0161"></a>
+## FIX-0161 — One source for OS constants/defaults and validated operational tuning
+
+### Problem and root owner
+Generic OS defaults and operational limits were embedded across settings,
+storage, context, inference/native adapters, commands and workspaces. Helpers,
+independent CLI/UI writers and inspector projections could retain independent
+values. The kernel pin and diagnostics also contained different version literals.
+The owner is generic OS configuration and its consumers; coding workflow/provider
+presets remain application choices.
+
+### Change
+`src/polyinference/os_config.py` now owns existing generic defaults, operational
+validation ceilings and typed `OSTuning`. `system.tuning` resolves newly exposed
+journal/page/buffer/polling/pool/context/tool/workspace controls alongside existing
+public settings. Primary/fallback clients and helper call paths receive resolved
+values; independent record writers inherit `runtime/os-tuning`. Inspector retention
+and activity agree with that policy, including offline paging without a second
+client default. Resume text uses the canonical server bound. Resolved tuning enters
+source-bound environment identity. Kernel pin/diagnostics share one version
+constant. SQLite durability, authority, resource-accounting and completion guards
+remain fixed. Prior default values were compared against the captured starting
+source and match; no old run configuration/account/deadline was changed.
+
+The audit read all runtime files and adjacent shared/entry-point consumers. The
+[per-file inventory](../docs/os-config-inventory.md) classifies configurable values,
+protocol/safety invariants and application-owned defaults. The
+[usage guide](../docs/guides/os-tuning.md) explains precedence, validation, retained
+state, resource implications and fresh-state requirements.
+
+### Scope and principle
+Expose operational choices once and trace nondefault values to their consumers.
+Do not turn authority, physical certainty or coding acceptance into deployment
+knobs. Only this constants/defaults issue was implemented. Native cumulative-output
+classification, diagnostic evidence handoff, convergence, gameplay and historical
+test defects were not repaired. The separately requested run audit/correction is
+in `/home/marven/Downloads/polyinference-minecraft-test-2026-10-28/os-audit.md`;
+final analysis/log remain in Downloads, not duplicated in this project.
+
+### Verification
+New behavioral fixtures cover invalid settings, grouping/default independence,
+small/unbounded retention, independent writers/inspectors, changed-config rejection,
+primary/fallback propagation, native telemetry, private environments, protected
+source/dependency rules, combined command output limits, file paging/search,
+shell default/ceiling and real loopback HTTP pool serialization. Existing OS,
+context, native, resource/recovery, workspace, frontend and application fixtures
+are included in the final verification receipt. Ruff, schema/default generation,
+documentation navigation and whitespace checks accompany that receipt. These
+fixtures do not constitute a new live-model or broad game qualification run.
+
+
+<a id="fix-0162"></a>
+## FIX-0162 — 2026-10-29 — Require explicit single-file local coding contracts
+
+Status: implemented on codex/simple-os-v1; see the final verification record below.
+Related: FIX-0161 and [P0 implementation/verification](p0-repairs-2026-10-29.md).
+
+### Problem and root owner
+
+All seven local assignments in the preserved continuation stalled; planner guidance allowed multiple production files and optional boundary fields. Small-behavior prose alone did not establish an enforceable assignment boundary.
+
+### How it was fixed
+
+The coding application now requires local_contract with one implementation_path, typed input/output shapes, provided functions/objects, ownership, effects and errors, plus behavior/focused_check/acceptance_criteria. Only scoped tests/docs accompany the implementation. Prompts require smaller tasks; senior effective-plan validation, controller allocation and task construction enforce the rule. Shared versioned interfaces and original write ceilings remain.
+
+### Design principle
+
+Coding task meaning and decomposition belong to the agent. A structural file boundary supplements prompt guidance; it does not prove semantic difficulty or local model convergence.
+
+### Verification
+
+The [P0 record](p0-repairs-2026-10-29.md) records focused and broad offline checks,
+source preservation, docs/schema/frontend results and actual limits. Tests exercise
+real disposable HTTP/stdio paths where needed; no live-model convergence or old-run
+Resume is claimed. Remaining P1/P2 work is in the [current-version list](current-iter-issues.md#p0-repairs-2026-10-29).
+
+
+<a id="fix-0163"></a>
+## FIX-0163 — 2026-10-29 — Make tuning immutable and propagate operational settings
+
+Status: implemented on codex/simple-os-v1; see the final verification record below.
+Related: FIX-0161 and [P0 implementation/verification](p0-repairs-2026-10-29.md).
+
+### Problem and root owner
+
+FIX-0161 centralized settings but frozen OSTuning still exposed mutable nested lists/dictionaries; system views shared them. A supplied HTTP transport bypassed environment proxy selection, and inspection SQLite readers retained default timeouts.
+
+### How it was fixed
+
+Nested tuning uses immutable tuples and a JSON-compatible immutable string mapping. HTTPX builds its default zero-retry transports with configured limits/environment trust, including proxies. Shared inspection connections, checkpoint export and terminal event readers use known or saved effective timeouts. Independent historical databases use the canonical timeout only for the metadata lookup needed to discover their policy.
+
+### Design principle
+
+Resolved configuration must remain stable and operational preferences must reach their consumers. Saved run policy takes precedence over inspection defaults; authority, WAL/FULL durability and physical certainty are unchanged.
+
+### Verification
+
+The [P0 record](p0-repairs-2026-10-29.md) records focused and broad offline checks,
+source preservation, docs/schema/frontend results and actual limits. Tests exercise
+real disposable HTTP/stdio paths where needed; no live-model convergence or old-run
+Resume is claimed. Remaining P1/P2 work is in the [current-version list](current-iter-issues.md#p0-repairs-2026-10-29).
+
+
+<a id="fix-0164"></a>
+## FIX-0164 — 2026-10-29 — Preserve required cloud coding placement
+
+Status: implemented on codex/simple-os-v1; see the final verification record below.
+Related: FIX-0161 and [P0 implementation/verification](p0-repairs-2026-10-29.md).
+
+### Problem and root owner
+
+Ordinary task-count allocation could demote a senior-proposed specialist task to the local lane even when safe decomposition was impossible.
+
+### How it was fixed
+
+Assignment.cloud_only_reason records the coupling reason. Allocation protects it; validation requires a specialist bound to cloud. Raw proposals remain separate from effective assignment roles. Existing automatic recovery protection, original grants, accounting/deadlines and finite campaign limits remain.
+
+### Design principle
+
+Agent suitability constraints outrank soft distribution targets. Extra local microtasks do not authorize relabeling required cloud implementation as local work or minting more resources.
+
+### Verification
+
+The [P0 record](p0-repairs-2026-10-29.md) records focused and broad offline checks,
+source preservation, docs/schema/frontend results and actual limits. Tests exercise
+real disposable HTTP/stdio paths where needed; no live-model convergence or old-run
+Resume is claimed. Remaining P1/P2 work is in the [current-version list](current-iter-issues.md#p0-repairs-2026-10-29).
+
+
+<a id="fix-0165"></a>
+## FIX-0165 — 2026-10-29 — Separate provider completion from local budget violations
+
+Status: implemented on codex/simple-os-v1; see the final verification record below.
+Related: FIX-0161 and [P0 implementation/verification](p0-repairs-2026-10-29.md).
+
+### Problem and root owner
+
+A provider-completed valid 547-byte candidate was classified IncompleteGeneration from 20189 cumulative native output tokens against 16384. Smaller visible-response recovery addressed the wrong failure scope.
+
+### How it was fixed
+
+Native terminal responses retain provider status, final-response completeness and native_thread_total usage scope. Cloud per-call caps are removed by FIX-0167. A completed local overage becomes non-retryable CompletedBudgetExceeded with full output, usage and violation facts preserved; it does not enter smaller-response adaptation. Actual cutoff remains IncompleteGeneration and cannot execute partial actions.
+
+### Design principle
+
+Provider completion, budget compliance, response validity, retained source and application acceptance are separate facts. Complete over-budget output is not permission to publish; unknown execution still requires reconciliation.
+
+### Verification
+
+The [P0 record](p0-repairs-2026-10-29.md) records focused and broad offline checks,
+source preservation, docs/schema/frontend results and actual limits. Tests exercise
+real disposable HTTP/stdio paths where needed; no live-model convergence or old-run
+Resume is claimed. Remaining P1/P2 work is in the [current-version list](current-iter-issues.md#p0-repairs-2026-10-29).
+
+
+<a id="fix-0166"></a>
+## FIX-0166 — 2026-10-29 — Carry exact-source passing and failing check evidence
+
+Status: implemented on codex/simple-os-v1; see the final verification record below.
+Related: FIX-0161 and [P0 implementation/verification](p0-repairs-2026-10-29.md).
+
+### Problem and root owner
+
+The preserved final diagnostic lacked an available passing check for its exact input tree. Failure-only evidence selection caused diagnosis/senior review to request already available verification again.
+
+### How it was fixed
+
+Agent check_evidence selects latest receipts of each verdict by process, repository, tree, environment and configured invocation. Diagnosis receives a separate passing/failing catalog and frozen authorized output refs; coding.diagnostic_evidence_read pages only those outputs. Parked private source retains its code identity; senior exception packets expose matching checks without adding them to objective-completion authority.
+
+### Design principle
+
+Route retained evidence to its owner without conflating the failure trigger with all verification. Matching technical checks do not replace reconciliation, assessment, publication or full-objective acceptance.
+
+### Verification
+
+The [P0 record](p0-repairs-2026-10-29.md) records focused and broad offline checks,
+source preservation, docs/schema/frontend results and actual limits. Tests exercise
+real disposable HTTP/stdio paths where needed; no live-model convergence or old-run
+Resume is claimed. Remaining P1/P2 work is in the [current-version list](current-iter-issues.md#p0-repairs-2026-10-29).
+
+
+<a id="fix-0167"></a>
+## FIX-0167 — 2026-10-29 — Unify local token settings and remove cloud per-call caps
+
+Status: implemented on codex/simple-os-v1; see the final verification record below.
+Related: FIX-0161 and [P0 implementation/verification](p0-repairs-2026-10-29.md).
+
+### Problem and root owner
+
+Local input/output settings were split among Limits, endpoint context/reservations and the smaller raw target. The same per-call output ceiling rejected completed native cloud jobs. Provider startup configuration could retain a different context size.
+
+### How it was fixed
+
+system.local_token_limits is the canonical input_tokens/output_tokens pair. Validation projects legacy fields and derives local context/admission; raw API requests and capacity/prompt views use the pair. Legacy target input migrates once and is absent from current schema/serialization. Cloud endpoints omit token caps; Codex cloud inference is uncapped even if bound to the local worker lane. Request bytes and campaign accounts remain independent. The application configure-local utility and optional local_strata_config synchronize Strata --max-context before restart, retain a backup and never control a running server. Restart round trips and incompatible pins require fresh state.
+
+### Design principle
+
+Provider-owned cloud generation limits must not be inferred from local worker configuration. One declared local pair drives all local projections; actual serving, tokenization and hidden native context remain provider-owned. Existing total campaign accounting/deadlines and authority are preserved.
+
+### Verification
+
+The [P0 record](p0-repairs-2026-10-29.md) records focused and broad offline checks,
+source preservation, docs/schema/frontend results and actual limits. Tests exercise
+real disposable HTTP/stdio paths where needed; no live-model convergence or old-run
+Resume is claimed. Remaining P1/P2 work is in the [current-version list](current-iter-issues.md#p0-repairs-2026-10-29).
+
+
+<a id="fix-0168"></a>
+## FIX-0168 — 2026-11-02 — Persist machine-local Qwen/Strata UI defaults
+
+Status: implemented; verification recorded below.
+Related history: [FIX-0128](#fix-0128), [FIX-0092](#fix-0092), [FIX-0167](#fix-0167).
+
+### Problem
+
+Plain polyinference ui continued to use remote Haiku after real local Qwen/Strata
+had been configured for isolated live tests. The user requested machine defaults
+of Qwen3.8 Flash-Next Coder IQ1_M, 64K context and batch size one.
+
+### What was wrong
+
+The application UI preset always selected Haiku; past explicit run configs did not
+persist a machine preference. Protocol alone also identified simulation candidates:
+a real local Strata endpoint speaks Anthropic's wire protocol, so a later explicit
+simulation could preserve the local server while labeling it remote Haiku.
+
+### How it was fixed
+
+agent/system_settings.py loads optional XDG ui-defaults.json for the ordinary UI
+preset, allowing only a complete local endpoint, local_token_limits, max_workers
+and local_strata_config. Relative Strata paths resolve against the preferences.
+Endpoint replacement drops the old credentials; AgentConfig validates final settings.
+ui.py displays the actual model/context/slots/workers/sprints instead of its stale
+Haiku/nine-sprint label.
+Explicit --config bypasses the preset, project selection keeps normal grants, and
+saved-run Resume retains original configuration. Explicit --sim-batch replaces
+a declared local Anthropic endpoint with Haiku. The installed machine preferences
+select loopback Qwen, 49152/16384 tokens and one worker/slot. The installed Strata
+launch profile is backed up and configured for 65536 context, parallel=1 and
+batch_groups=1, with a named polyinference-default runtime profile.
+
+### Design principle enforced or reconstructed
+
+Persist machine deployment choices in application preferences, keeping generic OS
+defaults, explicit run pins, original resources and historical evidence intact.
+Wire protocol does not attest physical placement. Provider scheduling and lifecycle
+remain in Strata; the UI preference loader does not start or reload a server.
+
+### Verification
+
+The new UI regression checks effective context/admission, credential replacement,
+project selection, explicit-config precedence, unchanged cloud endpoint, explicit
+remote simulation and rejected unknown/invalid preferences. Shared test fixtures
+isolate XDG preferences so the developer's model deployment cannot change tests. Effective machine
+configuration and no-op Strata synchronization were inspected. The affected UI,
+simulation and P0 suite passed 85 tests in 255.30 seconds (before the final footer
+assertion and test-isolation edits). All three final focused UI cases then passed
+in 65.02 seconds on the final source, including the updated footer assertion and
+the isolated machine-preference fixture.
+Initial sandbox runs could not bind sockets; the completed suite ran with loopback
+access. Ruff, settings schema agreement, documentation generation/check and diff
+whitespace checks passed. No full framework suite or coding task was launched.
+Strata runtime readiness passed API identity, launch attestation and one-token
+generation. Live /v1/models reported the requested loaded model and n_ctx=65536;
+telemetry reported context=65536, slots_requested=1 and slots_effective=1. A plain
+UI /api/runs smoke check displayed local Qwen, 65536 context and one slot/worker.
+The first Strata start used an insufficient one-second readiness budget and was
+cleanly stopped; the corrected 60-second start reached generation_ready. The
+verified runtime is left running under profile polyinference-default. It is not
+a boot service; start that profile again after shutdown. No old run was resumed.
+Configuration/setup/launching and owning settings/UI guides were updated. Runtime
+boundary, generic settings schema, provider/token-pair semantics and recovery guides
+remain applicable: no generic schema, old-run or ownership contract changed.
+Project knowledge was appended to AGENTS.md and read back; no automation was added.
+
+
+<a id="fix-0169"></a>
+## FIX-0169 — 2026-11-02 — Automatically start the configured Strata engine with the UI
+
+Status: implemented; final verification recorded below.
+Related history: [FIX-0168](#fix-0168), [FIX-0167](#fix-0167).
+This supersedes FIX-0168's requirement to start the machine's engine separately.
+
+### Problem
+
+The saved Qwen defaults still required a separate Strata command after shutdown.
+The user explicitly requested that polyinference ui launch the inference engine.
+
+### What was wrong
+
+UI bootstrap selected the local endpoint but did not manage provider readiness.
+Launch-JSON synchronization intentionally remains a separate no-inference utility;
+it could not establish an engine was running. Application deployment startup owns
+this missing behavior, not the generic OS or provider's GPU scheduler.
+
+### How it was fixed
+
+AgentConfig adds optional local_strata_profile, accepted by machine UI preferences.
+The machine opts into polyinference-default. Before TestUI construction (which can
+restore pending saved resumes), ui.serve resolves the effective config/simulation
+overlay and invokes application local-provider bootstrap. For a declared loopback
+local endpoint it finds Strata on PATH or ~/.local/bin, inspects the named runtime,
+starts a stopped profile with a bounded readiness wait, or awaits an in-progress
+startup. Matching ready engines are reused. Live telemetry must match configured
+model, loaded state, context and effective slots. Invalid/unready/mismatched
+engines fail visibly; no existing engine is restarted or stopped. Remote
+simulation and configs without this explicit profile never bootstrap Strata.
+Launch synchronization retains its backup/no-reload contract. UI exit leaves the
+background provider running for reuse; a later UI starts it again after shutdown.
+
+### Design principle enforced or reconstructed
+
+Application startup may prepare an explicitly selected provider without changing
+generic OS defaults or stored run authority. Physical provider state must be
+observed rather than inferred from lane/protocol labels. Preserve other runtime
+owners, active work, original saved configurations and budgets; never repair a
+mismatch by silently replacing a live engine or falling back to another model.
+
+### Verification
+
+Nine focused offline cases passed: machine preference/profile loading, stopped,
+ready, starting, failed, mismatched and failed-start runtimes, skipped remote/no-opt-in
+cases, and bootstrap ordering before UI restoration with normal/simulated launch.
+The affected P0/Strata token-setting and simulation suite passed all 54 cases in
+22.97 seconds; combined with the nine new/focused cases, 63 checks passed.
+An actual idle runtime created in this chat was ownership-checked and stopped.
+Invoking the installed plain polyinference ui --port 0 from a fresh directory
+cold-started Strata and opened HTTP only after readiness; /api/runs showed local
+Qwen IQ1_M, 65536 context and one slot/worker. A second invocation reused the exact
+same instance. Interrupting each UI left that engine generation-ready. Evidence:
+ignored .polyinference/machine-defaults/autostart-verification.json. No boot service
+or separate engine-start command was used. The verified engine remains running.
+Ruff, generated settings schema agreement, documentation generation/check and
+whitespace checks passed. The full framework suite was not rerun.
+No historical run was resumed or coding task launched. Launch/setup/token guides,
+settings/UI ownership docs, generated settings schemas and project memory are
+updated. Existing generic OS/provider transport contracts and unrelated issue
+backlogs require no edits; deployment startup remains application-owned.
+Retained AGENTS.md knowledge was appended and read back.
+
+<a id="fix-0170"></a>
+## FIX-0170 — 2026-11-02 — Investigate a native setup interruption at the cloud timeout
+
+Status: investigated; no implementation changed.
+Related: [FIX-0068](#fix-0068), [FIX-0168](#fix-0168), [FIX-0169](#fix-0169).
+Evidence and follow-up: [run 20739a315d3f](current-iter-issues.md#run-20739a315d3f).
+
+### Problem
+
+The ordinary UI paused during initial Minecraft v2 setup with “Codex interrupted;
+remote termination is not established”, before senior planning or local inference.
+
+### What was wrong
+
+The cloud native setup job had a 180-second whole-call timeout and became uncertain
+180.041963 seconds after activation. Its matching Codex rollout records an
+interruption at that boundary. Timeout is strongly supported, though the durable
+failure loses the original timeout/cancellation exception type. The adapter sends
+interrupt and closes transport without draining terminal acknowledgement.
+FIX-0068 already identified these mechanisms; it was investigation only, so no
+implemented repair or regression coverage prevented recurrence. Recent local
+Strata startup fixes did not change the cloud endpoint or native termination path.
+
+### How it was fixed or established
+
+No runtime fix, configuration change, saved-run mutation or game development was
+performed. Recorded the exact timeline, cloud binding, 19 successful callback
+receipts and twelve private scaffold files. No checks, candidate commit or accepted
+contribution were recorded. Added the investigation to the issue/index routes.
+Increasing future native-job time allowance is mitigation; typed failure provenance
+and bounded terminal drain remain unimplemented follow-ups.
+
+### Design principle
+
+Application deployment owns suitable native-job timing preferences. The OS owns
+precise timeout/cancellation facts, terminal evidence and uncertainty barriers.
+Activity, local transport shutdown and partial source never authorize blind replay
+or establish product acceptance. Preserve old pins, resources and private work.
+
+### Verification
+
+Inspected saved metadata/configuration/history, the matching Codex rollout and
+current settings/kernel/adapter/recovery code. No live inference, Resume,
+reconciliation, game commands or framework suite was run. Documentation checks
+and evidence-hash preservation are recorded in the investigation handoff.
+Reviewed kernel/inference/UI/recovery and boundary guides: their contracts remain
+accurate and needed no behavior edits. Project knowledge was appended to AGENTS.md
+and read back; no automation or runtime hook was installed.
+
+<a id="fix-0171"></a>
+## FIX-0171 — 2026-11-02 — Make cloud agent endpoint timeouts warning-only by default
+
+Status: implemented; verification below.
+Related: [FIX-0068](#fix-0068), [FIX-0170](#fix-0170).
+
+### Problem
+
+A useful native setup job was interrupted at the UI's 180-second endpoint timeout.
+The user requested a binary OS choice: interrupt when true, only log and continue
+when false, with false as the default and the option exposed to the coding agent.
+
+### What was wrong
+
+The kernel always wrapped the whole native job in the endpoint timeout; direct
+Codex also timed each stdio read, and proxy HTTP had its own transport timeout.
+Changing only the outer wrapper would still interrupt a quiet provider. The OS
+owns timing/transport policy; applications must not need a coding-specific bypass.
+
+### How it was fixed
+
+Canonical os_config.py DEFAULTS.RuntimeConfig now defines the strict boolean
+cloud_agent_timeout_interrupt=false. RuntimeConfig exposes it directly and in
+system; AgentConfig inherits it without an application override. Updated exported
+settings schema, Codex/mixed examples and the settings/module/usage/design guides.
+For physically cloud-hosted AgentJob calls, false observes the endpoint threshold
+without cancelling the same task, logs one WARNING and stores a durable diagnostic
+under runtime/warning/cloud-agent-timeout/<operation_id>. It retains admission,
+reservations, callbacks, accounting and eventual terminal result. Adapter stdio
+and proxy HTTP endpoint timeouts are disabled for this invocation. True retains
+endpoint interruption. Raw ModelQuery and local-agent behavior remain unchanged.
+Original process/root deadlines and explicit cancellation remain authoritative.
+No retry, fallback or new allowance is issued by a warning. Fresh configuration
+is required; the old paused run, saved resources and private game files are untouched.
+
+### Design principle
+
+Generic OS settings define endpoint timeout action independently from application
+meaning or lane labels. Logging is observational; it cannot claim termination,
+release physical ownership or replay effects. Disabling an endpoint timer does not
+widen original grants, campaign deadlines or operator cancellation authority.
+FIX-0068's missing terminal drain and conflated interruption cause remain separate
+follow-ups; this change avoids the default timer trigger rather than proving an
+interrupted job stopped.
+
+### Verification
+
+Focused coverage exercises real delayed stdio across both whole-job and silent-read
+timeouts, continued callbacks exactly once, active admission/known state after the
+warning, eventual completion and settled replay. Strict mode/local agents still
+interrupt; original deadlines and cancellation of the owned dispatch remain active.
+Schema tests verify false defaults, strict boolean validation, system and AgentConfig
+exposure/round trips. Proxy tests inspect actual HTTP request timeout options.
+All 139 affected cases passed in 72.47 seconds across capability boundary, OS
+configuration, native events/worker, endpoints/proxy, model retries and output
+limits. Ruff, generated settings-schema agreement, all five example configurations,
+documentation generation/check and whitespace checks passed. The first sandboxed
+async SQLite attempts stalled in event-loop wakeup; the completed suites ran with
+normal local IPC. Early fixture assertions were corrected to use the kernel's
+UncertainEffect and owned-dispatch cancellation contracts. All 66 hashed historical
+run/history/rollout evidence files remain unchanged. This is focused offline
+regression evidence, not a full-suite or live-model qualification.
+No live model job or historical Resume was launched. Existing worktree edits are
+preserved. UI/local-provider/fallback guides were reviewed: no provider startup,
+model-routing or resume authority changed. Retained knowledge is in AGENTS.md.
+
+<a id="fix-0172"></a>
+## FIX-0172 — 2026-11-02 — Keep coding presets warning-only with a 1800-second cloud timeout
+
+Status: implemented; verification below. Related: [FIX-0171](#fix-0171).
+
+### Problem and owning cause
+
+After introducing warning-only cloud-agent timing, the coding UI still explicitly
+selected 180 seconds. The user requested 1800 seconds and assurance that the coding
+agent does not override the OS interruption default to true. This is an application
+preset choice; the generic OS timeout/default and explicit caller overrides remain.
+
+### Change and design principle
+
+Changed ui_system_settings' native cloud endpoint timeout to 1800 and aligned
+native Codex endpoints in Codex/mixed examples. Audited the coding defaults,
+UI machine preferences, endpoint-profile and simulation overlays: none sets
+cloud_agent_timeout_interrupt=true. The coding agent continues to inherit false
+from canonical OS DEFAULTS; no duplicate application flag default was introduced.
+A focused regression locks down the false value and 1800-second cloud threshold
+through all profiles/simulation. Explicit user configurations can still choose
+true. Old saved configurations and runs are not rewritten or resumed.
+Application defaults must respect the OS option rather than silently reversing
+it. Raw Haiku factory timing and generic Endpoint.timeout_seconds remain unchanged.
+
+### Verification
+
+Five focused configuration/preset/UI preference and startup-order checks passed
+in 0.57 seconds. All five example configurations validated with warning-only
+behavior; Codex/mixed cloud endpoints resolve to 1800 seconds. Ruff, generated
+schema agreement, documentation generation/check and whitespace checks passed. No live inference or historical Resume was launched.
+Settings/launch/OS tuning guides and examples were updated; kernel/inference,
+recovery/boundary guides and schemas remain accurate because the OS contract and
+schema default did not change. Retained project knowledge was appended to AGENTS.md.
+
+
+<a id="fix-0173"></a>
+## FIX-0173 — 2026-11-02 — Use a 112K input and 16K output coding preference within 128K
+
+Status: implemented; verification recorded below.
+Related: [FIX-0167](#fix-0167), [FIX-0168](#fix-0168), [FIX-0169](#fix-0169).
+Supersedes FIX-0168's 64K machine token preference for fresh UI launches.
+
+### Problem
+
+The user reports good Strata behavior at 128K and asks for a coding-agent input/
+output allocation plus updated PolyInference settings.
+
+### What was wrong
+
+The machine UI preferences still selected 49152 input + 16384 output (65536),
+while the installed Strata launch JSON already selected 131072 context. Application
+deployment preferences own this mismatch; generic OS defaults are not hardware
+recommendations and must remain independent.
+
+### How it was fixed
+
+Updated the machine's XDG PolyInference ui-defaults.json to 114688 input + 16384
+output = 131072, retaining its complete local endpoint, counter, reasoning/timing
+settings, one worker and one slot. Retained a before-128k-20261102 backup and
+checked source bytes before atomic replacement. The installed Strata launch JSON
+already has matching context and one slot/group, so needed no edit or restart.
+112K input prioritizes code/tool/history; 16K output includes reasoning and allows
+substantial structured edits. This is an application starting preference, not a
+measured optimum or proof of full-context reliability. The existing single pair
+continues to drive packing/admission/request limits without a competing preset.
+Extended machine-preference regression coverage to this pair and its derived
+context and output allowance. Explicit configurations and historical saved runs
+retain their own settings; generic defaults remain 24000/4000.
+
+### Design principle enforced or reconstructed
+
+Keep machine deployment choices in the application preference layer. The OS
+faithfully enforces the selected pair; the provider owns physical token/GPU
+scheduling. Preserve current serving work and historical pins/resources.
+
+### Verification
+
+The affected UI/P0/simulation/output/context run passed all 150 cases in 331.67
+seconds. Effective machine configuration independently resolves 114688/16384,
+131072 local context/reservation and one worker/slot; installed Strata context and
+one slot/group match without rewriting its launch file. Cloud timing remains
+1800 seconds with warning-only interruption policy. Final focused checks passed
+25 cases after the last instance-replacement guard and POSIX signal additions.
+Ruff, settings-schema agreement, documentation generation/check (336 files,
+148 leaves), 21 documentation regressions and Git whitespace checks pass.
+No maximum-context benchmark, live generation or historical Resume is claimed.
+Updated token, configuration, launch/setup, settings and project-knowledge guidance;
+examples retain their provider-independent pairs and need no changes. Preferences
+are backed up; existing serving processes were not restarted.
+
+
+<a id="fix-0174"></a>
+## FIX-0174 — 2026-11-02 — Clean up UI-owned Strata runtimes on exit and process death
+
+Status: implemented; verification recorded below.
+Related: [FIX-0169](#fix-0169), [FIX-0173](#fix-0173).
+Supersedes FIX-0169's intentional leave-running policy for UI-started instances.
+
+### Problem
+
+Stopping PolyInference left the Strata instance it launched running in the
+background. The user requests cleanup on terminal exit or other termination.
+
+### What was wrong
+
+Application bootstrap started a detached Strata runtime without binding its
+lifetime or returning a cleanup handle. UI finally closed only HTTP, and startup
+errors after provider launch were outside that cleanup scope. A Python finally
+alone cannot handle SIGKILL. Reused providers must not be mistaken for owned ones.
+
+### How it was fixed
+
+agent/local_provider.py passes --die-with-pid for the UI process and a 10-second
+drain budget to Strata runtime start. Installed Strata captures that PID's start
+identity and its supervisor drains/stops its own server/engine tree when the UI
+dies, including uncatchable termination. Successful starts return an
+OwnedStrataRuntime handle with captured owner/instance IDs. Its idempotent stop
+uses --if-owner-id/--if-instance-id, a bounded wait and visible cleanup errors;
+there is no kill-by-port/name fallback. Ready/starting runtimes only reused by
+this UI return no ownership. Failed starts with a captured owner, failed readiness
+and startup interruptions close that captured instance without touching replacements.
+
+ui.serve now covers provider preparation, saved-run manager creation, HTTP binding
+and serving with cleanup. Main-thread SIGTERM/SIGHUP enter that same finally path;
+Ctrl+C retains normal handling, and prior signal handlers are restored afterward.
+Normal return and later startup errors close owned providers even if HTTP was
+never opened. If a start command loses delivery before returning an owner ID,
+process-death supervision remains the fallback; no uncertain profile-wide stop
+is attempted. Closing a browser tab still does not stop the backend.
+
+### Design principle enforced or reconstructed
+
+The application owns deployment lifetime; Strata retains provider/process-tree
+supervision. Bind lifetime at launch rather than relying only on in-process hooks.
+Observation/reuse does not transfer ownership, and a captured runtime ID cannot
+authorize stopping its replacement. Preserve generic OS semantics and old runs.
+
+### Verification
+
+All 150 affected UI/P0/simulation/output/context cases passed in 331.67 seconds.
+After the final same-owner instance-replacement guard and subprocess signal tests,
+25 focused cases passed in 4.73 seconds. Coverage includes 128K projection,
+reused/failed/mismatched startup, guarded/idempotent cleanup, startup errors,
+racing starts, owner/instance replacement, interrupt and visible cleanup failure.
+Actual subprocess SIGINT/SIGTERM/SIGHUP exits each invoked provider cleanup.
+
+An isolated CPU-only smoke check of the installed Strata Host supervisor verified
+that SIGKILL of its watched parent stops/reaps its owned child; evidence is in
+/tmp/pi-strata-watchdog-c4y0jsrl/result.json. The first fixture lacked required
+profile_revision metadata; that harness error was corrected before the passing
+check. This is provider watcher evidence, not a live GPU-engine shutdown test.
+The new-start command regression separately verifies --die-with-pid carries the
+actual UI PID. No live model request or existing instance stop/restart occurred.
+
+Initial sandbox regressions could not bind loopback sockets; the passing 150-case
+run used normal local IPC. Redundant sandbox runs were terminated. Ruff, schema
+agreement, documentation generation/check, 21 documentation regressions and
+whitespace checks pass. The full framework suite was not rerun. Updated launch/
+setup, UI/settings modules, accepted revisions, settings reference, onboarding and
+retained AGENTS.md knowledge (read back). Kernel/inference/recovery and runtime
+boundary guides were reviewed: generic execution/uncertainty contracts remain
+accurate and need no edits. Existing navigation owns all affected files; no new
+source file or feature leaf. Earlier FIX history bytes were verified unchanged.
+
+<a id="fix-0175"></a>
+## FIX-0175 — 2026-11-04 — Expose planner allowances and default senior source retrieval to 16 ranges
+
+Status: implemented; affected regressions and documentation verification passed.
+Related: [FIX-0088](#fix-0088), [FIX-0136](#fix-0136) and
+[the saved-run investigation](current-iter-issues.md#run-917e45c4b40a).
+
+### Problem
+
+Run `917e45c4b40a` paused after setup when its senior requested eight source ranges against a configured
+four-range invocation allowance. Zero reads were performed. The response schema permitted eight ranges,
+but no message exposed the configured total or remaining allowance. A task correction failed the
+focused-check membership validator, and its physical response repair again requested eight ranges.
+The user requested a 16-range default and explicit model-visible limits, plus all cloud application prompts.
+
+### What was wrong
+
+The application enforced read and correction accounting without including that accounting in planner
+inputs. Worker messages exposed current process resources and finishing reserve; senior messages did not.
+The generic read-limit rejection omitted requested/remaining counts. FIX-0088 improved check/source
+planning inputs, and FIX-0136 conditioned response repair on actual validation failures, but neither
+covered invocation-specific source-read allowance visibility. Independent dependency preparation and
+invalid focused-check generation remain separate findings, not repaired by this change.
+
+### How it was fixed
+
+AgentConfig defaults max_review_reads to 16, preserving explicit 0–16 values. AgentServices refreshes
+review_limits on each new planner request: configured/used/remaining reads and corrections, the schema's
+eight-range proposal maximum and 4000-byte range maximum. planning_limits supplies sprint, worker,
+recovery, diagnosis, progress and response-retry settings. Planner and worker messages include process
+resource_limits, current resources, finishing_reserve and response_budget. Native cloud token fields
+remain null/provider-owned; no legacy per-call cloud cap is implied. Prompt instructions name these
+fields, and oversized retrieval feedback states requested/remaining counts without consuming reads.
+
+Updated reliability/configuration, settings, services/workers module guides, consolidated settings,
+generated schema and the issue record. Existing navigation owns every changed source/doc; no new feature
+leaf or source file was added. Refreshed retained project knowledge in AGENTS.md and read it back.
+Exported all seven historical cloud application prompts, including the response repair, from the supplied
+JSON and its referenced native rollouts to a separate session-artifact directory. Application instructions,
+input text and available broker declarations are complete; the JSON also retains visible messages and
+host tool exchanges. Updated offline fixture packets are separately labeled; no live model was called.
+
+### Design principle enforced or reconstructed
+
+The coding application owns review policy, prompt grammar and semantic planning. Supply current bounds
+to the decision maker while preserving generic OS admission/accounting and provider token ownership.
+Retries, retrieval and prompt export cannot reset accounts/deadlines, migrate historical runs or promote
+model claims into product acceptance. Existing uncommitted changes and saved game source are preserved.
+
+### Verification
+
+The initial focused semantic-review run passed 18 cases in 71.60 seconds. The final affected run passed
+91 cases in 387.20 seconds across semantic review, native workers, user briefs, validation feedback,
+context safety and setup tools. It includes the added correction-accounting regression, raw/native
+planner inputs, explicit lower settings, two eight-range batches, zero allowance, overrun rejection,
+source identity, context bounds and semantic acceptance. A separate 21 documentation tests passed in
+0.10 seconds. The actual exported configuration still validates with its explicit four-read limit;
+removing only that field validates with the new 16-read default. These use offline providers; no saved
+run was resumed and live planner convergence is unverified. Restricted test processes stalled before
+completing their first asynchronous fixture and were stopped; passing tests used normal local IPC.
+The ten-task setup regression exceeded the 60-second diagnostic traceback threshold but completed
+successfully within the passing suite; the traceback was diagnostic output, not a failed case.
+
+Reviewed setup/launch, runtime boundary and provider fallback interfaces: no deployment, dependency,
+transport or OS policy changed, so they need no edit. Ruff, schema agreement, documentation generation/
+check and whitespace checks passed. Existing guide-length advisories remain nonblocking. The complete
+historical prompt export was checked against seven unique native sessions and source/file SHA-256
+digests. Captured updated adapter packets are labeled offline fixtures; the archive passed its integrity
+check. Historical export bytes remained unchanged. The full framework suite was not rerun.
+
+<a id="fix-0176"></a>
+## FIX-0176 — 2026-11-04 — Record the revised agent prompting proposal and first current implementation issue
+
+Status: investigation and proposal documentation only; no implementation changed.
+Issue: [PROMPT-01](current-iter-issues.md#prompt-01).
+Proposal: [simpler agent prompts and milestone-driven sprint planning](agent-prompting-proposal-2026-11-04.md).
+Related: [FIX-0175](#fix-0175), [FIX-0088](#fix-0088) and [FIX-0136](#fix-0136).
+
+### Problem
+
+The user requested a revised prompting proposal emphasizing milestone/status/work
+organization/task distribution/verification, one-purpose local work, existing OS
+action contracts, context-aware repair, a prompt-family matrix and fewer redundant
+checks. They then requested a document and first issue in the current tracker.
+
+### What was wrong
+
+The previous conversational proposal overemphasized validation and mandatory task
+contracts. The saved run's semantic rejections exposed upstream prompt/contract
+disagreement and a repair-context regression: `invalid-0/feedback` was optional and
+the agent repair callback dropped it while retaining only required parts. The
+rejected task proposal was not supplied inline. A subsequent repair requested eight
+ranges again without restoring the historical four-read constraint. All 41 native
+tool callbacks successfully delivered observations; this does not establish command
+success, and there was no observed broker argument rejection requiring an OS fix.
+
+### How it was fixed or established
+
+Created the linked proposal and added PROMPT-01 as the first issue below the current
+tracker title. The proposal confirms current documentation, explicitly organizes
+file responsibilities/APIs, test work, prerequisites and integration before local
+task distribution, and explains current versus proposed task/check policies. It
+records the exact failed read/focused-check/repair sequence, a context-aware repair
+example and a matrix covering all prompt families against seven improvements.
+Core implementation is agent-level; candidate OS changes are identified and
+deferred. Updated development/proposal navigation, JSON/generated tree and retained
+AGENTS.md proposal knowledge. No agent/OS source, configuration, historical run,
+budget, game file or implementation status was changed by this documentation work.
+
+### Design principle enforced or reconstructed
+
+The agent owns milestone organization, task meaning, prompt grammar, evidence
+selection, semantic review and proportionate verification. The OS owns generic
+actions, grants, effects, replay, certainty and accounting. Simplify avoidable agent
+gates and let engineers exercise judgment; retain user boundaries and truthful
+evidence. A documented proposal is not an implemented guarantee or a new live-run
+authorization. Preserve original source, run pins, resources and existing edits.
+
+### Verification
+
+Reviewed the current agent/OS action documentation, local-task/check policy and
+prompt-building/repair sources. Reproduced the reported read counts, correction
+context parts, focused-check values, callback count, initial TypeScript failure
+and three same-tree passing prerequisite receipts from the retained JSON/prompts.
+Documentation generation/check passed for 337 files and 149 feature/doc leaves;
+existing guide-length advisories remain nonblocking. Whitespace checks passed.
+All 77 captured source hashes remained unchanged. Earlier FIX history bytes
+(apart from the added index row) and the previous issue body were preserved, and
+PROMPT-01 was confirmed as the first issue. No production test, inference, run
+Resume or code repair was performed. Success-rate improvements remain proposed.
+
+Adjacent services/workers/workflow, setup/check, capability, runtime-boundary and
+onboarding/project-memory guides were reviewed: their current behavior and existing
+ownership rules are unchanged, so they need no implementation-policy edits now.
+The proposal identifies the guide updates required during implementation. The new
+document has a primary navigation leaf; retained AGENTS.md knowledge was read back.
+
+<a id="fix-0177"></a>
+## FIX-0177 — 2026-11-04 — Audit the prompting proposal against prior fixes and correct unsafe workflow shortcuts
+
+Status: analysis and corrected implementation plan only; no source implementation changed.
+Audit: [prompting proposal audit and corrected plan](agent-prompting-audit-2026-11-04.md).
+Issue: [PROMPT-01](current-iter-issues.md#prompt-01).
+Corrects: [FIX-0176](#fix-0176), retaining the original proposal/history.
+Related: [FIX-0023](#fix-0023), [FIX-0025](#fix-0025), [FIX-0086](#fix-0086),
+[FIX-0088](#fix-0088), [FIX-0089](#fix-0089), [FIX-0136](#fix-0136),
+[FIX-0137](#fix-0137), [FIX-0162](#fix-0162), [FIX-0164](#fix-0164),
+[FIX-0166](#fix-0166).
+
+### Problem
+
+The user requested an audit of whether the new prompting proposal would undo prior
+design/fixes and asked for clear findings and an improved plan. The earlier plan
+mixed prompt cleanup, new task types and weaker completion mechanics, calling the
+combined work a small agent refactor without tracing publication consequences.
+
+### What was wrong
+
+Relaxing canonical local/shared contracts could reopen failures addressed by
+FIX-0162 and dependency/interface validation. Worker publication currently requires
+reconciliation/assessment turns and matching required check evidence; source-only
+completion or skipping those turns would be rejected or would require removing
+guards protecting semantic post-merge/final-tree review. FIX-0166's evidence
+selector supplies diagnosis/private review, not general acceptance or phase-skip
+authority. Testing-only assignments cannot simply enter the code-commit/report
+path with no implementation target. Partial read fulfillment and extra-field
+tolerance also lacked precise boundaries. Generic record access was presented as
+if it guaranteed a stable public failed-attempt lookup interface.
+
+The prompt/repair causes in run 917e45c4b40a still hold: undisclosed read budget,
+misleading focused-check semantics, lost active correction context and missing
+failed answer. These justify narrower agent corrections without dropping required
+contracts or proof. A genuine setup type error and environment handoff failures
+remain distinct findings. Their occurrence does not prove every rejection is a
+prompt problem or every repeated check is safe to remove.
+
+### How it was fixed or established
+
+Added the linked audit with source/history cross-references, a compatibility matrix,
+explicit self-correction and a three-stage plan. Stage A fixes prompts/repair while
+preserving current execution contracts; Stage B defines honest test-only results;
+Stage C isolates evidence-backed optimizations. Marked the earlier proposal as
+partly superseded, updated PROMPT-01 to implement the audited first stage, and
+updated development/proposal/tree navigation and retained AGENTS.md knowledge.
+Current implementation guides stay accurate; they were not edited to claim future
+policy already exists. No agent/OS source, saved run, account, configuration or
+private game implementation was changed by this work.
+
+### Design principle enforced or reconstructed
+
+Simplify presentation and redundant work while preserving or explicitly replacing
+the semantics an earlier fix restored. Agent planning/grammar/evidence policy must
+remain separate from generic OS authority, replay, certainty and accounting. AI
+judgment operates within an honest task/result contract; accepting more outputs
+does not by itself establish useful completion. Latest user direction can change
+old policy, but requires a coherent implementation path rather than synthetic
+phase records, false checks or implicit evidence promotion.
+
+### Verification
+
+Read the relevant current design/user-review, capability, check/workflow and
+memory/boundary guides plus linked historical fixes and current source. Three
+direct in-memory probes confirmed that current classes reject a local edit with
+no local contract, an empty write target and empty required checks. These are
+expected compatibility results, not new production test failures. Source inspection
+confirmed mandatory phase-turn/evidence guards and existing public callback/record
+interfaces. No model generation, saved-run execution, code fix or production
+workflow test was performed. Documentation/preservation results are recorded after
+completion below; future convergence and performance remain unmeasured.
+
+Documentation generation/check passed for 338 files and 150 feature/doc leaves;
+existing guide-length advisories remain nonblocking. Whitespace checks passed.
+All 77 captured agent/OS source hashes were unchanged. Earlier FIX history (apart
+from the new index row), the original proposal body below its correction notice,
+and older issue bodies were preserved. The updated project note was read back.
+
+Reviewed adjacent agent services/workers/workflow, check, capability, design,
+onboarding/project-memory and runtime-boundary guides. Current rules are unchanged;
+the audit identifies future edits rather than rewriting those guides now. The new
+audit has a primary navigation leaf. Earlier proposal/history remains available
+with an explicit correction notice, and the refreshed project note was read back.

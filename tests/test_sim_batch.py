@@ -68,9 +68,10 @@ def test_simulation_preserves_complete_endpoint_and_precedence(config, tmp_path,
     manager = TestUI(tmp_path / "sim", path, sim_batch=slots)
     for effective in (manager.configuration(), manager.configure_run(), manager.configuration().system):
         assert effective.max_workers == effective.local.max_inflight == slots
-        assert effective.local.reserved_context_tokens == max(500000, slots * 48000)
-        assert effective.local.model_dump(exclude={"max_inflight", "reserved_context_tokens"}) == {
-            k: v for k, v in local.items() if k not in {"max_inflight", "reserved_context_tokens"}}
+        assert effective.local.max_context_tokens == effective.local_token_limits.context_tokens
+        assert effective.local.reserved_context_tokens == slots * effective.local_token_limits.context_tokens
+        assert effective.local.model_dump(exclude={"max_inflight", "max_context_tokens", "reserved_context_tokens"}) == {
+            k: v for k, v in local.items() if k not in {"max_inflight", "max_context_tokens", "reserved_context_tokens"}}
         assert effective.cloud.model_dump(mode="json") == source["system"]["cloud"]
         assert effective.limits == config.limits
     assert path.read_text() == text and dict(os.environ) == environment
@@ -153,7 +154,7 @@ async def test_simulated_worker_requests_overlap_to_capacity_and_refill_without_
         assert str(request.url) == "https://api.anthropic.com/v1/messages"
         assert request.headers["x-api-key"] == "fixture-secret" and request.headers["anthropic-version"] == "2023-06-01"
         assert body["model"] == "claude-haiku-5-5"
-        assert body["max_tokens"] == config.model_output_target_tokens == 4096
+        assert body["max_tokens"] == config.local_token_limits.output_tokens
         assert body["system"].startswith("Independent bounded task") and body["messages"][-1]["role"] == "user"
         active += 1
         peak = max(peak, active)
@@ -248,7 +249,7 @@ async def test_simulation_runs_two_real_worker_assignments_and_persists_effectiv
 
     manager = TestUI(tmp_path / "ui", path, runner=runner, sim_batch=2)
     run_id = manager.start()
-    for _ in range(1000):
+    for _ in range(6000):
         if manager.active is None:
             break
         await asyncio.sleep(0.02)

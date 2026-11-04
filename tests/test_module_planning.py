@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 
 import pytest
-from conftest import ScriptedAgent
+from conftest import ScriptedAgent, fixture_task
 from langgraph.runtime import Runtime
 
 from polyinference.agent.architecture import catalog, pinned_context, validate_plan
@@ -35,8 +35,7 @@ def interface(version=1, **updates):
 
 
 def assignment(name, **updates):
-    return Assignment(
-        **{
+    return Assignment.model_validate(fixture_task({
             "task_id": name,
             "objective": f"Implement the bounded {name} module",
             "write_paths": [name + ".py"],
@@ -45,8 +44,7 @@ def assignment(name, **updates):
             "acceptance_criteria": ["Returned state matches the agreed data shape"],
             "non_goals": ["Do not build inventory or menus"],
             **updates,
-        }
-    )
+        }))
 
 
 def ledger(task, execution="pending"):

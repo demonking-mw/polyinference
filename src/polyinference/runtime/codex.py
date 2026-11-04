@@ -12,6 +12,7 @@ import shutil
 from collections import Counter, deque
 from pathlib import Path
 
+from ..os_config import DEFAULT_TUNING, NATIVE_CLIENT, default
 from .inference import EndpointError, HTTPInference, IncompleteGeneration, UnknownExecution, model_unavailable
 
 # Completed items carry the authoritative text. Retaining their streaming
@@ -40,23 +41,26 @@ class NativeJobStopped(EndpointError):
 class NativeEventLog:
     """Bounded observations; telemetry retention never controls job execution."""
 
-    def __init__(self, byte_limit, event_limit=2000):
+    def __init__(self, byte_limit, event_limit=None, *, tuning=None):
+        self.tuning = tuning or DEFAULT_TUNING
+        event_limit = self.tuning.native_event_limit if event_limit is None else event_limit
         self.byte_limit, self.event_limit = byte_limit, event_limit
         self.events = deque()
         self.retained_bytes = self.received_bytes = self.received_events = 0
         self.dropped_events = 0
         self.methods = Counter()
-        self.recent = deque(maxlen=24)
+        self.recent = deque(maxlen=self.tuning.native_recent_events)
 
     def record(self, message, size):
-        method = str(message.get("method", ""))[:120]
+        wire_method = str(message.get("method", ""))
+        method = wire_method[:self.tuning.native_method_chars]
         self.received_events += 1
         self.received_bytes += size
         # Bound method cardinality as well as the payload buffer.
-        bucket = method if method in self.methods or len(self.methods) < 32 else "other"
+        bucket = method if method in self.methods or len(self.methods) < self.tuning.native_method_buckets else "other"
         self.methods[bucket] += 1
         self.recent.append({"method": method, "bytes": size})
-        if method in STREAMED_TEXT_METHODS or method.endswith("/delta") or size > self.byte_limit:
+        if wire_method in STREAMED_TEXT_METHODS or wire_method.endswith("/delta") or size > self.byte_limit:
             self.dropped_events += 1
             return
         self.events.append((message, size))
@@ -160,11 +164,12 @@ def broker_schema(tools):
 
 
 class CodexAppServer:
-    def __init__(self, endpoint):
+    def __init__(self, endpoint, *, tuning=None):
+        self.tuning = tuning or DEFAULT_TUNING
         self.endpoint = endpoint
-        self.output_cap = 4 * 1024 * 1024
+        self.output_cap = default("RuntimeConfig", "max_model_response_bytes")
 
-    def prepare(self, messages, schema, *, tools=None, instructions="", max_output=4000):
+    def prepare(self, messages, schema, *, tools=None, instructions="", max_output=None):
         output_schema, wrapped = strict_output_schema(schema)
         if wrapped:
             messages = [
@@ -178,7 +183,7 @@ class CodexAppServer:
             "All current file reads, source edits and commands must go through polyinference_tool when granted. "
             "Never use native shell, apply_patch or other native tools to write files. "
             "Never request escalated access. Only the host owns workspace generations, checks and publication. "
-            + instructions + f" Return a small complete response; the requested output allowance is {max_output} tokens.")
+            + instructions + " Return a complete response under the supplied schema.")
         if instructions:
             messages = [*messages, {"role": "system", "content": instructions}]
         rendered, inputs = native_context(messages)
@@ -192,7 +197,8 @@ class CodexAppServer:
         return wire
 
     async def generate_job(self, messages, snapshot, schema, callback=None, observer=None,
-                           *, tools=None, instructions="", max_output=4000, prepared=None, session_ref=None):
+                           *, tools=None, instructions="", max_output=None, prepared=None, session_ref=None,
+                           enforce_timeout=True):
         if callback and not tools:
             raise NativeJobStopped("Brokered jobs require explicitly granted tool descriptors")
         wire = prepared or self.prepare(messages, schema, tools=tools, instructions=instructions, max_output=max_output)
@@ -233,11 +239,11 @@ class CodexAppServer:
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,
-            limit=1024 * 1024,
+            limit=self.tuning.native_line_bytes,
             start_new_session=True,
         )
         serial, thread_id, turn_id = 0, None, None
-        event_log = NativeEventLog(self.output_cap)
+        event_log = NativeEventLog(self.output_cap, tuning=self.tuning)
         terminal, final_text, usage_event = None, None, None
 
         async def send(message):
@@ -246,7 +252,8 @@ class CodexAppServer:
 
         async def receive():
             nonlocal terminal, final_text, usage_event
-            line = await asyncio.wait_for(proc.stdout.readline(), self.endpoint.timeout_seconds)
+            line = await asyncio.wait_for(proc.stdout.readline(),
+                                          self.endpoint.timeout_seconds if enforce_timeout else None)
             if not line:
                 raise UnknownExecution("Codex app-server exited without a terminal turn")
             message = json.loads(line)
@@ -307,7 +314,7 @@ class CodexAppServer:
                     if "error" in message:
                         failure = NativeJobStopped(
                             f"Codex RPC rejected {method}: {message['error'].get('code')} "
-                            + str(message["error"].get("message", ""))[:1500]
+                            + str(message["error"].get("message", ""))[:self.tuning.native_error_chars]
                         )
                         failure.model_unavailable = model_unavailable(message["error"].get("message"),
                                                                       message["error"].get("code"))
@@ -318,7 +325,7 @@ class CodexAppServer:
             await rpc(
                 "initialize",
                 {
-                    "clientInfo": {"name": "polyinference", "version": "0.1.0"},
+                    "clientInfo": NATIVE_CLIENT,
                     "capabilities": {
                         "experimentalApi": True,
                         "optOutNotificationMethods": list(STREAMED_TEXT_METHODS),
@@ -379,7 +386,7 @@ class CodexAppServer:
             if turn["status"] != "completed":
                 failure = NativeJobStopped(
                     f"Codex turn ended: {turn['status']}: "
-                    + str((turn.get("error") or {}).get("message", "No error detail"))[:1500],
+                    + str((turn.get("error") or {}).get("message", "No error detail"))[:self.tuning.native_error_chars],
                     retryable=turn["status"] not in {"cancelled", "interrupted"},
                 )
                 failure.model_unavailable = model_unavailable((turn.get("error") or {}).get("message"),
@@ -400,6 +407,8 @@ class CodexAppServer:
                     "usage": {**total, "total_tokens": total.get("totalTokens")},
                     "model": self.endpoint.model, "provider_id": turn_id,
                     "events": event_log.snapshot(), "event_diagnostics": event_log.diagnostics(),
+                    "completion": {"provider_status": "completed", "final_response_complete": False,
+                                   "usage_scope": "native_thread_total", "output_token_enforced": False},
                 }, "native_response_byte_limit", max_output)
             if wrapped:
                 try:
@@ -421,6 +430,8 @@ class CodexAppServer:
                 "model": self.endpoint.model,
                 "events": event_log.snapshot(),
                 "event_diagnostics": event_log.diagnostics(),
+                "completion": {"provider_status": "completed", "final_response_complete": True,
+                               "usage_scope": "native_thread_total", "output_token_enforced": False},
             }
         except (TimeoutError, asyncio.TimeoutError, asyncio.CancelledError) as exc:
             if thread_id and turn_id:
@@ -445,7 +456,7 @@ class CodexAppServer:
             if proc.returncode is None:
                 proc.terminate()
                 try:
-                    await asyncio.wait_for(proc.wait(), 5)
+                    await asyncio.wait_for(proc.wait(), self.tuning.native_shutdown_seconds)
                 except asyncio.TimeoutError:
                     proc.kill()
                     await proc.wait()
@@ -455,11 +466,13 @@ class CodexAppServer:
 
 
 class CodexProxy:
-    def __init__(self, endpoint):
+    def __init__(self, endpoint, *, tuning=None):
+        self.tuning = tuning or DEFAULT_TUNING
         self.endpoint = endpoint
-        self.http = HTTPInference(endpoint)
+        self.http = HTTPInference(endpoint, tuning=self.tuning)
 
-    async def generate_job(self, messages, snapshot, schema, *, max_output=4000, prepared=None):
+    async def generate_job(self, messages, snapshot, schema, *, max_output=None, prepared=None,
+                           enforce_timeout=True):
         configured = self.endpoint.readonly_snapshot_root
         if configured is None or Path(configured).resolve() != Path(snapshot).resolve():
             raise EndpointError(
@@ -467,7 +480,8 @@ class CodexProxy:
             )
         # Native tools only. No client-defined tools are sent. A successful HTTP response
         # supplies a proposal, never independent execution or completion evidence.
-        result = await self.http.generate(messages, max_output, schema, prepared=prepared)
+        result = await self.http.generate(messages, max_output, schema, prepared=prepared,
+                                          enforce_timeout=enforce_timeout)
         result["events"] = [
             {
                 "type": "proxy_visibility",

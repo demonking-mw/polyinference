@@ -7,15 +7,17 @@ import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 
+from ..os_config import DEFAULT_TUNING, EXCLUSIVE_FALLBACK_SECONDS
 from ..primitives import digest
 
 
 class Exclusive:
     """Durable logical ownership plus installation-wide OS advisory shell lock."""
 
-    def __init__(self, records, wait_timeout=3600):
+    def __init__(self, records, wait_timeout=None, *, tuning=None):
         self.records = records
-        self.wait_timeout = wait_timeout
+        self.tuning = tuning or getattr(records, "tuning", DEFAULT_TUNING)
+        self.wait_timeout = (self.tuning.exclusive_wait_seconds or EXCLUSIVE_FALLBACK_SECONDS) if wait_timeout is None else wait_timeout
         self.conditions = {}
         self.shell_handles = {}
         self.resource_handles = {}
@@ -92,7 +94,7 @@ class Exclusive:
                     except BlockingIOError:
                         if asyncio.get_running_loop().time() >= deadline:
                             raise RuntimeError("Installation shell queue deadline expired")
-                        await asyncio.sleep(0.05)
+                        await asyncio.sleep(self.tuning.lock_poll_seconds)
             version = held[0] if held else 0
             permit = digest(f"{key}:{process_id}:{version + 1}".encode())
             self.records.compare_and_publish(

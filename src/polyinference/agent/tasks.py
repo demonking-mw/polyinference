@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ..contracts import CodeRevision, Prerequisite, TaskAttempt, TaskSpec
-from .architecture import catalog, task_context
+from .architecture import catalog, task_context, validate_local_tasks
 from .routing import cloud_recovery
 
 
@@ -29,6 +29,9 @@ def coding_tools(config, setup=False):
 def make_task(
     app, assignment, plan_ref, base, attempt, category="development", *, interfaces=None, predecessor=None
 ):
+    if category == "development":
+        from types import SimpleNamespace
+        validate_local_tasks(SimpleNamespace(tasks=[assignment]), app.config)
     task = {
         "assignment": assignment.model_dump(mode="json"),
         "category": category,

@@ -7,6 +7,9 @@ const settledOperation=state=>["succeeded","failed","cancelled"].includes(state)
 const actionLabel=action=>({keep:"Kept · resolved",revert:"Reverted · resolved",retry:"Retry requested",defer:"Deferred · unresolved"}[action]||"Awaiting review");
 const reviewClosed=action=>["keep","revert"].includes(action);
 const taskReviewLabel=task=>task.report?.code_location==="private"&&task.resolution?.action==="revert"?"Rejected · resolved":actionLabel(task.resolution?.action);
+// Current snapshots carry the resolved page size. Legacy snapshots retain the
+// latest page's event sequences, so derive their historical page size from data.
+function activityPageSize(runtime){return runtime.activity_page_size??Math.max(1,new Set((runtime.activity||[]).map(row=>row.sequence)).size)}
 const compactText=(value,limit=200)=>String(value||"").length>limit?String(value).slice(0,limit-1)+"…":String(value||"");
 function readableText(value){try{const parsed=JSON.parse(value);return typeof parsed==="string"?parsed:value}catch{return value}}
 function taskTitle(task){const text=task.id.replace(/[_-]\d+$/,"").replace(/[_-]/g," ");return text.charAt(0).toUpperCase()+text.slice(1)}
@@ -281,14 +284,13 @@ function updateResumePanel(){
 function processResumeControls(box,pid){
  const key=JSON.stringify([current,pid]),section=element("section",undefined,"steering");
  const text=element("textarea"),button=element("button","Resume process"),hint=element("p",undefined,"hint"),status=element("p",undefined,"hint");
- text.rows=3;text.maxLength=16000;text.setAttribute("aria-label","Optional steering for resumed process");
+ text.rows=3;text.setAttribute("aria-label","Optional steering for resumed process");
  text.placeholder="Add instructions for the agent (optional)…";text.value=resumeDrafts.get(key)||"";
  text.oninput=()=>resumeDrafts.set(key,text.value);button.type="button";status.setAttribute("role","status");
  section.append(element("h3","Resume paused process"),text,button,hint,status);box.append(section);
  const panel={run:current,pid,inspection,key,text,button,hint,status};resumePanel=panel;updateResumePanel();
  button.onclick=async()=>{
   if(button.disabled||resuming||savedDocument||panel.run!==current||panel.inspection!==inspection)return;
-  if(text.value.length>16000){status.textContent="Steering instructions must be at most 16000 characters.";return}
   const run=current,document=savedDocument,version=++viewVersion;resuming=true;updateResumePanel();$("start").disabled=true;
   try{
    await api("/api/resume",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:run,process_id:pid,text:text.value})});
@@ -330,7 +332,6 @@ function renderResumeDraft(data){
 async function showRunResume(){
  if(savedDocument||resuming||starting||hasRunningRun||!current)return;
  const run=current,document=savedDocument,draft=runResumeDraft(run),text=$("resumeText").value;
- if(text.length>16000){$("resumeStatus").textContent="Instructions must be at most 16000 characters.";return}
  if(draft.text!==text){draft.text=text;draft.request_id=null}
  if(!draft.request_id)draft.request_id=typeof crypto!=="undefined"&&crypto.randomUUID?crypto.randomUUID():Date.now().toString(36)+Math.random().toString(36).slice(2);
  const key=runResumeKey(run);resumeDrafts.set(key,draft);resumeStorage(key,JSON.stringify(draft));
@@ -574,7 +575,8 @@ function renderOS(data){
  for(const lane of runtime.lanes){
   const box=element("div",undefined,"lane"),title=element("div",undefined,"lane-heading");title.append(element("strong",lane.name+" endpoint"),element("span",lane.held+" / "+(lane.limit??"?")+" slots"));box.append(title,element("div",(lane.model||"Model unrecorded")+" · "+(lane.protocol||"protocol unrecorded"),"lane-model"));
   const meter=element("div",undefined,"meter"),fill=element("span");fill.style.width=Math.min(100,lane.held/(lane.limit||1)*100)+"%";meter.append(fill);box.append(meter);
-  box.append(element("p",number(lane.reserved_tokens)+" / "+number(lane.token_limit)+" reserved context tokens · "+(lane.ordinary_waiters+lane.finishing_waiters)+" waiting","policy"));lanes.append(box);
+  const tokenStatus=lane.token_limit_owner==="provider"?number(lane.reserved_tokens)+" visible-input tokens reserved · provider manages token capacity":number(lane.reserved_tokens)+" / "+number(lane.token_limit)+" reserved context tokens";
+  box.append(element("p",tokenStatus+" · "+(lane.ordinary_waiters+lane.finishing_waiters)+" waiting","policy"));lanes.append(box);
  }
  const reservations=runtime.reservations.slice().sort((a,b)=>(a.state==="waiting"?0:1)-(b.state==="waiting"?0:1)||(b.queued_at||"").localeCompare(a.queued_at||""));
  table("reservationTable",["Operation","Endpoint / lane","State","Queue wait","Slot hold"],reservations.slice(0,100).map(row=>[recordLink(row.key,row.operation_id),row.key.split("/")[1]+" / "+(row.lane||"unrecorded"),stateBadge(row.state),row.admitted_at||row.released_at||row.state==="waiting"?duration(row.queued_at,row.admitted_at||row.released_at):"—",row.admitted_at&&(row.released_at||row.state==="held")?duration(row.admitted_at,row.released_at):"—"]));
@@ -595,7 +597,7 @@ function renderOS(data){
  table("osWorkspaces",["Workspace","Owner","View","Write scope","Generation"],workspaceRows(live),"No active file workspaces.");table("retainedWorkspaces",["Workspace","Owner","View","Write scope","Generation"],workspaceRows(retained));
  $("retainedWorkspaceCount").textContent="Retained workspace history · "+retained.length;
  renderOperations();renderActivity();renderRecords();
- $("journalInfo").textContent=number(journal.count)+" retained transactions · #"+(journal.first_sequence??"—")+"–"+(journal.last_sequence??"—")+". Showing the latest 120 transactions; Older transactions pages through retained history. Save includes the full retained journal.";
+ $("journalInfo").textContent=number(journal.count)+" retained transactions · #"+(journal.first_sequence??"—")+"–"+(journal.last_sequence??"—")+". Showing the latest "+activityPageSize(runtime)+" transactions; Older transactions pages through retained history. Save includes the full retained journal.";
 }
 function renderOperations(){
  if(!osState)return;

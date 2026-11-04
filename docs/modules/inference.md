@@ -39,13 +39,20 @@ transport class and lifecycle stage survive in diagnostics. Buffered mode makes 
 incremental progress claim. Absent lifecycle keeps legacy timeout semantics.
 See [profiles, retry policy and testing](../guides/endpoint-testing.md).
 
+Telemetry buffers, adapter error/body caps, shutdown/status polling, API version
+and progress precision use [central OS tuning](../guides/os-tuning.md). Standalone
+helpers and kernel-created primary/fallback clients share the canonical defaults.
+
 ## Principles to preserve
 
 - Known-unsubmitted, confirmed stopped and unknown execution are distinct facts.
 - Incomplete/unusable output retains diagnostics/usage; native invalid output is distinct from provider/RPC rejection, without application recovery policy.
 - Native permissions and observed source views matter more than prompt promises.
+- Cloud AgentJob timeout behavior follows cloud_agent_timeout_interrupt: default false disables native stdio/proxy endpoint interruption; the kernel warns once and retains the same live task. True enforces the endpoint timeout. Original deadlines/cancellation remain hard.
 - Bound streaming telemetry without losing terminal/tool evidence.
-- Native hard generation-token caps are unsupported; expose or strictly reject that requirement.
+- Cloud inference has no OS per-call token cap; native provider completion is distinct from cumulative usage.
+- Local completed overages retain complete output as CompletedBudgetExceeded, without smaller-response replay.
+- Local raw adapters submit the canonical output cap; strict native enforcement requirements reject.
 - Provider token/GPU scheduling is outside the OS.
 
 ## Verification and related reading

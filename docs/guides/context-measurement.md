@@ -2,15 +2,14 @@
 
 [Context module](../modules/context.md) · [Settings](../../design-docs/simplified-os/AGENT_SETTINGS.md) · [Configuration](configuration.md)
 
-`simple-os/5` separates three facts: serialized adapter UTF-8 bytes, measured or
+`simple-os/6` separates three facts: serialized adapter UTF-8 bytes, measured or
 conservatively bounded input tokens, and output reservation. It requires fresh
 state; old runs keep their original source, receipts, settings and accounts.
 
-The input token allowance is the minimum of ContextView.maximum_input_tokens,
-Limits.max_input_tokens_per_call and endpoint context minus output reservation.
-Raw adapters reserve their actual enforced request output cap, including a smaller
-explicit runtime/output-tokens value. Native output is not hard-enforced, so its
-hard configured allowance stays reserved and hidden native context stays unmeasured.
+The [local pair](local-token-limits.md) supplies the local input cap and raw output reservation.
+A caller may request a narrower local context. Cloud inference has no OS per-call input/output token cap;
+its receipts identify the provider as limit owner. Native hidden context remains unmeasured. Actual
+provider usage settles campaign accounts; visible-input reservation cannot bound hidden native consumption.
 
 ## Opt into a provider counter
 
@@ -24,10 +23,9 @@ on the same provider can count the **complete prepared request body**, for examp
       "protocol": "chat",
       "base_url": "http://127.0.0.1:8099/v1",
       "model": "your-served-model",
-      "max_context_tokens": 65536,
-      "reserved_context_tokens": 65536,
       "input_token_count_path": "/chat/completions/input_tokens"
     },
+    "local_token_limits": {"input_tokens": 49152, "output_tokens": 16384},
     "max_model_request_bytes": 400000
   }
 }
@@ -51,8 +49,7 @@ Native adapters reject this raw counter setting.
 ## Independent byte ceiling and optional packing
 
 `max_model_request_bytes` is an independent serialized-adapter byte ceiling.
-When absent, min(context maximum_input_tokens, max_input_tokens_per_call) retains
-the old byte ceiling for compatibility. Raising the explicit byte ceiling does not
+When absent it uses the canonical 4194304-byte request default, independently of token and response-byte settings. Raising the explicit byte ceiling does not
 raise token/model/output limits. Oversized inputs are never sent to the counter.
 Admission and token accounts reserve measured input tokens, or the conservative
 bound, plus output. Receipts retain byte counts and token provenance separately.

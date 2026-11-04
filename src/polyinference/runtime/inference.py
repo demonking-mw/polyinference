@@ -14,6 +14,7 @@ from email.utils import parsedate_to_datetime
 
 import httpx
 
+from ..os_config import DEFAULT_TUNING, default
 from .inference_stream import CompletionStream, SSEDecoder, StreamFault
 
 
@@ -108,7 +109,8 @@ class IncompleteGeneration(EndpointError):
     retryable = True
 
     def __init__(self, response, stop_reason, max_output):
-        super().__init__(f"Model output reached its {max_output}-token limit ({stop_reason}); "
+        limit = f"{max_output}-token limit" if max_output is not None else "response boundary"
+        super().__init__(f"Model output reached its {limit} ({stop_reason}); "
                          "retry with a smaller response")
         self.response = {**response, "incomplete": True, "stop_reason": stop_reason,
                          "max_output_tokens": max_output, "error": str(self)}
@@ -116,10 +118,25 @@ class IncompleteGeneration(EndpointError):
                             "max_output_tokens": max_output, "provider_id": response.get("provider_id")}
 
 
+class CompletedBudgetExceeded(EndpointError):
+    """Complete output with reported usage above a local allowance, not truncation."""
+
+    retryable = False
+
+    def __init__(self, response, maximum, *, scope):
+        super().__init__(f"Completed inference exceeded the local {maximum}-token output budget ({scope})")
+        self.response = {**response, "incomplete": False, "budget_exceeded": True,
+                         "completion": {**response.get("completion", {}), "final_response_complete": True,
+                                        "usage_scope": scope}}
+        self.diagnostics = {"category": "budget_violation", "usage_scope": scope,
+                            "max_output_tokens": maximum, "provider_id": response.get("provider_id"),
+                            "final_response_complete": True}
+
+
 class Admission:
     """Bounded requests/tokens, FIFO with alternating verifier and ordinary lanes."""
 
-    def __init__(self, limit, token_limit, records=None, name="local", max_queued=128):
+    def __init__(self, limit, token_limit, records=None, name="local", max_queued=default("RuntimeConfig", "max_queued_operations")):
         self.limit, self.token_limit = limit, token_limit
         self.records, self.name, self.max_queued = records, name, max_queued
         self.active = self.tokens = 0
@@ -190,7 +207,7 @@ class Admission:
 
     @asynccontextmanager
     async def reserve(self, tokens, finishing=False, operation_id=None, timeout=None, process_id=None):
-        if tokens < 0 or tokens > self.token_limit:
+        if tokens < 0 or self.token_limit is not None and tokens > self.token_limit:
             raise EndpointError("Context cannot fit configured token reservation")
         ticket = object()
         lane = int(finishing)
@@ -208,7 +225,7 @@ class Admission:
                     lambda: (
                         self._front() is ticket
                         and self.active < self.limit
-                        and self.tokens + tokens <= self.token_limit
+                        and (self.token_limit is None or self.tokens + tokens <= self.token_limit)
                     )
                 )
                 try:
@@ -244,12 +261,14 @@ class Admission:
 
 
 class HTTPInference:
-    def __init__(self, endpoint, client=None):
+    def __init__(self, endpoint, client=None, *, tuning=None):
+        self.tuning = tuning or DEFAULT_TUNING
         self.endpoint = endpoint
         self.secrets = []
-        self.output_cap = 4 * 1024 * 1024
-        self.require_completion_metadata = True
-        headers = {"anthropic-version": "2023-06-01"} if endpoint.protocol == "anthropic" else {}
+        self.output_cap = default("RuntimeConfig", "max_model_response_bytes")
+        self.output_token_limit = default("Limits", "max_output_tokens_per_call")
+        self.require_completion_metadata = default("InferenceSafety", "require_completion_metadata")
+        headers = {"anthropic-version": self.tuning.anthropic_version} if endpoint.protocol == "anthropic" else {}
         if endpoint.api_key_env:
             key = os.environ.get(endpoint.api_key_env)
             if not key:
@@ -265,7 +284,12 @@ class HTTPInference:
             timeout=endpoint.timeout_seconds,
             headers=headers,
             follow_redirects=False,
-            transport=httpx.AsyncHTTPTransport(retries=0),
+            trust_env=self.tuning.http_trust_environment,
+            # HTTPX's default transport has zero retries. Let the client build
+            # transports so trust_env also controls environment proxy routing.
+            limits=httpx.Limits(max_connections=self.tuning.http_max_connections,
+                               max_keepalive_connections=self.tuning.http_max_keepalive_connections,
+                               keepalive_expiry=self.tuning.http_keepalive_expiry_seconds),
         )
 
     def validate_messages(self, messages):
@@ -284,13 +308,13 @@ class HTTPInference:
             value = value.replace(secret, "[redacted]")
         value = re.sub(r"(?i)(bearer\s+|sk-)[A-Za-z0-9._-]+", "[redacted]", value)
         value = re.sub(r"(?i)((?:api[_-]?key|authorization|token|password)\s*[=:]\s*)\S+", r"\1[redacted]", value)
-        return " ".join(value.split())[:1024]
+        return " ".join(value.split())[:self.tuning.http_error_chars]
 
     async def rejected(self, response):
         chunks, size = [], 0
         async for chunk in response.aiter_bytes():
             size += len(chunk)
-            if size > 16384:
+            if size > self.tuning.http_error_body_bytes:
                 break
             chunks.append(chunk)
         try:
@@ -310,11 +334,11 @@ class HTTPInference:
             category = "input_overflow"
         retry_after = None
         try:
-            retry_after = max(0, min(int(float(response.headers.get("retry-after", "")) * 1000), 3600000))
+            retry_after = max(0, min(int(float(response.headers.get("retry-after", "")) * 1000), self.tuning.http_retry_after_max_ms))
         except (ValueError, OverflowError):
             try:
                 retry_after = max(0, min(int((parsedate_to_datetime(response.headers["retry-after"])
-                                             - datetime.now(timezone.utc)).total_seconds() * 1000), 3600000))
+                                             - datetime.now(timezone.utc)).total_seconds() * 1000), self.tuning.http_retry_after_max_ms))
             except (KeyError, ValueError, TypeError, OverflowError):
                 pass
         return ProviderError(
@@ -370,6 +394,12 @@ class HTTPInference:
                 "max_tokens": max_output,
                 "stream": False,
             }
+        if max_output is None:
+            # Native/cloud callers delegate per-call token policy to the provider.
+            payload.pop("max_tokens", None)
+            payload.pop("max_output_tokens", None)
+            if endpoint.protocol == "gemini":
+                payload["generationConfig"].pop("maxOutputTokens", None)
         if temperature is not None:
             if not endpoint.supports_temperature:
                 raise EndpointError("Endpoint does not support the requested temperature")
@@ -399,7 +429,7 @@ class HTTPInference:
             raw = bytearray()
             async for chunk in response.aiter_bytes():
                 raw.extend(chunk)
-                if len(raw) > min(self.output_cap, 65536):
+                if len(raw) > min(self.output_cap, self.tuning.http_counter_body_bytes):
                     raise EndpointError("Input counter response exceeds its byte bound")
             count = json.loads(raw).get("input_tokens")
             if isinstance(count, bool) or not isinstance(count, int) or count < 0:
@@ -431,17 +461,17 @@ class HTTPInference:
             if not isinstance(body, dict) or body.get("id") != response_id:
                 raise EndpointError("The recovered response identity does not match")
             if body.get("status") in {"queued", "in_progress"}:
-                await asyncio.sleep(0.25)
+                await asyncio.sleep(self.tuning.http_recovery_poll_seconds)
                 continue
             if body.get("status") not in {"completed", "failed", "cancelled", "incomplete"}:
                 raise EndpointError("The provider did not establish the previous response's final state")
-            return self.normalize(body, request.limits.max_output_tokens_per_call, response)
+            return self.normalize(body, self.output_token_limit, response)
 
     async def generate(self, messages, max_output, response_schema=None, *, prepared=None,
-                       observer=None, progress=None, temperature=None):
+                       observer=None, progress=None, temperature=None, enforce_timeout=True):
         endpoint = self.endpoint
         wire = prepared or self.prepare(messages, max_output, response_schema, temperature=temperature)
-        lifecycle = endpoint.lifecycle
+        lifecycle = endpoint.lifecycle if enforce_timeout else None
         streaming = bool(wire["payload"].get("stream"))
         started = time.monotonic()
         last_output = None
@@ -453,13 +483,13 @@ class HTTPInference:
         async def report(state, **facts):
             nonlocal last_report
             current = time.monotonic()
-            if state == "receiving" and last_report is not None and current - last_report < .25:
+            if state == "receiving" and last_report is not None and current - last_report < self.tuning.http_progress_interval_seconds:
                 return
             last_report = current
             if progress:
                 try:
-                    await progress({"state": state, "elapsed_seconds": round(time.monotonic() - started, 3),
-                                    "last_output_seconds": round(last_output - started, 3) if last_output else None,
+                    await progress({"state": state, "elapsed_seconds": round(time.monotonic() - started, self.tuning.progress_time_decimals),
+                                    "last_output_seconds": round(last_output - started, self.tuning.progress_time_decimals) if last_output else None,
                                     **facts})
                 except Exception:
                     pass  # Diagnostic observers cannot alter execution certainty.
@@ -534,7 +564,7 @@ class HTTPInference:
 
         try:
             await report("waiting_first_output" if streaming else "waiting_buffered_response")
-            options = {}
+            options = {} if enforce_timeout else {"timeout": None}
             if lifecycle:
                 options["timeout"] = httpx.Timeout(connect=lifecycle.connect_seconds,
                     pool=lifecycle.connect_seconds, write=lifecycle.connect_seconds,
@@ -602,7 +632,7 @@ class HTTPInference:
             choice = choices[0] if isinstance(choices, list) and choices else {}
             stop_reason = choice.get("finish_reason") if isinstance(choice, dict) else None
         blocks = blocks if isinstance(blocks, list) else []
-        block_types = [self.sanitize(p.get("type")) for p in blocks[:32] if isinstance(p, dict)]
+        block_types = [self.sanitize(p.get("type")) for p in blocks[:self.tuning.http_content_type_items] if isinstance(p, dict)]
         request_id = self.sanitize(http_response.headers.get("request-id")
                                    or http_response.headers.get("x-request-id"))
         response = {"text": "", "usage": usage, "provider_id": self.sanitize(body.get("id")),
@@ -705,8 +735,8 @@ class HTTPInference:
             raise IncompleteGeneration(response, incomplete_reason, max_output)
         usage = response.get("usage") or {}
         emitted = usage.get("output_tokens", usage.get("completion_tokens"))
-        if isinstance(emitted, int) and emitted > max_output:
-            raise IncompleteGeneration(response, "reported_output_limit_exceeded", max_output)
+        if max_output is not None and isinstance(emitted, int) and emitted > max_output:
+            raise CompletedBudgetExceeded(response, max_output, scope="provider_response")
         if not isinstance(text, str) or not text.strip():
             raise self.response_error("Endpoint returned no text", body, http_response, "empty_text")
         return response

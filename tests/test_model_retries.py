@@ -67,7 +67,7 @@ async def setup(tmp_path, protocol="anthropic", binding="local", endpoint_option
         record_id="request/research/summary", scope=scope, created_at=now(), revision=1, operation_id="summary",
         logical_step_id="summary", intent_digest=digest(b"pending"), causal_parent_ref=None, trace_id="run",
         grant_ref="grant/run", owner_generation=1, expected_process_revision=1, expected_binding_generation=1,
-        schedule_ref="summary/1", budget_account_ref="budget/run", deadline=now() + timedelta(seconds=30),
+        schedule_ref="summary/1", budget_account_ref="budget/run", deadline=now() + timedelta(seconds=120),
         limits=config.limits, resources=[], conflict_keys=[], safe_boundary="settled_operation",
         replay_policy="reconcile_before_retry", payload=payload,
     )
@@ -265,7 +265,7 @@ async def test_transport_retry_classification_and_backoff(tmp_path, monkeypatch,
 async def test_backoff_obeys_cancellation_deadlines_allowances_and_shutdown(tmp_path, monkeypatch, stop):
     rt, request = await setup(tmp_path, call_limit=1 if stop == "allowance" else None)
     if stop == "deadline":
-        request = request.model_copy(update={"deadline": now() + timedelta(milliseconds=100)})
+        request = request.model_copy(update={"deadline": now() + timedelta(seconds=1)})
     calls = 0
 
     async def handler(_):

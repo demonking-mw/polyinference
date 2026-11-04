@@ -7,6 +7,7 @@ import json
 from datetime import datetime, timezone
 
 from .contracts import Limits
+from .os_config import DEFAULTS
 
 
 def now():
@@ -32,7 +33,4 @@ def operation_fingerprint(request):
 
 
 def runtime_limits():
-    return Limits(max_steps=2048, max_model_calls=512, max_repairs=0,
-                  max_input_tokens_per_call=24000, max_output_tokens_per_call=4000,
-                  max_total_tokens=16000000, max_output_bytes=262144, max_wall_time_ms=3600000,
-                  max_api_spend_microusd=0, cost_guarantee="estimate")
+    return Limits.model_validate(DEFAULTS["Limits"])

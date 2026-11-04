@@ -23,6 +23,10 @@ Applications supply ProcessSpec and an async continuation; the OS does not
 decompose objectives. Resident worker capacity and model endpoint admission are
 independent. Control/management treatment is explicit rather than inferred from roles.
 
+Resume text/request-ID bounds share canonical definitions with CLI/UI control
+validation. See [central OS configuration](../guides/os-tuning.md); process state
+transitions and resource ownership are unchanged.
+
 ## Principles to preserve
 
 - Cooperative cancellation preserves started effects and their certainty.

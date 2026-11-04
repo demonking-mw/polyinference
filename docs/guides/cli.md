@@ -16,6 +16,7 @@ any saved commit as final success.
 | Command | Purpose |
 | --- | --- |
 | `polyinference validate-config CONFIG` | Validate configuration structure. |
+| `polyinference configure-local CONFIG [--strata-config FILE]` | Derive Strata startup context from the [local token pair](local-token-limits.md), preserving the original file. Restart Strata before running. Makes no inference request. |
 | `polyinference probe CONFIG --endpoint local` | Make one readiness request to the worker lane. Use `cloud` for the other lane. |
 | `polyinference run CONFIG` | Start/drive a run in the configured state directory. Use fresh state for a new run. |
 | `polyinference status STATE` | Inspect application status, task reports, heads and uncertain effects. |

@@ -79,6 +79,7 @@ async def test_shared_check_preparation_is_accepted_before_two_isolated_test_wri
     runtime, app, engine, scripted = await app_for(
         config, max_sprints=5,
         limits=config.limits.model_copy(update={"max_input_tokens_per_call": 96000}),
+        local_token_limits=config.local_token_limits.model_copy(update={"input_tokens": 96000}),
         local=config.local.model_copy(update={"max_context_tokens": 128000, "reserved_context_tokens": 256000}),
         cloud=config.cloud.model_copy(update={"max_context_tokens": 128000, "reserved_context_tokens": 256000}),
         allowed_write_paths=["runner.py", "a.py", "b.py", "test_a.py", "test_b.py"],
@@ -350,6 +351,7 @@ async def test_senior_selects_retained_source_and_corrects_unavailable_handoff(c
     runtime, app, engine, scripted = await app_for(
         config, max_sprints=5,
         limits=config.limits.model_copy(update={"max_input_tokens_per_call": 96000}),
+        local_token_limits=config.local_token_limits.model_copy(update={"input_tokens": 96000}),
         local=config.local.model_copy(update={"max_context_tokens": 128000, "reserved_context_tokens": 256000}),
         cloud=config.cloud.model_copy(update={"max_context_tokens": 128000, "reserved_context_tokens": 256000}))
     scripted.two, scripted.verdict = False, "uncertain"

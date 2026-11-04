@@ -88,8 +88,8 @@ class InferenceRetries:
                 original.scope.run_id,
             ) or scope.process_id not in {None, process_id}:
                 raise ValueError("Replacement context is outside the caller's data scope")
-        bound = min(proposed.maximum_input_tokens, original.limits.max_input_tokens_per_call)
-        if sum(part.content.size_bytes for part in proposed.parts) > bound:
+        byte_bound = self.config.request_byte_limit()
+        if sum(part.content.size_bytes for part in proposed.parts) > byte_bound:
             raise ValueError("Replacement context does not fit")
         messages = [
             {
@@ -103,9 +103,13 @@ class InferenceRetries:
             for part in proposed.parts
         ]
         size = len(canonical(messages))
-        endpoint = getattr(self.config, self.config.role_bindings[replacement.role])
-        if size > bound or size + original.limits.max_output_tokens_per_call > endpoint.max_context_tokens:
+        if size > byte_bound:
             raise ValueError("Replacement context does not fit")
+        pair = self.config.token_limits(replacement.role)
+        endpoint = getattr(self.config, self.config.role_bindings[replacement.role])
+        if (pair and not endpoint.input_token_count_path
+                and size > min(proposed.maximum_input_tokens, pair.input_tokens)):
+            raise ValueError("Replacement context does not fit the local input-token bound")
         if now() >= datetime.fromisoformat(row["until"]):
             raise ValueError("Replacement window expired")
         self.records.compare_and_publish(
@@ -173,7 +177,7 @@ class InferenceRetries:
                                     "state": "failed",
                                     "error": ErrorDetail(
                                         code="ResponseValidationError",
-                                        message=str(exc)[:2000],
+                                        message=str(exc)[:self.config.tuning.diagnostic_preview_chars],
                                         retryable_after_reconciliation=True,
                                         retry_after_ms=None,
                                     ),

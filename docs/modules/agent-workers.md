@@ -12,6 +12,7 @@ Reusable application graphs turn model replies into development, reconciliation 
 | [src/polyinference/domain.py](../../src/polyinference/domain.py) | Git policy, assignments, senior proposals and typed worker replies. |
 | [src/polyinference/agent/architecture.py](../../src/polyinference/agent/architecture.py) | Immutable versioned interfaces, resulting-plan dependencies and pinned task contracts. |
 | [src/polyinference/agent/review.py](../../src/polyinference/agent/review.py) | Source/diff/check packets, bounded review reads and exact-tree semantic completion. |
+| [src/polyinference/agent/check_evidence.py](../../src/polyinference/agent/check_evidence.py) | Select latest passing and failing receipts matched by process, repository, tree, environment and configured invocation. |
 | [src/polyinference/agent/diagnostics.py](../../src/polyinference/agent/diagnostics.py) | Relevant source previews and a bounded frozen-source read capability for diagnosis under the worker's resource account. |
 | [src/polyinference/agent/schema.py](../../src/polyinference/agent/schema.py) | Compact displayed response schemas while retaining validation constraints. |
 | [src/polyinference/agent/worker_memory.py](../../src/polyinference/agent/worker_memory.py) | Bounded source-backed facts, resolved-error retirement, replay-safe history and caller retention priorities within existing retry bounds. |
@@ -30,8 +31,12 @@ no extra task. Dependencies start only after keep. Senior publication instructio
 private uncertain candidates from isolated provisional ones. Retained-source offers drive explicit
 resume_from and bounded corrections for unavailable source or incomplete replacement grants.
 
-Assignments can pin `acceptance_criteria`, `non_goals`, `provides` and `consumes`. Optional `behavior` and
-`focused_check` are paired; the check must be assigned. Declared check `required_paths` need readable
+Every effective local development assignment requires local_contract with exactly one production
+implementation file, input/output shapes, provided functions/objects, ownership, effects and errors. Only
+explicit tests/documentation may accompany it. behavior, focused_check and acceptance_criteria are required;
+provides/consumes pin shared interfaces. Planning and task construction reject violations after allocation.
+Irreducibly coupled specialist work supplies cloud_only_reason, protected from ordinary quota demotion.
+The focused check must be assigned. Declared check `required_paths` need readable
 closure or declared dependency owners, including retained providers. The required 8192-byte worker-state view retains recent CAS
 digests/errors/evidence and original trajectory references. Source/generation changes invalidate digest
 facts. Interface references use `interface_id@version`; revisions must be sequential and existing versions
@@ -42,11 +47,15 @@ search errors; valid replies clear protocol errors even without observations. La
 resolved errors. Canonical trajectories remain immutable; changed source invalidates file facts.
 
 Senior review separates worker claims from actual diffs, source and check evidence. Bounded `read_requests`
-retrieve more source. Completion must assess the reserved `objective` criterion and configured criteria
+retrieve more source: the default invocation allowance is 16 ranges, with eight per proposal. Prompts expose
+used/remaining reads and corrections plus planning/process limits; an oversized proposal receives numeric
+remaining-allowance feedback before any retrieval. Completion must assess the reserved `objective` criterion and configured criteria
 against the exact reviewed tree; missing, uncertain or stale evidence cannot establish completion. Diagnosis
 uses failing paths/lines, assigned entry points and check files before unrelated source. Native diagnosis
-can page only its frozen input through coding.diagnostic_read; raw diagnosis retains bounded previews/read
-expansion. No write tools or new allowance are granted. See [configuration](../guides/agent-reliability.md).
+can page frozen source through coding.diagnostic_read and matching check outputs through
+coding.diagnostic_evidence_read (up to 4096 bytes). Passing and failing receipts remain separate from the
+failure trigger. Senior exception packets retain private exact-tree checks without making them acceptance
+evidence. Raw diagnosis retains bounded previews/read expansion. No write tools or new allowance are granted. See [configuration](../guides/agent-reliability.md).
 
 Automatic stagnation parks directly for senior review, bypassing read-only diagnosis. Eligible local
 exceptions now get a bounded cloud coding takeover protected from normal allocation. The senior graph

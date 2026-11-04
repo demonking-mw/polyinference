@@ -202,15 +202,16 @@ async def test_model_failure_pauses_then_explicit_recovery_preserves_private_edi
 
 
 async def test_stopped_active_driver_does_not_spin_the_controller_loop(config):
+    from conftest import fixture_assignment
+
     from polyinference.agent.tasks import make_task
-    from polyinference.domain import Assignment
 
     runtime = await KernelRuntime(config).open()
     app = AgentServices(runtime, config)
     engine = ProjectAgent(app)
     try:
         await engine.initialize()
-        task, specs = make_task(app, Assignment(
+        task, specs = make_task(app, fixture_assignment(
             task_id="stopped", objective="Retained work", write_paths=["a.py"], read_paths=["a.py"], checks=["syntax"],
         ), "plan/stopped", app.get("head/provisional")["code"], "stopped")
         runtime.records.compare_and_publish(

@@ -435,3 +435,95 @@ async def test_registered_workspace_handlers_share_source_preconditions(config):
         assert not runtime.records.scan("task/")
     finally:
         await runtime.close()
+
+
+@pytest.mark.parametrize("mode", ["soft", "hard", "deadline", "cancel", "local"])
+async def test_cloud_agent_timeout_policy_keeps_same_native_job(tmp_path, caplog, mode):
+    import asyncio
+    import logging
+
+    script = tmp_path / "slow_agent.py"
+    script.write_text('''import json,sys,time
+def send(value): print(json.dumps(value),flush=True)
+for line in sys.stdin:
+ m=json.loads(line);method=m.get("method")
+ if method=="initialize":send({"id":m["id"],"result":{}})
+ elif method=="thread/start":send({"id":m["id"],"result":{"thread":{"id":"slow-thread"},"sandbox":{"type":"readOnly"},"approvalPolicy":"never"}})
+ elif method=="turn/start":
+  send({"id":m["id"],"result":{"turn":{"id":"slow-turn"}}})
+  time.sleep(0.8)
+  send({"id":100,"method":"item/tool/call","params":{"threadId":"slow-thread","callId":"one-call","tool":"polyinference_tool","arguments":{"tool":"research.lookup","arguments":{"topic":"trees"}}}})
+  reply=json.loads(sys.stdin.readline());assert reply["result"]["success"]
+  send({"method":"item/completed","params":{"item":{"type":"agentMessage","text":"{\\"summary\\":\\"done\\"}"}}})
+  send({"method":"turn/completed","params":{"turn":{"id":"slow-turn","status":"completed","items":[]}}})
+''')
+    # The worker binding can still execute a physically cloud-hosted agent.
+    endpoint = Endpoint(model="fixture", protocol="codex_app_server", brokered_tools=True,
+                        inference_location="local" if mode == "local" else "cloud",
+                        command=[sys.executable, str(script)], timeout_seconds=0.15)
+    config = configuration(tmp_path, endpoint)
+    config = config.model_copy(update={"cloud_agent_timeout_interrupt": mode == "hard"})
+    runtime = await KernelRuntime(config).open()
+    calls = []
+
+    async def lookup(operation, arguments):
+        calls.append(arguments)
+        return {"evidence": ["trees"]}
+
+    runtime.register_capability("research.lookup", lookup, input_type=Lookup)
+    runtime.register_agent_protocol("research/1", {"type": "object"}, workspace="none", brokered=True)
+    spec, prompt = process(runtime, capabilities=["research.lookup"])
+    context = ContextView(view_id="slow-context", digest=digest(b"context"), parts=[
+        ContextPart(part_id="facts", content=prompt, part_kind="data", trust="user",
+                    source_ref="user", required=True)], memory_snapshot_refs=[],
+        tool_catalog_digest=digest(b"tools"), maximum_input_tokens=spec.limits.max_input_tokens_per_call,
+        omitted_refs=[])
+    operation = request(runtime, spec, AgentJob(
+        role=spec.role, objective=prompt, context=context, workspace_id="unused",
+        allowed_capabilities=["research.lookup"], required_phase_protocol="research/1",
+        required_guarantees=[], response_schema_ref="research-summary/1", session_ref=None), "slow")
+    if mode == "deadline":
+        operation = operation.model_copy(update={"deadline": now() + timedelta(seconds=0.5)})
+        operation = operation.model_copy(update={"intent_digest": operation_fingerprint(operation)})
+    caplog.set_level(logging.WARNING, logger="polyinference.runtime.kernel")
+    running = None
+    try:
+        running = asyncio.create_task(runtime.execute(operation))
+        if mode in {"soft", "cancel", "deadline"}:
+            warning_key = "runtime/warning/cloud-agent-timeout/" + operation.operation_id
+            for _ in range(150):
+                if runtime.records.get(warning_key) or running.done():
+                    break
+                await asyncio.sleep(0.005)
+            assert runtime.records.get(warning_key)[1]["action"] == "continue"
+            assert not running.done()
+            assert runtime.records.get("effect/" + operation.operation_id)[1]["state"] == "active"
+            assert runtime.admission["local"].active == 1
+            assert not runtime.uncertain()
+            if mode == "cancel":
+                runtime.inflight[operation.operation_id].cancel()
+        if mode == "soft":
+            result = await asyncio.wait_for(running, 3)
+        else:
+            with pytest.raises(UncertainEffect):
+                await asyncio.wait_for(running, 3)
+        warnings = [r for r in caplog.records if "continuing the same job" in r.message]
+        if mode == "soft":
+            assert result.state == "succeeded", result.error
+            assert len(calls) == 1
+            assert not runtime.uncertain()
+            assert len(warnings) == 1
+            # Settled replay must neither submit the job again nor log again.
+            assert (await runtime.execute(operation)).state == "succeeded"
+            assert len(calls) == 1
+            assert runtime.inference_calls_used(spec.process_id) == 1
+        else:
+            assert runtime.records.get("effect/" + operation.operation_id)[1]["state"] == "uncertain"
+            assert not calls
+            assert len(warnings) == (1 if mode in {"cancel", "deadline"} else 0)
+            assert runtime.uncertain()
+    finally:
+        if running and not running.done():
+            running.cancel()
+            await asyncio.gather(running, return_exceptions=True)
+        await runtime.close()

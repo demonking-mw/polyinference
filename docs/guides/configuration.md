@@ -9,8 +9,17 @@ block. The bundled agent's OS defaults and UI preferences live together in
 configuration remains accepted; do not configure the same field in both locations. The field names below
 refer to their entries inside `system` unless they are agent workflow settings.
 
-The UI defaults are useful for a first test. Use a JSON configuration to pin your own project, permissions,
-checks and endpoint settings:
+Plain UI launches support [persistent machine defaults](launching.md) for local inference.
+The machine's 128K coding preference is 114688 input + 16384 output tokens, with
+one worker/slot; explicit configs and retained runs keep their own token settings.
+UI-owned Strata instances are cleaned up at UI exit, including a provider-side
+process-death watcher; separately started/reused runtimes remain separately owned.
+Cloud agent jobs default to warning-only endpoint timeouts. Set
+`"cloud_agent_timeout_interrupt": true` inside `system` to interrupt instead;
+false keeps the same cloud job running. See [OS timeout behavior](os-tuning.md).
+Original deadlines and explicit cancellation still apply; use fresh state.
+
+Use a JSON configuration to pin your project, permissions, checks and endpoint settings:
 
 ```bash
 mkdir -p .polyinference
@@ -18,8 +27,7 @@ cp examples/agent.mixed.json .polyinference/agent.json
 ```
 
 UI-only `--sim-batch N` applies a validated invocation overlay after base loading, overriding the legacy
-capacity environment variable. It preserves complete custom Anthropic endpoint fields; other local protocols
-select the full remote Haiku preset. New-run config.json records effective values, not a future preference.
+capacity environment variable. It preserves custom remote Anthropic fields; declared local endpoints and other protocols select Haiku. New-run config.json records effective values, not a future preference.
 See [scope/precedence and recovery](../../codex-haiku-setup.md). UI --sim-inference additionally reveals
 per-run fault/pacing controls. Only an explicitly buggy/slow run saves an application-level
 inference_simulation block outside system; absent lifecycle/policy fields preserve legacy serialization.
@@ -39,7 +47,7 @@ placeholders. At minimum, update these fields:
 | `checks` | Named task checks. Explicitly supplied legacy checks also serve final acceptance when acceptance_checks is omitted. |
 | `prerequisite_checks` | Agent workflow field at top level: environment/setup checks, excluded from product acceptance. Default []. |
 | `acceptance_checks` | Agent workflow field at top level: final product checks. Omitted/null retains explicitly configured legacy checks; [] requires setup discovery of final criteria. |
-| `local`, `cloud` | Provider protocols, URLs, accessible model IDs, credential variable names and concurrency/context settings. |
+| `local`, `cloud` | Provider protocols, URLs, model IDs, credential variables and concurrency. Local token capacity derives from local_token_limits; cloud has no OS token cap. |
 
 `repository` and `state_directory` resolve relative to the **configuration file's parent directory**, not
 your terminal's working directory. Source file grants and closure paths resolve relative to the target
@@ -57,18 +65,19 @@ specialist→cloud bindings; capability manifests do not advertise browser/MCP/s
 `supports_temperature` and `reasoning_effort` remain inside local/cloud. The integrated program requires
 fresh state.
 
+`max_review_reads` defaults to 16 total source ranges per senior invocation, with at most eight per
+proposal. Every planner message includes current read/correction allowances and planning/process limits;
+explicit values and saved configurations retain their original limits.
+
 [Endpoint testing](endpoint-testing.md) covers streaming timings, native/caller retry allowances and
 explicit warm-up. [Budgets](budgets.md) covers execution backends, validation and launch commands. Preserve
 saved configuration pins. [Model fallback](model-fallback.md) covers agent
 `default_retry_model` (Terra/high/seven), endpoint overrides and disabling.
 
-For mixed native/local runs, size each endpoint from its actual model/server metadata. Context preparation
-uses the smaller of the shared input limit and that endpoint's context minus actual raw output headroom.
-Optional input_token_count_path counts the complete raw body on the same provider; absent/failed counters
-retain a conservative byte/token bound. Separate max_model_request_bytes must also fit. See [measurement
-and independent ceilings](context-measurement.md); configured 65,536 capacity alone does not prove utilization. A shared limit sized only for the local lane can unnecessarily stop native
-review. Changing a saved limit is not a supported way to rewrite an existing run's pinned configuration or
-replenish its accounts.
+Configure [one local input/output pair](local-token-limits.md) under system.local_token_limits. Its sum
+sets local context capacity and drives provider requests, admission and saved capacity views. Cloud agents
+have no OS per-call token cap. Request-byte guards and campaign accounts remain independent. Strata launch
+JSON can be synchronized with configure-local before restarting the server. Changed pins require fresh state.
 
 For uncommitted delivery, select `repository_mode: "isolated"` before starting; private runtime commits do
 not commit the user's branch. Review export status, baseline and conflicts before applying a patch. A
@@ -78,3 +87,6 @@ Optional `system.data_policy` sets mandatory run-wide location/destination/class
 ProcessSpec can narrow them. Constrained endpoints need explicit `inference_location`; URLs do not attest it.
 Static hard classes are supported; unsupported weights or unequal process/runtime limits reject before effects.
 See [settings schemas/defaults](../settings-schema.json) and [qualification](qualification.md).
+
+[Central OS configuration](os-tuning.md) owns generic defaults/bounds. Use `system.tuning` for operational
+controls; coding presets remain application preferences. See the [per-file inventory](../os-config-inventory.md).

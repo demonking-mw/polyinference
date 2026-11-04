@@ -8,6 +8,7 @@ import json
 import os
 import re
 import shlex
+import signal
 import sqlite3
 import subprocess
 import threading
@@ -23,11 +24,12 @@ from .config import AgentConfig
 from .costs import combine_costs, run_cost
 from .domain import Check
 from .history import save_run_history
+from .os_config import BOUNDS, CHECK_DEFAULT_SECONDS
 from .runtime.processes import request_resume
 from .runtime.storage import Records
 from .snapshots import detail, export_run, node_history, read_artifact, read_records, run_summary
 from .ui_agents import agent_snapshot
-from .ui_os import activity, read_snapshot, runtime_view
+from .ui_os import activity, inspection_connection, inspection_tuning, read_snapshot, runtime_view
 from .ui_repository import directories, project
 
 
@@ -89,7 +91,7 @@ async def run_with_terminal_events(runner, config, run_id, reporting_errors=None
         events = []
         try:
             if path.is_file():
-                with sqlite3.connect(path.as_uri() + "?mode=ro", uri=True) as db:
+                with inspection_connection(path, config.tuning) as db:
                     if db.execute("SELECT 1 FROM sqlite_master WHERE name='events'").fetchone():
                         events = db.execute(
                             "SELECT sequence,body FROM events WHERE sequence>? ORDER BY sequence", (sequence,)
@@ -138,7 +140,6 @@ def greeting_config(root, *, context=None):
     return AgentConfig.model_validate(dict(
         system=ui_system_settings(source),
         inference_policy={"additional_retries": 1, "replace_undelivered": True},
-        model_output_target_tokens=4096,
         objective=(
             "Fix greeting(name) to return exactly Hello, {name}! with the comma and exclamation mark. "
             "Preserve its public signature. Change only greeting.py. Use one small worker task and "
@@ -313,7 +314,7 @@ class TestUI:
             updates["checks"] = [
                 Check(
                     name=config.checks[0].name if config.checks else "tests", argv=argv,
-                    timeout_seconds=config.checks[0].timeout_seconds if config.checks else 60,
+                    timeout_seconds=config.checks[0].timeout_seconds if config.checks else CHECK_DEFAULT_SECONDS,
                 ),
                 *config.checks[1:],
             ] if argv else config.checks
@@ -379,12 +380,12 @@ class TestUI:
             metadata = self.runs[run_id]
             metadata.setdefault("reporting_errors", [])
             records = read_records(metadata["state"])
-            if text is not None and (not isinstance(text, str) or len(text) > 16000):
-                raise ValueError("Steering instructions must be at most 16000 characters")
+            if text is not None and (not isinstance(text, str) or len(text) > BOUNDS["resume_chars"]):
+                raise ValueError(f"Steering instructions must be at most {BOUNDS['resume_chars']} characters")
             existing_ref = None
             if request_id is not None:
-                if not isinstance(request_id, str) or not 1 <= len(request_id) <= 128:
-                    raise ValueError("Resume request ID must be a nonempty string of at most 128 characters")
+                if not isinstance(request_id, str) or not 1 <= len(request_id) <= BOUNDS["request_id_chars"]:
+                    raise ValueError(f"Resume request ID must be a nonempty string of at most {BOUNDS['request_id_chars']} characters")
                 existing_ref = "resume-request/" + hashlib.sha256(request_id.encode()).hexdigest()
                 old = records.get(existing_ref)
                 if old:
@@ -646,7 +647,9 @@ class TestUI:
             raise KeyError("Run not found")
         snapshot = read_snapshot(self.runs[run_id]["state"])
         events = [event for event in snapshot["events"] if before is None or event["sequence"] < before]
-        page = events[-120:]
+        config_path = Path(self.runs[run_id]["state"]).parent / "config.json"
+        configuration = json.loads(config_path.read_text()) if config_path.is_file() else {}
+        page = events[-inspection_tuning(configuration, snapshot["records"]).inspector_activity_events:]
         return {
             "rows": activity(page, snapshot["records"]), "has_older": len(events) > len(page),
             "first_sequence": page[0]["sequence"] if page else None,
@@ -715,7 +718,9 @@ def make_server(manager, port=8765):
                             "total_cost": combine_costs(unique.values()),
                             "configuration": manager.simulation_label(config) if manager.sim_batch is not None else str(manager.config_path)
                             if manager.config_path
-                            else "Haiku juniors + Codex setup/senior · 90/10 development · 9 sprints",
+                            else (f"{config.local.model} workers ({config.local.inference_location or config.local.protocol})"
+                                  f" · {config.local.max_context_tokens} context · {config.local.max_inflight} slots"
+                                  f" · {config.max_workers} workers · {config.max_sprints} sprints"),
                             **({"inference_simulation": {"batch": manager.sim_batch or 2}}
                                if manager.sim_inference else {}),
                         },
@@ -797,17 +802,41 @@ def make_server(manager, port=8765):
 
 
 def serve(port=8765, config_path=None, state=None, *, sim_batch=None, sim_inference=False):
-    manager = TestUI(Path.cwd() / ".polyinference" / "ui", config_path, state,
-                     sim_batch=sim_batch, sim_inference=sim_inference)
-    if sim_inference:
-        print("Inference simulation controls enabled; select mode, shared TPS, batch and bug rate before Start.", flush=True)
-    if sim_batch is not None:
-        print(manager.simulation_label(manager.configuration()), flush=True)
-    server = make_server(manager, port)
-    print(f"PolyInference OS console: http://localhost:{server.server_port}", flush=True)
+    from .agent.local_provider import ensure_ui_local_provider
+    from .agent.system_settings import simulation_config
+
+    def terminate(signum, frame):
+        raise SystemExit(128 + signum)
+
+    handlers = {}
+    owned = server = None
     try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
+        if threading.current_thread() is threading.main_thread():
+            for signum in (signal.SIGTERM, *([signal.SIGHUP] if hasattr(signal, "SIGHUP") else [])):
+                handlers[signum] = signal.signal(signum, terminate)
+        root = Path.cwd() / ".polyinference" / "ui"
+        config = load_config(config_path) if config_path else greeting_config(root)
+        owned = ensure_ui_local_provider(simulation_config(config, sim_batch) if sim_batch is not None else config)
+        manager = TestUI(root, config_path, state,
+                         sim_batch=sim_batch, sim_inference=sim_inference)
+        if sim_inference:
+            print("Inference simulation controls enabled; select mode, shared TPS, batch and bug rate before Start.", flush=True)
+        if sim_batch is not None:
+            print(manager.simulation_label(manager.configuration()), flush=True)
+        server = make_server(manager, port)
+        print(f"PolyInference OS console: http://localhost:{server.server_port}", flush=True)
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
     finally:
-        server.server_close()
+        try:
+            if server is not None:
+                server.server_close()
+        finally:
+            try:
+                if owned is not None:
+                    owned.close()
+            finally:
+                for signum, handler in handlers.items():
+                    signal.signal(signum, handler)

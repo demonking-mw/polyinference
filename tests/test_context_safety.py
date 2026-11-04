@@ -12,7 +12,11 @@ from polyinference.config import AgentConfig
 from polyinference.contracts import ContextPart
 from polyinference.primitives import canonical, operation_fingerprint
 from polyinference.runtime.context import context_with_parts
-from polyinference.runtime.inference import HTTPInference, IncompleteGeneration, ModelResponseError
+from polyinference.runtime.inference import (
+    CompletedBudgetExceeded,
+    HTTPInference,
+    ModelResponseError,
+)
 from polyinference.system_settings import ContextPolicy, InferenceSafety, RuntimeConfig
 
 
@@ -35,7 +39,7 @@ def part(rt, request, name, text, *, required=True, compactable=False, kind="dat
 @pytest.mark.parametrize("binding", ["local", "cloud"])
 @pytest.mark.parametrize("automatic", [False, True])
 async def test_manual_and_automatic_overflow_preserve_pins_and_complete_pairs(tmp_path, binding, automatic):
-    rt, request = await setup(tmp_path, binding=binding)
+    rt, request = await setup(tmp_path, binding=binding, max_model_request_bytes=24000)
     pinned = part(rt, request, "constraints", "Never discard this constraint")
     call = part(rt, request, "call", '"\\\n' * 9000, required=False, kind="tool_call", call_id="pair")
     result = part(rt, request, "result", "historical result", required=False, kind="tool_result", call_id="pair")
@@ -53,7 +57,7 @@ async def test_manual_and_automatic_overflow_preserve_pins_and_complete_pairs(tm
         outcome = await rt.execute(request)
         assert outcome.state == ("succeeded" if automatic else "failed")
         receipt = rt.records.get("context-receipt/" + request.operation_id)[1]
-        assert receipt["original_bytes"] > receipt["input_allowance"]
+        assert receipt["original_bytes"] > receipt["max_request_bytes"]
         if automatic:
             assert receipt["omitted_refs"] == ["call", "result"]
             assert receipt["intervened"] and len(sent) == 1
@@ -69,7 +73,7 @@ async def test_manual_and_automatic_overflow_preserve_pins_and_complete_pairs(tm
 @pytest.mark.parametrize("binding", ["local", "cloud"])
 @pytest.mark.parametrize("compact", [False, True])
 async def test_compaction_is_optional_preserves_sources_and_replays(tmp_path, binding, compact):
-    rt, request = await setup(tmp_path, binding=binding)
+    rt, request = await setup(tmp_path, binding=binding, max_model_request_bytes=24000)
     source = "A fact with uncertainty. " * 1200
     memory = part(rt, request, "memory", source, compactable=True)
     pin = part(rt, request, "constraints", "Preserve this verbatim")
@@ -89,7 +93,7 @@ async def test_compaction_is_optional_preserves_sources_and_replays(tmp_path, bi
         assert rt.artifacts.read(memory.content).decode() == source
         if compact:
             receipt = result.extensions["runtime/context-receipt"]
-            assert receipt["summaries"] and receipt["required_bytes"] < receipt["input_allowance"]
+            assert receipt["summaries"] and receipt["required_bytes"] < receipt["max_request_bytes"]
             retained = rt.records.get("context-prepared/" + request.operation_id)[1]["context"]
             summary = next(p for p in retained["parts"] if p["part_id"] == "memory")
             assert summary["trust"] == "retrieved" and memory.content.artifact_id in summary["derived_from"]
@@ -143,7 +147,7 @@ async def test_missing_completion_signal_and_reported_over_limit_are_rejected():
     try:
         with pytest.raises(ModelResponseError):
             adapter.normalize({"choices": [{"message": {"content": "{}"}}]}, 10, response)
-        with pytest.raises(IncompleteGeneration):
+        with pytest.raises(CompletedBudgetExceeded):
             adapter.normalize({"choices": [{"finish_reason": "stop", "message": {"content": "{}"}}],
                                "usage": {"completion_tokens": 11}}, 10, response)
     finally:
@@ -168,6 +172,7 @@ def test_system_settings_grouping_and_coding_defaults_have_one_source(tmp_path):
 
 async def test_native_strict_output_guarantee_is_rejected_before_submission(tmp_path):
     rt, request = await setup(tmp_path, protocol="codex_app_server",
+        endpoint_options={"inference_location": "local"},
         inference_safety=InferenceSafety(require_output_token_enforcement=True))
     try:
         result = await rt.execute(request)
@@ -369,7 +374,7 @@ for line in sys.stdin:
   send({"method":"item/completed","params":{"item":{"type":"agentMessage","text":text}}})
   send({"method":"turn/completed","params":{"turn":{"id":"turn","status":"completed","items":[]}}})
 ''')
-    rt, request = await setup(tmp_path, protocol="codex_app_server", max_model_response_bytes=100,
+    rt, request = await setup(tmp_path, protocol="codex_app_server", max_model_response_bytes=100, max_model_request_bytes=24000,
                               endpoint_options={"command": [sys.executable, str(script),
                                                             "cutoff" if cutoff else "normal"]})
     # The parent also uses a tool-free registered protocol for this research agent.
@@ -443,9 +448,12 @@ for line in sys.stdin:
         result = await rt.execute(request)
         assert result.state == "succeeded", result
         original = rt.records.get("effect/" + request.operation_id)[1]["result"]
-        assert original["extensions"]["polyinference/incomplete-generation"]["stop_reason"] == (
-            "native_response_byte_limit" if mode == "bytes" else "reported_output_limit_exceeded")
-        assert len(rt.records.scan("output-retry/")) == 1
+        if mode == "bytes":
+            assert original["extensions"]["polyinference/incomplete-generation"]["stop_reason"] == "native_response_byte_limit"
+        else:
+            assert original["state"] == "succeeded"
+            assert "polyinference/incomplete-generation" not in original["extensions"]
+        assert len(rt.records.scan("output-retry/")) == int(mode == "bytes")
         assert not rt.records.scan("model-retry/") and not rt.uncertain()
     finally:
         await rt.close()
@@ -457,7 +465,7 @@ def test_gemini_reported_generation_tokens_include_thinking():
     adapter.endpoint, adapter.secrets = Endpoint(model="fixture", protocol="gemini"), []
     response = body("gemini", "{}")
     response["usageMetadata"] = {"totalTokenCount": 100, "candidatesTokenCount": 8, "thoughtsTokenCount": 3}
-    with pytest.raises(IncompleteGeneration):
+    with pytest.raises(CompletedBudgetExceeded):
         adapter.normalize(response, 10, httpx.Response(200))
 
 

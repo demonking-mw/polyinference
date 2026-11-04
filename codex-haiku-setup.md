@@ -11,6 +11,8 @@ the lockfile recipe when reproducing a recorded Linux/macOS environment.
 | `local` / `worker` | Anthropic `claude-haiku-5-5`, one in-flight request |
 | `cloud` / `senior`, `specialist` | `codex_app_server`, `gpt-6.1-sol`, medium turn effort, brokered tools, one request |
 
+This checklist describes the bundled preset without [machine preferences](docs/guides/configuration.md).
+Use explicit --sim-batch 1 to select remote Haiku when machine preferences declare a local Strata endpoint.
 The lane names do not describe physical hosting. Haiku is a paid cloud stand-in
 for serial local admission; this is neither Anthropic's Batch API nor a hardware
 performance model. One worker and one inference slot are separate limits. Model
@@ -30,8 +32,8 @@ comparing results.
    ```
 
    The variable applies only to this launch. The default UI has one worker,
-   trusted shell/check execution and 27 sprints. Raw queries target 4096 tokens
-   inside a 32k hard ceiling. The mixed JSON example has different concurrency.
+   trusted shell/check execution and 27 sprints. The local input/output defaults come from the canonical pair (24000/4000);
+   native Codex cloud agents have no OS per-call token cap. The mixed JSON example has different concurrency.
 4. Follow the [greeting smoke test](docs/guides/first-run.md). Inspect worker
    calls on `local` and senior/specialist calls on `cloud`; the saved config must
    show `max_workers:1` and both `max_inflight:1`. Require final acceptance/check

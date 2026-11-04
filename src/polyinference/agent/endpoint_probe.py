@@ -14,14 +14,14 @@ async def probe_endpoint(config, state_directory):
         raise ValueError("Endpoint testing requires a raw generation endpoint on the local lane")
     seconds = endpoint.lifecycle.total_seconds if endpoint.lifecycle else endpoint.timeout_seconds
     limits = config.limits.model_copy(update={"max_steps": 1, "max_model_calls": 1, "max_repairs": 0,
-        "max_input_tokens_per_call": 1024, "max_output_tokens_per_call": 64,
-        "max_total_tokens": 4096, "max_output_bytes": 4096, "max_wall_time_ms": int(seconds * 1000),
+        "max_total_tokens": max(4096, config.local_token_limits.context_tokens),
+        "max_output_bytes": 4096, "max_wall_time_ms": int(seconds * 1000),
         "final_phase_reserve": None})
     settings = config.system.model_copy(update={"repository": str(Path(state_directory) / "unused"),
         "state_directory": str(state_directory), "local": endpoint, "cloud": endpoint,
         "role_bindings": {"probe": "local"}, "limits": limits, "prepare_repository": False,
         "checks": [], "allowed_write_paths": [], "closure_paths": [], "control_token_reserve": 0,
-        "run_token_budget": 4096, "model_call_retries": 0, "max_model_recoveries": 0})
+        "run_token_budget": limits.max_total_tokens, "model_call_retries": 0, "max_model_recoveries": 0})
     Path(state_directory).parent.mkdir(parents=True, exist_ok=True)
     (Path(state_directory).parent / "config.json").write_text(settings.model_dump_json(indent=2))
     rt = await KernelRuntime(settings).open()
@@ -52,7 +52,7 @@ async def probe_endpoint(config, state_directory):
         context = ContextView(view_id="probe", digest=prompt.digest,
             parts=[ContextPart(part_id="prompt", content=prompt, part_kind="data", trust="user",
                                source_ref="probe", required=True)], memory_snapshot_refs=[],
-            tool_catalog_digest=digest(b"none"), maximum_input_tokens=1024, omitted_refs=[])
+            tool_catalog_digest=digest(b"none"), maximum_input_tokens=config.local_token_limits.input_tokens, omitted_refs=[])
         payload = ModelQuery(role="probe", phase="probe", prompt_template_ref="probe/1", context=context,
             response_schema_ref="text/plain", capability_requirements=[], temperature=0, session_ref=None)
         request = OperationRequest(record_id="request/probe", revision=1, scope=scope, created_at=now(),

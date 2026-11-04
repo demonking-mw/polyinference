@@ -70,20 +70,11 @@ class ContextService:
         rt, original = self.runtime, request.payload.context
         policy = self.policy(request)
         endpoint = getattr(rt.config, rt.config.role_bindings[request.payload.role])
-        enforced = endpoint.protocol in {"chat", "responses", "anthropic", "gemini"}
-        reserve = (
-            output_tokens
-            if enforced and output_tokens is not None
-            else request.limits.max_output_tokens_per_call
-        )
-        cap = min(
-            original.maximum_input_tokens,
-            request.limits.max_input_tokens_per_call,
-            endpoint.max_context_tokens - reserve,
-        )
-        byte_cap = rt.config.max_model_request_bytes or min(
-            original.maximum_input_tokens, request.limits.max_input_tokens_per_call
-        )
+        local_caps = rt.config.token_limits(request.payload.role)
+        enforced = bool(local_caps) and endpoint.protocol in {"chat", "responses", "anthropic", "gemini"}
+        reserve = (output_tokens or local_caps.output_tokens) if local_caps else None
+        byte_cap = rt.config.request_byte_limit()
+        cap = min(original.maximum_input_tokens, local_caps.input_tokens) if local_caps else byte_cap
 
         async def measured(messages):
             value = measure(messages)
@@ -98,7 +89,7 @@ class ContextService:
             return wire, size
 
         def pressure(size):
-            return max(size["tokens"] / max(1, cap), size["bytes"] / byte_cap)
+            return max(size["tokens"] / max(1, cap) if local_caps else 0, size["bytes"] / byte_cap)
 
         cache_key = "context-prepared/" + request.operation_id
         cached = rt.records.get(cache_key)
@@ -122,7 +113,7 @@ class ContextService:
         if policy.auto_deal_context:
             if policy.auto_compaction and pressure(size) > policy.compaction_trigger:
                 for index, part in enumerate(parts):
-                    if size["tokens"] <= target and size["bytes"] <= byte_cap * policy.compaction_target:
+                    if (not local_caps or size["tokens"] <= target) and size["bytes"] <= byte_cap * policy.compaction_target:
                         break
                     if not part.compactable or part.part_kind not in {"data", "summary", "message"}:
                         continue
@@ -155,9 +146,9 @@ class ContextService:
             # Caller priorities are generic retention hints, never task interpretation.
             groups.sort(key=lambda group: max(p.retention_priority for p in group))
             for group in groups:
-                if size["tokens"] <= cap - min(policy.recovery_headroom, max(0, cap // 10)) and size[
+                if (not local_caps or size["tokens"] <= cap - min(policy.recovery_headroom, max(0, cap // self.runtime.config.tuning.context_headroom_divisor))) and size[
                     "bytes"
-                ] <= byte_cap - min(policy.recovery_headroom, byte_cap // 10):
+                ] <= byte_cap - min(policy.recovery_headroom, byte_cap // self.runtime.config.tuning.context_headroom_divisor):
                     break
                 if any(p.required for p in group):
                     continue
@@ -186,10 +177,11 @@ class ContextService:
             "original_input_tokens": initial["tokens"],
             "submitted_input_tokens": size["tokens"],
             "required_input_tokens": required_size["tokens"],
-            "input_allowance": cap,
+            "input_allowance": cap if local_caps else None,
             "max_request_bytes": byte_cap,
             "output_reservation_tokens": reserve,
             "output_token_enforced": enforced,
+            "token_limit_owner": "os_local_pair" if local_caps else "provider",
             "measurement_provenance": size["provenance"],
             "tokenizer_ref": size.get("tokenizer_ref"),
             "measurement_issue": size.get("issue"),
@@ -240,8 +232,8 @@ class ContextService:
         ]
         raw = rt.artifacts.read(part.content).decode()
         # Bound each summarizer input using the same conservative accounting rule.
-        chunk_bytes = max(1, (cap - 2000) // 8)
-        if chunk_bytes < 64:
+        chunk_bytes = max(1, (cap - self.runtime.config.tuning.compaction_reserve_tokens) // self.runtime.config.tuning.compaction_chunk_divisor)
+        if chunk_bytes < self.runtime.config.tuning.compaction_min_chunk_bytes:
             return None
         encoded = raw.encode()
         chunks = []
@@ -338,7 +330,7 @@ class ContextService:
                         prompt_template_ref="runtime/compaction/1",
                         response_schema_ref="runtime/summary/1",
                         capability_requirements=[],
-                        temperature=0,
+                        temperature=self.runtime.config.tuning.compaction_temperature,
                         session_ref=None,
                     )
                 # Same process, binding, limits, deadline and authority; no model tools.
@@ -354,9 +346,6 @@ class ContextService:
                         "extensions": {
                             "runtime/context-compaction": True,
                             "runtime/context-policy": {"auto_deal_context": False, "auto_compaction": False},
-                            "runtime/output-tokens": min(
-                                policy.compaction_output_tokens, parent.limits.max_output_tokens_per_call
-                            ),
                         },
                     }
                 )

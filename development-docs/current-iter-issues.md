@@ -1,5 +1,225 @@
 # Current iteration issues
 
+<a id="prompt-01"></a>
+## PROMPT-01 — Simplify agent prompting and milestone-driven sprint planning
+
+**Priority: first implementation item. Status: open; proposal only.**
+Implement **Stage A** of the [audited analysis and corrected plan](agent-prompting-audit-2026-11-04.md).
+The [earlier proposal](agent-prompting-proposal-2026-11-04.md) is retained with an
+audit correction notice. Its workflow shortcuts must not be implemented literally.
+This issue records future work; the current audit/documentation request does not
+implement the changes or authorize a live run.
+
+### Required outcome
+
+The cloud sprint manager identifies the next milestone and verified status,
+organizes concrete files/responsibilities/APIs, test scenarios, prerequisites and
+integration ownership, then distributes single-purpose tasks and chooses useful
+verification. Local writing tasks target one file. Preserve canonical local/shared
+contracts, source closure, accepted dependencies, pending work and protected cloud
+placement. Compact their presentation rather than deleting their semantics.
+
+Fix the recorded prompt/response disagreement and repair-context loss first:
+state the actual read allowance, define `focused_check` as a selected check ID,
+retain the rejected answer and active constraints, and issue the correct current
+phase request. Keep the final host message after history. Use existing registered
+protocols and action contracts; preserve required pins and original resources.
+
+Reduce duplicate instructions, repeated facts and discretionary manual rechecks.
+Do not remove mandatory post-merge reconciliation, required assigned checks,
+assessment, publication guards or independent final acceptance in this stage.
+Matching diagnostic receipts do not automatically authorize skipping those steps.
+AI retains engineering judgment within the declared task and evidence contract.
+
+**Later bounded work:** Stage B defines genuine test/inspection assignment and
+result semantics, reusing generic OS processes/tools without fake source edits or
+code reports. Stage C considers specific evidence-backed reductions only after
+their validity and publication implications are defined. Neither is a prerequisite
+for prompt/repair correction, nor a license to bypass current completion guards.
+
+### Ownership and implementation scope
+
+**Agent-level work. No OS change is required or included in the core scope.**
+Use existing registered protocols, granted actions, repair callbacks, records and
+artifacts. Prefer recording rejected validator input in agent-owned state over
+depending on private OS attempt-record layouts. The audit names potential OS
+changes and defers them. Any newly
+necessary OS change must state the missing public capability, why existing ports
+cannot express it, and the smallest generic fix before proceeding.
+
+Retain OS authority, typed action arguments, execution certainty, replay and
+resource enforcement. Preserve old runs, original accounts/deadlines, private
+source and unrelated edits. Use fresh program/state pins for changed contracts.
+
+### Completion evidence
+
+- A normal manager result includes milestone, status, concrete work organization,
+  derived tasks and verification while retaining the pinned execution contracts.
+- The recorded read/focused-check corrections retain the rejected answer and
+  active constraints and avoid the observed restart of the same failure.
+- Native/raw actions match the existing OS contract and final-message ordering.
+  Current mandatory phases, required checks and final acceptance still work.
+- Discretionary repeated commands are reduced without promoting worker/private
+  evidence into independent acceptance or declaring unrun checks passed.
+- Later test-only support must demonstrate its own honest result/readiness path;
+  no dummy implementation file, fabricated commit or successful code report.
+- Run one focused regression set for the changed boundaries. A short fresh live
+  trial, only when separately authorized, should report useful completion,
+  avoidable pauses, model/check counts and input size. Do not add a prompt-audit
+  framework or extra critics as prerequisites.
+
+The audit explains which suggestions would undo past fixes, why the immediate
+prompt changes still hold, and the corrected staged plan. See [FIX-0177](FIXES.md#fix-0177).
+
+<a id="run-917e45c4b40a"></a>
+## Review allowance visibility — 4 November 2026
+
+Run `917e45c4b40a` completed setup and paused during initial senior review with no development tasks
+started. Its first proposal requested eight source ranges against `max_review_reads=4`. No reads were
+performed: whole-batch validation rejected it. The configured total and remaining allowance were absent
+from the planner input, although the response schema allowed eight ranges per proposal. The correction
+used descriptive sentences as task `focused_check` values; response validation required configured check
+names. Its physical response repair requested eight ranges again, ending the bounded review correction
+loop. The terminal message described an exhausted allowance despite zero successful reads.
+
+Independent review also reproduced missing dependencies: plain `npm ci` failed with `npm: command not
+found`; checks using the local runtime helper then failed with `tsc: not found` and `playwright: not
+found`. Earlier setup-specific TypeScript/build/Chromium smoke evidence passed in the worker workspace.
+This investigation distinguishes setup verification, independent environment preparation and planning
+validation; the exported Minecraft objective is retained evidence.
+
+[FIX-0175](FIXES.md#fix-0175) raises the fresh-configuration default to 16 and supplies current
+`review_limits`, `planning_limits`, process `resource_limits`, `resources`, finishing reserve and
+response budget to the planner. Numeric rejection feedback now states requested and remaining ranges.
+The eight-range proposal and 4000-byte range schema bounds remain. Explicit lower/zero settings still
+apply. Dependencies and invalid focused-check generation remain separate follow-ups; these changes do
+not establish live planner convergence. Historical source, configuration, accounts and run state are
+preserved; no Resume or new model inference was performed for this repair.
+
+
+<a id="run-20739a315d3f"></a>
+## Native setup interruption — 2 November 2026
+
+**Historical investigation only; no implementation, configuration or saved-run change
+in that investigation.** Subsequent [FIX-0171](FIXES.md#fix-0171) adds a default
+warning-only cloud agent timeout policy for fresh configurations; the retained run
+remains unchanged and still requires evidence-based recovery. Terminal drain and
+precise interruption-cause reporting remain follow-ups.
+Run `20739a315d3f` reproduces the unresolved whole-native-job timeout and
+missing terminal drain documented in [FIX-0068](FIXES.md#fix-0068).
+The screenshot's Minecraft objective is retained evidence, not an instruction
+for this investigation to build the game or resume its campaign.
+
+### Evidence and trigger
+
+The saved configuration selects cloud `gpt-6.1-sol`/medium via
+`codex_app_server`, with `timeout_seconds=180`. Local Qwen/Strata is configured
+for 1800 seconds, but no local model operation was submitted before this pause.
+The initial repository-policy job completed; the setup specialist then started.
+Times below are Toronto local time on 2 November:
+
+| Event | Time |
+| --- | --- |
+| Run created | 16:04:09.084600 |
+| Setup effect active | 16:04:15.975450 |
+| Native turn started | 16:04:16.331309 |
+| Last completed broker callback | 16:06:11.815 |
+| Native rollout records `turn_aborted`, reason `interrupted` | 16:07:16.002 |
+| Effect marked uncertain | 16:07:16.017413 |
+
+Activation to uncertainty is **180.041963 seconds**, matching the whole-call
+limit. This strongly supports kernel timeout as the interruption trigger; the
+saved failure does not retain the original exception type, so it cannot exclude
+an independently coincident cancellation. The rollout corroborates interruption,
+not successful completion or proof that every descendant effect ended.
+
+### Owning cause and retained work
+
+`agent/system_settings.py:ui_system_settings` explicitly chooses the 180-second
+cloud timeout. `runtime/kernel.py` bounds the entire `generate_job` call with
+that timeout, including reasoning and brokered tools. Incoming activity does not
+extend it. `runtime/codex.py` groups timeout and cancellation into one
+UnknownExecution, sends `turn/interrupt`, then terminates the local transport
+without draining a matching terminal acknowledgement. The OS therefore correctly
+keeps the effect uncertain and pauses dispatch. This is not evidence of Qwen
+failure, context exhaustion, malformed JSON or a provider availability rejection.
+Terra fallback applies to confirmed availability failures, not this uncertainty.
+
+All 19 issued broker callbacks have successful host receipts: 12 file writes,
+two patches, four shell calls and one file listing. Shell receipt success does
+not establish every command succeeded: these were environment/network probes.
+The worker encountered missing Node/npm and wrote a runtime bootstrap helper.
+Twelve untracked scaffold files remain in the recorded private setup worktree
+under `testing/minecraft-v2/.polyinference/worktrees/b9fb1d95b397/`.
+No `checks.run`, candidate commit, accepted contribution or gameplay completion
+is recorded. The integration branch is `pi-dev`; private files are not delivered
+accepted output. The subsequent repository-summary error is a consequence of
+the uncertainty barrier, not another original failure.
+
+### Follow-up and verification limits
+
+Application policy should budget native setup work separately from short queries;
+a longer cloud timeout in a **fresh** configuration reduces this trigger but does
+not repair terminal handling. Generic runtime follow-up should preserve timeout
+versus cancellation provenance, await a bounded matching interrupt terminal and
+retain uncertainty if termination cannot be established. Never convert transport
+shutdown or a generic rollout abort into blanket proof of stopped host work.
+Resume retains saved pins, timeout and original resources; changing new-run
+preferences cannot repair this saved effect. Reconcile remote work and descendants
+before any explicit continuation; do not delete state or blindly replay setup.
+
+Read-only evidence: the run's `ui-run.json`, `config.json`, retained records and
+history export `20261102T210716260250Z-f9403892b84b4ae3833e758f62e11ac0.json`,
+plus the matching local Codex rollout for thread
+`01a19e13-bd55-7532-824e-aca475968f46`. No live generation, Resume, reconciliation,
+game execution or framework tests were performed. Documentation navigation is
+verified separately; source-level inspection and saved evidence are not a fresh
+live timeout reproduction. Existing kernel/inference/UI/recovery guides remain
+accurate; no protocol or settings behavior changed.
+Documentation generation passed (336 files, 148 leaves); all 66 hashed run,
+history and rollout evidence files remained unchanged. Retained project knowledge
+was appended to AGENTS.md and read back.
+
+
+
+<a id="p0-repairs-2026-10-29"></a>
+## Current-version fixes — 29 October 2026
+
+Current pins: **simple-os/6, agent-9-local-contracts/state 2.8**. The user authorized
+all P0 repairs plus one local input/output pair and removal of OS cloud token caps.
+Implementation and actual verification are in the [P0 record](p0-repairs-2026-10-29.md).
+The pre-existing constants refactor and historical run evidence are preserved.
+
+| Item | Status in this version |
+| --- | --- |
+| P0-01: local one-file contracts | Implemented: prompt requirements and agent validation at planning/allocation/task construction; tests/docs are explicit companions. |
+| P0-02: configuration contradictions | Implemented: immutable nested tuning, environment proxy routing and inherited SQLite inspection timeouts. |
+| P0-03: complexity-based cloud placement | Implemented: cloud_only_reason protects specialist work from ordinary allocation demotion. |
+| P0-04: native output/budget semantics | Implemented: no cloud per-call token cap; completed local overages are distinct budget facts, with complete output retained and no smaller-response replay. |
+| P0-05: passing check handoff | Implemented: source/environment/invocation-bound passing/failing receipts reach diagnosis and senior private review; scoped evidence-output paging is available. |
+| Token settings special request | Implemented: local_token_limits is the single input/output pair; API requests, context/admission and restart configuration derive from it. Strata launch JSON can be synchronized before restart. |
+
+The following remain **unimplemented follow-up tasks**, not completion claims:
+
+| Priority / ID | Task and acceptance boundary |
+| --- | --- |
+| P1-06 | Finish retained, settled implementation separately from requesting another coding takeover. Assess reconciliation/assessment under original remaining resources; never refill allowances, bypass phases or replay completed effects. Verify a valid retained candidate can finish when authorized, otherwise preserve it with a precise blocker. |
+| P1-07 | Reduce repeated diagnostic tool misuse. Source/evidence readers are bounded, but agents still need stronger paging examples, valid-path guidance and bounded correction for repeated oversized/unsupported requests. Verify the 4096-byte/path guards remain intact. |
+| P1-08 | Qualify the actual local model on representative single-file contracts before another long campaign. Measure completed tasks, schema errors, repeated reads, steps/tokens per completion and source-backed integration. Preserve the full objective as milestones; fixture success alone is insufficient. |
+| P1-09 | Archive campaign history before bounded journal pruning. Retention is tunable, but the default remains 10000 and old pruned events are unrecoverable. Add bounded archival/rotation and visible gaps; verify a campaign exceeding retention remains auditable. |
+| P2-10 | Repair the Minecraft saved-world test helper to select the newly created save by stable ID, with deterministic duplicate-name/timestamp coverage. The preserved game/test source is unchanged by the P0 work. |
+| P2-11 | Profile repeated prompts, prefix reuse and source rereads after convergence improves. Compare prompt processing with decode cost; no OS cache defect is established by current evidence. |
+
+All older issue sections below remain historical evidence; later explicit fixes
+supersede their former pending status. No old run is resumed or silently migrated.
+
+[28 October, 19:30 Minecraft continuation result](minecraft-live-test-2026-10-28-1930.md):
+the single real-local run ended paused at 06:46:33 Toronto on 29 October after
+cloud recovery exhaustion. The reviewed partial output is uncommitted on pi-dev;
+the full objective remains unmet. Final analysis, supported JSON export, browser
+evidence and retained failures are in the user-requested Downloads directory linked
+from the run record. See FIX-0160; earlier evidence and resource accounts are preserved.
+
 [Scheduled four-repair implementation](four-repairs-implementation-2026-10-28.md)
 implements agent source focus/diagnostic reads/search novelty, generic OS measurement
 and caller priorities, agent-owned clean-output semantic handoff and replay-safe error
@@ -2404,3 +2624,13 @@ admission serializes within one UI manager, not across independent runtimes.
 Unsupported status/cancel APIs cannot resolve or reclaim pending computation.
 See [FIX-0117](FIXES.md#fix-0117), [FIX-0118](FIXES.md#fix-0118) and
 [FIX-0119](FIXES.md#fix-0119) for actual verification and boundaries.
+
+## Central OS constants/defaults — 29 October 2026
+
+[FIX-0161](FIXES.md#fix-0161) centralizes generic values and exposes operational
+controls under `system.tuning`. See [usage](../docs/guides/os-tuning.md) and the
+[per-file inventory](../docs/os-config-inventory.md). Historical state requires
+its original frozen source/configuration. The completed Minecraft run's corrected
+OS audit and verification receipts are delivered in
+`/home/marven/Downloads/polyinference-minecraft-test-2026-10-28/`.
+Native-output classification/evidence handoff and gameplay remain outside this fix.

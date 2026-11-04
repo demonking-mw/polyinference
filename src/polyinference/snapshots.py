@@ -5,7 +5,6 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-import sqlite3
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -20,8 +19,10 @@ from .ui_os import (
     artifact_references,
     context_metadata,
     export_artifacts,
+    inspection_connection,
     invocation_root,
     read_snapshot,
+    resolve_inspection_tuning,
     runtime_view,
 )
 
@@ -30,7 +31,7 @@ def read_records(state):
     path = Path(state) / "records.sqlite"
     if not path.is_file():
         return {}
-    with sqlite3.connect(path.as_uri() + "?mode=ro", uri=True) as db:
+    with inspection_connection(path) as db:
         if not db.execute("SELECT 1 FROM sqlite_master WHERE name='records'").fetchone():
             return {}
         return {key: json.loads(body) for key, body in db.execute("SELECT key,body FROM records")}
@@ -54,7 +55,9 @@ async def checkpoints(state):
     path = Path(state) / "checkpoints.sqlite"
     if not path.is_file():
         return []
-    async with aiosqlite.connect(path.as_uri() + "?mode=ro", uri=True) as connection:
+    tuning = resolve_inspection_tuning(Path(state))
+    async with aiosqlite.connect(path.as_uri() + "?mode=ro", uri=True,
+                                 timeout=tuning.sqlite_timeout_seconds) as connection:
         tables = await connection.execute(
             "SELECT name FROM sqlite_master WHERE name IN ('checkpoints', 'writes')"
         )
@@ -339,6 +342,8 @@ async def export_run(metadata, configuration, active=False):
     } for item in retained_checkpoints]
     references = artifact_references([records, snapshot["events"], checkpoint_records])
     artifacts = export_artifacts(state, references)
+    retention = os_view["journal"]["retention_limit"]
+    retention_label = f"{retention:,} events" if retention is not None else "unbounded"
     return {
         "schema_version": 2,
         "exported_at": datetime.now(timezone.utc).isoformat(),
@@ -356,7 +361,7 @@ async def export_run(metadata, configuration, active=False):
             "journal": os_view["journal"],
             "artifact_errors": sum("error" in row for row in artifacts),
             "note": "Records and events share a read transaction. Checkpoints and artifacts are captured "
-                    "separately; an active run may advance during export. Journal retention is 10,000 events; "
+                    f"separately; an active run may advance during export. Journal retention is {retention_label}; "
                     "older runs may lack timestamps, historical values and queue telemetry. "
                     "This diagnostic export does not include private Git objects or restore a runnable OS.",
         },

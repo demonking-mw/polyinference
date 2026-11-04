@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 from ..contracts import ArtifactRef, CodeRevision
+from ..os_config import DEFAULT_TUNING
 from ..primitives import canonical, digest
 from ..workspace_contracts import CopiedFile, DeltaChange, WorkspaceDelta, WorkspaceManifest, relative_path
 from .blocking import BlockingIO
@@ -22,15 +23,7 @@ from .workspace_state import (
     storage_bytes,
 )
 
-IGNORED = {
-    "__pycache__",
-    ".pytest_cache",
-    ".ruff_cache",
-    ".mypy_cache",
-    "node_modules",
-    ".venv",
-    ".venv-linux",
-}
+IGNORED = frozenset(DEFAULT_TUNING.workspace_ignored_names)  # compatibility view; execution uses config.tuning
 ENVIRONMENT = digest(canonical({"adapter": "standalone-1", "tools": "configured-argv-1"}))
 
 
@@ -52,6 +45,7 @@ class Workspaces:
                     "python": sys.version,
                     "platform": platform.platform(),
                     "environment_policy": "source-and-execution-state-v2",
+                    "execution_tuning": config.tuning.model_dump(mode="json"),
                 }
             )
         )
@@ -139,6 +133,8 @@ class Workspaces:
                 timeout=self.config.max_command_seconds,
                 output_limit=self.config.max_workspace_bytes + self.config.limits.max_output_bytes,
                 input_data=input_data,
+                chunk_bytes=self.config.tuning.command_chunk_bytes,
+                stream_bytes=self.config.tuning.subprocess_stream_bytes,
                 env={
                     **os.environ,
                     "GIT_CONFIG_NOSYSTEM": "1",
@@ -148,7 +144,7 @@ class Workspaces:
             )
             if status:
                 raise RuntimeError(
-                    f"Trusted command failed ({status}): {error.decode(errors='replace')[:1000]}"
+                    f"Trusted command failed ({status}): {error.decode(errors='replace')[:self.config.tuning.command_error_chars]}"
                 )
             return output
         finally:
@@ -216,15 +212,7 @@ class Workspaces:
                 )
             elif self.config.prepare_repository:
                 await self.command(["git", "init", "--bare", "--initial-branch=main", str(self.gitdir)])
-                exclusions = [
-                    ".git",
-                    ".polyinference",
-                    "node_modules",
-                    ".npm",
-                    ".venv",
-                    ".venv-linux",
-                    "__pycache__",
-                ]
+                exclusions = self.config.tuning.initial_excluded_names
                 await self.git(
                     "--work-tree",
                     str(self.config.repo_path),
@@ -235,9 +223,7 @@ class Workspaces:
                     "--",
                     ".",
                     *[":(glob,exclude)**/" + name + "/**" for name in exclusions],
-                    ":(glob,exclude)**/.env*",
-                    ":(glob,exclude)**/*.pem",
-                    ":(glob,exclude)**/*.key",
+                    *[":(glob,exclude)" + pattern for pattern in self.config.tuning.initial_excluded_globs],
                 )
                 tree = (await self.git("write-tree")).decode().strip()
                 commit = (
@@ -289,7 +275,7 @@ class Workspaces:
         # The unchanged workspace SDK requires a nonempty dependency closure.
         # A useful ignore file supplies that seed without writing into the source checkout.
         env = {**self.identity(), "GIT_INDEX_FILE": str(self.config.state_path / "baseline.index")}
-        content = b".polyinference/\n.env\n.venv/\nnode_modules/\n__pycache__/\n"
+        content = self.config.tuning.empty_baseline_gitignore.encode()
         oid = (
             (await self.git("hash-object", "-w", "--stdin", input_data=content, process_id=process_id))
             .decode()
@@ -325,13 +311,12 @@ class Workspaces:
         await self.git("update-ref", "HEAD", result, process_id=process_id)
         return result
 
-    @staticmethod
-    def identity():
+    def identity(self):
         return {
-            "GIT_AUTHOR_NAME": "PolyInference",
-            "GIT_AUTHOR_EMAIL": "agent@localhost",
-            "GIT_COMMITTER_NAME": "PolyInference",
-            "GIT_COMMITTER_EMAIL": "agent@localhost",
+            "GIT_AUTHOR_NAME": self.config.tuning.setup_git_name,
+            "GIT_AUTHOR_EMAIL": self.config.tuning.setup_git_email,
+            "GIT_COMMITTER_NAME": self.config.tuning.setup_git_name,
+            "GIT_COMMITTER_EMAIL": self.config.tuning.setup_git_email,
         }
 
     async def select_branch(self, workspace_id, name, create=False):
@@ -610,7 +595,7 @@ class Workspaces:
                 return True
             if exact:
                 return False
-            return name not in protected and (any(p in IGNORED for p in Path(name).parts)
+            return name not in protected and (any(p in self.config.tuning.workspace_ignored_names for p in Path(name).parts)
                     or any(name == output or name.startswith(output + "/") for output in outputs))
 
         def files():
@@ -662,11 +647,11 @@ class Workspaces:
         if self.is_attached(manifest.workspace_id):
             return  # The caller owns dependency preparation; never delete user environments.
         root = self.root_for(manifest)
-        fingerprint = dependency_digest(await self.scan_async(root))
+        fingerprint = dependency_digest(await self.scan_async(root), self.config.tuning)
         key = "workspace-environment/" + manifest.manifest_id
         prior = self.records.get(key)
         if not prior or prior[1]["dependency_digest"] != fingerprint:
-            await self.blocking.run(discard_environment, root, self.scan_policy(root)[1])
+            await self.blocking.run(discard_environment, root, self.scan_policy(root)[1], self.config.tuning)
         self.records.compare_and_publish({key: prior[0] if prior else 0},
                                         {key: {"dependency_digest": fingerprint}})
 
@@ -677,18 +662,18 @@ class Workspaces:
         key = "workspace-environment/" + manifest.manifest_id
         prior = self.records.get(key)
         self.records.compare_and_publish({key: prior[0] if prior else 0},
-            {key: {"dependency_digest": dependency_digest(await self.scan_async(root))}})
+            {key: {"dependency_digest": dependency_digest(await self.scan_async(root), self.config.tuning)}})
 
     async def materialize_view(self, new, previous, tree):
         root, old_root = self.root_for(new), self.root_for(previous)
         # A cancelled copy can leave dependency files in an unpublished generation.
-        await self.blocking.run(discard_environment, root, self.scan_policy(old_root)[1])
+        await self.blocking.run(discard_environment, root, self.scan_policy(old_root)[1], self.config.tuning)
         await self.materialize_async(root, tree)
         prior = self.records.get("workspace-environment/" + previous.manifest_id)
-        fingerprint = dependency_digest(tree)
+        fingerprint = dependency_digest(tree, self.config.tuning)
         if prior and prior[1]["dependency_digest"] == fingerprint:
             await self.blocking.run(copy_environment, old_root, root, self.config.state_path,
-                                    self.config.max_workspace_total_bytes, self.scan_policy(old_root)[1])
+                                    self.config.max_workspace_total_bytes, self.scan_policy(old_root)[1], self.config.tuning)
             await self.capture_environment(new)
 
     async def revision(self, workspace_id):
@@ -884,6 +869,8 @@ class Workspaces:
                             ],
                             timeout=self.config.max_command_seconds,
                             output_limit=self.config.max_workspace_bytes,
+                            chunk_bytes=self.config.tuning.command_chunk_bytes,
+                            stream_bytes=self.config.tuning.subprocess_stream_bytes,
                         )
                         if status not in range(128):
                             raise ValueError("Merge failed")
@@ -964,12 +951,12 @@ class Workspaces:
         index = self.root / workspace_id / "trusted.index"
         env = {
             "GIT_INDEX_FILE": str(index),
-            "GIT_AUTHOR_NAME": "PolyInference",
-            "GIT_AUTHOR_EMAIL": "agent@polyinference.local",
-            "GIT_COMMITTER_NAME": "PolyInference",
-            "GIT_COMMITTER_EMAIL": "agent@polyinference.local",
-            "GIT_AUTHOR_DATE": "2000-01-01T00:00:00+0000",
-            "GIT_COMMITTER_DATE": "2000-01-01T00:00:00+0000",
+            "GIT_AUTHOR_NAME": self.config.tuning.publication_git_name,
+            "GIT_AUTHOR_EMAIL": self.config.tuning.publication_git_email,
+            "GIT_COMMITTER_NAME": self.config.tuning.publication_git_name,
+            "GIT_COMMITTER_EMAIL": self.config.tuning.publication_git_email,
+            "GIT_AUTHOR_DATE": self.config.tuning.publication_git_date,
+            "GIT_COMMITTER_DATE": self.config.tuning.publication_git_date,
         }
         await self.git("read-tree", "--empty", process_id=manifest.process_id, env=env)
         for path, (mode, content) in sorted(final.items()):

@@ -45,7 +45,7 @@ to programs running on the PolyInference OS.
    For reliability work, read the [current stage record](../development-docs/reliability-implementation-2026-10-27.md)
    and [qualification procedure](guides/qualification.md). Keep fixture, browser
    runner and actual live-model results separate; use fresh state for changed pins.
-   Current pins are simple-os/5, agent-8-evidence-recovery/state 2.7. Read the
+   Current pins are simple-os/6, agent-9-local-contracts/state 2.8. Read the
    [four-repair record](../development-docs/four-repairs-implementation-2026-10-28.md),
    [context measurement](guides/context-measurement.md) and [model fallback](guides/model-fallback.md);
    caller preferences do not alter old runs, original resources or uncertainty rules.
@@ -83,3 +83,14 @@ loss, repeat setup before dependent work. Follow [maintenance](maintenance.md).
 > checkout/revision, documents actually read, agent/OS ownership, preservation rules,
 > checks/automation understood and unread/inaccessible material. Onboarding alone
 > does not authorize implementation, live provider calls or historical-run execution.
+
+For generic OS defaults/operational limits, edit the canonical
+[OS configuration](guides/os-tuning.md) and trace nondefault values to consumers.
+Keep application presets and protocol/safety invariants in their existing ownership.
+
+For UI provider changes, preserve runtime identity: only a newly started Strata
+instance is tied to the UI process and cleaned up. Reused runtimes and saved-run
+pins remain separately owned; see [launch lifecycle](guides/launching.md).
+
+Current P0 ownership, token settings and preservation limits are in the [implementation record](../development-docs/p0-repairs-2026-10-29.md).
+Read the [remaining current-version fixes](../development-docs/current-iter-issues.md#p0-repairs-2026-10-29) before follow-up.

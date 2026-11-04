@@ -9,7 +9,7 @@ Names below are abbreviated; the JSON tree and each guide give exact paths.
 | Feature | Files |
 | --- | --- |
 | [Contracts and runtime ports](sdk.md) | __init__.py, contracts.py, workspace_contracts.py, execution_contracts.py, ports.py, primitives.py |
-| [Settings and example configurations](settings.md) | system_settings.py, config.py, agent/system_settings.py and five provider examples |
+| [Settings and example configurations](settings.md) | os_config.py, system_settings.py, config.py, agent/system_settings.py and five provider examples |
 | [Coding controller, setup and task allocation](agent-workflow.md) | controller.py, resume.py, setup.py, tasks.py, routing.py |
 | [Worker/senior graphs, module contracts and semantic review](agent-workers.md) | worker.py, senior.py, prompts.py, domain.py, architecture.py, review.py, diagnostics.py, schema.py |
 | [Worker exceptions and linked recovery](../../design-docs/implementation/WORKER_RECOVERY.md) | agent/exceptions.py, runtime/lifecycle.py |

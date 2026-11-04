@@ -18,6 +18,8 @@ from pydantic import (
     model_validator,
 )
 
+from .os_config import BOUNDS, DISTRIBUTION_WEIGHT_TOLERANCE, default
+
 Identifier = Annotated[str, Field(min_length=1, max_length=256)]
 Digest = Annotated[str, Field(pattern=r"^sha256:[0-9a-f]{64}$")]
 Count = Annotated[int, Field(ge=0)]
@@ -46,8 +48,8 @@ class Wire(BaseModel):
 class InferencePolicy(Wire):
     """Caller consent, independent of OS-native retries and application recovery."""
 
-    additional_retries: Annotated[int, Field(ge=0, le=3)] = 0
-    replace_undelivered: bool = False
+    additional_retries: Annotated[int, Field(ge=0, le=BOUNDS["additional_retries"])] = Field(default=default("InferencePolicy", "additional_retries"), validate_default=True)
+    replace_undelivered: bool = Field(default=default("InferencePolicy", "replace_undelivered"), validate_default=True)
 
 
 class Scope(Wire):
@@ -150,7 +152,7 @@ class DistributionRule(Wire):
         if self.target_weights:
             if set(self.target_weights) != set(self.eligible_classes):
                 raise ValueError("Targets must cover exactly the eligible classes")
-            if abs(sum(self.target_weights.values()) - 1) > 1e-9:
+            if abs(sum(self.target_weights.values()) - 1) > DISTRIBUTION_WEIGHT_TOLERANCE:
                 raise ValueError("Target weights must sum to one")
         return self
 
@@ -369,8 +371,8 @@ class ContextPart(Wire):
     required: bool
     call_id: Identifier | None = None
     derived_from: list[Identifier] = Field(default_factory=list)
-    compactable: bool = False
-    retention_priority: Annotated[int, Field(ge=0, le=100)] = Field(default=0, exclude_if=lambda value: value == 0)
+    compactable: bool = Field(default=default("ContextPart", "compactable"), validate_default=True)
+    retention_priority: Annotated[int, Field(ge=0, le=100)] = Field(default=default("ContextPart", "retention_priority"), validate_default=True, exclude_if=lambda value: value == default("ContextPart", "retention_priority"))
 
 
 class ContextView(Wire):
@@ -549,7 +551,7 @@ class ActualBackend(Wire):
 
 class ErrorDetail(Wire):
     code: Identifier
-    message: Annotated[str, Field(max_length=4000)]
+    message: Annotated[str, Field(max_length=BOUNDS["error_chars"])]
     retryable_after_reconciliation: bool
     retry_after_ms: Count | None
 
@@ -887,7 +889,7 @@ class RetrievedItem(Wire):
     item_ref: Identifier
     item_revision: PositiveCount
     score: Annotated[float, Field(allow_inf_nan=False)] | None
-    reason: Annotated[str, Field(max_length=1000)]
+    reason: Annotated[str, Field(max_length=BOUNDS["retrieval_reason_chars"])]
 
 
 class MemorySnapshot(Record):

@@ -42,8 +42,7 @@ OS-native retries use system.model_call_retries (0–3). Bare OS default is one;
 fresh coding-agent configs choose two. The agent can declare more at top level:
 
 ```json
-"inference_policy": {"additional_retries": 1, "replace_undelivered": true},
-"model_output_target_tokens": 4096
+"inference_policy": {"additional_retries": 1, "replace_undelivered": true}
 ```
 
 Additional retries range from zero to three and follow the native allowance.
@@ -52,8 +51,8 @@ failures. Output adaptation shares these counters, never resets them, and has it
 own adaptation limit. Registered response validation, grammar correction and
 linked worker recovery have [separate agent settings](agent-reliability.md).
 Every attempt passes grants, cancellation, finishing
-reserve, capacity and token/spend admission. Hard output ceilings remain intact;
-the smaller target applies to raw queries. Saved explicit values win over defaults.
+reserve, capacity and campaign token/spend admission. Local raw output uses the single
+[local token pair](local-token-limits.md); cloud per-call caps are provider-owned.
 Optional [model fallback](model-fallback.md) handles confirmed provider availability
 errors separately: one alternate attempt plus the caller-overridable OS seven-call
 window. It retains the same accounts/deadline and does not refill ordinary retries.
@@ -68,7 +67,7 @@ Late retrieved output may settle physical accounting but cannot become a chosen
 answer. Native jobs, tools and external writes retain the strict global barrier.
 
 Expand Endpoint testing in the UI, select timings, then click Test endpoint / warm
-up. It submits one ordinary 64-token query, with no tools/Git/workspace and no
+up. It submits one ordinary query under the configured local token pair, with no tools/Git/workspace or
 retries. Opening the page never warms a model. Probes and their journals live
 under .polyinference/ui/probes/; a pending/uncertain probe blocks another launch
 or probe in that manager. Use the saved generic RuntimeConfig with KernelRuntime.reconcile_stopped and

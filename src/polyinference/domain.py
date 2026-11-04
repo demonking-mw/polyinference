@@ -8,14 +8,15 @@ from pydantic import Field, model_validator
 
 from .contracts import Limits, PhaseReserve, Wire
 from .execution_contracts import Check as Check
+from .os_config import LocalTokenLimits
 from .primitives import canonical as canonical
 from .primitives import digest as digest
 from .primitives import now as now
 from .primitives import operation_fingerprint as operation_fingerprint
 from .workspace_contracts import RelativePath
 
-PROGRAM_VERSION = "agent-8-evidence-recovery"
-STATE_VERSION = "2.7"
+PROGRAM_VERSION = "agent-9-local-contracts"
+STATE_VERSION = "2.8"
 
 
 class GitPolicy(Wire):
@@ -36,12 +37,13 @@ class GitPolicy(Wire):
 
 
 def default_limits() -> Limits:
+    pair = LocalTokenLimits()
     return Limits(
         max_steps=2048,
         max_model_calls=512,
         max_repairs=2,
-        max_input_tokens_per_call=24000,
-        max_output_tokens_per_call=4000,
+        max_input_tokens_per_call=pair.input_tokens,
+        max_output_tokens_per_call=pair.output_tokens,
         max_total_tokens=16000000,
         max_output_bytes=262144,
         max_wall_time_ms=3600000,
@@ -78,6 +80,16 @@ class InterfaceContract(Wire):
         return self
 
 
+class LocalFileContract(Wire):
+    implementation_path: RelativePath
+    inputs: ContractText
+    outputs: ContractText
+    provided_symbols: Annotated[list[ContractText], Field(min_length=1, max_length=24)]
+    state_ownership: ContractText
+    side_effects: ContractText
+    errors: ContractText
+
+
 class Assignment(Wire):
     task_id: Annotated[str, Field(pattern=r"^[a-zA-Z0-9_-]{1,80}$")]
     objective: Annotated[str, Field(min_length=1, max_length=16000)]
@@ -93,6 +105,8 @@ class Assignment(Wire):
     consumes: list[InterfaceRef] = Field(default_factory=list, max_length=16)
     behavior: ContractText | None = Field(default=None, exclude_if=lambda value: value is None)
     focused_check: str | None = Field(default=None, exclude_if=lambda value: value is None)
+    local_contract: LocalFileContract | None = Field(default=None, exclude_if=lambda value: value is None)
+    cloud_only_reason: ContractText | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode="after")
     def unique(self):

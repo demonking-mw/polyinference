@@ -17,6 +17,10 @@ Commands select disabled, trusted or optional Linux bubblewrap execution.
 Applications choose checks/dependency commands and declared outputs. Check argv
 is not a shell script. Tool environment does not inherit provider credentials.
 
+Buffer sizes, list/search bounds, shell defaults/ceiling/argv, system mounts and
+non-path tool environment defaults use [central OS tuning](../guides/os-tuning.md).
+Shell/check schema ceilings share canonical definitions; private paths stay host-issued.
+
 ## Principles to preserve
 
 - Trusted execution has host privileges; scope auditing is not a sandbox.
@@ -45,3 +49,5 @@ authority. Its public FileRead schema advertises the new bound to native brokers
 Read results retain next_offset for existing paged readers as well as returned-byte
 coverage. Cache-like names such as .npm remain source during checks/scope auditing;
 real tool caches stay in the separate invocation environment.
+
+The application configure-local command derives Strata startup context from the [local token pair](../guides/local-token-limits.md); it starts no server or inference.

@@ -104,7 +104,8 @@ async def test_technical_pass_does_not_override_semantic_contract(config, proble
 
 
 @pytest.mark.parametrize("native", [False, True])
-async def test_reviewer_requests_omitted_source_on_pinned_head_for_api_and_native(config, native):
+@pytest.mark.parametrize("read_limit", [16, 2])
+async def test_reviewer_requests_omitted_source_on_pinned_head_for_api_and_native(config, native, read_limit):
     # Relevant behavior is deliberately beyond the automatic prefix.
     (config.repo_path / "a.py").write_text("# padding\n" * 250 + "VALUE = 1\n")
     from conftest import git
@@ -120,7 +121,8 @@ async def test_reviewer_requests_omitted_source_on_pinned_head_for_api_and_nativ
         "-qm",
         "long file",
     )
-    config = config.model_copy(update={"objective": "Inspect baseline source"})
+    assert config.max_review_reads == 16
+    config = config.model_copy(update={"objective": "Inspect baseline source", "max_review_reads": read_limit})
     if native:
         config = config.model_copy(
             update={"cloud": config.cloud.model_copy(update={"protocol": "codex_app_server"})}
@@ -135,6 +137,28 @@ async def test_reviewer_requests_omitted_source_on_pinned_head_for_api_and_nativ
         def reply(self, messages):
             data = pinned(messages)
             self.calls += 1
+            limits = data["review_limits"]
+            assert limits == {
+                "max_review_reads": read_limit,
+                "review_reads_used": self.calls - 1,
+                "remaining_review_reads": read_limit - self.calls + 1,
+                "max_read_requests_per_proposal": 8,
+                "max_bytes_per_read": 4000,
+                "max_senior_corrections": config.max_senior_corrections,
+                "corrections_used": 0,
+                "remaining_corrections": config.max_senior_corrections,
+            }
+            assert data["planning_limits"]["max_workers"] == config.max_workers
+            assert data["planning_limits"]["remaining_sprints"] == config.max_sprints
+            assert data["resource_limits"]["max_total_tokens"] == config.limits.max_total_tokens
+            assert data["resource_limits"]["max_model_request_bytes"] == config.request_byte_limit()
+            pair = config.token_limits("senior")
+            assert data["resource_limits"]["max_input_tokens_per_call"] == (pair.input_tokens if pair else None)
+            assert data["resource_limits"]["token_limit_owner"] == ("os_local_pair" if pair else "provider")
+            assert data["resources"]["remaining_model_calls"] == config.limits.max_model_calls - self.calls + 1
+            assert data["resources"]["deadline"]
+            assert data["finishing_reserve"] == config.limits.final_phase_reserve.model_dump(mode="json")
+            assert "Obey review_limits" in messages[0]["content"]
             if self.calls == 1:
                 source = data["repository_context"]["contents"][0]
                 assert source["truncated"] and "VALUE" not in source["content"]
@@ -212,15 +236,73 @@ async def test_review_read_bounds_and_stale_acceptance(config):
         await runtime.close()
 
 
+@pytest.mark.parametrize("read_limit", [0, 3, 16])
+async def test_review_read_allowance_accepts_batches_and_rejects_only_overrun(config, read_limit):
+    from polyinference.agent.senior import read_context
+
+    config = config.model_copy(update={"max_review_reads": read_limit})
+    runtime, app, engine = await setup(config)
+    try:
+        data = await packet(app, engine)
+        state = {"input": data, "process_id": "senior-fixture", "logical_step": 0}
+        context = Runtime(context=AppContext(app))
+        used = 0
+        while used < read_limit:
+            count = min(8, read_limit - used)
+            state["reply"] = {"goal": "Inspect source", "read_requests": [
+                {"path": "a.py", "offset": used + i, "max_bytes": 1} for i in range(count)
+            ]}
+            result = await validate(state, context)
+            assert result["route"] == "read_context"
+            state.update(result)
+            state.update(await read_context(state, context))
+            used += count
+            assert state["review_reads_used"] == used
+        state["reply"] = {"goal": "One range too many", "read_requests": [{"path": "a.py"}]}
+        result = await validate(state, context)
+        assert result["route"] == "error"
+        assert f"0 remain out of {read_limit}" in result["error"]
+        assert len(state["input"].get("review_reads", [])) == read_limit
+    finally:
+        await runtime.close()
+
+
+async def test_senior_correction_prompt_preserves_used_read_and_correction_allowances(config):
+    runtime, app, engine = await setup(config)
+    client = ScriptedAgent(two=False)
+    seen = []
+
+    async def capture(data):
+        seen.append(data)
+
+    client.hook = capture
+    await runtime.clients["cloud"].close()
+    runtime.clients["cloud"] = client
+    try:
+        data = await packet(app, engine)
+        data["all_task_ids"] = []
+        await app.model({
+            "input": data, "process_id": "senior-fixture", "logical_step": 1,
+            "mode": "initial", "review_reads_used": 8, "corrections_used": 1,
+        }, senior=True)
+        limits = seen[0]["review_limits"]
+        assert limits["review_reads_used"] == 8
+        assert limits["remaining_review_reads"] == 8
+        assert limits["corrections_used"] == 1
+        assert limits["remaining_corrections"] == 0
+    finally:
+        await runtime.close()
+
+
 async def test_review_context_overflow_preserves_inputs_and_parks_honestly(config):
     config = config.model_copy(
-        update={"limits": config.limits.model_copy(update={"max_input_tokens_per_call": 8000})}
+        update={"max_model_request_bytes": 8000}
     )
     runtime, app, engine = await setup(config)
     try:
         await engine.review()
         run = app.get("app/run")
-        assert run["status"] == "paused" and "context bound" in run["blocker"]
+        assert run["status"] == "paused" and "request byte bound" in run["blocker"]
         saved = app.read(run["review_input_ref"])
         assert saved["objective"] == config.objective
         assert not runtime.records.scan("inference-attempt/")
@@ -230,6 +312,7 @@ async def test_review_context_overflow_preserves_inputs_and_parks_honestly(confi
 
 
 async def test_review_prioritizes_requested_source_and_preserves_scoped_provenance(config):
+    config = config.model_copy(update={"max_model_request_bytes": 50000})
     runtime, app, engine = await setup(config)
     try:
         data = await packet(app, engine)

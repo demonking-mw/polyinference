@@ -6,20 +6,23 @@ import asyncio
 import os
 import signal
 
+from ..os_config import DEFAULT_TUNING
 
-async def command(argv, *, timeout, output_limit, input_data=None, env=None):
+
+async def command(argv, *, timeout, output_limit, input_data=None, env=None, chunk_bytes=DEFAULT_TUNING.command_chunk_bytes, stream_bytes=DEFAULT_TUNING.subprocess_stream_bytes):
     process = await asyncio.create_subprocess_exec(
         *argv,
         stdin=asyncio.subprocess.PIPE,
         stdout=asyncio.subprocess.PIPE,
         stderr=asyncio.subprocess.PIPE,
         env=env,
+        limit=stream_bytes,
         start_new_session=True,
     )
     output, error = bytearray(), bytearray()
 
     async def read(stream, buffer):
-        while chunk := await stream.read(65536):
+        while chunk := await stream.read(chunk_bytes):
             if len(output) + len(error) + len(chunk) > output_limit:
                 raise ValueError("Command output exceeds configured limit")
             buffer.extend(chunk)

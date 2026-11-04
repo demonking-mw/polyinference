@@ -43,7 +43,7 @@ async def prepare(runtime, request_ref):
                     if receipt:
                         response = json.loads(runtime.artifacts.read(ArtifactRef.model_validate(receipt[1]["response_ref"])))
                     else:
-                        remaining = min(30, max(0, (request.deadline - now()).total_seconds()))
+                        remaining = min(runtime.config.tuning.response_recovery_seconds, max(0, (request.deadline - now()).total_seconds()))
                         response = (await asyncio.wait_for(adapter.recover_operation(request, retained), remaining)
                                     if remaining > 0 and hasattr(adapter, "recover_operation") else None)
                     if response is not None:
@@ -65,7 +65,7 @@ async def prepare(runtime, request_ref):
                 adapter = runtime.clients[name]
                 recover = getattr(adapter, "recover_operation", None)
                 if recover:
-                    remaining = min(30, getattr(runtime.config, name).timeout_seconds,
+                    remaining = min(runtime.config.tuning.response_recovery_seconds, getattr(runtime.config, name).timeout_seconds,
                                     max(0, (request.deadline - now()).total_seconds()))
                     if remaining > 0:
                         try:
@@ -115,5 +115,5 @@ async def prepare(runtime, request_ref):
             admission.restore()
         progress(records, request_ref, "ready")
     except Exception as exc:
-        progress(records, request_ref, "failed", error=str(exc)[:2000])
+        progress(records, request_ref, "failed", error=str(exc)[:runtime.config.tuning.diagnostic_preview_chars])
         raise

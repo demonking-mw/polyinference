@@ -13,8 +13,15 @@ The local test runner hosts fresh runs, project selection and inspection without
 
 ## Interface and ownership
 
-The default preset uses Haiku workers/Codex seniors with one worker/slot. Every
-Start run creates fresh state. A custom config preserves its grants/providers.
+Without machine preferences, the preset uses Haiku workers/Codex seniors with one worker/slot.
+[Machine defaults](../guides/configuration.md) replace local serving settings for plain UI launches. The launch footer displays the effective model, location/protocol, context, slots, workers
+and sprint limit. Opt-in local_strata_profile preparation runs before saved-run
+restoration and HTTP serving; startup failure prevents opening an unusable UI.
+serve closes its owned provider on normal exit, Ctrl+C, SIGTERM/SIGHUP and later
+startup errors, restoring prior signal handlers. Strata's process-death watcher
+covers uncatchable termination. Reused runtimes are never adopted; see the
+[launch lifecycle and bounded drain](../guides/launching.md).
+Every Start run creates fresh state. A custom config preserves its grants/providers.
 Snapshot viewing makes no provider requests. Endpoint testing offers explicit
 cloud/local/buffered timing profiles and an on-click warm-up using an ordinary
 bounded query. Probes serialize with launches/resumes; unknown probe state remains
@@ -43,6 +50,10 @@ ordinary launches hide the controls and send the original payload. An active mod
 batch overrides --sim-batch for that run. Progress/incidents are separate from real
 provider costs; live/saved inspection retains the same facts. See the
 [simulator module](inference-simulation.md) and [usage](../guides/sim-inference.md).
+
+Activity paging/labels share the resolved [OS tuning](../guides/os-tuning.md) in
+live and saved views. Resume text bounds are enforced by the canonical server
+definition; the client retains rejected drafts without an independent fixed cap.
 
 ## Principles to preserve
 

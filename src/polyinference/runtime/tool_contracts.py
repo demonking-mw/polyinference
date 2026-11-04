@@ -5,6 +5,7 @@ from __future__ import annotations
 from pydantic import Field
 
 from ..contracts import Wire
+from ..os_config import BOUNDS
 from ..workspace_contracts import RelativePath
 
 
@@ -43,7 +44,7 @@ class CheckRun(Wire):
 class ShellRun(Wire):
     script: str
     cwd: str | None = None
-    timeout_seconds: float | None = Field(default=None, gt=0, le=600)
+    timeout_seconds: float | None = Field(default=None, gt=0, le=BOUNDS["shell_seconds"])
 
 
 class SelectBranch(Wire):

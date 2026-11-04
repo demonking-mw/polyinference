@@ -5,10 +5,12 @@ from __future__ import annotations
 import asyncio
 import fcntl
 import json
+import logging
 import math
 from contextlib import AsyncExitStack
 from datetime import datetime, timedelta
 
+import aiosqlite
 from langgraph.checkpoint.sqlite.aio import AsyncSqliteSaver
 
 from ..contracts import (
@@ -24,6 +26,7 @@ from ..contracts import (
     Scope,
     UsageMeasure,
 )
+from ..os_config import KERNEL_VERSION
 from ..primitives import canonical, digest, now, operation_fingerprint
 from .capabilities import Capabilities
 from .codex import CodexAppServer, CodexProxy
@@ -31,6 +34,7 @@ from .context import ContextService, InputOverflow
 from .exclusive import Exclusive
 from .inference import (
     Admission,
+    CompletedBudgetExceeded,
     EndpointError,
     HTTPInference,
     IncompleteGeneration,
@@ -54,6 +58,8 @@ from .tool_contracts import FILE_CAPABILITIES
 from .tools import Tools
 from .workspace import Workspaces
 
+logger = logging.getLogger(__name__)
+
 
 class UncertainEffect(RuntimeError):
     pass
@@ -64,6 +70,34 @@ class ProcessCancelled(RuntimeError):
 
 
 class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
+    async def _await_agent_job(self, job, request, endpoint, *, warn_only):
+        """Observe a soft endpoint timeout without cancelling or replacing its task."""
+        if not warn_only:
+            return await job
+        task = asyncio.ensure_future(job)
+        try:
+            done, _ = await asyncio.wait({task}, timeout=endpoint.timeout_seconds)
+            if not done:
+                warning = {
+                    "level": "warning", "code": "cloud_agent_timeout",
+                    "operation_id": request.operation_id, "process_id": request.scope.process_id,
+                    "timeout_seconds": endpoint.timeout_seconds, "at": now().isoformat(),
+                    "action": "continue",
+                }
+                # Diagnostic logging must not change execution or effect certainty.
+                try:
+                    self.records.put_once("runtime/warning/cloud-agent-timeout/" + request.operation_id, warning)
+                except Exception:
+                    logger.exception("Could not persist cloud agent timeout warning")
+                logger.warning("Cloud agent job %s exceeded %.3fs; continuing the same job without interruption",
+                               request.operation_id, endpoint.timeout_seconds)
+            return await task
+        finally:
+            # Outer deadlines/operator cancellation still own this exact task.
+            if not task.done():
+                task.cancel()
+                await asyncio.gather(task, return_exceptions=True)
+
     def __init__(self, config, run_id="run"):
         self.config, self.run_id = config, run_id
         self.scope = Scope(
@@ -76,9 +110,11 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
         except BlockingIOError as exc:
             self.driver.close()
             raise RuntimeError("Another coordinator owns this state directory") from exc
-        self.records = Records(config.state_path / "records.sqlite")
+        self.records = Records(config.state_path / "records.sqlite", tuning=config.tuning)
         self.artifacts = Artifacts(config.state_path / "artifacts", config.max_artifact_bytes)
-        self.exclusive = Exclusive(self.records, config.limits.max_wall_time_ms / 1000)
+        self.exclusive = Exclusive(self.records, min(config.tuning.exclusive_wait_seconds or
+                                                   config.limits.max_wall_time_ms / 1000,
+                                                   config.limits.max_wall_time_ms / 1000))
         self.workspaces = Workspaces(config, self.records, self.exclusive, self.artifacts, self.scope)
         self.tools = Tools(config, self.workspaces, self.exclusive, self.artifacts, self.scope)
         self.operations = self
@@ -216,18 +252,19 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                 raise ValueError("Unsupported required runtime feature: " + requirement.feature_id)
 
     async def open(self):
-        self.checkpointer = await self.stack.enter_async_context(
-            AsyncSqliteSaver.from_conn_string(str(self.config.state_path / "checkpoints.sqlite"))
-        )
+        connection = await self.stack.enter_async_context(aiosqlite.connect(
+            str(self.config.state_path / "checkpoints.sqlite"), timeout=self.config.tuning.sqlite_timeout_seconds))
+        self.checkpointer = AsyncSqliteSaver(connection)
         pinned = self.records.get("runtime/config")
         fingerprint = digest(canonical(self.config))
         if pinned and pinned[1]["digest"] != fingerprint:
             raise RuntimeError("Configuration changed: start a new run/state directory")
         self.records.put_once("runtime/config", {"digest": fingerprint, "run_id": self.run_id})
         kernel = self.records.get("runtime/kernel")
-        if kernel and kernel[1].get("version") != "simple-os/5":
+        if kernel and kernel[1].get("version") != KERNEL_VERSION:
             raise RuntimeError("Runtime authority/residency changed: use original source or fresh state")
-        self.records.put_once("runtime/kernel", {"version": "simple-os/5"})
+        self.records.put_once("runtime/kernel", {"version": KERNEL_VERSION})
+        self.records.put_once("runtime/os-tuning", self.config.tuning.model_dump(mode="json"))
         from ..contracts import ProcessSpec
 
         for _, _, process in self.records.scan("process/"):
@@ -240,11 +277,11 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                 if endpoint.protocol == "codex_app_server"
                 else (CodexProxy if endpoint.protocol == "codex_proxy" else HTTPInference)
             )
-            self.clients[name] = cls(endpoint)
+            self.clients[name] = cls(endpoint, tuning=self.config.tuning)
             if endpoint.retry_model:
                 alternative = endpoint.model_copy(update={"model": endpoint.retry_model.model,
                     "reasoning_effort": endpoint.retry_model.reasoning_effort, "retry_model": None})
-                self.fallback_clients[name] = cls(alternative)
+                self.fallback_clients[name] = cls(alternative, tuning=self.config.tuning)
                 self.fallback_clients[name].output_cap = self.config.max_model_response_bytes
                 if isinstance(self.fallback_clients[name], HTTPInference):
                     self.fallback_clients[name].require_completion_metadata = self.config.inference_safety.require_completion_metadata
@@ -254,9 +291,13 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                 self.clients[name].require_completion_metadata = self.config.inference_safety.require_completion_metadata
             if isinstance(self.clients[name], CodexProxy):
                 self.clients[name].http.output_cap = self.config.max_model_response_bytes
+            for client in [self.clients[name], *([self.fallback_clients[name]] if name in self.fallback_clients else [])]:
+                if isinstance(client, HTTPInference):
+                    pair = self.config.token_limits_for_binding(name)
+                    client.output_token_limit = pair.output_tokens if pair else None
             self.admission[name] = Admission(
                 endpoint.max_inflight,
-                endpoint.reserved_context_tokens,
+                endpoint.reserved_context_tokens if self.config.token_limits_for_binding(name) else None,
                 records=self.records,
                 name=name,
                 max_queued=self.config.max_queued_operations,
@@ -405,7 +446,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
             logical_step_id=request.logical_step_id, state="uncertain", output_refs=[],
             paired_call_id=None, binding_ref=name, binding_generation=1, actual_backend=None,
             usage=[], execution_termination="unknown", effects="none", started_at=started,
-            finished_at=now(), error=ErrorDetail(code="UndeliveredGeneration", message=str(exc)[:4000],
+            finished_at=now(), error=ErrorDetail(code="UndeliveredGeneration", message=str(exc)[:self.config.tuning.diagnostic_error_chars],
                 retryable_after_reconciliation=False, retry_after_ms=None), continuation_ref=None,
             extensions={"runtime/undelivered-generation": marker})
         return marker, result
@@ -717,9 +758,10 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                 circuit = self.records.get(self._model_failure_key(request))
                 if circuit and circuit[1]["count"] >= self.config.max_repeated_model_failures and not request.extensions.get("polyinference/recovery-of"):
                     raise EndpointError("Model dispatch stopped after repeated permanent failures; explicit recovery required")
-                output_tokens = min(request.limits.max_output_tokens_per_call,
-                    request.extensions.get("runtime/output-tokens", request.limits.max_output_tokens_per_call))
-                if not isinstance(output_tokens, int) or isinstance(output_tokens, bool) or output_tokens < 1:
+                local_caps = self.config.token_limits(payload.role)
+                output_tokens = local_caps.output_tokens if local_caps else None
+                if output_tokens is not None and (not isinstance(output_tokens, int)
+                        or isinstance(output_tokens, bool) or output_tokens < 1):
                     raise ValueError("Invalid output-token allowance")
                 protocol = self.agent_protocols.get(payload.required_phase_protocol) if isinstance(payload, AgentJob) else None
                 measurement_cache = {}
@@ -738,8 +780,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                         prepared = messages
                     size = len(canonical(prepared))
                     measured = {"bytes": size, "tokens": size, "provenance": "conservative_bytes"}
-                    byte_cap = self.config.max_model_request_bytes or min(
-                        payload.context.maximum_input_tokens, request.limits.max_input_tokens_per_call)
+                    byte_cap = self.config.request_byte_limit()
                     if isinstance(client, HTTPInference) and endpoint.input_token_count_path and size <= byte_cap:
                         fingerprint = digest(canonical(prepared))
                         if fingerprint not in measurement_cache:
@@ -753,16 +794,16 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                         if counted:
                             measured.update(counted)
                     return prepared, measured
-                if (self.config.inference_safety.require_output_token_enforcement
+                if (local_caps and self.config.inference_safety.require_output_token_enforcement
                         and endpoint.protocol in {"codex_app_server", "codex_proxy"}):
                     raise EndpointError("Selected native adapter cannot enforce a hard output-token limit")
                 messages, prepared, receipt = await self.contexts.prepare(request, measure, output_tokens=output_tokens)
                 if self.uncertain():
                     raise EndpointError("Context preparation left uncertain effects; reconcile before submission")
                 extensions["runtime/context-receipt"] = receipt
-                extensions["runtime/output-token-enforcement"] = endpoint.protocol in {"chat", "responses", "gemini", "anthropic"}
+                extensions["runtime/output-token-enforcement"] = bool(local_caps) and endpoint.protocol in {"chat", "responses", "gemini", "anthropic"}
                 input_bound = receipt["submitted_input_tokens"]
-                reserved = input_bound + output_tokens
+                reserved = input_bound + (output_tokens or 0)
                 manifest_ref = request.extensions.get("polyinference/workspace-view")
                 if manifest_ref:
                     current = self.workspaces.current(manifest_ref["workspace_id"])
@@ -934,20 +975,18 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                                 )
                             elif isinstance(client, CodexProxy):
                                 options.update(max_output=output_tokens, prepared=prepared)
+                            warn_only = (endpoint.physical_location == "cloud"
+                                         and not self.config.cloud_agent_timeout_interrupt)
+                            if isinstance(client, (CodexAppServer, CodexProxy)):
+                                options["enforce_timeout"] = not warn_only
                             dispatched = True
                             attempted["submitted"] = True
-                            if callback:
-                                result = await asyncio.wait_for(
-                                    client.generate_job(
-                                        messages, snapshot, schema, callback, **options
-                                    ),
-                                    timeout,
-                                )
-                            else:
-                                result = await asyncio.wait_for(
-                                    client.generate_job(messages, snapshot, schema, **options),
-                                    timeout,
-                                )
+                            job = (client.generate_job(messages, snapshot, schema, callback, **options)
+                                   if callback else client.generate_job(messages, snapshot, schema, **options))
+                            result = await asyncio.wait_for(
+                                self._await_agent_job(job, request, endpoint, warn_only=warn_only),
+                                max(0, (model_deadline - now()).total_seconds()) if warn_only else timeout,
+                            )
                             paths = await unbrokered_changes()
                             if paths:
                                 raise NativeJobStopped("Native harness modified files outside the broker: "
@@ -965,7 +1004,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                                 "Native job did not establish a terminal result: "
                                 + type(exc).__name__
                                 + ": "
-                                + str(exc)[:1500]
+                                + str(exc)[:self.config.tuning.native_error_chars]
                             )
                             failure.native_diagnostics = getattr(exc, "native_diagnostics", None)
                             raise failure from exc
@@ -975,8 +1014,10 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                 reported_usage = result.get("usage") or {}
                 emitted = reported_usage.get("output_tokens", reported_usage.get("completion_tokens",
                     reported_usage.get("outputTokens")))
-                if isinstance(emitted, int) and not isinstance(emitted, bool) and emitted > output_tokens:
-                    raise IncompleteGeneration(result, "reported_output_limit_exceeded", output_tokens)
+                if (output_tokens is not None and isinstance(emitted, int)
+                        and not isinstance(emitted, bool) and emitted > output_tokens):
+                    raise CompletedBudgetExceeded(result, output_tokens,
+                        scope=result.get("completion", {}).get("usage_scope", "provider_response"))
                 if len(result["text"].encode()) > request.limits.max_output_bytes:
                     result = {**result, "text": result["text"].encode()[:request.limits.max_output_bytes].decode(errors="replace")}
                     raise IncompleteGeneration(result, "response_byte_limit", output_tokens)
@@ -1077,7 +1118,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                 extensions["runtime/io-error"] = exc.diagnostics
             if getattr(exc, "diagnostics", {}).get("category") == "model_output":
                 extensions["polyinference/model-output-error"] = exc.diagnostics
-            failed_response = exc.response if isinstance(exc, (IncompleteGeneration, ModelResponseError)) else None
+            failed_response = exc.response if isinstance(exc, (IncompleteGeneration, ModelResponseError, CompletedBudgetExceeded)) else None
             total = (failed_response.get("usage") or {}).get("total_tokens") if failed_response else None
             if not isinstance(total, int) or isinstance(total, bool) or total < 0:
                 total = None
@@ -1085,6 +1126,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
             self._settle_budget(request, total if failed_response else (None if submitted else 0))
             if failed_response:
                 extension = ("polyinference/incomplete-generation" if isinstance(exc, IncompleteGeneration)
+                             else "runtime/completed-budget-exceeded" if isinstance(exc, CompletedBudgetExceeded)
                              else "polyinference/model-output-error")
                 extensions[extension] = exc.diagnostics
                 backend = ActualBackend(
@@ -1104,7 +1146,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                 state, termination = "cancelled", "not_started"
             error = ErrorDetail(
                 code=type(exc).__name__,
-                message=str(exc)[:4000],
+                message=str(exc)[:self.config.tuning.diagnostic_error_chars],
                 retryable_after_reconciliation=getattr(exc, "retryable", False),
                 retry_after_ms=getattr(exc, "diagnostics", {}).get("retry_after_ms"),
             )
@@ -1121,7 +1163,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
             detail = getattr(exc, "detail", {})
             if detail:
                 extensions["polyinference/workspace-error"] = detail
-            diagnostic = {"error": str(exc)[:4000], **detail}
+            diagnostic = {"error": str(exc)[:self.config.tuning.diagnostic_error_chars], **detail}
             if isinstance(exc, ProviderError):
                 diagnostic["provider_detail"] = canonical(exc.diagnostics).decode()
             outputs = [self.artifacts.put(canonical(failed_response or diagnostic), request.scope)]
@@ -1210,7 +1252,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
             raise ValueError("Reconcile unknown effects before recovery")
         request = request.model_copy(update={"extensions": {
             **request.extensions, "polyinference/recovery-of": failed_id,
-            "polyinference/recovery-reason": reason[:4000],
+            "polyinference/recovery-reason": reason[:self.config.tuning.diagnostic_error_chars],
         }})
         request = request.model_copy(update={"intent_digest": operation_fingerprint(request)})
         self._authorize_recovery(request, failed_id)
@@ -1330,7 +1372,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
         ref = observation.get("output") if isinstance(observation, dict) else None
         if isinstance(ref, dict) and ref.get("media_type") == "text/plain":
             raw = self.artifacts.read(ArtifactRef.model_validate(ref))
-            cap = min(3000, parent.limits.max_output_bytes)
+            cap = min(self.config.tuning.check_excerpt_chars, parent.limits.max_output_bytes)
             excerpt = raw if len(raw) <= cap else raw[:cap // 2] + b"\n[...truncated...]\n" + raw[-cap // 2:]
             presented["diagnostics"] = {"output_ref": ref, "text": excerpt.decode(errors="replace"), "truncated": len(raw) > cap}
         return presented
@@ -1355,7 +1397,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
 
     def diagnostics(self):
         return {
-            "kernel": "simple-os/2",
+            "kernel": KERNEL_VERSION,
             "admission": {name: value.snapshot() for name, value in self.admission.items()},
             "processes": [value for _, _, value in self.records.scan("process-status/")],
             "uncertain_operations": self.uncertain(),
@@ -1397,7 +1439,7 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                                 account_scope_ref=request.budget_account_ref)],
             execution_termination="confirmed_stopped", effects="known",
             started_at=request.created_at, finished_at=now(),
-            error=ErrorDetail(code=type(failure).__name__, message=str(failure)[:4000],
+            error=ErrorDetail(code=type(failure).__name__, message=str(failure)[:self.config.tuning.diagnostic_error_chars],
                               retryable_after_reconciliation=False, retry_after_ms=None) if failure else None,
             continuation_ref=None,
         )

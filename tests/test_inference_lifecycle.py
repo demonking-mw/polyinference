@@ -254,8 +254,8 @@ async def test_endpoint_probe_is_bounded_and_has_no_git_or_tools(tmp_path, monke
     async def handler(wire):
         calls.append(json.loads(wire.content))
         return httpx.Response(200, headers={"content-type": "text/event-stream"}, stream=Chunks([encoded(events("ready"))]))
-    def client(self, endpoint, client=None):
-        original(self, endpoint, httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    def client(self, endpoint, client=None, *, tuning=None):
+        original(self, endpoint, httpx.AsyncClient(transport=httpx.MockTransport(handler)), tuning=tuning)
     monkeypatch.setattr(HTTPInference, "__init__", client)
     endpoint = Endpoint(model="fixture", protocol="anthropic", lifecycle={}, inference_location=location)
     policy = DataPolicy(policy_ref="local-only", allowed_inference_locations=["local"],
@@ -267,7 +267,7 @@ async def test_endpoint_probe_is_bounded_and_has_no_git_or_tools(tmp_path, monke
         assert not calls and not config.repo_path.exists()
         return
     result = await probe_endpoint(config, tmp_path / "probe")
-    assert result["status"] == "succeeded" and len(calls) == 1 and calls[0]["max_tokens"] == 64
+    assert result["status"] == "succeeded" and len(calls) == 1 and calls[0]["max_tokens"] == config.local_token_limits.output_tokens
     assert not config.repo_path.exists()
     records = Records(tmp_path / "probe" / "records.sqlite")
     try:

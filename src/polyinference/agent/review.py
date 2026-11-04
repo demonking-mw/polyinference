@@ -302,11 +302,11 @@ def fit_snapshot(app, snapshot):
     for source in result.get("review_reads", []):
         optional.append((source, "content", "requested-source/" + source["path"]))
     result["review_evidence_catalog"] = evidence_catalog(result)
-    while size() > app.config.limits.max_input_tokens_per_call:
+    while size() > app.config.request_byte_limit():
         candidates = [(obj, key, label) for obj, key, label in optional if obj[key]]
         if not candidates:
             raise ValueError(
-                f"Required review contracts exceed context bound ({size()} > {app.config.limits.max_input_tokens_per_call}); "
+                f"Required review contracts exceed request byte bound ({size()} > {app.config.request_byte_limit()}); "
                 "split work or configure a larger context"
             )
         automatic = [item for item in candidates if not item[2].startswith("requested-source/")]

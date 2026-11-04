@@ -34,6 +34,19 @@ records, artifacts and user messages without a Git repository or coding task.
 
 ## Accepted revisions
 
+Accepted 2026-11-02 ([FIX-0174](../../development-docs/FIXES.md#fix-0174)):
+the coding UI cleans up a Strata runtime it starts, using captured runtime IDs and
+Strata process-death supervision. This supersedes FIX-0169's leave-running policy;
+reusing an existing runtime does not transfer ownership. Generic OS scheduling,
+provider GPU configuration and saved-run authority are unchanged.
+
+Accepted 2026-11-02 ([FIX-0171](../../development-docs/FIXES.md#fix-0171)):
+cloud_agent_timeout_interrupt is an OS boolean, default false. Cloud AgentJob
+endpoint timeouts log and continue the same job unless explicitly true. Physical
+location determines applicability; original deadlines, explicit cancellation,
+resource holds and unknown-execution rules remain unchanged. See
+[timeout configuration](../../docs/guides/os-tuning.md).
+
 | ID | Earlier content | Current rule and reason | Evidence / owner |
 | --- | --- | --- | --- |
 | R01 | Coding grammar, task state and publication assumptions inside runtime paths. | Register typed capabilities, native protocols and application publication/reconciliation policies. A process can finish with artifacts or no output. This restores the intended boundary and lets future agents avoid coding conventions. | [FIX-0022](../../development-docs/FIXES.md#fix-0022), [FIX-0032](../../development-docs/FIXES.md#fix-0032); OS mechanisms, application semantics. |
@@ -49,7 +62,7 @@ records, artifacts and user messages without a Git repository or coding task.
 | R11 | Physical RAM/VRAM admission, automatic retention, migration or a broader platform are current requirements. | O02 defers physical memory management. This version uses configured request/context/token/spend/output/artifact/workspace limits, a single coordinator and explicit archival. Git/SQLite history has no total physical quota; use host storage controls when needed. MCP lifecycle, distributed recovery and migration remain outside scope. This keeps the current OS implementable without claiming hardware or storage guarantees it lacks. | [Implementation scope decisions](IMPLEMENTATION.md), [retention limits](RUNBOOK.md#retention-and-export); OS/deployment boundary. |
 | R12 | A one-worker/one-request test demonstrates the intended multi-request local-serving result. | UI defaults deliberately serialize worker/lane use for bring-up. Cloud-backed local-lane calls can test concurrent admission when both workers and slots are configured, but do not reproduce GPU batching, KV pressure or throughput. The server still owns token scheduling; fixture overlap is not a hardware benchmark. | [FIX-0048](../../development-docs/FIXES.md#fix-0048), [FIX-0061](../../development-docs/FIXES.md#fix-0061); deployment/test configuration. |
 | R13 | An OS label implies protected hosted Python processes, preemptive drivers or transparent recovery of remote execution. | Trusted application code shares a cooperative host event loop; trusted shell has host privileges. Optional command/native sandboxes have their own limits. Unknown native/tool/effectful work blocks runtime dispatch. Updated 2026-10-23: explicit generation-only isolation can discard delivery while retaining physical holds; replacements still need spare capacity and bounded caller/native policy. Status/inspection remain available. This is a deliberate single-project safety boundary, not general isolation between arbitrary programs. The global shell gate and verification-before-shell order remain required. | [Runtime trust boundary](RUNTIME_BOUNDARY.md#bootstrap-and-the-capability-boundary), [recovery](RUNBOOK.md#recovery), [kernel guards](../../src/polyinference/runtime/kernel.py); OS scope and safety logic. |
-| R14 | Settings are scattered or an additional shared agent library is required now. | The OS schema is in system_settings.py, coding defaults/UI choices are adjacent in agent/system_settings.py, and JSON uses one system block. A shared library is deferred until real reuse justifies a third surface. Direct OS access remains supported. | [FIX-0054](../../development-docs/FIXES.md#fix-0054), [FIX-0059](../../development-docs/FIXES.md#fix-0059), [complete settings reference](AGENT_SETTINGS.md); OS schema and agent preferences. |
+| R14 | Settings are scattered or an additional shared agent library is required now. | Generic values/operational bounds are centralized in os_config.py; the OS schema is in system_settings.py, coding defaults/UI choices are adjacent in agent/system_settings.py, and JSON uses one system block. A shared library is deferred until real reuse justifies a third surface. Direct OS access remains supported. | [FIX-0054](../../development-docs/FIXES.md#fix-0054), [FIX-0059](../../development-docs/FIXES.md#fix-0059), [complete settings reference](AGENT_SETTINGS.md); OS schema and agent preferences. |
 
 ## Resume compatibility addition — 2026-10-23
 

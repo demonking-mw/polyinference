@@ -5,15 +5,16 @@ from __future__ import annotations
 import asyncio
 import uuid
 
+from ..os_config import BOUNDS
 from ..primitives import now
 
 
 def request_resume(records, process_id=None, text=None, *, request_id=None):
     """Record an operator signal; the owning application supplies continuation policy."""
-    if text is not None and (not isinstance(text, str) or len(text) > 16000):
-        raise ValueError("Steering instructions must be at most 16000 characters")
-    if request_id is not None and (not isinstance(request_id, str) or not 1 <= len(request_id) <= 128):
-        raise ValueError("Resume request ID must be a nonempty string of at most 128 characters")
+    if text is not None and (not isinstance(text, str) or len(text) > BOUNDS["resume_chars"]):
+        raise ValueError(f"Steering instructions must be at most {BOUNDS['resume_chars']} characters")
+    if request_id is not None and (not isinstance(request_id, str) or not 1 <= len(request_id) <= BOUNDS["request_id_chars"]):
+        raise ValueError(f"Resume request ID must be a nonempty string of at most {BOUNDS['request_id_chars']} characters")
     from ..primitives import digest
 
     request_id = request_id if request_id is not None else uuid.uuid4().hex

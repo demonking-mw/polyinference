@@ -212,6 +212,24 @@
             "title": "Input token measurement, byte ceilings and caller priorities",
             "doc": "docs/guides/context-measurement.md",
             "files": []
+          },
+          {
+            "id": "local-token-limits",
+            "title": "One local token pair and provider startup",
+            "doc": "docs/guides/local-token-limits.md",
+            "files": []
+          },
+          {
+            "id": "doc-docs-guides-os-tuning",
+            "title": "Central OS configuration",
+            "doc": "docs/guides/os-tuning.md",
+            "files": []
+          },
+          {
+            "id": "doc-docs-os-config-inventory",
+            "title": "OS constants audit inventory",
+            "doc": "docs/os-config-inventory.md",
+            "files": []
           }
         ]
       },
@@ -407,6 +425,7 @@
             "title": "Settings and example configurations",
             "doc": "docs/modules/settings.md",
             "files": [
+              "src/polyinference/os_config.py",
               "src/polyinference/system_settings.py",
               "src/polyinference/config.py",
               "src/polyinference/agent/system_settings.py",
@@ -416,7 +435,8 @@
               "examples/agent.openai.json",
               "examples/agent.gemini.json",
               "scripts/settings_docs.py",
-              "docs/settings-schema.json"
+              "docs/settings-schema.json",
+              "src/polyinference/agent/local_provider.py"
             ]
           },
           {
@@ -432,7 +452,8 @@
               "src/polyinference/agent/review.py",
               "src/polyinference/agent/diagnostics.py",
               "src/polyinference/agent/schema.py",
-              "src/polyinference/agent/worker_memory.py"
+              "src/polyinference/agent/worker_memory.py",
+              "src/polyinference/agent/check_evidence.py"
             ]
           },
           {
@@ -676,6 +697,18 @@
         "title": "Development records and investigations",
         "children": [
           {
+            "id": "agent-prompting-audit-20261104",
+            "title": "Prompting proposal audit and corrected implementation plan",
+            "doc": "development-docs/agent-prompting-audit-2026-11-04.md",
+            "files": []
+          },
+          {
+            "id": "agent-prompting-proposal-20261104",
+            "title": "Simpler agent prompts and milestone-driven sprint planning proposal",
+            "doc": "development-docs/agent-prompting-proposal-2026-11-04.md",
+            "files": []
+          },
+          {
             "id": "run-reliability-implementation-plan-20261027",
             "title": "Run reliability implementation plan and historical failure coverage (2026-10-27)",
             "doc": "development-docs/run-reliability-implementation-plan-2026-10-27.md",
@@ -874,6 +907,12 @@
             "files": []
           },
           {
+            "id": "minecraft-live-test-20261028-1930",
+            "title": "Local Minecraft continuation result (28 October, 19:30)",
+            "doc": "development-docs/minecraft-live-test-2026-10-28-1930.md",
+            "files": []
+          },
+          {
             "id": "minecraft-failure-isolation-20261028",
             "title": "Minecraft failure isolation and proposed repair order (2026-10-28)",
             "doc": "development-docs/minecraft-failure-isolation-2026-10-28.md",
@@ -913,6 +952,12 @@
             "id": "doc-development-docs-four-repairs-2026-10-28",
             "title": "Four scheduled repairs: implementation and verification",
             "doc": "development-docs/four-repairs-implementation-2026-10-28.md",
+            "files": []
+          },
+          {
+            "id": "p0-repairs-2026-10-29",
+            "title": "Current P0 repairs and token configuration",
+            "doc": "development-docs/p0-repairs-2026-10-29.md",
             "files": []
           }
         ]
@@ -1121,7 +1166,9 @@
               "tests/test_cli.py",
               "tests/test_branch_integration.py",
               "tests/test_model_fallback.py",
-              "tests/test_four_repairs.py"
+              "tests/test_four_repairs.py",
+              "tests/test_os_config.py",
+              "tests/test_p0_repairs.py"
             ]
           }
         ]

@@ -97,7 +97,7 @@ class ModelRetries:
             if self._blocked(original, eligible):
                 break
             target = max(1, min(rt.config.inference_safety.smaller_response_bytes,
-                                original.limits.max_output_bytes) // (2 ** index))
+                                original.limits.max_output_bytes) // (rt.config.tuning.response_shrink_divisor ** index))
             text = ("The previous response hit an output limit and was discarded; none of its returned actions executed. "
                 f"Recovery attempt {index + 1}: aim below {target} UTF-8 bytes of visible response content. "
                 "Return a substantially smaller complete response under the same declared protocol. "
@@ -212,7 +212,7 @@ class ModelRetries:
                 blocked = self._blocked(original, result)
                 if blocked:
                     return self.complete(original, result, blocked)
-                delay = max(rt.config.model_retry_delay_ms * 2 ** (attempt - 1),
+                delay = max(rt.config.model_retry_delay_ms * rt.config.tuning.retry_backoff_multiplier ** (attempt - 1),
                             result.error.retry_after_ms or 0)
                 not_before = now() + timedelta(milliseconds=delay)
                 if delay > rt.config.model_retry_max_delay_ms or not_before >= self.deadline(original):

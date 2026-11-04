@@ -7,7 +7,7 @@
 | Operating system | macOS, Linux, or Linux inside WSL. Native Windows is not supported by the POSIX runtime. |
 | Python | Python 3.10 or later, including `venv` and `pip`. |
 | System tools | Git and Bash; `curl` for the linked Codex installer. |
-| Default junior provider | An Anthropic API key with access to the configured model. |
+| Bundled junior provider (without machine preferences) | An Anthropic API key with access to the configured model. |
 | Default senior provider | Codex CLI installed and signed in on the same macOS/Linux/WSL host as PolyInference. |
 | Project tools | Any compiler, interpreter, package manager and dependencies required by your target project's checks. |
 
@@ -49,3 +49,12 @@ After installation, follow [first run](docs/guides/first-run.md), then
 [your project](docs/guides/projects.md). Contributors must read
 [developer onboarding](dev-readme.md) and update all affected docs after fixes/features.
 
+
+Generic defaults and operational controls are centralized in
+[OS configuration](docs/guides/os-tuning.md). Configure `system.tuning` before a fresh launch;
+existing saved runs retain their original source/configuration and resource accounts.
+
+Use [one local input/output token pair](docs/guides/local-token-limits.md) for raw local/Claude stand-in calls.
+Synchronize a Strata launch JSON with configure-local before restarting Strata. Cloud native agents have no OS per-call token cap.
+
+Plain UI launches can use persistent [machine local-model defaults](docs/guides/configuration.md), including a real Strata endpoint, without changing the bundled Haiku preset. Set local_strata_profile to a saved Strata profile name for automatic engine startup with the UI. Instances it starts stop when the UI exits; reused instances remain separately owned. The machine's 128K coding preference uses 112K input plus 16K output tokens.

@@ -34,8 +34,8 @@ def allocate(assignments, retained, fraction, *, protected_task_ids=()):
     quota = max(
         0, min(len(assignments), math.floor((len(prior) + len(assignments)) * fraction + 0.5) - senior)
     )
-    fixed = {i for i, task in enumerate(assignments) if task.task_id in protected_task_ids}
-    chosen = {i for i in fixed if assignments[i].role == "specialist"}
+    fixed = {i for i, task in enumerate(assignments) if task.task_id in protected_task_ids or task.cloud_only_reason}
+    chosen = {i for i in fixed if assignments[i].role == "specialist" or assignments[i].cloud_only_reason}
     preferred = sorted((i for i in range(len(assignments)) if i not in fixed),
                        key=lambda i: assignments[i].role != "specialist")
     chosen.update(preferred[:max(0, quota - len(chosen))])

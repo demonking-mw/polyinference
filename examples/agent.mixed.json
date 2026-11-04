@@ -1,5 +1,6 @@
 {
   "system": {
+    "cloud_agent_timeout_interrupt": false,
     "repository": "../../your-target-repository",
     "state_directory": "../.polyinference/mixed-run",
     "allowed_write_paths": [
@@ -27,8 +28,6 @@
       "model": "claude-haiku-5-5",
       "api_key_env": "ANTHROPIC_API_KEY",
       "max_inflight": 2,
-      "max_context_tokens": 128000,
-      "reserved_context_tokens": 256000,
       "lifecycle": {
         "transport": "sse",
         "connect_seconds": 10,
@@ -48,9 +47,7 @@
       ],
       "brokered_tools": true,
       "max_inflight": 1,
-      "max_context_tokens": 128000,
-      "reserved_context_tokens": 256000,
-      "timeout_seconds": 600
+      "timeout_seconds": 1800
     },
     "role_bindings": {
       "worker": "local",
@@ -63,8 +60,6 @@
       "max_steps": 2048,
       "max_model_calls": 512,
       "max_repairs": 2,
-      "max_input_tokens_per_call": 96000,
-      "max_output_tokens_per_call": 32000,
       "max_total_tokens": 16000000,
       "max_output_bytes": 262144,
       "max_wall_time_ms": 3600000,
@@ -81,6 +76,10 @@
     "context_policy": {
       "auto_deal_context": true,
       "auto_compaction": false
+    },
+    "local_token_limits": {
+      "input_tokens": 96000,
+      "output_tokens": 4096
     }
   },
   "objective": "Describe the bounded coding objective here.",
@@ -89,6 +88,5 @@
   "inference_policy": {
     "additional_retries": 1,
     "replace_undelivered": true
-  },
-  "model_output_target_tokens": 4096
+  }
 }

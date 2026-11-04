@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from conftest import ScriptedAgent
+from conftest import ScriptedAgent, fixture_assignment
 from test_exception_recovery import connect, inputs, output, seed
 
 from polyinference.agent.architecture import validate_plan
@@ -67,7 +67,7 @@ async def test_fallback_rewires_transitive_pending_consumers_without_mutating_ol
     runtime, app, engine, packet = await parked(config)
     try:
         for name, dependencies in (("b", ["a"]), ("c", ["b"])):
-            assignment = Assignment(task_id=name, objective="Consume upstream behavior",
+            assignment = fixture_assignment(task_id=name, objective="Consume upstream behavior",
                                     write_paths=["b.py"], dependencies=dependencies, checks=["syntax"])
             task, specs = make_task(app, assignment, "plan/test", packet["original_base"], "1-" + name)
             app.ports.records.compare_and_publish({"task/" + name: 0}, {"task/" + name: task}, specs)
@@ -234,7 +234,7 @@ async def test_role_rename_on_same_backend_is_not_a_changed_recovery_condition(c
 async def test_pending_recovery_consumer_cannot_be_cloned_with_a_fresh_account(config):
     runtime, app, _, packet = await parked(config)
     try:
-        assignment = Assignment(task_id="b", objective="Consume provider", write_paths=["b.py"],
+        assignment = fixture_assignment(task_id="b", objective="Consume provider", write_paths=["b.py"],
                                 dependencies=["a"], checks=["syntax"])
         task, specs = make_task(app, assignment, "plan/test", packet["original_base"], "1-b")
         task["previous_process_id"] = "retained-budget-root"
@@ -283,12 +283,13 @@ async def test_pending_linked_consumer_retargets_original_exception_without_new_
 
     config = config.model_copy(update={
         "limits": config.limits.model_copy(update={"max_input_tokens_per_call": 96000}),
+            "local_token_limits": config.local_token_limits.model_copy(update={"input_tokens": 96000}),
         "cloud": config.cloud.model_copy(update={"max_context_tokens": 128000, "reserved_context_tokens": 256000}),
     })
     runtime, app, engine, provider = await parked(config)
     try:
         base = provider["original_base"]
-        original = Assignment(task_id="b", objective="Consume a", write_paths=["b.py"],
+        original = fixture_assignment(task_id="b", objective="Consume a", write_paths=["b.py"],
                               dependencies=["a"], checks=["syntax"])
         task, specs = make_task(app, original, "plan/test", base, "1-b")
         task["execution"] = "in_progress"

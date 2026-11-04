@@ -7,6 +7,7 @@ actually run. Their historical counts are not current verification.
 
 | Topic | Report / evidence |
 | --- | --- |
+| Latest scheduled local Minecraft continuation | [28 October, 19:30 run](minecraft-live-test-2026-10-28-1930.md) — paused, partial; Downloads analysis/log |
 | Initial Minecraft incident | [8e83ed155ae2](run-analysis-8e83ed155ae2.md) |
 | Empty completed response | [d434799ad8e4](run-d434799ad8e4-analysis.md) |
 | Serialized input overflow | [2de3d5c5ab9b](run-2de3d5c5ab9b-analysis.md) |
@@ -27,3 +28,10 @@ actually run. Their historical counts are not current verification.
 After implementing a resulting fix, update affected module/design/usage docs,
 the current issue status and [FIXES.md](FIXES.md). Preserve original evidence and
 state what new verification covers the previously missed trigger.
+
+The completed 28 October Minecraft run has a subsequent read-only OS audit and
+correction at `/home/marven/Downloads/polyinference-minecraft-test-2026-10-28/os-audit.md`.
+Only the constants/defaults refactor was implemented: [FIX-0161](FIXES.md#fix-0161).
+
+[2 November native setup interruption](current-iter-issues.md#run-20739a315d3f):
+180-second cloud whole-job timeout evidence, retained scaffold and safe recovery limits.

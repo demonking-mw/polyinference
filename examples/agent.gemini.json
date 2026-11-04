@@ -53,12 +53,15 @@
     "context_policy": {
       "auto_deal_context": true,
       "auto_compaction": false
+    },
+    "local_token_limits": {
+      "input_tokens": 24000,
+      "output_tokens": 4096
     }
   },
   "objective": "Describe the bounded coding objective here.",
   "inference_policy": {
     "additional_retries": 1,
     "replace_undelivered": true
-  },
-  "model_output_target_tokens": 4096
+  }
 }

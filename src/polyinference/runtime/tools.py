@@ -58,7 +58,7 @@ class Tools:
             return await self.check(manifest.workspace_id, arguments["name"])
         if tool == "files.list":
             paths = sorted((await self.workspaces.scan_async(root)))
-            limit = min(max(int(arguments.get("limit") or 1000), 1), 1000)
+            limit = min(max(int(arguments.get("limit") or self.config.tuning.file_list_default), 1), self.config.tuning.file_list_max)
             offset = max(int(arguments.get("offset") or 0), 0)
             return {
                 "paths": paths[offset : offset + limit],
@@ -68,17 +68,17 @@ class Tools:
             }
         if tool == "files.search":
             pattern = arguments.get("pattern")
-            if not isinstance(pattern, str) or not pattern or len(pattern) > 1000:
-                raise ValueError("Search requires a nonempty literal pattern of at most 1000 characters")
+            if not isinstance(pattern, str) or not pattern or len(pattern) > self.config.tuning.search_pattern_chars:
+                raise ValueError(f"Search requires a nonempty literal pattern of at most {self.config.tuning.search_pattern_chars} characters")
             matches, size = [], 0
             for path, (_, content) in (await self.workspaces.scan_async(root)).items():
                 if b"\x00" in content:
                     continue
                 for line, text in enumerate(content.decode(errors="replace").splitlines(), 1):
                     if pattern in text:
-                        match = {"path": path, "line": line, "text": text[:1000]}
+                        match = {"path": path, "line": line, "text": text[:self.config.tuning.search_line_chars]}
                         size += len(canonical(match))
-                        if len(matches) >= 100 or size > self.config.limits.max_output_bytes:
+                        if len(matches) >= self.config.tuning.search_matches or size > self.config.limits.max_output_bytes:
                             return {"matches": matches, "truncated": True, "view": manifest.view}
                         matches.append(match)
             return {"matches": matches, "truncated": False, "view": manifest.view}
@@ -216,7 +216,7 @@ class Tools:
                 environment, mounts = await resources.enter_async_context(tool_environment(self.workspaces, sandboxed))
                 if sandboxed:
                     prefix = ["bwrap", "--unshare-all", "--die-with-parent", "--new-session"]
-                    for system in ("/usr", "/bin", "/lib", "/lib64", "/etc"):
+                    for system in self.config.tuning.sandbox_readonly_paths:
                         if Path(system).exists():
                             prefix += ["--ro-bind", system, system]
                     argv = prefix + [
@@ -232,13 +232,14 @@ class Tools:
                     stdin=asyncio.subprocess.DEVNULL,
                     start_new_session=True,
                     env=environment,
+                    limit=self.config.tuning.subprocess_stream_bytes,
                 )
                 collected = bytearray()
                 truncated = False
 
                 async def drain():
                     nonlocal truncated
-                    while chunk := await proc.stdout.read(8192):
+                    while chunk := await proc.stdout.read(self.config.tuning.tool_chunk_bytes):
                         remaining = self.config.limits.max_output_bytes - len(collected)
                         collected.extend(chunk[: max(remaining, 0)])
                         truncated |= len(chunk) > remaining

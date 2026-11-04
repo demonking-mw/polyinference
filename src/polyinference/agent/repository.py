@@ -12,7 +12,7 @@ from pathlib import Path
 from ..contracts import AgentJob, ArtifactRef, CodeRevision, ModelQuery
 from ..domain import GitPolicy, digest
 from ..runtime.kernel import UnknownExecution
-from ..runtime.workspace import IGNORED, Workspaces
+from ..runtime.workspace import Workspaces
 from ..runtime.workspace_state import WriteScopeError
 from ..workspace_contracts import CopiedFile, WorkspaceManifest
 
@@ -290,7 +290,7 @@ class RepositoryWorkspaces(Workspaces):
             if not entry:
                 continue
             path = entry[3:]
-            disposable = (any(p in IGNORED | {".polyinference"} for p in Path(path).parts)
+            disposable = (any(p in set(self.config.tuning.workspace_ignored_names) | {".polyinference"} for p in Path(path).parts)
                           or any(path == out or path.startswith(out + "/") for out in outputs))
             if entry.startswith("?? ") and disposable and path not in protected:
                 continue

@@ -8,7 +8,7 @@ need separately stated checks. Update affected docs and FIXES.md with every fix.
 
 | Module | Coverage responsibility |
 | --- | --- |
-| [conftest.py](conftest.py) | Shared runtime/agent configs, repositories and transport fixtures. |
+| [conftest.py](conftest.py) | Shared runtime/agent configs, repositories, transport fixtures and isolated XDG machine preferences. |
 | [test_agent.py](test_agent.py) | Coding orchestration and acceptance. |
 | [test_agent_transitions.py](test_agent_transitions.py) | Validated attempts, retained long notes and replacement/replay. |
 | [test_anthropic.py](test_anthropic.py) | Anthropic wire framing, payload limits and response handling. |
@@ -28,6 +28,7 @@ need separately stated checks. Update affected docs and FIXES.md with every fix.
 | [test_four_repairs.py](test_four_repairs.py) | Corrected error lifecycle/replay, independent context units/counters/priorities, focused diagnosis authority/search novelty and actual linked source recovery. |
 | [test_native_events.py](test_native_events.py) | Bounded native telemetry and terminal evidence. |
 | [test_native_worker.py](test_native_worker.py) | Native brokered coding phases and source authority. |
+| [test_os_config.py](test_os_config.py) | Nondefault OS tuning, persisted writer/inspector policy, validation, native buffers, private environments, workspace classification and config pins. |
 | [test_os.py](test_os.py) | Kernel resources, effects, publication and replay. |
 | [test_output_limits.py](test_output_limits.py) | Completion/cutoff classification and bounded smaller-output recovery. |
 | [test_outputs.py](test_outputs.py) | Explicit artifact delivery, conflicts and interrupted recovery. |
@@ -40,7 +41,7 @@ need separately stated checks. Update affected docs and FIXES.md with every fix.
 | [test_setup_tools.py](test_setup_tools.py) | Setup/check selection, durable task-start/quota accounting and bounded coding tool behavior. |
 | [test_sim_batch.py](test_sim_batch.py) | Invocation-only UI simulation, CLI/precedence, provider framing, admission/refill, saved settings and startup failures. |
 | [test_tool_environment.py](test_tool_environment.py) | Private homes/caches and command cleanup. |
-| [test_ui.py](test_ui.py) | UI launch/project picker/API/export/default settings and run-level Resume with both repository providers and durable recovery rejection. |
+| [test_ui.py](test_ui.py) | UI launch/project picker/API/export/default settings, 128K machine preferences, owned Strata cleanup/signal exits and run-level Resume with both repository providers and durable recovery rejection. |
 | [test_ui_agents.py](test_ui_agents.py) | Coding task/review/history projections. |
 | [test_ui_frontend.py](test_ui_frontend.py) | Python wrapper invoking supported Node frontend checks. |
 | [test_ui_os.py](test_ui_os.py) | Generic OS snapshot/inspection projections. |
@@ -70,3 +71,5 @@ before finishing, including affected guide/settings/navigation updates.
 - [test_cli.py](test_cli.py) checks private runtime status and delivery commands.
 
 - [test_branch_integration.py](test_branch_integration.py) verifies attached-source preservation, context compaction with response validation, shared response-repair bounds across transport retries, and physical-attempt certainty/admission through recovery and restart.
+
+[test_p0_repairs.py](test_p0_repairs.py) covers mandatory local file boundaries, cloud placement, immutable tuning, real proxy routing, inherited inspection timeouts, one local token pair/Strata restart configuration and uncapped native cloud completion with replay/accounting.

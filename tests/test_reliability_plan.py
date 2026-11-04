@@ -14,19 +14,20 @@ from polyinference.primitives import canonical
 
 @pytest.mark.parametrize("providers", ["missing", "new", "retained"])
 async def test_required_check_paths_need_complete_declared_dependency_ownership(config, providers):
+    from conftest import fixture_assignment
     from langgraph.runtime import Runtime
 
     from polyinference.agent.senior import validate
     from polyinference.agent.tasks import make_task
     from polyinference.agent.worker import AppContext
-    from polyinference.domain import Assignment, Check, SeniorProposal
+    from polyinference.domain import Check, SeniorProposal
 
     config = config.model_copy(update={"allowed_write_paths": ["a.py", "b.py", "c.py"], "closure_paths": [],
         "checks": [*config.checks, Check(name="behavior", argv=["unused-in-plan-validation"],
                                          required_paths=["a.py", "b.py"])]})
     runtime, app, _ = await connect(config)
     try:
-        tasks = [Assignment(task_id=name, objective="Provide " + path, write_paths=[path], checks=["syntax"])
+        tasks = [fixture_assignment(task_id=name, objective="Provide " + path, write_paths=[path], checks=["syntax"])
                  for name, path in (("pa", "a.py"), ("pb", "b.py"))]
         all_ids = []
         head = app.get("head/provisional")["code"]
@@ -34,7 +35,7 @@ async def test_required_check_paths_need_complete_declared_dependency_ownership(
             retained, specs = make_task(app, tasks.pop(0), "plan/test", head, "1-pa")
             app.ports.records.compare_and_publish({"task/pa": 0}, {"task/pa": retained}, specs)
             all_ids.append("pa")
-        tasks.append(Assignment(task_id="consumer", objective="Use both inputs", write_paths=["c.py"],
+        tasks.append(fixture_assignment(task_id="consumer", objective="Use both inputs", write_paths=["c.py"],
                                 checks=["behavior"], dependencies=[] if providers == "missing" else ["pa", "pb"]))
         result = await validate({"reply": SeniorProposal(goal="Connected checks", tasks=tasks).model_dump(mode="json"),
             "input": {"all_task_ids": all_ids, "head": head}, "process_id": "senior-test", "logical_step": 0},

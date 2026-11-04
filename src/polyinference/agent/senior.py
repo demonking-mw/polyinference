@@ -6,11 +6,12 @@ from langgraph.graph import END, START, StateGraph
 from langgraph.runtime import Runtime
 
 from ..domain import SeniorProposal
-from .architecture import catalog, validate_plan
+from .architecture import catalog, validate_local_tasks, validate_plan
 from .cloud_recovery import prepare
 from .exceptions import validate as validate_exceptions
 from .exceptions import validate_sources
 from .review import fit_snapshot, retrieve, validate_completion
+from .routing import allocate, was_started
 from .worker import AppContext
 
 
@@ -98,12 +99,20 @@ async def validate(state, runtime: Runtime[AppContext]):
                     raise ValueError(f"Check {preparation.check_name} needs dependency {preparation.task_id} "
                                      f"before task {assignment.task_id} can start")
         if proposal.read_requests:
-            if state.get("review_reads_used", 0) + len(proposal.read_requests) > app.config.max_review_reads:
+            remaining = max(0, app.config.max_review_reads - state.get("review_reads_used", 0))
+            if len(proposal.read_requests) > remaining:
                 raise ValueError(
-                    "Review retrieval allowance exhausted; leave incomplete or plan follow-up work"
+                    f"Review retrieval allowance exhausted: requested {len(proposal.read_requests)} ranges; "
+                    f"{remaining} remain out of {app.config.max_review_reads}. "
+                    "Request fewer ranges, leave incomplete or plan follow-up work"
                 )
             return {"proposal": proposal.model_dump(mode="json"), "error": None, "route": "read_context"}
         replacements = validate_exceptions(app, proposal, state["input"])
+        retained = [v for _, _, v in app.ports.records.scan("task/")
+                    if v["assignment"]["task_id"] not in proposal.cancel_pending_task_ids or was_started(v)]
+        validate_local_tasks(proposal.model_copy(update={"tasks": allocate(
+            proposal.tasks, retained, app.config.senior_development_fraction,
+            protected_task_ids=replacements)}), app.config)
         validate_plan(proposal, [v for _, _, v in app.ports.records.scan("task/")], catalog(app))
         await validate_sources(app, proposal, replacements, state["input"]["head"])
         validate_completion(proposal, state["input"])

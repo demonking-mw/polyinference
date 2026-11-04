@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from ..contracts import ArtifactRef
+from ..os_config import DEFAULT_TUNING, STORAGE_POLICY
 from ..ports import RecordConflict
 from ..primitives import canonical, digest
 
@@ -20,17 +21,23 @@ class Conflict(RecordConflict):
 class Records:
     """Short transactions; immutable objects and CAS pointers share a commit."""
 
-    def __init__(self, path: Path):
+    def __init__(self, path: Path, *, tuning=None):
+        self.tuning = tuning or DEFAULT_TUNING
         path.parent.mkdir(parents=True, exist_ok=True)
-        self.db = sqlite3.connect(path, isolation_level=None)
-        self.db.execute("PRAGMA journal_mode=WAL")
-        self.db.execute("PRAGMA synchronous=FULL")
+        self.db = sqlite3.connect(path, isolation_level=None, timeout=self.tuning.sqlite_timeout_seconds)
+        self.db.execute("PRAGMA journal_mode=" + STORAGE_POLICY["journal_mode"])
+        self.db.execute("PRAGMA synchronous=" + STORAGE_POLICY["synchronous"])
         self.db.execute(
             "CREATE TABLE IF NOT EXISTS records (key TEXT PRIMARY KEY, revision INTEGER, body TEXT)"
         )
         self.db.execute(
             "CREATE TABLE IF NOT EXISTS events (sequence INTEGER PRIMARY KEY AUTOINCREMENT, body TEXT)"
         )
+        retained = self.get("runtime/os-tuning")
+        if tuning is None and retained:
+            from ..os_config import OSTuning
+            self.tuning = OSTuning.model_validate(retained[1])
+            self.db.execute("PRAGMA busy_timeout=" + str(int(self.tuning.sqlite_timeout_seconds * 1000)))
         self.changed = asyncio.Event()
 
     @contextmanager
@@ -90,17 +97,20 @@ class Records:
                         "immutable_values": immutable or {},
                     }).decode(),),
                 )
-                self.db.execute(
-                    "DELETE FROM events WHERE sequence <= (SELECT MAX(sequence)-10000 FROM events)"
-                )
+                if self.tuning.journal_retention_events is not None:
+                    self.db.execute(
+                        "DELETE FROM events WHERE sequence <= (SELECT MAX(sequence)-? FROM events)",
+                        (self.tuning.journal_retention_events,),
+                    )
         self.changed.set()
 
-    def events(self, after=0, limit=100):
+    def events(self, after=0, limit=None):
+        limit = self.tuning.events_page_size if limit is None else limit
         return [
             {"sequence": seq, **json.loads(body)}
             for seq, body in self.db.execute(
                 "SELECT sequence,body FROM events WHERE sequence>? ORDER BY sequence LIMIT ?",
-                (after, min(max(limit, 1), 1000)),
+                (after, min(max(limit, 1), self.tuning.events_page_max)),
             )
         ]
 

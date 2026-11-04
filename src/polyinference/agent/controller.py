@@ -18,7 +18,7 @@ from ..contracts import (
 )
 from ..domain import SeniorProposal, canonical, digest, now
 from ..ports import RecordConflict
-from .architecture import catalog, validate_plan
+from .architecture import catalog, validate_local_tasks, validate_plan
 from .cloud_recovery import capabilities, policy_view
 from .design_basis import DESIGN_BASIS
 from .exceptions import obligation_satisfied, park_model_failure, review_view, validate_sources
@@ -929,6 +929,7 @@ class ProjectAgent:
                 protected_task_ids=replacements,
             )}
         )
+        validate_local_tasks(proposal, app.config)
         replacements = validate_exceptions(app, proposal, snapshot)
         plan_ref = f"plan/{run['sprint'] + 1}"
         for assignment in proposal.tasks:

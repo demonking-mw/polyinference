@@ -16,6 +16,12 @@ Records own versions and atomic batches; applications validate their own record
 semantics. Artifacts are content-addressed. Exclusive resource keys coordinate
 cooperating runtimes; filesystem work is serialized off the event loop.
 
+Retention/page defaults, SQLite busy timeout and exclusive lock polling now come from
+[central OS configuration](../guides/os-tuning.md). Independent record writers inherit
+`runtime/os-tuning`; inspection/export/checkpoint readers inherit the saved SQLite timeout too.
+A standalone database uses the canonical timeout only to discover its saved policy. Canonical records and
+WAL/FULL durability are preserved.
+
 ## Principles to preserve
 
 - SQLite atomicity does not make an external filesystem/Git mutation atomic.

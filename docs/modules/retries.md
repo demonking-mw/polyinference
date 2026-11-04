@@ -22,6 +22,10 @@ One consenting generation-only unknown may be isolated with its physical holds;
 replacement requires free capacity and another unknown stops the chain. See
 [profiles and limits](../guides/endpoint-testing.md).
 
+Retry backoff/shrinking factors, error previews and status-recovery timeout use
+[central OS tuning](../guides/os-tuning.md). Original deadlines and no-blind-replay policy remain. Completed local overages are
+CompletedBudgetExceeded, not output adaptation; cloud per-call token caps are provider-owned.
+
 ## Principles to preserve
 
 - Never blindly retry uncertain execution or effectful native jobs; trusted terminal
