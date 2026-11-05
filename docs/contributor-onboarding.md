@@ -49,6 +49,10 @@ to programs running on the PolyInference OS.
    [four-repair record](../development-docs/four-repairs-implementation-2026-10-28.md),
    [context measurement](guides/context-measurement.md) and [model fallback](guides/model-fallback.md);
    caller preferences do not alter old runs, original resources or uncertainty rules.
+   [FIX-0178](../development-docs/FIXES.md#fix-0178) adds agent `kind: test` assignments
+   without implementation/result files or source commits. Preserve edit contracts and
+   independent final acceptance; the changed source/prompt fingerprints require fresh
+   state. Historical runs remain on their original implementation.
 5. **If you are an agent, you MUST add this project's rules, important information
    and design/preservation principles to your available memory, project rules or
    project-specific `content.md`.** Use the [memory checklist](project-memory.md),

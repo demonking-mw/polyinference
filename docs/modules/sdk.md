@@ -28,6 +28,10 @@ from serialization. Required parts and whole tool groups retain their protection
 mechanism conveys no task-completion or memory policy; see [context](context.md).
 Some shared wire types retain coding
 records for compatibility; their presence does not make coding mandatory.
+The shared `TaskSpec.allowed_change_scope` accepts an empty list to represent no source-write
+authority. This is a data-contract relaxation needed for agent test assignments, not a new runtime
+permission or task policy. The agent still rejects empty scope for edits. Test observations use
+`agent.reports.TestReport` through existing record/artifact ports, without a `PublicationReceipt`.
 
 ## Principles to preserve
 

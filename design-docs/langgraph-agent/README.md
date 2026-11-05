@@ -18,6 +18,16 @@ provisional publication for uncertain assessments and private failed candidates.
 Placement uses configured static role bindings; richer allocation models below
 are future interface semantics, not implemented routing guarantees.
 
+Current agent task kinds also include `test`, for one bounded scenario using existing
+configured checks. Unlike the edit path described below, it needs no implementation
+file, write target or result path and creates no source commit. The same worker graph
+captures the integrated revision, runs checks and assesses observations; an agent-owned
+test result reaches senior review. Successful keep releases dependencies, while reject
+changes no Git history. Test authoring and repairs remain edits. Required final
+acceptance stays independent. See [worker guide](../../docs/modules/agent-workers.md)
+and [FIX-0178](../../development-docs/FIXES.md#fix-0178); historical diagrams/fixtures
+remain provenance for the coding path, not a requirement to commit test-only work.
+
 The current build target is the [simplified OS profile](../simplified-os/README.md):
 configured endpoint lanes, concurrent admission, default full tracked task
 worktrees and exact-tree integration checks. The UI's serial cloud-backed

@@ -68,13 +68,18 @@ semantic escalation; native jobs are sampled between settled jobs. Thresholds ar
 a measured guarantee that a worker will complete. See [progress
 policy](../../design-docs/implementation/PROGRESS_MONITORING.md).
 
-Planner inputs include actual tools/capability limits and cloud eligibility. Local planning requires one production file plus an explicit local_contract, one
+Planner inputs include actual tools/capability limits and cloud eligibility. Local edit planning requires one production file plus an explicit local_contract, one
 observable behavior and focused check per task: movement, collision, save/load and migration are separate
-work. Focused source/check evidence must establish consumer integration; existing APIs alone do not. Native
+work. Focused source/check evidence must establish consumer integration; existing APIs alone do not.
+Test assignments (`kind: test`) run existing configured checks with no implementation/result file or
+writable source target. They retain actual tested revision/results without a commit; failed tests
+reach manager review without automatic coding diagnosis. A code fix or new test file needs a separate
+edit assignment. Test retries preserve the original read-only scope and resources, without a source
+handoff. Successful kept results release dependencies; they do not replace final acceptance. Native
 diagnosis may read its frozen source and cataloged check outputs through bounded readonly capabilities;
 matching passing/failing receipts also reach senior exception review. Raw diagnosis uses previews.
 Resolved search/protocol errors retire from worker hints and retention priority; old histories stay immutable.
-Clean retryable output exhaustion after OS repair receives bounded diagnosis before linked recovery. Local assignments now require the explicit single-file contract and focused check at planning and dispatch;
+Clean retryable output exhaustion after OS repair receives bounded diagnosis before linked recovery. Local edit assignments require the explicit single-file contract and focused check at planning and dispatch;
 actual semantic task difficulty still needs qualification. cloud_only_reason protects irreducible work from
 ordinary quota demotion; all existing accounts and authority still apply. Browser/MCP/persistent service APIs are
 unavailable; installed foreground test dependencies must be established with real evidence.

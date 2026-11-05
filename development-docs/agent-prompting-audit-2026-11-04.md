@@ -1,9 +1,19 @@
 # Prompting proposal audit and corrected implementation plan
 
-Date: 2026-11-04. Status: **analysis and revised plan; unimplemented**.
+Date: 2026-11-04. Status: **analysis and revised plan; testing subset implemented by later authorization**.
 [Implementation issue: PROMPT-01](current-iter-issues.md#prompt-01) ·
 [Earlier proposal, retained for history](agent-prompting-proposal-2026-11-04.md) ·
 [Fix history](FIXES.md#fix-0177)
+
+> **Later decision, 2026-11-04 — [FIX-0178](FIXES.md#fix-0178):** the user confirmed
+> that test-only tasks must not require implementation files or result paths and
+> authorized this bounded implementation. `kind: test` now records tested revision,
+> summary and actual receipts through existing agent records, without a filesystem
+> result path or source commit. Empty write scope is represented in the shared
+> TaskSpec envelope; runtime logic is unchanged. Test authoring/repairs remain edits;
+> general inspection and the broader prompting redesign remain proposals. References
+> below to a test "result path" mean workflow handling, not a required output file.
+> The original audit body is retained as the evidence for the earlier decision.
 
 ## Conclusion
 

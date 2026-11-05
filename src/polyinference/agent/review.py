@@ -115,8 +115,11 @@ async def repository_context(app, head, changed_paths=()):
 
 
 async def report_view(app, report):
-    before = await app.ports.workspaces.tree(report["captured_head"]["commit_id"])
-    after = await app.ports.workspaces.tree(report["final_code"]["commit_id"])
+    testing = report.get("kind") == "test_report"
+    before_code = report["tested_code"] if testing else report["captured_head"]
+    after_code = report["tested_code"] if testing else report["final_code"]
+    before = await app.ports.workspaces.tree(before_code["commit_id"])
+    after = before if testing else await app.ports.workspaces.tree(after_code["commit_id"])
     paths = [p for p in sorted(set(before) | set(after)) if before.get(p) != after.get(p)]
     # Full delta retained independently of a bounded presentation. This is actual
     # integrated code, not the worker's summary or original development delta.
@@ -139,13 +142,14 @@ async def report_view(app, report):
                 "task_spec_ref",
                 "verdict",
                 "resolution",
-                "candidate_commit_id",
-                "hazard_refs",
             )
         },
-        "code_location": report.get("code_location", "provisional"),
-        "captured_head": code_identity(report["captured_head"]),
-        "final_code": code_identity(report["final_code"]),
+        **({"result_kind": "test", "tested_code": code_identity(report["tested_code"])} if testing else {
+            "result_kind": "edit", "candidate_commit_id": report["candidate_commit_id"],
+            "code_location": report.get("code_location", "provisional"),
+            "captured_head": code_identity(before_code), "final_code": code_identity(after_code),
+        }),
+        "hazard_refs": report.get("hazard_refs", []),
         "worker_claim": {
             "summary": app.read(report["assessment_summary"]),
             "source_ref": brief_ref(app, report["assessment_summary"]),
@@ -164,11 +168,12 @@ async def report_view(app, report):
             "source_ref": brief_ref(app, full_ref),
             "preview": raw[:2500].decode(errors="replace"),
             "truncated": len(raw) > 2500,
-            "before_commit": report["captured_head"]["commit_id"],
-            "after_commit": report["final_code"]["commit_id"],
+            "before_commit": before_code["commit_id"],
+            "after_commit": after_code["commit_id"],
         },
         "task_check_evidence": [check_view(app, e) for e in report["evidence"]],
-        "publication_status": report.get("code_location", "provisional") + "; task verdict does not certify the project objective",
+        "publication_status": ("test result only; no source commit" if testing else report.get("code_location", "provisional"))
+            + "; task verdict does not certify the project objective",
     }
 
 

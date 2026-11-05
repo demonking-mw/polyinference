@@ -7,7 +7,7 @@ from .architecture import catalog, task_context, validate_local_tasks
 from .routing import cloud_recovery
 
 
-def coding_tools(config, setup=False):
+def coding_tools(config, setup=False, *, test=False):
     tools = [
         "files.list",
         "files.read",
@@ -18,6 +18,8 @@ def coding_tools(config, setup=False):
         "checks.run",
         "user.notify",
     ]
+    if test:
+        tools = [tool for tool in tools if tool not in {"files.patch", "files.write", "files.delete"}]
     if config.shell_execution != "disabled":
         tools.append("shell.run")
     if setup:
@@ -67,9 +69,9 @@ def make_task(
         acceptance_spec=app.artifact(assignment.checks),
         context_refs=task_context(app, assignment, catalog(app) if interfaces is None else interfaces),
         memory_snapshot_refs=[],
-        allowed_capabilities=coding_tools(app.config, category == "setup"),
+        allowed_capabilities=coding_tools(app.config, category == "setup", test=assignment.kind == "test"),
         worker_process_spec_ref="process-spec/" + task["process_id"],
-        report_schema_ref="task-report/2",
+        report_schema_ref="test-report/1" if assignment.kind == "test" else "task-report/2",
     )
     task_attempt = TaskAttempt(
         **app.base("attempt/" + attempt),

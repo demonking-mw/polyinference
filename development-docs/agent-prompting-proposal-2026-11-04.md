@@ -9,6 +9,12 @@ Implementation issue: [PROMPT-01, at the top of the current iteration tracker](c
 > partial-read and test-only shortcuts below. The first implementation retains
 > current contracts and completion guarantees while improving prompts and repair.
 
+> **Later implementation, 2026-11-04:** the user explicitly authorized the test-only
+> exception. [FIX-0178](FIXES.md#fix-0178) implements `kind: test` without an
+> implementation file, result path or source commit. Test results use existing agent
+> records and actual receipts. Test authoring/repairs remain edits. Other proposals
+> below remain subject to the audit; this does not implement the wider redesign.
+
 [Development records](README.md) · [Proposal archive](proposals.md) · [Related run](current-iter-issues.md#run-917e45c4b40a)
 
 ## Purpose and scope

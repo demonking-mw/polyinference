@@ -49,6 +49,8 @@ async def validate(state, runtime: Runtime[AppContext]):
                 raise ValueError("Disposition is not in the pinned review input")
             if report.get("code_location") == "private" and disposition.action == "keep":
                 raise ValueError("Private failed commit cannot be kept; reject it or assign a repair")
+            if report.get("result_kind") == "test" and report["verdict"] != "successful" and disposition.action == "keep":
+                raise ValueError("Only successful test results can be kept; reject, retry or defer failed/uncertain tests")
         definitions = {c.name: c for c in app.task_check_definitions}
         providers = {t["assignment"]["task_id"]: t["assignment"]["write_paths"]
                      for _, _, t in app.ports.records.scan("task/")

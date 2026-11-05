@@ -11,6 +11,14 @@ General-agent examples are local regression fixtures, not a new agent product.
 
 ## In-place coding repositories
 
+The agent also supports `kind: test` assignments that run existing checks without
+source edits or result files. Their tested revision, observations and receipts are
+agent records, not coding publications. They reuse existing processes, workspaces,
+checks, permits, artifacts and atomic records. The only shared SDK change is allowing
+`TaskSpec.allowed_change_scope: []` to express no source-write authority; edit tasks
+still require a target in agent validation. No OS implementation or task semantics
+were added. See [FIX-0178](../../development-docs/FIXES.md#fix-0178).
+
 New coding runs use the actual supplied repository. `AgentConfig.repository_mode`
 defaults to `in_place`; bare `RuntimeConfig` has no such workflow setting.
 `agent/repository.py` implements Git policy and the application's workspace provider.

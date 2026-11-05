@@ -73,3 +73,7 @@ before finishing, including affected guide/settings/navigation updates.
 - [test_branch_integration.py](test_branch_integration.py) verifies attached-source preservation, context compaction with response validation, shared response-repair bounds across transport retries, and physical-attempt certainty/admission through recovery and restart.
 
 [test_p0_repairs.py](test_p0_repairs.py) covers mandatory local file boundaries, cloud placement, immutable tuning, real proxy routing, inherited inspection timeouts, one local token pair/Strata restart configuration and uncapped native cloud completion with replay/accounting.
+
+[test_testing_tasks.py](test_testing_tasks.py) covers test-only assignments without implementation/result
+paths, empty write grants, optimistic-verdict correction, commit-free success/failure reporting,
+manager review and publication replay in isolated and in-place repositories.

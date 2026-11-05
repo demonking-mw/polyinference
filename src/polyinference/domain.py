@@ -93,7 +93,8 @@ class LocalFileContract(Wire):
 class Assignment(Wire):
     task_id: Annotated[str, Field(pattern=r"^[a-zA-Z0-9_-]{1,80}$")]
     objective: Annotated[str, Field(min_length=1, max_length=16000)]
-    write_paths: Annotated[list[RelativePath], Field(min_length=1)]
+    kind: Literal["edit", "test"] = "edit"
+    write_paths: list[RelativePath] = Field(default_factory=list)
     read_paths: list[RelativePath] = Field(default_factory=list)
     dependencies: list[str] = Field(default_factory=list)
     resume_from: str | None = None
@@ -110,6 +111,10 @@ class Assignment(Wire):
 
     @model_validator(mode="after")
     def unique(self):
+        if self.kind == "edit" and not self.write_paths:
+            raise ValueError("Edit assignments require write_paths")
+        if self.kind == "test" and (self.write_paths or self.local_contract or self.resume_from or self.provides):
+            raise ValueError("Test assignments run existing tests: no write_paths, local_contract, resume_from or provides")
         for values in (
             self.write_paths,
             self.read_paths,

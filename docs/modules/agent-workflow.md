@@ -29,6 +29,12 @@ effects remain unchanged. Unknown graph/prompt/schema changes are rejected. Gran
 budgets and deadlines are preserved.
 Dependencies become ready after senior keep resolutions. Verification/integration
 is serialized by an explicit resource permit; starts close while review drains.
+Assignments distinguish `edit` (default) from `test`. A test runs existing configured checks with
+empty write scope and no implementation/result file. It uses the same worker graph and verification
+permit, then atomically records its tested revision and observations without a code publication.
+Passing test results reach senior keep before dependents start; failed/uncertain results close starts
+for review and cannot be kept. Rejecting a test result changes no Git history. Tool authority and
+original resources remain unchanged during linked retries; test recovery carries no source delta.
 Shared runner preparation has one declared owner and explicit dependent tasks;
 private source cannot satisfy that dependency. Planning sees commands/source previews.
 Dispatch records started_at atomically with task admission. Historical development

@@ -23,7 +23,7 @@ from ..ports import WriteScopeError
 from .diagnostics import diagnose, feedback
 from .exceptions import park as park_exception
 from .progress import inspect_progress
-from .reports import PrivateCommitReceipt, PrivateTaskReport, task_report
+from .reports import PrivateCommitReceipt, PrivateTaskReport, record_test_result, task_report
 
 
 class WorkerState(TypedDict, total=False):
@@ -74,8 +74,9 @@ async def load(state, runtime: Runtime[AppContext]):
         list(dict.fromkeys([*task["assignment"]["read_paths"],
             *(path for check in app.check_definitions if check.name in task["assignment"]["checks"]
               for path in check.required_paths)])),
-        capabilities=[*app.get(task["spec_ref"])["allowed_capabilities"], "workspace.commit", "workspace.retain",
-                      *(["coding.commit"] if app.repository else [])],
+        capabilities=[*app.get(task["spec_ref"])["allowed_capabilities"],
+                      *([] if task["assignment"].get("kind") == "test" else
+                        ["workspace.commit", "workspace.retain", *(["coding.commit"] if app.repository else [])])],
         check_names=task["assignment"]["checks"],
         expandable=task.get("category") == "setup" and app.config.write_scope == "project",
     )
@@ -203,7 +204,7 @@ async def tool(state, runtime: Runtime[AppContext]):
     }
     if reply.tool == "checks.run" and result and result.state == "succeeded":
         update["last_check_evidence"] = observation
-        if observation["status"] != "passed":
+        if observation["status"] != "passed" and app.get(state["task_ledger_ref"])["assignment"].get("kind") != "test":
             outcome = await diagnose(app, state, "check/" + observation["criterion_ref"], observation)
             update["trajectory_ref"] = feedback(app, history, state, outcome)
             update["last_check_evidence"] = outcome["evidence"]
@@ -260,7 +261,7 @@ async def checks(state, runtime: Runtime[AppContext]):
     evidence = await app.checks(state, names)
     history = state.get("trajectory_ref")
     for index, item in enumerate(evidence):
-        if item["status"] != "passed":
+        if item["status"] != "passed" and app.get(state["task_ledger_ref"])["assignment"].get("kind") != "test":
             outcome = await diagnose(app, state, "check/" + item["criterion_ref"], item)
             evidence[index] = outcome["evidence"]
             history = feedback(app, history, state, outcome)
@@ -290,6 +291,9 @@ async def publish(state, runtime: Runtime[AppContext]):
     pid = state["process_id"]
     report_ref = "report/" + state["attempt_id"]
     receipt_ref = "receipt/" + state["attempt_id"]
+    testing = app.get(state["task_ledger_ref"])["assignment"].get("kind") == "test"
+    if testing and app.ports.records.get(report_ref):
+        return {"report_ref": report_ref}
     # The receipt, rather than a rechecked transient view, is the replay boundary.
     if app.ports.records.get(receipt_ref):
         return {"report_ref": report_ref}
@@ -304,6 +308,8 @@ async def publish(state, runtime: Runtime[AppContext]):
             e.criterion_ref
             for e in evidence
             if e.checked_code.effective_tree_digest == current.effective_tree_digest
+            and (not testing or (e.checked_code.repository_id == current.repository_id
+                                 and e.checked_code.environment_digest == current.environment_digest))
         }
         if any(e.status == "failed" for e in evidence):
             verdict = "fail"
@@ -311,6 +317,8 @@ async def publish(state, runtime: Runtime[AppContext]):
             verdict = "uncertain"
         if not state.get("reconciliation_turn_refs") or not state.get("assessment_turn_refs"):
             raise RuntimeError("Missing mandatory phase turns")
+        if testing:
+            return await record_test_result(app, state, current, evidence, verdict)
         if app.repository and verdict != "successful" and not app.get("coding/repository-policy")["task_branches"]:
             raise RuntimeError("Checks did not pass; edits remain uncommitted in the current checkout")
         result, code_data = await app.capability(state, "commit", "workspace.commit", {}, "shared_write")
@@ -472,6 +480,8 @@ async def publish(state, runtime: Runtime[AppContext]):
 
 async def release(state, runtime: Runtime[AppContext]):
     app = runtime.context.services
+    if app.get(state["task_ledger_ref"])["assignment"].get("kind") == "test":
+        await app.ports.workspaces.abort(state["workspace_id"])
     permit = state.get("verification_permit_ref")
     if permit and app.ports.exclusive.owns(permit, "verification/project", state["process_id"]):
         await app.ports.exclusive.release(permit, state["process_id"])

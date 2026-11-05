@@ -276,6 +276,8 @@ def validate(app, proposal, snapshot):
               or packet["recovery_depth"] >= app.config.max_worker_recoveries):
             raise ValueError("Semantic recovery allowance exhausted; defer or stop")
         source = app.get("task/" + packet["task_id"])["assignment"]
+        if assignment.kind != source.get("kind", "edit"):
+            raise ValueError("Recovery must preserve the original assignment kind")
         if (
             not cloud_recovery(app.config, packet, assignment)
             and assignment.objective == source["objective"]

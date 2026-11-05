@@ -362,7 +362,7 @@ class RepositoryWorkspaces(Workspaces):
                     tree.pop(path, None)
             await self.materialize_view(manifest, manifest, tree)
         elif resume:
-            reports = [r for _, _, r in self.records.scan("report/") if r["candidate_commit_id"] == resume]
+            reports = [r for _, _, r in self.records.scan("report/") if r.get("candidate_commit_id") == resume]
             if not reports or reports[0].get("code_location") != "private":
                 raise ValueError("resume_from must name a retained private candidate from this run")
             parent = await self.tree(reports[0]["candidate_parent_commit_id"], process_id)
@@ -395,7 +395,7 @@ class RepositoryWorkspaces(Workspaces):
                 offer["kind"] = "interrupted_source"
             else:
                 report = next((r for _, _, r in self.records.scan("report/")
-                               if r["candidate_commit_id"] == reference and r.get("code_location") == "private"), None)
+                               if r.get("candidate_commit_id") == reference and r.get("code_location") == "private"), None)
                 if not report:
                     raise ValueError("Source must name a retained private candidate from this run")
                 parent = await self.tree(report["candidate_parent_commit_id"])
@@ -640,7 +640,8 @@ class RepositoryWorkspaces(Workspaces):
             work.append({**item, "workspace_id": key.removeprefix("coding/worktree/"),
                          "task_id": task.get("assignment", {}).get("task_id"), "commit": tip,
                          "tip_is_ancestor": ancestry, "report_ref": report_ref,
-                         "code_location": report.get("code_location", "provisional" if report else "unreported"),
+                         "code_location": "test_result" if report.get("kind") == "test_report" else
+                             report.get("code_location", "provisional" if report else "unreported"),
                          "candidate_commit_id": candidate, "candidate_is_ancestor": candidate_ancestor,
                          "contribution_paths": changed.splitlines() if changed else [],
                          "publication_recorded": published, "review_action": resolution.get("action"),

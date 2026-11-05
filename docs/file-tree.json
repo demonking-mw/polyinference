@@ -1168,7 +1168,8 @@
               "tests/test_model_fallback.py",
               "tests/test_four_repairs.py",
               "tests/test_os_config.py",
-              "tests/test_p0_repairs.py"
+              "tests/test_p0_repairs.py",
+              "tests/test_testing_tasks.py"
             ]
           }
         ]

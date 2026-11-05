@@ -7,7 +7,7 @@ Default coding work uses the selected actual repository, integration branch and 
 | File | Responsibility |
 | --- | --- |
 | [src/polyinference/agent/repository.py](../../src/polyinference/agent/repository.py) | Git policy/setup, RepositoryWorkspaces, preparation, verified integration, retained candidates and interrupted-source handoff. |
-| [src/polyinference/agent/reports.py](../../src/polyinference/agent/reports.py) | Coding-specific task reports, commit receipts and validation. |
+| [src/polyinference/agent/reports.py](../../src/polyinference/agent/reports.py) | Coding reports/commit receipts and commit-free test results. |
 | [src/polyinference/os_contracts.py](../../src/polyinference/os_contracts.py) | Compatibility imports of application-owned report extensions. |
 
 ## Interface and ownership
@@ -23,6 +23,10 @@ not arbitrary selective multi-candidate access. Publication rules are mode-speci
 Repository summaries separate tip/candidate ancestry, dirty source, publication
 receipts and kept nonempty contributions. An inherited tip or empty publication
 does not establish an accepted task contribution; review remains a separate fact.
+Test-only reports carry a tested revision and observations instead of a candidate commit.
+They appear as `test_result` in repository summaries, with no accepted code contribution;
+rejecting the result does not run a Git revert. Source offers skip these non-candidate
+reports, preserving normal private-source handoffs when both result kinds coexist.
 
 The repository provider consumes the resolved OS workspace ignore names from
 [central tuning](../guides/os-tuning.md); branch/commit/acceptance policy remains

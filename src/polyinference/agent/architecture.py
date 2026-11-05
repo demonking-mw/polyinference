@@ -13,7 +13,7 @@ def validate_local_tasks(proposal, config):
         if assignment.cloud_only_reason:
             if assignment.role != "specialist" or config.role_bindings[assignment.role] != "cloud":
                 raise ValueError("Cloud-only work requires a specialist bound to cloud")
-        if config.role_bindings[assignment.role] != "local":
+        if assignment.kind == "test" or config.role_bindings[assignment.role] != "local":
             continue
         contract = assignment.local_contract
         if not contract or contract.implementation_path not in assignment.write_paths:
@@ -138,6 +138,7 @@ def task_context(app, assignment, contracts):
         app.artifact(
             {
                 "module_assignment": {
+                    "kind": assignment.kind,
                     "behavior": assignment.behavior or assignment.objective,
                     "focused_check": assignment.focused_check or assignment.checks[0],
                     "acceptance_criteria": assignment.acceptance_criteria,

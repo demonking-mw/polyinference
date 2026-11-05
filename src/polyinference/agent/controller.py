@@ -1147,9 +1147,12 @@ class ProjectAgent:
             return
         report = app.get(disposition.report_ref)
         private = report.get("code_location") == "private"
+        testing = report.get("kind") == "test_report"
+        if testing and report["verdict"] != "successful" and disposition.action == "keep":
+            raise ValueError("Only successful test results can be kept")
         if private and disposition.action == "keep":
             raise ValueError("Private failed code cannot be kept; reject it or assign a repair")
-        if disposition.action == "revert" and not private:
+        if disposition.action == "revert" and not private and not testing:
             await self.revert(pid, query_index, index, disposition)
             return
         resolution = ReviewResolution(

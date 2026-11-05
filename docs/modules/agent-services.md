@@ -4,6 +4,13 @@
 
 AgentServices assembles coding state and requests without making the OS interpret coding records.
 
+Worker processes, task specs, raw prompts and native jobs use the same kind-aware tool selection.
+`kind: test` advertises reads/checks/notifications and optional shell, excluding source-edit tools.
+Its process/workspace grants also omit code commit/publication capabilities.
+Its completion guidance asks for expected versus observed results without a result file. The senior
+receives that test tool inventory alongside ordinary worker tools. Existing action schemas, worker
+phase protocol and resource accounting are reused; there is no new OS task-type behavior.
+
 | File | Responsibility |
 | --- | --- |
 | [src/polyinference/agent/__init__.py](../../src/polyinference/agent/__init__.py) | Application package boundary. |

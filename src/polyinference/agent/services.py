@@ -346,12 +346,14 @@ class AgentServices:
             output_schema_ref=output_schema_ref or ("senior/1" if role == "senior" else "worker/1"),
             resume_strategy="portable_context",
         )
+        testing = bool(task_data and task_data["assignment"].get("kind") == "test")
         self.ports.processes.register(
             spec, endpoint_name, management=role == "senior",
             capabilities=["coding.diagnostic_read", "coding.diagnostic_evidence_read"] if entry_point == "check_diagnosis" else [
-                          *coding_tools(self.config, task_data and task_data.get("category") == "setup"),
-                          "workspace.commit", "workspace.retain", "records.publish",
-                          *(["coding.commit", "coding.publish"] if self.repository else []),
+                          *coding_tools(self.config, task_data and task_data.get("category") == "setup",
+                                        test=testing),
+                          *([] if testing else ["workspace.commit", "workspace.retain", "records.publish",
+                                                *(["coding.commit", "coding.publish"] if self.repository else [])]),
                           *(["coding.prepare", "coding.reconfigure"]
                             if self.repository and process_id == "controller" else []),
                           *(["outputs.deliver"] if process_id == "controller" else [])],
@@ -807,7 +809,8 @@ class AgentServices:
                 instruction += BOOTSTRAP
                 data["repository_setup"] = self.get("repository/setup")
             data["write_authority"] = self.ports.workspaces.authority(manifest.workspace_id)
-            data["available_tools"] = coding_tools(self.config, task.get("category") == "setup")
+            data["available_tools"] = coding_tools(self.config, task.get("category") == "setup",
+                                                  test=task["assignment"].get("kind") == "test")
             from .worker_memory import project
 
             data["worker_state"] = project(self, state, current.model_dump(mode="json"))
@@ -822,7 +825,10 @@ class AgentServices:
                 "behavior": task["assignment"].get("behavior") or task["assignment"]["objective"],
                 "focused_check": task["assignment"].get("focused_check") or task["assignment"]["checks"],
                 "source_paths": [p["path"] for p in data["focused_source"]],
-                "completion_rule": "Verify the assigned consumer/entry behavior. An existing API alone is not "
+                "completion_rule": "Report expected versus observed test behavior using assigned check receipts; "
+                    "leave source unchanged and request a separate edit if needed. No result file is required."
+                    if task["assignment"].get("kind") == "test" else
+                    "Verify the assigned consumer/entry behavior. An existing API alone is not "
                     "an integrated feature. Already-complete work needs exact-source behavior evidence; edits are not mandatory."}
             if task.get("previous_process_id"):
                 predecessor = self.get(self.get("attempt/" + task["attempt_id"])["previous_attempt_ref"])
@@ -834,7 +840,7 @@ class AgentServices:
                     "changed_condition": task.get("recovery_condition"),
                     "source_reused": bool(task.get("source_delta_ref")),
                     "cloud_recoveries": task.get("cloud_recoveries", 0),
-                    "policy": "Repair the original contract using a changed approach; all original resource limits still apply",
+                    "policy": "Continue the original assignment kind using a changed approach; all original resource limits still apply",
                 }
         if self.repository:
             notes = self.ports.records.get("coding/startup-notes")
@@ -872,7 +878,7 @@ class AgentServices:
                 workspace_id=state.get("workspace_id", "senior-snapshot"),
                 allowed_capabilities=[]
                 if senior
-                else coding_tools(self.config, task.get("category") == "setup"),
+                else data["available_tools"],
                 required_phase_protocol="polyinference/senior-readonly/1"
                 if senior
                 else "polyinference/worker-phase/1",

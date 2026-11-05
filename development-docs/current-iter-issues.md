@@ -3,12 +3,21 @@
 <a id="prompt-01"></a>
 ## PROMPT-01 — Simplify agent prompting and milestone-driven sprint planning
 
-**Priority: first implementation item. Status: open; proposal only.**
+**Priority: first implementation item. Status: open; test-only task support implemented separately.**
 Implement **Stage A** of the [audited analysis and corrected plan](agent-prompting-audit-2026-11-04.md).
 The [earlier proposal](agent-prompting-proposal-2026-11-04.md) is retained with an
 audit correction notice. Its workflow shortcuts must not be implemented literally.
-This issue records future work; the current audit/documentation request does not
-implement the changes or authorize a live run.
+The original audit/documentation request did not authorize implementation. The later user request
+authorized the test-only exception below; the broader prompting redesign remains future work.
+
+**Implemented 2026-11-04, [FIX-0178](FIXES.md#fix-0178):** `kind: test` runs existing
+configured tests with no implementation file, local contract, write target or result path.
+The agent records tested revision/observations/check receipts, without a source commit;
+successful kept results release dependents, while failed/uncertain tests reach review.
+Test authoring and product repairs remain edit tasks. This is the bounded testing part
+of Stage B, not general inspection support or completion of Stage A/C. No runtime
+implementation changed; the shared TaskSpec envelope now permits empty change scope.
+Basic offline checks are recorded in FIX-0178; live testing is left to the user.
 
 ### Required outcome
 
@@ -31,9 +40,8 @@ assessment, publication guards or independent final acceptance in this stage.
 Matching diagnostic receipts do not automatically authorize skipping those steps.
 AI retains engineering judgment within the declared task and evidence contract.
 
-**Later bounded work:** Stage B defines genuine test/inspection assignment and
-result semantics, reusing generic OS processes/tools without fake source edits or
-code reports. Stage C considers specific evidence-backed reductions only after
+**Remaining bounded work:** Stage B's testing path is implemented as described above;
+general inspection remains a separate proposal. Stage C considers specific evidence-backed reductions only after
 their validity and publication implications are defined. Neither is a prerequisite
 for prompt/repair correction, nor a license to bypass current completion guards.
 
@@ -61,8 +69,8 @@ source and unrelated edits. Use fresh program/state pins for changed contracts.
   Current mandatory phases, required checks and final acceptance still work.
 - Discretionary repeated commands are reduced without promoting worker/private
   evidence into independent acceptance or declaring unrun checks passed.
-- Later test-only support must demonstrate its own honest result/readiness path;
-  no dummy implementation file, fabricated commit or successful code report.
+- Test-only support now has its own result/readiness path; retain the no-dummy-file,
+  no-fabricated-commit and no-successful-code-report guarantees in follow-up work.
 - Run one focused regression set for the changed boundaries. A short fresh live
   trial, only when separately authorized, should report useful completion,
   avoidable pauses, model/check counts and input size. Do not add a prompt-audit

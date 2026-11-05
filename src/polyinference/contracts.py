@@ -351,7 +351,7 @@ class TaskSpec(Record):
     task_id: Identifier
     plan_ref: Identifier
     objective: ArtifactRef
-    allowed_change_scope: Annotated[list[Identifier], Field(min_length=1)]
+    allowed_change_scope: list[Identifier]  # Empty scope grants no source writes; task-kind policy belongs to the agent.
     prerequisites: list[Prerequisite]
     base: CodeRevision
     acceptance_spec: ArtifactRef

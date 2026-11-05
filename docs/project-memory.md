@@ -51,9 +51,18 @@ owns canonical memory and semantics. Contributor setup belongs to developer tool
 not every program hosted on the OS. Read the [boundary](../design-docs/simplified-os/RUNTIME_BOUNDARY.md)
 and [revisions/open gaps](../design-docs/simplified-os/DESIGN_REVISIONS.md) before changing these layers.
 
-Current P0 policy requires a single production file and explicit local_contract per local development
+Current P0 policy requires a single production file and explicit local_contract per local edit
 assignment, enforced after lane allocation and at task construction. cloud_only_reason protects coupled
-specialist work from task-share demotion. One system.local_token_limits input/output pair drives local
+specialist work from task-share demotion.
+
+`kind: test` is the exception for running existing configured tests: no implementation file, local
+contract, write/result path or code commit. The agent records tested revision, observed receipts and
+assessment. Only successful kept results release dependents; final acceptance remains independent.
+Test authoring and product repairs are edit tasks. Test retries retain empty source-write scope and
+original resource accounts. The shared TaskSpec wire envelope accepts empty change scope, but no OS
+execution logic or new OS task semantics were added; see [FIX-0178](../development-docs/FIXES.md#fix-0178).
+
+One system.local_token_limits input/output pair drives local
 provider requests, packing and admission; cloud agents have no OS per-call token cap. Strata startup JSON
 can be synchronized before restart without launching inference. Optional agent
 local_strata_profile lets the UI start/reuse a named Strata runtime, validate live

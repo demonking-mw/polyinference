@@ -11,6 +11,7 @@ from .tasks import coding_tools
 def capabilities(config):
     return {
         "worker_tools": coding_tools(config),
+        "test_tools": coding_tools(config, test=True),
         "setup_only_tools": ["repository.select_branch", "checks.configure"],
         "senior_source_access": "Pinned previews + read_requests only",
         "shell_execution": config.shell_execution,
@@ -63,6 +64,8 @@ async def offer(app, packet, head):
             raise ValueError("Unsettled execution must be reconciled before handoff")
     except ValueError as exc:
         return {**result, "reason": str(exc)}
+    if packet["assignment"].get("kind") == "test":
+        return {**result, "eligible": True, "reason": "Rerun the existing test contract on the current base; no source handoff"}
     try:
         await app.ports.workspaces.validate_handoff(
             packet["source_delta_ref"], CodeRevision.model_validate(head),
@@ -129,7 +132,8 @@ async def prepare(app, proposal, snapshot):
         source = choice["reason"] if replacement.resume_from else (
             "fresh current base (senior choice)" if choice["resume_from"] else choice["reason"]
         )
-        condition = "Cloud specialist implements the pinned contract using failure evidence; " + source
+        action = "reruns the pinned tests" if replacement.kind == "test" else "implements the pinned contract"
+        condition = "Cloud specialist " + action + " using failure evidence; " + source
         prior = decision.changed_condition if decision and decision.action == "retry" else ""
         if prior and not prior.endswith(condition):
             condition = prior[:3200] + "; " + condition

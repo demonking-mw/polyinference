@@ -219,6 +219,7 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0175](#fix-0175) | 2026-11-04 | Expose planner allowances and default senior source retrieval to 16 ranges |
 | [FIX-0176](#fix-0176) | 2026-11-04 | Record the revised agent prompting proposal and first current implementation issue |
 | [FIX-0177](#fix-0177) | 2026-11-04 | Audit the prompting proposal against prior fixes and correct unsafe workflow shortcuts |
+| [FIX-0178](#fix-0178) | 2026-11-04 | Support test-only assignments without implementation or result files |
 | [FIX-0168](#fix-0168) | 2026-11-02 | Persist machine-local Qwen/Strata UI defaults |
 | [FIX-0167](#fix-0167) | 2026-10-29 | Unify local token settings and remove cloud per-call caps |
 
@@ -8639,3 +8640,93 @@ onboarding/project-memory and runtime-boundary guides. Current rules are unchang
 the audit identifies future edits rather than rewriting those guides now. The new
 audit has a primary navigation leaf. Earlier proposal/history remains available
 with an explicit correction notice, and the refreshed project note was read back.
+
+<a id="fix-0178"></a>
+## FIX-0178 — 2026-11-04 — Support test-only assignments without implementation or result files
+
+Status: implemented; basic offline verification, live testing left to the user.
+Issue: [PROMPT-01](current-iter-issues.md#prompt-01).
+Supersedes the testing deferral in [FIX-0177](#fix-0177) following explicit user
+implementation authorization; the broader prompting redesign remains open.
+Related: [FIX-0162](#fix-0162), [FIX-0164](#fix-0164),
+[FIX-0166](#fix-0166), [FIX-0136](#fix-0136), [FIX-0137](#fix-0137).
+
+### Problem
+
+The user confirmed that a pure testing task should not need an implementation file
+or a result path. The existing planner/worker prompts and assignment validator
+required every local task to declare an implementation contract and nonempty write
+scope. Removing those constraints alone would still send observations through a
+coding publication that creates a commit, including for unchanged source.
+
+### What was wrong
+
+Agent task meaning conflated editing source with executing existing tests.
+FIX-0162 correctly protected local editing boundaries but had no task-kind exception.
+The audit identified the missing result/readiness handling, then deferred testing;
+its phrase "result path" described a workflow, not a necessary output filename.
+A fake source target, result file or code commit would add work without representing
+what the testing agent actually did. This is agent planning/execution/report policy.
+
+### How it was fixed
+
+Added `Assignment.kind` (`edit` by default, or `test`). Tests run one bounded scenario
+using existing configured checks and read dependencies, with empty/omitted
+`write_paths` and no implementation/local contract or result-path field. Test
+authoring and repairs remain edits; ordinary local edit contracts and protected
+cloud placement remain enforced. Planner/worker prompts explain this distinction,
+actual check-name arguments, available tools, expected versus observed results and
+separate repair assignments. Process, task, raw prompt and native-job tool inventories
+all omit source-edit tools for testing; existing output/scratch rules still apply.
+Test process/workspace grants also omit code commit/publication capabilities, so a
+hallucinated raw action cannot create a code contribution outside the advertised tools.
+
+The same worker graph captures current integrated source, runs required checks and
+assesses actual receipts. Test check failures become findings rather than automatic
+coding-diagnosis calls. An agent-owned `TestReport` records tested revision, summary,
+evidence and usage atomically with completed task/attempt records. It uses the result
+record as the replay boundary, retains verification ownership and matching source,
+and neither creates a code commit nor advances the shared head. Release retains
+normal process/permit cleanup. Actual failing evidence overrides an optimistic model
+verdict. Failed/uncertain tests close starts for senior review; only successful kept
+results release dependents. Revert rejects observations without reverting Git.
+Review packets/repository summaries distinguish testing from code contributions,
+and private-source lookup skips non-candidate reports. Linked cloud retry preserves
+task kind, original accounts and empty write authority without a source handoff.
+
+Updated owning guides, design/boundary notes, proposal/issue status, onboarding,
+project knowledge, navigation and retained AGENTS.md instructions. Earlier proposals,
+fix entries and historical runs remain preserved. The larger prompt/repair redesign,
+general inspection tasks and phase-skipping proposals are not implemented here.
+
+### Design principle enforced or reconstructed
+
+Task meaning and evidence handling belong to the agent, using existing generic
+OS processes, tools, workspaces, permits, artifacts and atomic records. **No OS
+implementation changed.** The one shared SDK data-contract adjustment allows
+`TaskSpec.allowed_change_scope: []`, necessary to represent no source-write authority;
+the agent still requires a target for edits. No OS task type, new capability,
+supervisor or graph was added. Test observations remain distinct from code
+contributions and independent current-tree final acceptance. Changed source/prompt
+fingerprints require fresh state; historical pins/accounts/deltas remain unchanged.
+
+### Verification
+
+The focused offline run passed **46 tests**: new test-task cases, module
+planning, cloud recovery and the two existing local-contract/cloud-placement
+regressions. Cases cover omitted implementation/result paths, empty grants,
+commit-free success in isolated and default task-branch in-place modes, failure
+without task branches, observed failures overriding optimistic model output,
+manager rejection without a Git revert, cleanup and publication replay. After final
+grant tightening, **10 test-task and existing agent workflow cases passed**. Initial
+fixture collection/serialization warnings were corrected; the final run had none.
+Ruff passed for the agent sources, domain/shared contract and new tests; whitespace
+checks passed. All model clients were local deterministic fixtures. No live model
+calls, provider setup, historical-run replay or broad product qualification was
+performed; the user will run live tests later.
+
+Reviewed adjacent setup, check-purpose, runtime capability and configuration guides:
+no setup/configuration, check ABI/purpose or OS execution changes needed edits.
+Documentation generation and `--check` passed for 339 files and 150 feature/doc
+leaves, including links and navigation; guide-length advisories are nonblocking.
+The retained project-rule note in AGENTS.md was saved and read back.

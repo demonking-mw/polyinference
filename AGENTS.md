@@ -420,3 +420,16 @@ requirements. Stage B defines honest testing results; Stage C isolates any later
 optimization. All remain unimplemented. Preserve FIX-0023/0025, 0086/0088/0089,
 0136/0137 and 0162/0164/0166 semantics and original accounts/source. No OS change
 is required for Stage A; generic protections and current documentation still apply.
+
+Test-only implementation, 2026-11-04 (FIX-0178): the user's later instruction authorizes
+the testing exception despite the earlier analysis-only proposal. `Assignment.kind=test`
+runs existing configured checks with no local_contract, implementation/write/result path
+or source commit. Writing tests and product repairs remain edit assignments, retaining
+FIX-0162 contracts. Test results record actual tested revision/evidence; only successful
+keep releases dependents, and rejecting observations performs no Git revert. Final
+acceptance stays independent. The shared TaskSpec envelope permits empty change scope;
+OS execution logic is unchanged. Recovery preserves task kind, empty write scope and
+original resources. Use fresh source/prompt pins; preserve historical runs and accounts.
+The broader PROMPT-01 redesign remains open; live testing is left to the user. Refresh
+from docs/project-memory.md and FIX-0178 before follow-up. This project-rule note is
+read back after saving and installs no automation.
