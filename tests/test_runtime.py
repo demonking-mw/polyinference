@@ -61,7 +61,7 @@ async def test_unknown_remote_effect_is_not_retried_or_treated_as_cancelled(conf
     class Disconnected:
         calls = 0
 
-        async def generate(self, *args):
+        async def generate(self, *args, **kwargs):
             self.calls += 1
             raise UnknownExecution("after send")
 
@@ -154,11 +154,70 @@ async def test_checks_that_modify_source_cannot_prove_success(config):
         await runtime.close()
 
 
+@pytest.mark.parametrize("modify_source", [False, True])
+async def test_check_npm_cache_is_excluded_but_source_changes_invalidate_evidence(config, modify_source):
+    import sys
+
+    from polyinference.domain import Check
+
+    # The integrated runner isolates npm housekeeping outside the assessed tree.
+    # Explicit writes under a source .npm directory still face scope enforcement
+    # (test_tool_environment.py); a blanket directory exclusion would hide them.
+    script = (
+        "import os; from pathlib import Path; "
+        "cache=Path(os.environ['npm_config_cache'])/'_logs/check.log'; "
+        "cache.parent.mkdir(parents=True); cache.write_text('npm cache output')"
+    )
+    if modify_source:
+        script += "; Path('a.py').write_text('VALUE = 77\\n')"
+    config = config.model_copy(update={"checks": [Check(name="syntax", argv=[sys.executable, "-c", script])]})
+    runtime, _, _ = await setup(config)
+    try:
+        evidence = await runtime.tools.check("fixture-ws", "syntax")
+        assert evidence["status"] == ("inconclusive" if modify_source else "passed")
+        manifest = runtime.workspaces.current("fixture-ws")
+        tree = runtime.workspaces.scan(runtime.workspaces.root_for(manifest))
+        assert not any(path.startswith(".npm/") for path in tree)
+        assert not list(config.state_path.glob("tool-environment-*"))
+        await runtime.workspaces.preserve_delta("fixture-ws")
+    finally:
+        await runtime.close()
+
+
 async def test_final_acceptance_rejects_new_steering_during_checks(config):
+    import json
+
+    from conftest import fixture_completion
+
+    class Reviewer:
+        async def generate(self, messages, *args, **kwargs):
+            data = json.loads(
+                next(m["content"] for m in messages if "Pinned application inputs:\n" in m["content"]).split(
+                    "Pinned application inputs:\n", 1
+                )[1]
+            )
+            return {
+                "text": json.dumps(
+                    {
+                        "goal": "Fixture baseline review",
+                        "complete": True,
+                        "completion_assessment": fixture_completion(data),
+                    }
+                ),
+                "usage": {"total_tokens": 10},
+                "model": "fixture",
+                "events": [],
+            }
+
+        async def close(self):
+            pass
+
     runtime, app, engine = await setup(config)
     try:
-        run = app.get("app/run")
-        app.update("app/run", {**run, "completion_proposed": True})
+        await runtime.clients["cloud"].close()
+        runtime.clients["cloud"] = Reviewer()
+        await engine.review()
+        assert app.get("app/run")["completion_proposed"]
         original = runtime.tools.check
 
         async def interrupt_check(*args):
@@ -192,7 +251,7 @@ async def test_native_terminal_failure_releases_resources_but_unknown_retains_th
     from polyinference.runtime.inference import UnknownExecution
 
     endpoint = config.local.model_copy(update={"protocol": "codex_app_server", "brokered_tools": True})
-    config = config.model_copy(update={"local": endpoint})
+    config = config.model_copy(update={"local": endpoint, "model_call_retries": 1})
     runtime, app, _ = await setup(config)
 
     class NativeFailure:
@@ -200,11 +259,14 @@ async def test_native_terminal_failure_releases_resources_but_unknown_retains_th
 
         async def generate_job(self, *args):
             self.calls += 1
-            raise (
+            failure = (
                 NativeJobStopped("fixture terminal failure")
                 if known_end
                 else UnknownExecution("fixture disconnected")
             )
+            failure.native_diagnostics = {"received_events": 2200, "received_bytes": 100000,
+                                          "recent_events": [{"method": "item/agentMessage/delta"}]}
+            raise failure
 
         async def close(self):
             pass
@@ -234,15 +296,24 @@ async def test_native_terminal_failure_releases_resources_but_unknown_retains_th
         for _ in range(2):
             with pytest.raises(RuntimeError if known_end else UncertainEffect):
                 await app.model(state)
-        assert client.calls == 1
+        # Known stopped, effect-free native failures get one OS retry. Replaying
+        # the invocation does not submit again; unknown execution never retries.
+        assert client.calls == (2 if known_end else 1)
         assert runtime.admission["local"].active == (0 if known_end else 1)
         permit = runtime.records.get("permit/shell/installation")[1]
-        assert permit["process_id"] == (None if known_end else "fixture")
+        # Direct Codex reasoning never owns shell; actual broker callbacks acquire it.
+        assert permit["process_id"] is None
         effect = runtime.records.scan("effect/")[0][2]
         assert effect["state"] == ("failed" if known_end else "uncertain")
         if known_end:
             assert effect["result"]["execution_termination"] == "confirmed_stopped"
             assert "fixture terminal failure" in effect["result"]["error"]["message"]
+            diagnostics = effect["result"]["extensions"]["polyinference/native-diagnostics"]
+        else:
+            diagnostics = effect["native_diagnostics"]
+            assert effect["result"] is None
+        assert diagnostics["received_events"] == 2200
+        assert diagnostics["recent_events"][0]["method"] == "item/agentMessage/delta"
     finally:
         # This fake provider has no live remote execution. Retention was asserted
         # above; explicitly reconcile its fixture lease so later tests can run.

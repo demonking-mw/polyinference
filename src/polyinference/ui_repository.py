@@ -45,12 +45,14 @@ def repository(path, clean=False):
 
 
 def project(path, clean=False):
-    """Allow a new project folder as well as a committed Git checkout."""
+    """Inspect a project path without creating it; setup owns folder creation."""
     if not isinstance(path, str) or not path.strip():
         raise ValueError("Choose a project directory")
     selected = Path(path).expanduser().resolve()
+    if not selected.exists():
+        return selected, []
     if not selected.is_dir():
-        raise ValueError("Repository directory does not exist")
+        raise ValueError("Project path must be a directory")
     if (selected / ".git").exists():
         head = subprocess.run(
             ["git", "-C", str(selected), "rev-parse", "--verify", "HEAD"], capture_output=True, timeout=15
@@ -93,6 +95,11 @@ def suggested_check(root, files):
 
 def directories(path):
     selected = Path(path).expanduser().resolve()
+    if not selected.exists():
+        return {
+            "path": str(selected), "parent": str(selected.parent), "directories": [],
+            "is_repository": True, "exists": False,
+        }
     if not selected.is_dir():
         raise ValueError("Directory does not exist")
     children = []
@@ -114,4 +121,5 @@ def directories(path):
         "parent": str(selected.parent),
         "directories": children,
         "is_repository": is_repository,
+        "exists": True,
     }

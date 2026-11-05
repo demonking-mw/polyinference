@@ -6,7 +6,10 @@ import asyncio
 import os
 import shutil
 import signal
+from contextlib import AsyncExitStack
 from pathlib import Path
+
+from .tool_environment import tool_environment
 
 
 def restore(workspaces, root, before):
@@ -24,45 +27,41 @@ async def run(tools, manifest, arguments):
     if tools.config.shell_execution == "disabled":
         raise ValueError("Shell execution is disabled")
     script = arguments.get("script")
-    if not isinstance(script, str) or not script.strip() or len(script) > 16000:
-        raise ValueError("Supply a shell script of 1-16000 characters")
-    timeout = arguments.get("timeout_seconds") or 60
-    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 0 < timeout <= 600:
-        raise ValueError("Shell timeout must be between 0 and 600 seconds")
+    if not isinstance(script, str) or not script.strip() or len(script) > tools.config.tuning.shell_script_chars:
+        raise ValueError(f"Supply a shell script of 1-{tools.config.tuning.shell_script_chars} characters")
+    timeout = arguments.get("timeout_seconds") or tools.config.tuning.shell_default_seconds
+    if isinstance(timeout, bool) or not isinstance(timeout, (int, float)) or not 0 < timeout <= tools.config.tuning.shell_max_seconds:
+        raise ValueError(f"Shell timeout must be between 0 and {tools.config.tuning.shell_max_seconds} seconds")
     root = tools.workspaces.root_for(manifest)
     cwd = (root / (arguments.get("cwd") or ".")).resolve()
     if not cwd.is_relative_to(root.resolve()) or not cwd.is_dir():
         raise ValueError("Shell cwd must be an existing directory inside the workspace")
-    before = tools.workspaces.scan(root)
-    argv = ["bash", "-c", script]
-    if tools.config.shell_execution == "bubblewrap":
-        if not shutil.which("bwrap"):
-            raise ValueError("bubblewrap requested but unavailable")
-        prefix = ["bwrap", "--unshare-all", "--die-with-parent", "--new-session"]
-        for system in ("/usr", "/bin", "/lib", "/lib64", "/etc"):
-            if Path(system).exists():
-                prefix += ["--ro-bind", system, system]
-        argv = prefix + [
-            "--bind",
-            str(root),
-            "/workspace",
-            "--chdir",
-            "/workspace/" + cwd.relative_to(root.resolve()).as_posix(),
-            "--tmpfs",
-            "/tmp",
-            "--proc",
-            "/proc",
-            "--dev",
-            "/dev",
-            "--",
-            *argv,
-        ]
+    await tools.workspaces.prepare_environment(manifest)
+    before = await tools.workspaces.scan_async(root)
+    if tools.config.shell_fail_fast:
+        script = "set -e -o pipefail\n" + script
+    argv = [*tools.config.tuning.shell_command, script]
+    sandboxed = tools.config.shell_execution == "bubblewrap"
+    if sandboxed and not shutil.which("bwrap"):
+        raise ValueError("bubblewrap requested but unavailable")
     permit = await tools.exclusive.acquire("shell/installation", manifest.process_id)
     process = None
+    resources = AsyncExitStack()
     output = bytearray()
     truncated = False
     timed_out = False
     try:
+        environment, mounts = await resources.enter_async_context(tool_environment(tools.workspaces, sandboxed))
+        if sandboxed:
+            prefix = ["bwrap", "--unshare-all", "--die-with-parent", "--new-session"]
+            for system in tools.config.tuning.sandbox_readonly_paths:
+                if Path(system).exists():
+                    prefix += ["--ro-bind", system, system]
+            argv = prefix + [
+                "--bind", str(root), "/workspace", *mounts,
+                "--chdir", "/workspace/" + cwd.relative_to(root.resolve()).as_posix(),
+                "--tmpfs", "/tmp", "--proc", "/proc", "--dev", "/dev", "--", *argv,
+            ]
         process = await asyncio.create_subprocess_exec(
             *argv,
             cwd=cwd,
@@ -70,18 +69,13 @@ async def run(tools, manifest, arguments):
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.STDOUT,
             start_new_session=True,
-            env={
-                "PATH": os.environ.get("PATH", ""),
-                "HOME": str(root),
-                "LANG": "C.UTF-8",
-                "PYTHONDONTWRITEBYTECODE": "1",
-                "PYTEST_ADDOPTS": "-p no:cacheprovider",
-            },
+            env=environment,
+            limit=tools.config.tuning.subprocess_stream_bytes,
         )
 
         async def drain():
             nonlocal truncated
-            while chunk := await process.stdout.read(8192):
+            while chunk := await process.stdout.read(tools.config.tuning.tool_chunk_bytes):
                 remaining = max(0, tools.config.limits.max_output_bytes - len(output))
                 output.extend(chunk[:remaining])
                 truncated |= len(chunk) > remaining
@@ -97,13 +91,23 @@ async def run(tools, manifest, arguments):
             except ProcessLookupError:
                 pass
             await process.wait()
+        unauthorized = []
         try:
-            after = tools.workspaces.scan(root)
+            after = await tools.workspaces.scan_async(root)
+            await tools.workspaces.capture_environment(manifest)
             changed = {p for p in set(before) | set(after) if before.get(p) != after.get(p)}
-            if not changed <= set(manifest.allowed_write_paths):
-                tools.workspaces.extend_setup_scope(manifest.workspace_id, sorted(changed))
-        except Exception:
-            restore(tools.workspaces, root, before)
+            unauthorized = sorted(changed - set(manifest.allowed_write_paths))
+            if unauthorized:
+                await tools.workspaces.extend_write_scope(manifest.workspace_id, sorted(changed))
+        except Exception as exc:
+            if unauthorized:
+                exc.detail = {"code": "write_scope_exceeded", "workspace_id": manifest.workspace_id,
+                    "phase": "shell", "paths": unauthorized, "allowed_write_paths": manifest.allowed_write_paths}
+            if not tools.workspaces.is_attached(manifest.workspace_id):
+                await tools.workspaces.blocking.run(restore, tools.workspaces, root, before)
+            else:
+                tools.workspaces.records.put_once("workspace-blocked/" + manifest.workspace_id,
+                                                  {"reason": str(exc), "paths": unauthorized})
             raise
         return {
             "stdout": output.decode(errors="replace"),
@@ -115,10 +119,15 @@ async def run(tools, manifest, arguments):
             "cwd": cwd.relative_to(root.resolve()).as_posix(),
         }
     finally:
-        if process is not None and process.returncode is None:
+        try:
+            if process is not None and process.returncode is None:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                await process.wait()
+        finally:
             try:
-                os.killpg(process.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                pass
-            await process.wait()
-        await tools.exclusive.release(permit, manifest.process_id)
+                await resources.aclose()
+            finally:
+                await tools.exclusive.release(permit, manifest.process_id)

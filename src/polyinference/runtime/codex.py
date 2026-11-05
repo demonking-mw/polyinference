@@ -1,4 +1,4 @@
-"""Codex native senior and brokered coding-phase jobs.
+"""Schema-driven native agent jobs with optional brokered capabilities.
 
 Native events remain observations. Each phase starts a fresh native thread;
 only actual dynamic-tool callbacks execute host capabilities.
@@ -8,13 +8,101 @@ from __future__ import annotations
 
 import asyncio
 import json
+import shutil
+from collections import Counter, deque
 from pathlib import Path
 
-from .inference import EndpointError, HTTPInference, UnknownExecution
+from ..os_config import DEFAULT_TUNING, NATIVE_CLIENT, default
+from .inference import EndpointError, HTTPInference, IncompleteGeneration, UnknownExecution, model_unavailable
+
+# Completed items carry the authoritative text. Retaining their streaming
+# fragments makes the lifecycle-event bound depend on a reply's token count.
+STREAMED_TEXT_METHODS = (
+    "item/agentMessage/delta",
+    "item/plan/delta",
+    "item/reasoning/summaryTextDelta",
+    "item/reasoning/summaryPartAdded",
+    "item/reasoning/textDelta",
+    "item/commandExecution/outputDelta",
+    "item/fileChange/outputDelta",
+)
 
 
 class NativeJobStopped(EndpointError):
     """The app-server rejected dispatch or explicitly confirmed a terminal turn."""
+
+    def __init__(self, message, *, retryable=True, output_failure=False):
+        super().__init__(message)
+        self.retryable = retryable
+        self.diagnostics = ({"category": "model_output", "fault_scope": "response",
+                             "reason": "invalid_native_output"} if output_failure else {})
+
+
+class NativeEventLog:
+    """Bounded observations; telemetry retention never controls job execution."""
+
+    def __init__(self, byte_limit, event_limit=None, *, tuning=None):
+        self.tuning = tuning or DEFAULT_TUNING
+        event_limit = self.tuning.native_event_limit if event_limit is None else event_limit
+        self.byte_limit, self.event_limit = byte_limit, event_limit
+        self.events = deque()
+        self.retained_bytes = self.received_bytes = self.received_events = 0
+        self.dropped_events = 0
+        self.methods = Counter()
+        self.recent = deque(maxlen=self.tuning.native_recent_events)
+
+    def record(self, message, size):
+        wire_method = str(message.get("method", ""))
+        method = wire_method[:self.tuning.native_method_chars]
+        self.received_events += 1
+        self.received_bytes += size
+        # Bound method cardinality as well as the payload buffer.
+        bucket = method if method in self.methods or len(self.methods) < self.tuning.native_method_buckets else "other"
+        self.methods[bucket] += 1
+        self.recent.append({"method": method, "bytes": size})
+        if wire_method in STREAMED_TEXT_METHODS or wire_method.endswith("/delta") or size > self.byte_limit:
+            self.dropped_events += 1
+            return
+        self.events.append((message, size))
+        self.retained_bytes += size
+        while len(self.events) > self.event_limit or self.retained_bytes > self.byte_limit:
+            _, removed = self.events.popleft()
+            self.retained_bytes -= removed
+            self.dropped_events += 1
+
+    def snapshot(self):
+        return [message for message, _ in self.events]
+
+    def diagnostics(self):
+        # No prompt, output text, or tool arguments in failure diagnostics.
+        return {
+            "received_events": self.received_events, "received_bytes": self.received_bytes,
+            "retained_events": len(self.events), "retained_bytes": self.retained_bytes,
+            "dropped_events": self.dropped_events, "event_limit": self.event_limit,
+            "byte_limit": self.byte_limit, "methods": dict(self.methods),
+            "recent_events": list(self.recent),
+        }
+
+
+def native_context(messages):
+    """Render canonical context without promoting retrieved data into instructions.
+
+    Only the native transport uses this renderer. Ordinary API clients retain
+    the canonical system/user/assistant message list and its actual roles.
+    """
+    instructions, inputs = [], []
+    for message in messages:
+        role, content = message["role"], message["content"]
+        if role == "system":
+            instructions.append(content)
+        else:
+            label = (
+                "Recorded assistant output (context data)"
+                if role == "assistant"
+                else "Task/context or recorded observation"
+            )
+            inputs.append({"type": "text", "text": label + ":\n" + content})
+    return "\n\n".join(instructions), inputs
 
 
 def strict_output_schema(schema):
@@ -49,20 +137,72 @@ def strict_output_schema(schema):
     return output, wrapped
 
 
-class CodexAppServer:
-    def __init__(self, endpoint):
-        self.endpoint = endpoint
+def broker_schema(tools):
+    definitions, schemas = {}, []
+    for index, tool in enumerate(tools):
+        prefix = f"capability_{index}_"
 
-    async def generate_job(self, messages, snapshot, schema, callback=None):
+        def namespace(value):
+            if isinstance(value, list):
+                return [namespace(item) for item in value]
+            if not isinstance(value, dict):
+                return value
+            return {key: "#/$defs/" + prefix + item[8:]
+                    if key == "$ref" and item.startswith("#/$defs/") else namespace(item)
+                    for key, item in value.items()}
+
+        schema = dict(tool["input_schema"])
+        definitions.update({prefix + name: namespace(value) for name, value in schema.pop("$defs", {}).items()})
+        schemas.append(namespace(schema))
+    schema = {"type": "object", "properties": {
+        "tool": {"type": "string", "enum": [tool["name"] for tool in tools]},
+        "arguments": {"anyOf": schemas},
+    }, "required": ["tool", "arguments"], "additionalProperties": False}
+    if definitions:
+        schema["$defs"] = definitions
+    return strict_output_schema(schema)[0]
+
+
+class CodexAppServer:
+    def __init__(self, endpoint, *, tuning=None):
+        self.tuning = tuning or DEFAULT_TUNING
+        self.endpoint = endpoint
+        self.output_cap = default("RuntimeConfig", "max_model_response_bytes")
+
+    def prepare(self, messages, schema, *, tools=None, instructions="", max_output=None):
         output_schema, wrapped = strict_output_schema(schema)
         if wrapped:
             messages = [
                 *messages,
                 {
-                    "role": "user",
+                    "role": "system",
                     "content": 'Return the final phase JSON inside {"reply": ...}, as required by the output schema.',
                 },
             ]
+        developer = ("The native filesystem view is read-only input and may be stale. "
+            "All current file reads, source edits and commands must go through polyinference_tool when granted. "
+            "Never use native shell, apply_patch or other native tools to write files. "
+            "Never request escalated access. Only the host owns workspace generations, checks and publication. "
+            + instructions + " Return a complete response under the supplied schema.")
+        if instructions:
+            messages = [*messages, {"role": "system", "content": instructions}]
+        rendered, inputs = native_context(messages)
+        developer += "\n\n" + rendered
+        wire = {"input": inputs,
+                "outputSchema": output_schema, "developerInstructions": developer, "wrapped": wrapped}
+        if tools:
+            wire["dynamicTools"] = [{"type": "function", "name": "polyinference_tool",
+                "description": "Invoke one of the explicitly granted host capabilities.",
+                "inputSchema": broker_schema(tools)}]
+        return wire
+
+    async def generate_job(self, messages, snapshot, schema, callback=None, observer=None,
+                           *, tools=None, instructions="", max_output=None, prepared=None, session_ref=None,
+                           enforce_timeout=True):
+        if callback and not tools:
+            raise NativeJobStopped("Brokered jobs require explicitly granted tool descriptors")
+        wire = prepared or self.prepare(messages, schema, tools=tools, instructions=instructions, max_output=max_output)
+        output_schema, wrapped = wire["outputSchema"], wire["wrapped"]
         # Keep profile definitions in the app-server's base config. Codex reloads
         # that config for ChatGPT workspace routing; thread-only definitions can
         # disappear during that reload in CLI 0.163.
@@ -71,6 +211,14 @@ class CodexAppServer:
             ":minimal": "read",
             str(Path(snapshot).resolve()): "read",
         }
+        executable = shutil.which(self.endpoint.command[0])
+        command = list(self.endpoint.command)
+        if executable:
+            # macOS invokes the sandbox helper through the CLI path. Both the
+            # launcher and its resolved binary need read/execute access.
+            filesystem[str(Path(executable).absolute())] = "read"
+            filesystem[str(Path(executable).resolve())] = "read"
+            command[0] = str(Path(executable).resolve())
         policy = (
             "{"
             + ", ".join(
@@ -80,7 +228,7 @@ class CodexAppServer:
             + "}"
         )
         proc = await asyncio.create_subprocess_exec(
-            *self.endpoint.command,
+            *command,
             "-c",
             "permissions.polyinference_readonly.filesystem=" + policy,
             "-c",
@@ -91,24 +239,44 @@ class CodexAppServer:
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.DEVNULL,
-            limit=1024 * 1024,
+            limit=self.tuning.native_line_bytes,
             start_new_session=True,
         )
-        serial, events, thread_id, turn_id = 0, [], None, None
+        serial, thread_id, turn_id = 0, None, None
+        event_log = NativeEventLog(self.output_cap, tuning=self.tuning)
+        terminal, final_text, usage_event = None, None, None
 
         async def send(message):
             proc.stdin.write(json.dumps(message).encode() + b"\n")
             await proc.stdin.drain()
 
         async def receive():
-            line = await asyncio.wait_for(proc.stdout.readline(), self.endpoint.timeout_seconds)
+            nonlocal terminal, final_text, usage_event
+            line = await asyncio.wait_for(proc.stdout.readline(),
+                                          self.endpoint.timeout_seconds if enforce_timeout else None)
             if not line:
                 raise UnknownExecution("Codex app-server exited without a terminal turn")
             message = json.loads(line)
             if "method" in message:
-                if len(events) >= 2000:
-                    raise UnknownExecution("Native event limit exceeded")
-                events.append(message)
+                event_log.record(message, len(line))
+                params = message.get("params") or {}
+                belongs = (
+                    params.get("threadId", thread_id) == thread_id
+                    and (turn_id is None or params.get("turnId", turn_id) == turn_id)
+                )
+                # Keep execution state independently of the rolling event buffer,
+                # including notifications received before turn/start's RPC reply.
+                if belongs:
+                    if message["method"] == "turn/completed" and (
+                        turn_id is None or params.get("turn", {}).get("id") == turn_id
+                    ):
+                        terminal = message
+                    elif message["method"] == "item/completed":
+                        item = params.get("item") or {}
+                        if item.get("type") == "agentMessage":
+                            final_text = item.get("text")
+                    elif message["method"] == "thread/tokenUsage/updated":
+                        usage_event = message
                 if "id" in message and message.get("method") == "item/tool/call" and callback:
                     params = message["params"]
                     if params.get("threadId") != thread_id or params.get("tool") != "polyinference_tool":
@@ -144,18 +312,24 @@ class CodexAppServer:
                 message = await receive()
                 if message.get("id") == serial and "method" not in message:
                     if "error" in message:
-                        raise NativeJobStopped(
+                        failure = NativeJobStopped(
                             f"Codex RPC rejected {method}: {message['error'].get('code')} "
-                            + str(message["error"].get("message", ""))[:1500]
+                            + str(message["error"].get("message", ""))[:self.tuning.native_error_chars]
                         )
+                        failure.model_unavailable = model_unavailable(message["error"].get("message"),
+                                                                      message["error"].get("code"))
+                        raise failure
                     return message["result"]
 
         try:
             await rpc(
                 "initialize",
                 {
-                    "clientInfo": {"name": "polyinference", "version": "0.1.0"},
-                    "capabilities": {"experimentalApi": True},
+                    "clientInfo": NATIVE_CLIENT,
+                    "capabilities": {
+                        "experimentalApi": True,
+                        "optOutNotificationMethods": list(STREAMED_TEXT_METHODS),
+                    },
                 },
             )
             await send({"method": "initialized", "params": {}})
@@ -164,149 +338,100 @@ class CodexAppServer:
                 "cwd": str(snapshot),
                 "permissions": "polyinference_readonly",
                 "approvalPolicy": "never",
+                "developerInstructions": wire["developerInstructions"],
                 "config": {
                     "features.shell_tool": False,
                     "web_search": "disabled",
                 },
             }
-            if callback:
-                params["dynamicTools"] = [
-                    {
-                        "type": "function",
-                        "name": "polyinference_tool",
-                        "description": "Execute a scoped host file, shell, branch or check tool. Use for all effects.",
-                        "inputSchema": {
-                            "type": "object",
-                            "properties": {
-                                "tool": {
-                                    "type": "string",
-                                    "enum": [
-                                        "files.list",
-                                        "files.read",
-                                        "files.write",
-                                        "files.delete",
-                                        "checks.run",
-                                        "shell.run",
-                                        "repository.select_branch",
-                                    ],
-                                },
-                                "arguments": {
-                                    "type": "object",
-                                    "properties": {
-                                        **{
-                                            name: {"type": ["string", "null"]}
-                                            for name in (
-                                                "path",
-                                                "content",
-                                                "expected_digest",
-                                                "name",
-                                                "script",
-                                                "cwd",
-                                            )
-                                        },
-                                        "timeout_seconds": {"type": ["integer", "null"]},
-                                        "create": {"type": ["boolean", "null"]},
-                                    },
-                                    "required": [
-                                        "path",
-                                        "content",
-                                        "expected_digest",
-                                        "name",
-                                        "script",
-                                        "cwd",
-                                        "timeout_seconds",
-                                        "create",
-                                    ],
-                                    "additionalProperties": False,
-                                    "description": "Supply fields for the chosen tool; use null for unused fields.",
-                                },
-                            },
-                            "required": ["tool", "arguments"],
-                            "additionalProperties": False,
-                        },
-                    }
-                ]
-                messages = [
-                    *messages,
-                    {
-                        "role": "user",
-                        "content": "Execute actions internally using polyinference_tool. Do not return an action as your "
-                        "final answer. Finish this phase with candidate, assessment or needs_review. "
-                        "The host owns all phase changes and publication.",
-                    },
-                ]
-            thread = await rpc("thread/start", params)
+            if callback and not session_ref:
+                params["dynamicTools"] = wire["dynamicTools"]
+            if session_ref:
+                params["threadId"] = session_ref
+            else:
+                # Model routing is owned and recorded by the OS, not an opaque provider fallback.
+                params["allowProviderModelFallback"] = False
+            thread = await rpc("thread/resume" if session_ref else "thread/start", params)
+            sandbox = thread.get("sandbox") or {}
+            if (sandbox.get("type") != "readOnly" or sandbox.get("networkAccess", False)
+                    or thread.get("approvalPolicy") != "never"):
+                raise NativeJobStopped("Codex did not confirm read-only permissions with escalation disabled",
+                                       retryable=False)
             thread_id = thread["thread"]["id"]
+            if observer:
+                await observer("thread_started", thread_id, None)
             result = await rpc(
                 "turn/start",
                 {
                     "threadId": thread_id,
-                    "input": [{"type": "text", "text": json.dumps(messages)}],
+                    "input": ([{"type": "text", "text":
+                        "Continue the interrupted turn from its recorded conversation. Completed host tool "
+                        "operations retain their results and must not be repeated. Inspect current state through "
+                        "the granted tools when needed; finish the remaining work under the original protocol."}]
+                        if session_ref else wire["input"]),
+                    "effort": self.endpoint.reasoning_effort,
                     "cwd": str(snapshot),
                     "approvalPolicy": "never",
                     "outputSchema": output_schema,
                 },
             )
             turn_id = result["turn"]["id"]
-            # Events can arrive before the start response; inspect retained events first.
-            terminal = next(
-                (
-                    e
-                    for e in events
-                    if e.get("method") == "turn/completed"
-                    and e.get("params", {}).get("turn", {}).get("id") == turn_id
-                ),
-                None,
-            )
+            if observer:
+                await observer("turn_started", thread_id, turn_id)
+            if terminal and terminal["params"]["turn"]["id"] != turn_id:
+                terminal = None
             while terminal is None:
-                message = await receive()
-                if (
-                    message.get("method") == "turn/completed"
-                    and message.get("params", {}).get("turn", {}).get("id") == turn_id
-                ):
-                    terminal = message
+                await receive()
             turn = terminal["params"]["turn"]
             if turn["status"] != "completed":
-                raise NativeJobStopped(
+                failure = NativeJobStopped(
                     f"Codex turn ended: {turn['status']}: "
-                    + str((turn.get("error") or {}).get("message", "No error detail"))[:1500]
+                    + str((turn.get("error") or {}).get("message", "No error detail"))[:self.tuning.native_error_chars],
+                    retryable=turn["status"] not in {"cancelled", "interrupted"},
                 )
-            texts = [
-                e["params"]["item"]["text"]
-                for e in events
-                if e.get("method") == "item/completed"
-                and e.get("params", {}).get("item", {}).get("type") == "agentMessage"
-            ]
-            if not texts:
+                failure.model_unavailable = model_unavailable((turn.get("error") or {}).get("message"),
+                                                              (turn.get("error") or {}).get("codexErrorInfo")
+                                                              or (turn.get("error") or {}).get("code"))
+                if turn["status"] == "failed" and failure.model_unavailable:
+                    failure.native_continuation = {"session_id": thread_id, "turn_id": turn_id}
+                raise failure
+            if final_text is None:
                 texts = [i["text"] for i in turn.get("items", []) if i.get("type") == "agentMessage"]
-            if not texts:
-                raise NativeJobStopped("No terminal Codex agent message")
-            final_text = texts[-1]
+                final_text = texts[-1] if texts else None
+            if final_text is None:
+                raise NativeJobStopped("No terminal Codex agent message", output_failure=True)
+            if len(final_text.encode()) > self.output_cap:
+                total = ((usage_event or {}).get("params", {}).get("tokenUsage") or {}).get("total") or {}
+                raise IncompleteGeneration({
+                    "text": final_text.encode()[:self.output_cap].decode(errors="ignore"),
+                    "usage": {**total, "total_tokens": total.get("totalTokens")},
+                    "model": self.endpoint.model, "provider_id": turn_id,
+                    "events": event_log.snapshot(), "event_diagnostics": event_log.diagnostics(),
+                    "completion": {"provider_status": "completed", "final_response_complete": False,
+                                   "usage_scope": "native_thread_total", "output_token_enforced": False},
+                }, "native_response_byte_limit", max_output)
             if wrapped:
                 try:
                     final_text = json.dumps(json.loads(final_text)["reply"])
                 except (ValueError, KeyError, TypeError) as exc:
-                    raise NativeJobStopped("Terminal Codex reply has an invalid phase envelope") from exc
-            token_updates = [
-                e["params"]["tokenUsage"]["total"]
-                for e in events
-                if e.get("method") == "thread/tokenUsage/updated"
-                and e.get("params", {}).get("threadId") == thread_id
-                and e.get("params", {}).get("turnId") == turn_id
-                and "totalTokens" in e.get("params", {}).get("tokenUsage", {}).get("total", {})
-            ]
-            usage = (
-                {**token_updates[-1], "total_tokens": token_updates[-1]["totalTokens"]}
-                if token_updates
-                else None
-            )
+                    raise NativeJobStopped("Terminal Codex reply has an invalid phase envelope", output_failure=True) from exc
+            usage = None
+            if usage_event:
+                params = usage_event["params"]
+                total = (params.get("tokenUsage") or {}).get("total") or {}
+                if (params.get("threadId") == thread_id and params.get("turnId") == turn_id
+                        and "totalTokens" in total):
+                    usage = {**total, "total_tokens": total["totalTokens"]}
             return {
                 "text": final_text,
                 "usage": usage,
                 "provider_id": turn_id,
                 "session_id": thread_id,
                 "model": self.endpoint.model,
-                "events": events,
+                "events": event_log.snapshot(),
+                "event_diagnostics": event_log.diagnostics(),
+                "completion": {"provider_status": "completed", "final_response_complete": True,
+                               "usage_scope": "native_thread_total", "output_token_enforced": False},
             }
         except (TimeoutError, asyncio.TimeoutError, asyncio.CancelledError) as exc:
             if thread_id and turn_id:
@@ -320,13 +445,18 @@ class CodexAppServer:
                     )
                 except (BrokenPipeError, ConnectionError):
                     pass
-            raise UnknownExecution("Codex interrupted; remote termination is not established") from exc
+            failure = UnknownExecution("Codex interrupted; remote termination is not established")
+            failure.native_diagnostics = event_log.diagnostics()
+            raise failure from exc
+        except BaseException as exc:
+            exc.native_diagnostics = event_log.diagnostics()
+            raise
         finally:
             # Killing the local transport is not represented as remote cancellation.
             if proc.returncode is None:
                 proc.terminate()
                 try:
-                    await asyncio.wait_for(proc.wait(), 5)
+                    await asyncio.wait_for(proc.wait(), self.tuning.native_shutdown_seconds)
                 except asyncio.TimeoutError:
                     proc.kill()
                     await proc.wait()
@@ -336,11 +466,13 @@ class CodexAppServer:
 
 
 class CodexProxy:
-    def __init__(self, endpoint):
+    def __init__(self, endpoint, *, tuning=None):
+        self.tuning = tuning or DEFAULT_TUNING
         self.endpoint = endpoint
-        self.http = HTTPInference(endpoint)
+        self.http = HTTPInference(endpoint, tuning=self.tuning)
 
-    async def generate_job(self, messages, snapshot, schema):
+    async def generate_job(self, messages, snapshot, schema, *, max_output=None, prepared=None,
+                           enforce_timeout=True):
         configured = self.endpoint.readonly_snapshot_root
         if configured is None or Path(configured).resolve() != Path(snapshot).resolve():
             raise EndpointError(
@@ -348,7 +480,8 @@ class CodexProxy:
             )
         # Native tools only. No client-defined tools are sent. A successful HTTP response
         # supplies a proposal, never independent execution or completion evidence.
-        result = await self.http.generate(messages, 4000, schema)
+        result = await self.http.generate(messages, max_output, schema, prepared=prepared,
+                                          enforce_timeout=enforce_timeout)
         result["events"] = [
             {
                 "type": "proxy_visibility",

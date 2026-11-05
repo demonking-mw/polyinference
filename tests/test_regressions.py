@@ -18,7 +18,7 @@ from polyinference.contracts import (
     TaskReport,
     TaskSpec,
 )
-from polyinference.domain import Check
+from polyinference.domain import Check, canonical
 from polyinference.runtime.adapter import StandaloneRuntime
 
 
@@ -31,6 +31,44 @@ async def connect(config, client=None):
             await old.close()
         runtime.clients = {name: client for name in runtime.clients}
     return runtime, app, engine
+
+
+async def test_context_budget_counts_json_escaped_complete_tool_pairs(config):
+    config = config.model_copy(
+        update={"limits": config.limits.model_copy(update={"max_input_tokens_per_call": 10000})}
+    )
+    runtime, app, _ = await connect(config)
+    history = [
+        {
+            "id": f"tool-{index}",
+            "reply": {"kind": "action", "tool": "files.read", "arguments": {"path": "a.py"}},
+            "observation": {"content": "\\" * 600},
+        }
+        for index in range(10)
+    ]
+    try:
+        view = app.context("Keep these instructions", {"objective": "Keep this task"}, history, "worker", {})
+        from polyinference.contracts import ContextView, ModelQuery
+        app.process("worker", "worker")
+        request = app.ensure_request("worker", "context-budget", ModelQuery(role="worker", phase="development",
+            prompt_template_ref="fixture/1", context=view, response_schema_ref="context-fixture/1",
+            capability_requirements=[], temperature=0, session_ref=None))
+        adapter = runtime.clients["local"]
+        def measure(messages):
+            wire = adapter.prepare(messages, config.limits.max_output_tokens_per_call, temperature=0)
+            return wire, len(canonical(wire))
+        messages, wire, receipt = await runtime.contexts.prepare(request, measure)
+        assert len(canonical(wire)) <= config.limits.max_input_tokens_per_call
+        assert {part.part_id for part in view.parts if part.required} == {"instructions", "pinned-data", "current-request"}
+        assert len([part for part in view.parts if part.part_kind == "tool_call"]) == len(history)
+        prepared = ContextView.model_validate(runtime.records.get("context-prepared/" + request.operation_id)[1]["context"])
+        assert receipt["omitted_refs"] and messages[-1]["role"] == "user"
+        view = prepared
+        calls = [part.call_id for part in view.parts if part.part_kind == "tool_call"]
+        results = [part.call_id for part in view.parts if part.part_kind == "tool_result"]
+        assert calls == results and calls[-1] == "tool-9"
+    finally:
+        await runtime.close()
 
 
 async def test_crash_after_durable_commit_and_publication_reuses_receipts(config):
@@ -139,7 +177,7 @@ async def test_worker_allowance_exhaustion_never_fabricates_assessment(config):
     config = config.model_copy(update={"limits": limits})
 
     class Looping(ScriptedAgent):
-        async def generate(self, messages, *args):
+        async def generate(self, messages, *args, **kwargs):
             data = json.loads(
                 next(m["content"] for m in messages if "Pinned application inputs:" in m["content"]).split(
                     "Pinned application inputs:\n", 1
@@ -169,7 +207,7 @@ async def test_steering_keeps_unstarted_task_pending_then_explicitly_cancels_it(
     config = config.model_copy(update={"max_workers": 1})
 
     class SteeringSenior(ScriptedAgent):
-        async def generate(self, messages, *args):
+        async def generate(self, messages, *args, **kwargs):
             data = json.loads(
                 next(m["content"] for m in messages if "Pinned application inputs:" in m["content"]).split(
                     "Pinned application inputs:\n", 1

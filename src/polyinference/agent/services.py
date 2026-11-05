@@ -28,10 +28,14 @@ from ..contracts import (
     ProgramRef,
     ScheduleContract,
     Scope,
+    TaskAttempt,
 )
 from ..domain import (
     PROGRAM_VERSION,
     STATE_VERSION,
+    Assessment,
+    Candidate,
+    GitPolicy,
     SeniorProposal,
     WorkerReply,
     canonical,
@@ -40,21 +44,151 @@ from ..domain import (
     operation_fingerprint,
 )
 from ..ports import RuntimePorts
-from .prompts import BOOTSTRAP, SENIOR, WORKER
+from .architecture import pinned_context
+from .diagnostics import DIAGNOSIS_PROMPT, DiagnosisPlan
+from .prompts import BOOTSTRAP, SENIOR, SENIOR_IN_PLACE, SENIOR_ISOLATED, WORKER
+from .review import report_view, repository_context
+from .runtime_policy import CheckSelection, CodingRuntimePolicy, configured_checks, purpose_checks
+from .schema import schema_text
 from .tasks import coding_tools
 
 
+class ModelOperationFailure(RuntimeError):
+    def __init__(self, result):
+        super().__init__(result.error.message if result.error else "Model operation failed")
+        self.result = result
+
+
+def owns_process(records, process_id, program_id="polyinference"):
+    process = records.get("process/" + process_id)
+    if not process:
+        return False
+    program = process[1].get("program")
+    if not program:
+        spec = records.get(process[1].get("spec_ref", ""))
+        program = spec[1].get("program") if spec else None
+    return bool(program and program.get("program_id") == program_id)
+
+
+def close_for_cancellation(records, process_id):
+    """The coding agent owns its drain policy; cancellation itself is an OS action."""
+    if not owns_process(records, process_id):
+        return
+    run = records.get("app/run")
+    if run:
+        records.compare_and_publish({"app/run": run[0]}, {"app/run": {
+            **run[1], "starts_closed": True, "completion_proposed": False,
+            "captured_workers": sorted(set(run[1]["active_workers"]) | set(run[1]["captured_workers"])),
+        }})
+
+
 class AgentServices:
+    @property
+    def check_definitions(self):
+        return configured_checks(self.config, self.ports.records)
+
+    @property
+    def acceptance_check_definitions(self):
+        return purpose_checks(self.config, self.ports.records, "acceptance")
+
+    @property
+    def task_check_definitions(self):
+        checks = [*purpose_checks(self.config, self.ports.records, "task"), *self.acceptance_check_definitions]
+        return list({check.name: check for check in checks}.values())
+
+    @property
+    def setup_check_definitions(self):
+        return purpose_checks(self.config, self.ports.records, "prerequisite") or self.task_check_definitions
+
     def __init__(self, ports: RuntimePorts, config, run_id="run"):
         self.ports, self.config, self.run_id = ports, config, run_id
         self.worker_tasks = {}
+        self.worker_limit = config.max_workers
+        self.repository = None
+        ports.processes.on_cancel = lambda pid: close_for_cancellation(ports.records, pid)
+        ports.on_reconciled = self.reconciled
+        from ..domain import Assessment, Candidate, NeedsReview
+
+        ports.register_agent_protocol(
+            "polyinference/senior-readonly/1", SeniorProposal.model_json_schema()
+        )
+        ports.register_agent_protocol(
+            "polyinference/worker-phase/1",
+            TypeAdapter(Candidate | Assessment | NeedsReview).json_schema(),
+            workspace="workspace", brokered=True,
+            instructions="Execute actions internally using polyinference_tool. Do not return an action as your "
+            "final answer. Finish this phase with candidate, assessment or needs_review. "
+            "The coding application owns phase changes and publication. "
+            "Use only polyinference_tool for files and commands. Native shell, patch and "
+            "filesystem tools must not modify the read-only native view.",
+        )
+        register = getattr(ports.operations, "register_response_validator", None)
+        if register:
+            register("worker/1", self.validate_worker_response)
+            register("senior/1", lambda text, payload: SeniorProposal.model_validate_json(text))
+            register("diagnosis/1", lambda text, payload: DiagnosisPlan.model_validate_json(text))
+        register_schema = getattr(ports.operations, "register_response_schema", None)
+        register_repair = getattr(ports.operations, "register_response_repair", None)
+        if register_repair:
+            from .worker_memory import repair
+
+            for schema_ref in ("worker/1", "senior/1", "diagnosis/1"):
+                register_repair(schema_ref, lambda request, error: repair(self, request, error))
+        if register_schema:
+            register_schema("diagnosis/1", DiagnosisPlan.model_json_schema())
+        ports.register_agent_protocol("runtime/readonly-query/1", DiagnosisPlan.model_json_schema())
+        from .diagnostics import register_source_reader
+
+        register_source_reader(self)
+        ports.register_agent_protocol("polyinference/diagnosis-readonly/1", DiagnosisPlan.model_json_schema(),
+            workspace="snapshot", brokered=True,
+            instructions="Inspect frozen source with coding.diagnostic_read and cataloged check outputs with "
+                         "coding.diagnostic_evidence_read through polyinference_tool. "
+                         "No writes, native shell, publication or external tools. Return the diagnosis schema.")
         self.program = ProgramRef(
             program_id="polyinference",
             program_version=PROGRAM_VERSION,
             graph_digest=digest(b"".join(p.read_bytes() for p in sorted(Path(__file__).parent.glob("*.py")))),
             state_schema_version=STATE_VERSION,
-            prompt_bundle_digest=digest((WORKER + SENIOR + BOOTSTRAP).encode()),
+            prompt_bundle_digest=digest((WORKER + SENIOR + SENIOR_IN_PLACE + SENIOR_ISOLATED + BOOTSTRAP + DIAGNOSIS_PROMPT).encode()),
         )
+        self.runtime_policy = CodingRuntimePolicy(self)
+        capacities = {}
+        for binding in sorted(set(config.role_bindings.values())):
+            endpoint = getattr(config, binding)
+            pair = config.token_limits_for_binding(binding)
+            output = pair.output_tokens if pair else None
+            capacities[binding] = {"model": endpoint.model, "protocol": endpoint.protocol,
+                "configured_context": pair.context_tokens if pair else None, "output_reservation": output,
+                "input_allowance": pair.input_tokens if pair else None,
+                "token_limit_owner": "os_local_pair" if pair else "provider",
+                "unit": "input_token_capacity", "reasoning_effort": endpoint.reasoning_effort,
+                "configured_input_counter": endpoint.input_token_count_path,
+                "max_request_bytes": config.request_byte_limit(),
+                "validation": "Configuration only; each actual adapter packet is measured before submission"}
+            if pair and capacities[binding]["input_allowance"] <= 0:
+                raise ValueError("Endpoint has no input capacity after output headroom: " + binding)
+        ports.records.put_once("coding/capacity-profile", capacities)
+        for check in self.check_definitions:
+            ports.tools.register_check(check)
+        ports.register_capability("checks.configure", self.runtime_policy.configure_checks, input_type=CheckSelection,
+                                  effect_class="private_write", workspace=True)
+        ports.register_publication_policy(self.program.program_id, self.runtime_policy.publication)
+        if config.repository_mode == "in_place":
+            from .repository import RepositoryWorkspaces
+
+            ports.register_agent_protocol("polyinference/git-policy/1",
+                                          GitPolicy.model_json_schema(), workspace="none")
+            self.repository = RepositoryWorkspaces(self)
+            ports.install_workspaces(self.repository)
+            ports.register_capability("coding.prepare", self.repository.prepare_capability,
+                                      effect_class="shared_write", workspace=False)
+            ports.register_capability("coding.reconfigure", self.repository.reconfigure,
+                                      effect_class="shared_write", workspace=False)
+            ports.register_capability("coding.commit", self.repository.commit_capability,
+                                      effect_class="shared_write", workspace=True)
+            ports.register_capability("coding.publish", self.repository.publish,
+                                      effect_class="shared_write", workspace=False)
 
     def get(self, key):
         row = self.ports.records.get(key)
@@ -62,9 +196,67 @@ class AgentServices:
             raise ValueError("Missing application record: " + key)
         return row[1]
 
+    async def reconciled(self, request, result):
+        """Restore coding work after the OS has established known termination."""
+        pid = request.scope.process_id
+        if not owns_process(self.ports.records, pid, self.program.program_id):
+            return
+        for key, _, task in self.ports.records.scan("task/"):
+            if task["process_id"] != pid or task.get("report_ref"):
+                continue
+            if self.ports.records.get("workspace/" + task["workspace_id"]):
+                await self.ports.workspaces.abort(task["workspace_id"])
+            failure = ({"operation_id": request.operation_id,
+                        "error": result.error.model_dump(mode="json") if result.error else None,
+                        "diagnostics": result.extensions}
+                       if isinstance(request.payload, (ModelQuery, AgentJob)) else None)
+            self.update(key, {**task, "execution": "interrupted",
+                              "exception": "Reconciled operation " + request.operation_id,
+                              "model_failure": failure})
+            attempt_key = "attempt/" + task["attempt_id"]
+            attempt = self.get(attempt_key)
+            self.update(attempt_key, {**attempt, "revision": attempt["revision"] + 1,
+                                      "execution": "interrupted", "stop_reason": "operator reconciliation"})
+        run = self.ports.records.get("app/run")
+        if run:
+            self.update("app/run", {**run[1], "status": "paused", "starts_closed": True,
+                                    "completion_proposed": False,
+                                    "active_workers": [p for p in run[1]["active_workers"] if p != pid],
+                                    "captured_workers": [p for p in run[1]["captured_workers"] if p != pid],
+                                    "blocker": "Termination reconciled; explicitly retry the model or revise the plan"})
+    @staticmethod
+    def validate_worker_response(text, payload):
+        reply = TypeAdapter(WorkerReply).validate_json(text)
+        phase = getattr(payload, "phase", None)
+        if isinstance(reply, Assessment) and phase != "assessment":
+            raise ValueError("Verdict outside assessment phase")
+        if isinstance(reply, Candidate) and phase == "assessment":
+            raise ValueError("Assessment requires a verdict")
+        return reply
+
     def update(self, key, body):
+        if key.startswith("attempt/"):
+            body = self.task_attempt(body).model_dump(mode="json")
         row = self.ports.records.get(key)
         self.ports.records.compare_and_publish({key: row[0] if row else 0}, {key: body})
+
+    def task_attempt(self, body, update=None):
+        """Validate the new value, preserving prose separately from reason codes.
+
+        Normalizing the old reason also permits retiring an invalid historical
+        attempt without losing the diagnostic that made its old schema invalid.
+        """
+        values = {**body, **(update or {})}
+        previous, reason = body.get("stop_reason"), values.get("stop_reason")
+        diagnostic = next((value for value in (reason, previous)
+                           if value and (len(value) > 256 or any(c.isspace() for c in value))), None)
+        if diagnostic:
+            ref = self.ports.artifacts.put(diagnostic.encode(), self.scope(), "text/plain")
+            values["extensions"] = {**values.get("extensions", {}),
+                                    "polyinference/stop-detail": ref.model_dump(mode="json")}
+        if reason and (len(reason) > 256 or any(c.isspace() for c in reason)):
+            values["stop_reason"] = values["execution"]
+        return TaskAttempt.model_validate(values)
 
     def scope(self, process_id=None):
         return Scope(
@@ -85,9 +277,13 @@ class AgentServices:
     def base(self, record_id):
         return dict(record_id=record_id, revision=1, scope=self.scope(), created_at=now())
 
-    def process(self, process_id, role, task_ref=None, task_data=None):
+    def process(
+        self, process_id, role, task_ref=None, task_data=None, *, entry_point=None, output_schema_ref=None
+    ):
         key = "process/" + process_id
         if self.ports.records.get(key):
+            if task_data and task_data.get("previous_process_id"):
+                self.ports.operations.bind_recovery(process_id, task_data["previous_process_id"])
             return
         endpoint_name = self.config.role_bindings[role]
         endpoint = getattr(self.config, endpoint_name)
@@ -95,8 +291,8 @@ class AgentServices:
             rule_id="static-role",
             roles=[role],
             phases=["*"],
-            axis="inference_location",
-            eligible_classes=[endpoint.physical_location],
+            axis="harness_class",
+            eligible_classes=[endpoint.protocol],
             target_weights={},
             enforcement="hard",
             unit="agent_jobs" if endpoint.protocol.startswith("codex") else "model_decisions",
@@ -118,10 +314,10 @@ class AgentServices:
                 minimum_residence_ms=0,
                 migration_boundaries=["before_start"],
             ),
-            data_policy=DataPolicy(
+            data_policy=self.config.data_policy or DataPolicy(
                 policy_ref="grant/run",
-                allowed_inference_locations=[endpoint.physical_location],
-                allowed_destination_classes=[endpoint_name],
+                allowed_inference_locations=["local", "cloud"],
+                allowed_destination_classes=sorted(set(self.config.role_bindings.values())),
                 maximum_classification="project",
             ),
             requirements=[],
@@ -136,11 +332,8 @@ class AgentServices:
             process_id=process_id,
             parent_process_id=None if process_id == "controller" else "controller",
             program=self.program,
-            entry_point="controller"
-            if process_id == "controller"
-            else "senior"
-            if role == "senior"
-            else "worker",
+            entry_point=entry_point
+            or ("controller" if process_id == "controller" else "senior" if role == "senior" else "worker"),
             role=role,
             input_refs=[self.artifact({"task_ref": task_ref, "objective": self.config.objective})],
             task_spec_ref=task_ref,
@@ -150,48 +343,28 @@ class AgentServices:
             budget_account_ref="budget/run",
             limits=self.config.limits,
             schedule=schedule,
-            output_schema_ref="senior/1" if role == "senior" else "worker/1",
+            output_schema_ref=output_schema_ref or ("senior/1" if role == "senior" else "worker/1"),
             resume_strategy="portable_context",
         )
-        status = ProcessStatus(
-            **self.base("process-status/" + process_id),
-            process_spec_ref=spec_ref,
-            state="ready",
-            phase="initial" if role == "senior" else "development",
-            owner_generation=1,
-            binding_generation=1,
-            binding_ref=endpoint_name,
-            wait=None,
-            pending_operations=[],
-            reservation_refs=[],
-            permit_refs=[],
-            continuation_ref=None,
-            terminal_result_ref=None,
-            cancellation_requested=False,
+        testing = bool(task_data and task_data["assignment"].get("kind") == "test")
+        self.ports.processes.register(
+            spec, endpoint_name, management=role == "senior",
+            capabilities=["coding.diagnostic_read", "coding.diagnostic_evidence_read"] if entry_point == "check_diagnosis" else [
+                          *coding_tools(self.config, task_data and task_data.get("category") == "setup",
+                                        test=testing),
+                          *([] if testing else ["workspace.commit", "workspace.retain", "records.publish",
+                                                *(["coding.commit", "coding.publish"] if self.repository else [])]),
+                          *(["coding.prepare", "coding.reconfigure"]
+                            if self.repository and process_id == "controller" else []),
+                          *(["outputs.deliver"] if process_id == "controller" else [])],
         )
-        self.ports.records.compare_and_publish(
-            {key: 0},
-            {
-                key: {
-                    "process_id": process_id,
-                    "owner_generation": 1,
-                    "role": role,
-                    "task_ref": task_ref,
-                    "state": "ready",
-                    "program": self.program.model_dump(mode="json"),
-                    "spec_ref": spec_ref,
-                    "started_at": now().isoformat(),
-                    "report_ref": None,
-                }
-            },
-            {spec_ref: spec.model_dump(mode="json"), status.record_id: status.model_dump(mode="json")},
-        )
+        if task_data and task_data.get("previous_process_id"):
+            self.ports.operations.bind_recovery(process_id, task_data["previous_process_id"])
 
     def process_status(self, process_id, **updates):
         key = "process-status/" + process_id
         current = self.ports.records.get(key)
-        status = ProcessStatus.model_validate(current[1])
-        status = status.model_copy(update={**updates, "revision": status.revision + 1})
+        status = ProcessStatus.model_validate({**current[1], **updates, "revision": current[1]["revision"] + 1})
         self.ports.records.compare_and_publish({key: current[0]}, {key: status.model_dump(mode="json")})
 
     def memory_view(self):
@@ -206,60 +379,38 @@ class AgentServices:
             ],
         }
 
-    def review_report(self, report):
+    def user_updates(self, through):
+        return sorted(
+            (body for _, _, body in self.ports.records.scan("steering/") if body["sequence"] <= through),
+            key=lambda body: body["sequence"],
+        )
+
+    async def review_report(self, report):
+        return await report_view(self, report)
+
+    def evidence_view(self, evidence, cap=3000):
+        ref = ArtifactRef.model_validate(evidence["output"])
+        raw = self.ports.artifacts.read(ref)
+        excerpt = (
+            raw
+            if len(raw) <= cap
+            else raw[: cap // 2] + b"\n[...truncated; full output in output_ref...]\n" + raw[-cap // 2 :]
+        )
         return {
-            "record_id": report["record_id"],
-            "task_spec_ref": report["task_spec_ref"],
-            "verdict": report["verdict"],
-            "resolution": report["resolution"],
-            "comment": self.read(report["assessment_summary"]),
-            "captured_head": report["captured_head"],
-            "final_code": report["final_code"],
-            "candidate_commit_id": report["candidate_commit_id"],
-            "hazard_refs": report["hazard_refs"],
-            "evidence": [
-                {
-                    "criterion": e["criterion_ref"],
-                    "status": e["status"],
-                    "exit_code": e["exit_code"],
-                    "checked_code": e["checked_code"],
-                    "output_ref": e["output"],
-                    "output_preview": self.ports.artifacts.read(ArtifactRef.model_validate(e["output"]))[
-                        :800
-                    ].decode(errors="replace"),
-                }
-                for e in report["evidence"]
-            ],
+            "criterion": evidence["criterion_ref"],
+            "evidence_id": evidence["evidence_id"],
+            "status": evidence["status"],
+            "exit_code": evidence["exit_code"],
+            "checked_code": evidence["checked_code"],
+            "output_ref": evidence["output"],
+            "output_preview": excerpt.decode(errors="replace"),
+            "truncated": len(raw) > cap,
         }
 
-    async def repository_context(self, code):
-        from ..contracts import CodeRevision
+    async def repository_context(self, code, changed_paths=()):
+        return await repository_context(self, code, changed_paths)
 
-        tree = await self.ports.workspaces.tree(CodeRevision.model_validate(code).commit_id)
-        selected = list(dict.fromkeys(self.config.allowed_write_paths + self.config.closure_paths))
-        remaining, contents = 5000, []
-        for path in selected:
-            if path not in tree or remaining <= 0:
-                continue
-            content = tree[path][1]
-            preview = content[: min(remaining, 2000)]
-            remaining -= len(preview)
-            contents.append(
-                {
-                    "path": path,
-                    "digest": digest(content),
-                    "content": preview.decode(errors="replace"),
-                    "truncated": len(preview) < len(content),
-                }
-            )
-        return {
-            "paths": sorted(tree)[:100],
-            "omitted_path_count": max(0, len(tree) - 100),
-            "contents": contents,
-            "source_code": code,
-        }
-
-    def ensure_request(self, process_id, step, payload, view=None, protected=False):
+    def ensure_request(self, process_id, step, payload, view=None, protected=False, recovery=None):
         key = f"request/{process_id}/{step}"
         existing = self.ports.records.get(key)
         if existing:
@@ -274,6 +425,9 @@ class AgentServices:
             created + timedelta(milliseconds=limits.max_wall_time_ms),
             datetime.fromisoformat(process["started_at"]) + timedelta(milliseconds=limits.max_wall_time_ms),
         )
+        cutoff = self.ports.operations.process_deadline(process_id)
+        if cutoff:
+            deadline = min(deadline, cutoff)
         request = OperationRequest(
             **{**self.base(key), "scope": self.scope(process_id)},
             operation_id=digest(f"{self.run_id}:{process_id}:{step}".encode()),
@@ -294,19 +448,68 @@ class AgentServices:
             safe_boundary="protected_phase" if protected else "settled_operation",
             replay_policy="reconcile_before_retry",
             payload=payload,
-            required_features=[Feature(feature_id="runtime/workspace-view", version="1")] if view else [],
-            extensions={"polyinference/workspace-view": view} if view else {},
+            required_features=[
+                *([Feature(feature_id="runtime/inference-policy", version="1")]
+                  if isinstance(payload, (ModelQuery, AgentJob)) and self.config.inference_policy else []),
+                *([Feature(feature_id="runtime/workspace-view", version="1")] if view else []),
+                *([Feature(feature_id="runtime/model-recovery", version="1")] if recovery else []),
+            ],
+            extensions={
+                **({"runtime/inference-policy": self.config.inference_policy.model_dump(mode="json")}
+                   if isinstance(payload, (ModelQuery, AgentJob)) and self.config.inference_policy else {}),
+                **({"polyinference/workspace-view": view} if view else {}),
+                **({"polyinference/recovery-of": recovery["operation_id"],
+                    "polyinference/recovery-reason": recovery["reason"]} if recovery else {}),
+            },
         )
+        if isinstance(payload, ModelQuery) and payload.phase == "development" and limits.final_phase_reserve:
+            reserve = limits.final_phase_reserve
+            request = request.model_copy(
+                update={
+                    "extensions": {
+                        **request.extensions,
+                        "polyinference/inference-call-reserve": reserve.reconciliation_model_calls
+                        + reserve.assessment_model_calls,
+                    }
+                }
+            )
         request = request.model_copy(update={"intent_digest": operation_fingerprint(request)})
         self.ports.records.compare_and_publish({}, {}, {key: request.model_dump(mode="json")})
         return request
 
-    async def effect(self, process_id, step, payload, view=None, protected=False):
+    async def effect(self, process_id, step, payload, view=None, protected=False, recovery=None):
         result = await self.ports.operations.execute(
-            self.ensure_request(process_id, step, payload, view, protected)
+            self.ensure_request(process_id, step, payload, view, protected, recovery)
         )
         if not result.output_refs:
             raise RuntimeError("Effect returned no observation")
+        return result, self.read(result.output_refs[0])
+
+    def model_call_count(self, process_id):
+        return sum(
+            body["request"]["scope"]["process_id"] == process_id
+            and body["request"]["payload"]["kind"] in {"model_query", "agent_job"}
+            for _, _, body in self.ports.records.scan("effect/")
+        )
+
+    async def preserve_interrupted(self, task_ref):
+        if not self.repository:
+            return
+        task = self.get(task_ref)
+        if not self.ports.records.get("workspace/" + task["workspace_id"]):
+            return
+        try:
+            ref = await self.repository.preserve_interrupted(task["workspace_id"])
+            if ref:
+                self.update(task_ref, {**task, "preserved_source_ref": ref})
+        except Exception as exc:
+            self.update(task_ref, {**task, "preservation_issue": str(exc)[:2000]})
+
+    async def model_result(self, original):
+        """The OS owns I/O recovery; application grammar stays in this agent."""
+        result = await self.ports.operations.execute(original)
+        if result.state != "succeeded" and not (result.error and result.error.code in {"ResponseValidationError", "ReservedInferenceCalls"}):
+            raise ModelOperationFailure(result)
         return result, self.read(result.output_refs[0])
 
     def history(self, ref):
@@ -320,9 +523,20 @@ class AgentServices:
         history.append({"id": call_id, "reply": reply, "observation": observation})
         return self.artifact(history).model_dump(mode="json")
 
+    def append_feedback(self, ref, event_id, feedback, *, source_ref, received=None):
+        history = self.history(ref)
+        if any(entry["id"] == event_id for entry in history):
+            return ref
+        if received is not None:
+            feedback = {**feedback, "received_output_ref": self.artifact(received).model_dump(mode="json")}
+        history.append({"id": event_id, "feedback": feedback, "source_ref": source_ref})
+        return self.artifact(history).model_dump(mode="json")
+
     def context(self, instruction, data, history, process_id, schema):
-        schema_text = "Return JSON matching this schema: " + json.dumps(schema)
-        text = instruction + "\n" + schema_text
+        text = instruction + "\nReturn JSON matching this schema: " + schema_text(schema)
+        data = dict(data)
+        memory = data.pop("memory", None)
+        focused_source = data.pop("focused_source", None)
         data_text = "Pinned application inputs:\n" + json.dumps(data)
         instruction_ref = self.ports.artifacts.put(text.encode(), self.scope(process_id), "text/plain")
         parts = [
@@ -346,21 +560,38 @@ class AgentServices:
                 required=True,
             )
         )
+        if memory is not None:
+            parts.append(ContextPart(part_id="agent-memory",
+                content=self.ports.artifacts.put(canonical(memory), self.scope(process_id)),
+                part_kind="data", trust="retrieved", source_ref="agent/working-memory",
+                required=True, compactable=True))
+        if focused_source:
+            parts.append(ContextPart(part_id="focused-source", content=self.artifact(focused_source, process_id),
+                part_kind="data", trust="retrieved", source_ref="agent/source-focus", required=False,
+                retention_priority=90))
         omitted = []
-        # Keep complete pairs; no partial provider tool-call records or mixed-worker histories.
-        selected = []
-        budget = (
-            self.config.limits.max_input_tokens_per_call - len(text.encode()) - len(data_text.encode()) - 2000
-        )
-        for entry in reversed(history):
-            size = len(canonical(entry))
-            if size > budget:
-                omitted.append(entry["id"])
-                continue
-            selected.insert(0, entry)
-            budget -= size
-        for entry in selected:
+        # Supply complete history; the OS applies the declared context policy.
+        selected = history
+        from .worker_memory import history_priority
+
+        for index, entry in enumerate(selected):
             call_id = entry["id"]
+            active_errors = {e["event"] for e in data["worker_state"]["errors"]} if "worker_state" in data else None
+            priority = history_priority(entry, data.get("assignment", {}), recent=index >= len(selected) - 4,
+                                        active_errors=active_errors)
+            if "feedback" in entry:
+                parts.append(
+                    ContextPart(
+                        part_id=call_id + "/feedback",
+                        content=self.artifact({"application_feedback": entry["feedback"]}, process_id),
+                        part_kind="data",
+                        trust="application",
+                        source_ref=entry["source_ref"],
+                        required=False,
+                        retention_priority=priority,
+                    )
+                )
+                continue
             action = entry["reply"].get("kind") == "action"
             content = self.ports.artifacts.put(canonical(entry["reply"]), self.scope(process_id))
             parts.append(
@@ -371,6 +602,7 @@ class AgentServices:
                     trust="model",
                     source_ref=call_id,
                     required=False,
+                    retention_priority=priority,
                     call_id=call_id if action else None,
                 )
             )
@@ -386,54 +618,71 @@ class AgentServices:
                         trust="external_tool",
                         source_ref=call_id,
                         required=False,
+                        retention_priority=priority,
                         call_id=call_id,
                     )
                 )
+        request_text = (
+            "Host request: continue this invocation using the pinned application inputs above. "
+            "The current phase is " + str(data.get("phase", "planning/review")) + ". "
+            "Historical replies describe previous turns. Return the next response required by the current phase."
+        )
+        parts.append(ContextPart(
+            part_id="current-request",
+            content=self.ports.artifacts.put(request_text.encode(), self.scope(process_id), "text/plain"),
+            part_kind="data", trust="application", source_ref="agent/current-phase", required=True,
+        ))
         return ContextView(
             view_id=digest(canonical([p.model_dump(mode="json") for p in parts])),
             digest=digest(canonical([p.content.digest for p in parts])),
             parts=parts,
             memory_snapshot_refs=[],
             tool_catalog_digest=digest(
-                canonical({"tools": coding_tools(self.config), "setup_tool": "repository.select_branch"})
+                canonical({"tools": coding_tools(self.config, setup=True)})
             ),
             maximum_input_tokens=self.config.limits.max_input_tokens_per_call,
             omitted_refs=omitted,
         )
 
-    def sync_setup(self, state):
+    async def sync_setup(self, state):
         task_key = state["task_ledger_ref"]
         task = self.get(task_key)
         if task.get("category") != "setup":
             return
-        from ..contracts import TaskAttempt, TaskSpec
+        from ..contracts import TaskSpec
 
         manifest = self.ports.workspaces.current(state["workspace_id"])
         selection = self.ports.records.get("branch-selection/" + manifest.workspace_id)
         selected = selection and not self.ports.records.get("setup/base-adopted")
         old_spec = TaskSpec.model_validate(self.get(task["spec_ref"]))
-        if not selected and old_spec.allowed_change_scope == manifest.allowed_write_paths:
+        names = [check.name for check in self.setup_check_definitions]
+        if (
+            not selected and old_spec.allowed_change_scope == manifest.allowed_write_paths
+            and task["assignment"]["checks"] == names
+        ):
             return
         base = selection[1]["code"] if selected else task["base"]
-        spec_id = old_spec.record_id + ":prepared-" + str(manifest.generation)
+        spec_id = old_spec.record_id + ":prepared-" + str(manifest.generation) + "-" + digest(canonical(names))[7:19]
         spec = old_spec.model_copy(
             update={
                 "record_id": spec_id,
                 "base": CodeRevision.model_validate(base),
                 "allowed_change_scope": manifest.allowed_write_paths,
+                "acceptance_spec": self.artifact(names),
             }
         )
         attempt_key = "attempt/" + task["attempt_id"]
-        attempt = TaskAttempt.model_validate(self.get(attempt_key))
-        attempt = attempt.model_copy(
-            update={"revision": attempt.revision + 1, "task_spec_ref": spec_id, "original_base": spec.base}
+        attempt_body = self.get(attempt_key)
+        attempt = self.task_attempt(
+            attempt_body, update={"revision": attempt_body["revision"] + 1,
+                                  "task_spec_ref": spec_id, "original_base": spec.base}
         )
         updates = {
             task_key: {
                 **task,
                 "base": base,
                 "spec_ref": spec_id,
-                "assignment": {**task["assignment"], "write_paths": manifest.allowed_write_paths},
+                "assignment": {**task["assignment"], "write_paths": manifest.allowed_write_paths, "checks": names},
             },
             attempt_key: attempt.model_dump(mode="json"),
         }
@@ -451,20 +700,30 @@ class AgentServices:
                 "base_commit": base["commit_id"],
             }
             immutable["setup/base-adopted"] = selection[1]
-        self.ports.workspaces.retag_task_spec(manifest.workspace_id, spec_id, updates, immutable)
+        await self.ports.workspaces.retag_task_spec(manifest.workspace_id, spec_id, updates, immutable)
 
     async def model(self, state, senior=False):
         pid = state["process_id"]
         retained = self.ports.records.get(f"request/{pid}/model-{state['logical_step']}")
         if retained:
-            result = await self.ports.operations.execute(OperationRequest.model_validate(retained[1]))
-            output = self.read(result.output_refs[0])
-            if result.state != "succeeded":
+            result, output = await self.model_result(OperationRequest.model_validate(retained[1]))
+            if (
+                not senior
+                and state["phase"] == "development"
+                and result.error
+                and result.error.code == "ReservedInferenceCalls"
+            ):
+                return {"kind": "candidate", "summary": "Development allowance ended; preserve final phases"}
+            if result.state != "succeeded" and not (
+                result.error and result.error.code == "ResponseValidationError"
+            ):
                 raise RuntimeError(str(output))
             if not senior:
-                self.sync_setup(state)
+                await self.sync_setup(state)
             try:
                 reply = json.loads(output["text"])
+                if not isinstance(reply, dict):
+                    return {"invalid_output": output["text"][:2000]}
                 if not senior and state["phase"] == "assessment" and reply.get("kind") == "assessment":
                     pinned_part = next(
                         part
@@ -484,15 +743,55 @@ class AgentServices:
         process = self.get("process/" + pid)
         role = "senior" if senior else process["role"]
         if senior:
-            data = state["input"]
+            data = dict(state["input"])
             schema, instruction, phase = SeniorProposal.model_json_schema(), SENIOR, state["mode"]
+            instruction += SENIOR_IN_PLACE if self.repository else SENIOR_ISOLATED
+            reads_used = state.get("review_reads_used", 0)
+            corrections_used = state.get("corrections_used", 0)
+            data["review_limits"] = {
+                "max_review_reads": self.config.max_review_reads,
+                "review_reads_used": reads_used,
+                "remaining_review_reads": max(0, self.config.max_review_reads - reads_used),
+                "max_read_requests_per_proposal": schema["properties"]["read_requests"]["maxItems"],
+                "max_bytes_per_read": schema["$defs"]["ReviewRead"]["properties"]["max_bytes"]["maximum"],
+                "max_senior_corrections": self.config.max_senior_corrections,
+                "corrections_used": corrections_used,
+                "remaining_corrections": max(0, self.config.max_senior_corrections - corrections_used),
+            }
+            run = self.get("app/run")
+            data["planning_limits"] = {
+                "max_sprints": self.config.max_sprints,
+                "sprints_used": run["sprint"],
+                "remaining_sprints": max(0, self.config.max_sprints - run["sprint"]),
+                "max_workers": self.config.max_workers,
+                "max_worker_recoveries": self.config.max_worker_recoveries,
+                "max_cloud_recoveries": self.config.max_cloud_recoveries,
+                "max_protocol_corrections": self.config.max_protocol_corrections,
+                "inference_retry": self.config.inference_retry.model_dump(mode="json"),
+                "check_diagnosis": self.config.check_diagnosis.model_dump(mode="json"),
+                "progress_monitor": self.config.progress_monitor.model_dump(mode="json"),
+            }
         else:
             task = self.get(state["task_ledger_ref"])
             manifest = self.ports.workspaces.current(state["workspace_id"])
             current = await self.ports.workspaces.revision(state["workspace_id"])
+            plan = self.ports.records.get(task.get("plan_ref", ""))
             data = {
                 "assignment": task["assignment"],
+                "user_objective": self.config.objective,
+                "user_updates": self.user_updates(plan[1].get("steering_through", 0) if plan else 0),
+                "requirement_policy": "Preserve the user's constraints; this assignment does not replace or narrow them.",
+                "module_context": pinned_context(self, self.get(state["task_spec_ref"]))
+                if state.get("task_spec_ref")
+                else [],
                 "phase": state["phase"],
+                "remaining_model_calls": max(
+                    0,
+                    self.config.limits.max_model_calls
+                    - getattr(
+                        self.ports.operations, "inference_calls_used", lambda pid: state.get("calls", 0)
+                    )(pid),
+                ),
                 "workspace_generation": manifest.generation,
                 "workspace_view": manifest.view,
                 "code": current.model_dump(mode="json"),
@@ -500,13 +799,75 @@ class AgentServices:
                 "evidence": state.get("evidence", []),
                 "hazards": [v for _, _, v in self.ports.records.scan("hazard/")],
                 "memory": self.memory_view(),
+                "configured_checks": [check.model_dump(mode="json") for check in self.check_definitions],
+                "check_purposes": {purpose: [c.name for c in purpose_checks(self.config, self.ports.records, purpose)]
+                                   for purpose in ("prerequisite", "task", "acceptance")},
+                "progress_attention": state.get("progress_attention"),
             }
             schema, instruction, phase = TypeAdapter(WorkerReply).json_schema(), WORKER, state["phase"]
             if task.get("category") == "setup":
                 instruction += BOOTSTRAP
                 data["repository_setup"] = self.get("repository/setup")
-                data["user_objective"] = self.config.objective
-            data["available_tools"] = coding_tools(self.config, task.get("category") == "setup")
+            data["write_authority"] = self.ports.workspaces.authority(manifest.workspace_id)
+            data["available_tools"] = coding_tools(self.config, task.get("category") == "setup",
+                                                  test=task["assignment"].get("kind") == "test")
+            from .worker_memory import project
+
+            data["worker_state"] = project(self, state, current.model_dump(mode="json"))
+            from .diagnostics import source_previews
+
+            failure = state.get("last_check_evidence") or next(
+                (e for e in reversed(state.get("evidence", [])) if e.get("status") != "passed"), None)
+            failure_text = self.evidence_view(failure).get("output_preview", "") if failure else ""
+            data["focused_source"] = source_previews(await self.ports.workspaces.private_tree(manifest.workspace_id),
+                task["assignment"], self.check_definitions, failure_text)
+            data["implementation_focus"] = {
+                "behavior": task["assignment"].get("behavior") or task["assignment"]["objective"],
+                "focused_check": task["assignment"].get("focused_check") or task["assignment"]["checks"],
+                "source_paths": [p["path"] for p in data["focused_source"]],
+                "completion_rule": "Report expected versus observed test behavior using assigned check receipts; "
+                    "leave source unchanged and request a separate edit if needed. No result file is required."
+                    if task["assignment"].get("kind") == "test" else
+                    "Verify the assigned consumer/entry behavior. An existing API alone is not "
+                    "an integrated feature. Already-complete work needs exact-source behavior evidence; edits are not mandatory."}
+            if task.get("previous_process_id"):
+                predecessor = self.get(self.get("attempt/" + task["attempt_id"])["previous_attempt_ref"])
+                packet_ref = "worker-exception/" + predecessor["record_id"].removeprefix("attempt/")
+                packet = self.get(packet_ref)
+                data["recovery_context"] = {
+                    "exception_ref": packet_ref, "reason": packet["reason"],
+                    "failed_phase": packet["phase"], "progress_attention": packet.get("progress_attention"),
+                    "changed_condition": task.get("recovery_condition"),
+                    "source_reused": bool(task.get("source_delta_ref")),
+                    "cloud_recoveries": task.get("cloud_recoveries", 0),
+                    "policy": "Continue the original assignment kind using a changed approach; all original resource limits still apply",
+                }
+        if self.repository:
+            notes = self.ports.records.get("coding/startup-notes")
+            data["startup_notes"] = notes[1]["notes"] if notes else []
+            data["preparation_issues"] = self.repository.preparation_issues(
+                None if senior else state["workspace_id"])
+        endpoint = getattr(self.config, self.config.role_bindings[role])
+        pair = self.config.token_limits(role)
+        limits = self.get(process["spec_ref"])["limits"]
+        data["resource_limits"] = {
+            **limits,
+            "max_input_tokens_per_call": pair.input_tokens if pair else None,
+            "max_output_tokens_per_call": pair.output_tokens if pair else None,
+            "token_limit_owner": "os_local_pair" if pair else "provider",
+            "max_model_request_bytes": self.config.request_byte_limit(),
+            "max_model_response_bytes": self.config.max_model_response_bytes,
+        }
+        data["resources"] = self.ports.operations.resource_state(pid)
+        data["finishing_reserve"] = limits.get("final_phase_reserve")
+        data["response_budget"] = {
+            "max_output_tokens": pair.output_tokens if pair else None,
+            "max_input_tokens": pair.input_tokens if pair else None,
+            "token_limit_owner": "os_local_pair" if pair else "provider",
+            "max_output_bytes": self.config.limits.max_output_bytes,
+            "recommended_response_bytes": min(4096, self.config.limits.max_output_bytes),
+            "policy": "Includes thinking. Use small complete responses and incremental edits across turns.",
+        }
         context = self.context(instruction, data, self.history(state.get("trajectory_ref")), pid, schema)
         endpoint = getattr(self.config, self.config.role_bindings[role])
         if endpoint.protocol in {"codex_app_server", "codex_proxy"}:
@@ -517,7 +878,7 @@ class AgentServices:
                 workspace_id=state.get("workspace_id", "senior-snapshot"),
                 allowed_capabilities=[]
                 if senior
-                else coding_tools(self.config, task.get("category") == "setup"),
+                else data["available_tools"],
                 required_phase_protocol="polyinference/senior-readonly/1"
                 if senior
                 else "polyinference/worker-phase/1",
@@ -544,21 +905,34 @@ class AgentServices:
                 "generation": manifest.generation,
                 "view": manifest.view,
             }
-        result, output = await self.effect(
+        request = self.ensure_request(
             pid,
             f"model-{state['logical_step']}",
             payload,
             view,
             protected=bool(state.get("verification_permit_ref")),
+            recovery=state.get("model_recovery"),
         )
-        if result.state != "succeeded":
+        result, output = await self.model_result(request)
+        if (
+            not senior
+            and state["phase"] == "development"
+            and result.error
+            and result.error.code == "ReservedInferenceCalls"
+        ):
+            return {"kind": "candidate", "summary": "Development allowance ended; preserve final phases"}
+        if result.state != "succeeded" and not (
+            result.error and result.error.code == "ResponseValidationError"
+        ):
             raise RuntimeError(output.get("error", "Model effect failed"))
         if len(output["text"].encode()) > self.config.limits.max_output_bytes:
             raise ValueError("Model output exceeds cap")
         if not senior:
-            self.sync_setup(state)
+            await self.sync_setup(state)
         try:
             reply = json.loads(output["text"])
+            if not isinstance(reply, dict):
+                return {"invalid_output": output["text"][:2000]}
             if not senior and state["phase"] == "assessment" and reply.get("kind") == "assessment":
                 after = await self.ports.workspaces.revision(state["workspace_id"])
                 if after.effective_tree_digest != current.effective_tree_digest:
@@ -568,15 +942,22 @@ class AgentServices:
         return reply
 
     async def capability(self, state, step, tool, args, effect_class="read"):
+        if self.repository and tool == "checks.run":
+            await self.repository.prepare_dependencies(state)
+        if self.repository:
+            tool = {"workspace.commit": "coding.commit", "records.publish": "coding.publish"}.get(tool, tool)
         retained = self.ports.records.get(f"request/{state['process_id']}/{step}")
         if retained:
             result = await self.ports.operations.execute(OperationRequest.model_validate(retained[1]))
             return result, self.read(result.output_refs[0])
-        workspace_id = state.get("workspace_id")
+        capability = self.ports.capabilities.get(tool)
+        workspace_id = state.get("workspace_id") if capability.workspace else None
+        if workspace_id:
+            args = {"generation": self.ports.workspaces.current(workspace_id).generation, **args}
         expected = await self.ports.workspaces.revision(workspace_id) if workspace_id else None
         payload = CapabilityCall(
             capability_id=tool,
-            schema_digest=digest(tool.encode()),
+            schema_digest=capability.schema_digest,
             arguments=self.artifact(args, state["process_id"]),
             model_call_id=f"turn-{state['logical_step']}" if str(step).startswith("tool-") else None,
             workspace_id=workspace_id,

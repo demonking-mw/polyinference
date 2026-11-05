@@ -87,7 +87,7 @@
       "migration_registry_ref": null,
       "design_basis": {
         "source_path": "design-docs/polyinference-design/polyinference-agent-design-merged.html",
-        "html_digest": "sha256:9337cfe93b796e7154734fe7a860858eebbdf74ec80528781b79a8295d2d34a6",
+        "html_digest": "sha256:196edd29d8cd7ec8da34d675ae71fd5f72b4a692c06d517782f85d0b8b45799c",
         "document_id": "polyinference-merged-user-layout-20261017",
         "execution_node_count": 23,
         "execution_edge_count": 57,

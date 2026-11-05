@@ -1,0 +1,50 @@
+# Optional workspaces and source classification
+
+[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
+
+Generic source views, grants and private execution state support attached directories and explicit isolated copies.
+
+| File | Responsibility |
+| --- | --- |
+| [src/polyinference/runtime/workspace.py](../../src/polyinference/runtime/workspace.py) | Workspace manifests/grants, attached authority, source snapshots, generations and legacy isolated integration helpers. |
+| [src/polyinference/runtime/workspace_state.py](../../src/polyinference/runtime/workspace_state.py) | Declared-output/source classification, dependency identity, private environment copies and disk accounting. |
+
+## Interface and ownership
+
+A registered process receives an explicit narrower workspace grant. Attached
+views are not copied over user source; coding RepositoryWorkspaces supplies Git
+policy. General processes may use no workspace. Compatibility task refs are opaque.
+WriteScopeError is defined in public ports; workspace_state re-exports the same
+class for existing callers, preserving structured details and catch identity.
+
+Ignore/exclusion lists, dependency/environment classification and compatibility
+Git identity defaults use [central OS tuning](../guides/os-tuning.md). The coding
+provider consumes the resolved ignore list; protected source still takes precedence.
+Resolved tuning also participates in the environment digest used by check evidence.
+
+## Principles to preserve
+
+- Current generation/content and source scope remain authoritative.
+- Tracked/granted source takes precedence over declared generated output.
+- Ignore files never grant authority or hide protected source.
+- Reuse private dependencies only while manifests/locks match.
+- Attached scope failures preserve edits and block mutation; no copy rollback.
+
+## Verification and related reading
+
+[Workspace outputs](../../tests/test_workspace_outputs.py), [in-place repository](../../tests/test_in_place_repository.py),
+[runtime](../../tests/test_runtime.py) and [capability boundary](../../tests/test_capability_boundary.py).
+
+[Repository policy](repository.md) · [FIX-0034–0035](../../development-docs/FIXES.md#fix-0034).
+
+After a fix/feature, update this guide and all affected docs/settings/navigation,
+then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
+Follow [documentation maintenance](../maintenance.md) in the same task.
+
+## Integrated reliability branch (2026-10-26)
+
+An immutable prepare_workspace_snapshot captures a parked private view for evidence.
+Explicit validate_handoff/apply_handoff reuse only its scoped development delta,
+checking the current base and replacement grant. In-place repository source remains
+preserved; integration repairs are not flattened into the original delta. Native
+snapshot preparation remains asynchronous and honors the explicit proxy binding.

@@ -28,7 +28,7 @@ The longer-term vision is to accept an agent design, adapt it to an available mo
 
 The initial preference is a thin LangGraph loop inspired by mini-swe-agent, borrowing selected necessities from the richer harnesses. Keep inference routing explicit. Adopting the Deep Agents SDK remains an alternative if it reduces effort without obscuring routing or adding unused behavior.
 
-The accompanying [interactive architecture study](references/docs/agent-structures.html) compares these references and proposes the Stage 1 graph in detail.
+The accompanying [interactive architecture study](../../references/docs/agent-structures.html) compares these references and proposes the Stage 1 graph in detail.
 
 ## Stage 1 scope
 

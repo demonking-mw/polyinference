@@ -1,71 +1,118 @@
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Annotated, Literal
 
 from pydantic import Field, model_validator
 
-from .contracts import Limits, Wire
-from .domain import Check, default_limits
+from .contracts import InferencePolicy, Wire
+from .execution_contracts import Check
+from .system_settings import Endpoint, RetryModel, RuntimeConfig
 from .workspace_contracts import RelativePath
 
-
-class Endpoint(Wire):
-    protocol: Literal["chat", "responses", "gemini", "anthropic", "codex_app_server", "codex_proxy"] = "chat"
-    base_url: str = "http://127.0.0.1:8000/v1"
-    model: str
-    api_key_env: str | None = None
-    command: list[str] = Field(default_factory=lambda: ["codex", "app-server"])
-    max_inflight: Annotated[int, Field(gt=0, le=32)] = 2
-    max_context_tokens: Annotated[int, Field(gt=0)] = 32000
-    reserved_context_tokens: Annotated[int, Field(gt=0)] = 64000
-    readonly_snapshot_root: str | None = None
-    brokered_tools: bool = False
-    inference_location: Literal["local", "cloud"] | None = None
-    timeout_seconds: Annotated[float, Field(gt=0, le=1800)] = 180
-
-    @property
-    def physical_location(self):
-        if self.inference_location:
-            return self.inference_location
-        from urllib.parse import urlparse
-
-        return (
-            "local"
-            if self.protocol in {"chat", "responses"}
-            and urlparse(self.base_url).hostname in {"127.0.0.1", "localhost", "::1"}
-            else "cloud"
-        )
+__all__ = ["AgentConfig", "Endpoint", "RuntimeConfig"]
 
 
-class AgentConfig(Wire):
-    repository: str
-    state_directory: str = ".polyinference"
-    objective: Annotated[str, Field(min_length=1)]
-    allowed_write_paths: Annotated[list[RelativePath], Field(min_length=1)]
-    closure_paths: list[RelativePath] = Field(default_factory=list)
-    checks: Annotated[list[Check], Field(min_length=1)]
-    local: Endpoint
-    cloud: Endpoint
-    role_bindings: dict[str, Literal["local", "cloud"]] = Field(
-        default_factory=lambda: {"senior": "cloud", "worker": "local", "specialist": "cloud"}
-    )
-    prepare_repository: bool = False
-    base_branch: str | None = None
-    write_scope: Literal["explicit", "project"] = "explicit"
-    shell_execution: Literal["disabled", "trusted", "bubblewrap"] = "disabled"
-    senior_development_fraction: Annotated[float, Field(ge=0, le=1)] = 0.1
-    max_workers: Annotated[int, Field(gt=0, le=16)] = 2
-    max_sprints: Annotated[int, Field(gt=0, le=100)] = 8
-    max_senior_corrections: Annotated[int, Field(ge=0, le=3)] = 1
-    limits: Limits = Field(default_factory=default_limits)
-    run_token_budget: Annotated[int, Field(gt=0)] = 64000000
-    max_artifact_bytes: Annotated[int, Field(gt=0)] = 128 * 1024 * 1024
-    max_workspace_bytes: Annotated[int, Field(gt=0)] = 64 * 1024 * 1024
-    check_execution: Literal["disabled", "trusted", "bubblewrap"] = "disabled"
+class InferenceRetry(Wire):
+    max_attempts: Annotated[int, Field(ge=2, le=8)] = 2
+    replacement_wait_seconds: Annotated[float, Field(ge=0, le=60)] = 1
+
+
+class CheckDiagnosis(Wire):
+    role: Literal["worker", "specialist", "senior"] = "worker"
+    max_rounds: Annotated[int, Field(ge=0, le=3)] = 1
+    max_read_paths: Annotated[int, Field(ge=1, le=32)] = 16
+    instructions: str = ""
+
+
+class AcceptanceCriterion(Wire):
+    criterion_id: Annotated[str, Field(pattern=r"^[a-zA-Z0-9_-]{1,80}$")]
+    description: Annotated[str, Field(min_length=1, max_length=4000)]
+    required_checks: list[str] = Field(default_factory=list)
+
+
+class ProgressMonitor(Wire):
+    mode: Literal["off", "observe", "enforce"] = "enforce"
+    warn_after: Annotated[int, Field(ge=2, le=128)] = 8
+    escalate_after: Annotated[int, Field(ge=3, le=256)] = 12
 
     @model_validator(mode="after")
-    def feasible(self):
+    def ordered(self):
+        if self.escalate_after <= self.warn_after:
+            raise ValueError("Progress escalation must leave decisions after warning")
+        return self
+
+
+class AgentConfig(RuntimeConfig):
+    """Policy of the bundled coding agent, separate from the runtime's contract."""
+
+    default_retry_model: RetryModel | None = Field(default_factory=lambda: RetryModel(
+        model="gpt-6.1-terra", reasoning_effort="high"))
+
+    inference_policy: InferencePolicy | None = Field(default=None, exclude_if=lambda value: value is None)
+    objective: Annotated[str, Field(min_length=1)]
+    local_strata_config: str | None = None
+    local_strata_profile: Annotated[str, Field(pattern=r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,79}$")] | None = None
+    repository_mode: Literal["in_place", "isolated"] = "in_place"
+    git_policy: dict | None = None
+    dependency_prepare: list[str] = Field(default_factory=list)
+    prerequisite_checks: list[Check] = Field(default_factory=list)
+    acceptance_checks: list[Check] | None = None
+    allowed_write_paths: Annotated[list[RelativePath], Field(min_length=1)]
+    senior_development_fraction: Annotated[float, Field(ge=0, le=1)] = 0.1
+    max_sprints: Annotated[int, Field(gt=0, le=100)] = 8
+    max_senior_corrections: Annotated[int, Field(ge=0, le=3)] = 1
+    inference_retry: InferenceRetry = Field(default_factory=InferenceRetry)
+    check_diagnosis: CheckDiagnosis = Field(default_factory=CheckDiagnosis)
+    acceptance_criteria: list[AcceptanceCriterion] = Field(default_factory=list)
+    max_review_reads: Annotated[int, Field(ge=0, le=16)] = 16
+    max_worker_recoveries: Annotated[int, Field(ge=0, le=3)] = 1
+    max_cloud_recoveries: Annotated[int, Field(ge=0, le=3)] = 1
+    progress_monitor: ProgressMonitor = Field(default_factory=ProgressMonitor)
+
+    max_protocol_corrections: Annotated[int, Field(ge=0, le=16)] = 3
+
+    @model_validator(mode="before")
+    @classmethod
+    def coding_defaults(cls, value):
+        from .agent.system_settings import coding_system_defaults
+        if isinstance(value, dict):
+            value = dict(value)
+            system = value.pop("system", {})
+            if not isinstance(system, dict) or system.keys() & value.keys():
+                raise ValueError("System settings must be configured once, in system or at top level")
+            value = {**coding_system_defaults(), **system, **value}
+            cloud = value.get("cloud")
+            fields = cloud.model_fields_set if isinstance(cloud, Endpoint) else set(cloud or {})
+            data = cloud.model_dump() if isinstance(cloud, Endpoint) else dict(cloud or {})
+            if data.get("protocol") == "codex_app_server" and "retry_model" not in fields:
+                retry = value.get("default_retry_model", RetryModel(
+                    model="gpt-6.1-terra", reasoning_effort="high"))
+                target = retry.model if isinstance(retry, RetryModel) else (retry or {}).get("model")
+                if target != data.get("model"):
+                    value["cloud"] = {**data, "retry_model": retry}
+            if "review_token_reserve" in value:
+                value["control_token_reserve"] = value.pop("review_token_reserve")
+        return value
+
+    @property
+    def review_token_reserve(self):
+        return self.control_token_reserve
+
+    @model_validator(mode="after")
+    def feasible_agent(self):
+        ids = [c.criterion_id for c in self.acceptance_criteria]
+        if len(ids) != len(set(ids)) or "objective" in ids:
+            raise ValueError("Acceptance criterion IDs must be unique; objective is reserved")
+        if any(not set(c.required_checks) <= {c.name for c in [*self.checks, *(self.acceptance_checks or [])]} for c in self.acceptance_criteria):
+            raise ValueError("Acceptance criteria must use configured checks")
+
+        if not (self.checks or self.acceptance_checks) and not self.prepare_repository:
+            raise ValueError("Provide checks or enable prepare_repository to discover them")
+        definitions = {}
+        for check in [*self.checks, *self.prerequisite_checks, *(self.acceptance_checks or [])]:
+            if check.name in definitions and definitions[check.name] != check:
+                raise ValueError("A check name must have one immutable command definition across purposes")
+            definitions[check.name] = check
         if set(self.role_bindings) != {"senior", "worker", "specialist"}:
             raise ValueError("Pin all three role bindings")
         for role in ("worker", "specialist"):
@@ -74,20 +121,4 @@ class AgentConfig(Wire):
                 backend.protocol == "codex_app_server" and backend.brokered_tools
             ):
                 raise ValueError("Opaque native coding jobs cannot enforce the worker protocol")
-        for endpoint in (self.local, self.cloud):
-            if endpoint.reserved_context_tokens < endpoint.max_context_tokens:
-                raise ValueError("One maximum-size context must fit")
-        names = [c.name for c in self.checks]
-        if len(names) != len(set(names)):
-            raise ValueError("Check names must be unique")
-        if self.limits.cost_guarantee == "enforced":
-            raise ValueError("No provider-enforced dollar quota in placeholder; use estimate")
         return self
-
-    @property
-    def repo_path(self):
-        return Path(self.repository).resolve()
-
-    @property
-    def state_path(self):
-        return Path(self.state_directory).resolve()

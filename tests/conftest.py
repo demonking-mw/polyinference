@@ -10,8 +10,72 @@ from polyinference.config import AgentConfig, Endpoint
 from polyinference.domain import Check
 
 
+@pytest.fixture(autouse=True)
+def isolated_machine_preferences(tmp_path, monkeypatch):
+    """UI fixtures must not inherit the developer's real model deployment."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg-config"))
+
+
 def git(repo, *args):
     return subprocess.check_output(["git", "-C", str(repo), *args], stderr=subprocess.STDOUT).decode().strip()
+
+
+def static_schedule(template, config, role, binding="local"):
+    """General fixtures declare the static policy they actually exercise."""
+    rule = template["distribution"]["rules"][0]
+    return {**template, "requirements": [], "conflict_keys": [], "locality_refs": [],
+            "distribution": {**template["distribution"], "rules": [{**rule, "roles": [role],
+                "phases": ["*"], "axis": "harness_class", "eligible_classes": [getattr(config, binding).protocol],
+                "target_weights": {}}]},
+            "data_policy": {**template["data_policy"], "allowed_destination_classes": [binding],
+                            "allowed_inference_locations": ["local", "cloud"]}}
+
+
+def fixture_completion(data):
+    """Deterministic reviewer response, not a live model's semantic validation."""
+    return {
+        "reviewed_tree_digest": data["acceptance_contract"]["reviewed_tree_digest"],
+        "criteria": [
+            {
+                "criterion_id": c["criterion_id"],
+                "verdict": "met",
+                "rationale": "Fixture inspected supplied source/checks",
+                "evidence_refs": [e["evidence_id"] for e in data["review_evidence_catalog"]],
+            }
+            for c in data["acceptance_contract"]["criteria"]
+        ],
+    }
+
+
+def fixture_review_reply(reply, data):
+    """Adapt deterministic legacy reviewers to the current exact-tree protocol."""
+    if reply.get("tasks"):
+        reply = {**reply, "tasks": [fixture_task(task) for task in reply["tasks"]]}
+    if reply.get("complete") and "acceptance_contract" in data:
+        return {**reply, "completion_assessment": fixture_completion(data)}
+    return reply
+
+
+def fixture_task(task):
+    """Explicit boundary of the deterministic VALUE-file test program."""
+    task = dict(task)
+    paths = task["write_paths"]
+    task.setdefault("behavior", task["objective"])
+    task.setdefault("focused_check", task["checks"][0])
+    task.setdefault("acceptance_criteria", [task["objective"]])
+    task.setdefault("local_contract", {"implementation_path": paths[0],
+        "inputs": "Pinned Python module with VALUE: int and the supplied read-only dependencies",
+        "outputs": "The assigned module with the requested VALUE and preserved imports/signatures",
+        "provided_symbols": ["VALUE: int; preserve the module's existing public functions"],
+        "state_ownership": "Only the assigned implementation file owns its source; dependencies are read-only",
+        "side_effects": "Scoped file edits and the named check only",
+        "errors": "Report scope, syntax and dependency failures with their host observations"})
+    return task
+
+
+def fixture_assignment(**values):
+    from polyinference.domain import Assignment
+    return Assignment.model_validate(fixture_task(values))
 
 
 @pytest.fixture
@@ -30,6 +94,8 @@ def repository(tmp_path):
 @pytest.fixture
 def config(repository, tmp_path):
     return AgentConfig(
+        repository_mode="isolated",  # Legacy protocol fixtures; real-repository behavior has its own suite.
+        prepare_repository=False,  # These fixtures exercise development; setup has dedicated tests.
         repository=str(repository),
         state_directory=str(tmp_path / "state"),
         objective="Set VALUE to 2 in a.py and b.py",
@@ -60,7 +126,7 @@ class ScriptedAgent:
         self.review_inputs = []
         self.hook = None
 
-    async def generate(self, messages, max_output, response_schema=None):
+    async def generate(self, messages, max_output, response_schema=None, **kwargs):
         import asyncio
 
         from polyinference.domain import digest
@@ -76,6 +142,10 @@ class ScriptedAgent:
             )
             if self.hook:
                 await self.hook(data)
+            if "repository_observation" in data:
+                return {"text": json.dumps({"mode": "new", "task_branches": True,
+                                            "reason": "No explicit Git override in fixture"}),
+                        "usage": {"total_tokens": 20}, "model": "fixture", "events": []}
             if "assignment" not in data:
                 if not data["all_task_ids"]:
                     self.initial_calls += 1
@@ -98,6 +168,7 @@ class ScriptedAgent:
                     reply = {
                         "goal": "Finished",
                         "complete": True,
+                        "completion_assessment": fixture_completion(data),
                         "dispositions": [
                             {"report_ref": r["record_id"], "action": "keep", "reason": "Inspected changes"}
                             for r in data["reports"]
@@ -129,7 +200,7 @@ class ScriptedAgent:
                 else:
                     reply = {"kind": "candidate", "summary": "Inspected incoming changes"}
             return {
-                "text": json.dumps(reply),
+                "text": json.dumps(fixture_review_reply(reply, data)),
                 "usage": {"total_tokens": 50},
                 "model": "fixture",
                 "events": [],

@@ -1,4 +1,16 @@
-# Implementation notes
+# Agent implementation notes
+
+> **Edited 2026-10-20 because** these notes describe the initial isolated-copy
+> implementation. The current [revision ledger](../simplified-os/DESIGN_REVISIONS.md)
+> and [boundary guide](../simplified-os/RUNTIME_BOUNDARY.md) supersede old private
+> Git/setup/copy-back details, all-verdict publication and caller-only recovery.
+> Default coding uses the actual repository, full task worktrees, private
+> failed/uncertain candidates and OS optional context/output services. The older
+> details below retain their historical provider/setup evidence.
+
+The bundled runtime is now simple OS v1. The current OS audit decisions and
+failure policy are recorded in [the OS implementation plan](../simplified-os/IMPLEMENTATION.md);
+see its [runbook](../simplified-os/RUNBOOK.md) and [validation](../simplified-os/VALIDATION.md).
 
 The behavioral sources are the LangGraph revision 4 design, simplified OS, merged
 execution contract, integration audit A1–A9, and the user's
@@ -14,7 +26,7 @@ remain unchanged. The implementation plan is [at the repository root](../../IMPL
 | `polyinference.domain` | Typed model replies, plans, assignments and finite limits |
 | `polyinference.ports` | Replaceable generic records/artifacts/effects/workspace/ownership ports |
 | `polyinference.agent` | Three public-API LangGraph entries, task ledger, steering, notes and acceptance |
-| `polyinference.runtime` | Small Linux standalone OS adapter and endpoint clients |
+| `polyinference.runtime` | Simple OS kernel for macOS/Linux/WSL and endpoint clients |
 
 Graph context holds live services. Checkpoints hold IDs, compact counters and
 artifact references. Workers are separate graph invocations with separate
@@ -51,7 +63,10 @@ The worker preserves B-to-development changes, acquires verification, captures H
 assembles a complete private H view, three-way merges, reasons again, runs checks,
 assesses, creates P with sole parent H, and atomically publishes head/report/
 hazards/note/attempt/receipt. A real empty commit supports no-diff normal reports.
-All verdicts publish; failed or missing evidence cannot become successful.
+All verdicts publish reports. Failed work retains a private commit and does not
+advance the shared head. Failure atomically closes new starts; already-started
+workers drain and publish before review. Failed or missing evidence cannot become
+successful. Private failed reports must be retried/rejected, never directly kept.
 Read-only omissions never become deletes. Add destinations must be absent in B.
 
 Git objects precede the metadata transaction; source refs are not authoritative.
@@ -84,10 +99,9 @@ The parent cloud occupancy is retained. Native item notifications are observatio
 
 The native sandbox is read-only with restricted snapshot reads. File mutation and
 configured checks, enabled foreground scripts and setup branch selection use the host broker. The adapter denies native approval and
-unknown callback requests. As a conservative additional bound, a native job owns
-the installation shell gate for its whole lifetime; reentrant broker checks share
-that ownership. Raw-inference workers retain the narrower per-command shell
-lifetime and overlapping inference. Measure this native-job tradeoff separately.
+unknown callback requests. Direct native jobs acquire the installation shell
+gate only for brokered commands/checks, so model reasoning can overlap. An opaque
+read-only proxy retains conservative shell ownership for the entire native job.
 
 The proxy brief's mehdic path remains configurable for read-only senior work;
 its HTTP surface does not establish brokered coding/cancellation guarantees.
@@ -121,6 +135,12 @@ schema exports differ cosmetically under newer Pydantic's const/enum generation.
 
 ## Initial setup, branch baselines and development allocation
 
+The private-baseline/source-unchanged description in this historical section
+applies to the original isolated provider. Default in-place setup now initializes
+or selects the actual project/branch and preserves user edits; bounded setup and
+dependency failures return to the coding agent for repair (FIX-0001–0003/FIX-0040).
+General OS processes need no Git or setup task. See the linked current guide.
+
 The default UI starts one `category=setup`, `role=specialist` task before sprint
 planning. It reads the full user objective with the `BOOTSTRAP` instructions and
 uses the ordinary worker graph, mandatory final phases and publication receipts.
@@ -145,7 +165,7 @@ tasks independently of planner/model-call totals.
 
 The new optional runtime feature requirements are `repository-baseline/1`,
 `shell-run/1` and `project-scope/1` (each prefixed `runtime/`). The OS implements
-WorkspacePorts.select_branch and atomic retag_task_spec; the agent never touches
+WorkspacePorts.select_branch and asynchronous atomic retag_task_spec; the agent never touches
 workspace files directly. `TaskSpec.extensions["polyinference/project-write"]`
 expresses a project-root setup grant; ordinary tasks still receive exact file
 write sets. Shell execution uses CapabilityCall, bounded output/deadline/process
@@ -158,3 +178,10 @@ program version prevents silently resuming an older graph/prompt implementation.
 A future OS must implement the advertised optional features or reject negotiation.
 Trusted shell execution is a host execution mode, not filesystem isolation; the
 bubblewrap mode enforces a restricted workspace environment when available.
+
+## Integrated reliability branch (2026-10-26)
+
+- [Worker exception recovery](WORKER_RECOVERY.md)
+- [Execution observations and progress policy](PROGRESS_MONITORING.md)
+- [Reliability branch fix log](FIXES.md), retained as historical implementation evidence.
+- [Integration record](../../development-docs/FIXES.md#fix-0127) for the combined simple OS branch.

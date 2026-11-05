@@ -8,7 +8,7 @@ import httpx
 import pytest
 
 from polyinference.config import Endpoint
-from polyinference.runtime.inference import EndpointError, HTTPInference, UnknownExecution
+from polyinference.runtime.inference import EndpointError, HTTPInference, ProviderError, UnknownExecution
 
 
 async def test_anthropic_headers_history_blocks_and_complete_token_accounting(monkeypatch):
@@ -133,5 +133,53 @@ async def test_anthropic_does_not_promote_incomplete_output_or_retry(failure):
             await adapter.generate([{"role": "user", "content": "request"}], 10)
         assert count == 1
         assert "private-provider-detail" not in str(error.value)
+    finally:
+        await adapter.close()
+
+
+@pytest.mark.parametrize("status,category,retryable", [
+    (400, "invalid_request", False), (401, "authentication", False),
+    (403, "permission", False), (429, "rate_limit", True), (503, "service_unavailable", True),
+])
+async def test_structured_provider_errors_are_bounded_and_credentials_are_redacted(monkeypatch, status, category, retryable):
+    monkeypatch.setenv("FIXTURE_KEY", "fixture-private-key")
+
+    async def handler(request):
+        return httpx.Response(status, headers={"request-id": "req-fixture", "retry-after": "2"}, json={
+            "error": {"type": "fixture_error", "message": "Bad parameter; api_key=fixture-private-key " + "x" * 3000},
+        })
+
+    adapter = HTTPInference(Endpoint(protocol="anthropic", model="fixture", api_key_env="FIXTURE_KEY"),
+                            httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    try:
+        with pytest.raises(ProviderError) as raised:
+            await adapter.generate([{"role": "user", "content": "request"}], 20)
+        error = raised.value
+        assert error.diagnostics["category"] == category
+        assert error.diagnostics["request_id"] == "req-fixture"
+        assert error.diagnostics["retry_after_ms"] == 2000
+        assert error.retryable == retryable
+        assert "fixture-private-key" not in json.dumps(error.diagnostics)
+        assert len(error.diagnostics["provider_message"]) <= 1024
+    finally:
+        await adapter.close()
+
+
+async def test_invalid_assistant_prefill_is_rejected_before_submission():
+    submitted = False
+
+    async def handler(request):
+        nonlocal submitted
+        submitted = True
+        raise AssertionError("Invalid request reached provider")
+
+    adapter = HTTPInference(Endpoint(protocol="anthropic", model="claude-haiku-5-5"),
+                            httpx.AsyncClient(transport=httpx.MockTransport(handler)))
+    try:
+        with pytest.raises(ProviderError) as raised:
+            await adapter.generate([{"role": "user", "content": "task"},
+                                    {"role": "assistant", "content": "candidate"}], 20)
+        assert raised.value.diagnostics["submitted"] is False
+        assert not submitted
     finally:
         await adapter.close()

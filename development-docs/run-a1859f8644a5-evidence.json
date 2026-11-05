@@ -1,0 +1,225 @@
+{
+  "run_id": "a1859f8644a5",
+  "source_filename": "polyinference-a1859f8644a5.json",
+  "exported_at": "2026-10-21T02:16:46.001506+00:00",
+  "source_bytes": 165672779,
+  "run": {
+    "created_at": "2026-10-21T00:57:49.816810+00:00",
+    "finished_at": "2026-10-21T02:14:12.401104+00:00",
+    "status": "budget_stopped",
+    "blocker": "Sprint/query limit",
+    "sprints": 9,
+    "senior_queries": 9,
+    "acceptance_attempts": 0,
+    "tokens_used": {
+      "reserved_or_used": 11138203
+    },
+    "token_allowance": 64000000,
+    "head": "bdc80f8c4b8ae4c6df9effbec32f66e5b97ac4ae"
+  },
+  "configuration": {
+    "max_workers": 2,
+    "local_max_inflight": 2,
+    "cloud_max_inflight": 1,
+    "local_protocol": "anthropic",
+    "local_max_output_tokens": 8000
+  },
+  "counts": {
+    "effects": 790,
+    "model_calls": 396,
+    "local_reservations": 378,
+    "cloud_reservations": 18,
+    "failed_effects": 24,
+    "output_cutoffs": 21,
+    "successful_output_recovery_targets": 21,
+    "invalid_worker_replies": 67,
+    "max_consecutive_invalid_replies": 2,
+    "foreign_history_scope_refs": 0,
+    "reports": 11,
+    "successful_reports": 4,
+    "uncertain_reports": 7,
+    "artifacts_verified": 1920,
+    "checkpoints": 1175,
+    "events_retained": 10000,
+    "events_pruned": 24313,
+    "tail_shell_ownership_events": 6960
+  },
+  "reservations": [
+    {
+      "binding": "local",
+      "max": 2,
+      "overlapSeconds": 230.444,
+      "examples": [
+        {
+          "time": "2026-10-21T01:00:07.231Z",
+          "p": "worker-1-original_game_interface"
+        },
+        {
+          "time": "2026-10-21T01:00:07.283Z",
+          "p": "worker-1-simulation_foundation"
+        }
+      ],
+      "admission_wait_seconds": {
+        "n": 378,
+        "min": 0,
+        "p50": 0.005,
+        "p95": 0.037,
+        "max": 0.436,
+        "sum": 4.938999999999988
+      }
+    },
+    {
+      "binding": "cloud",
+      "max": 1,
+      "overlapSeconds": 0,
+      "examples": [
+        {
+          "time": "2026-10-21T00:57:50.486Z",
+          "p": "repository-policy"
+        }
+      ],
+      "admission_wait_seconds": {
+        "n": 18,
+        "min": 0.001,
+        "p50": 0.003,
+        "p95": 0.079,
+        "max": 0.079,
+        "sum": 0.20400000000000004
+      }
+    }
+  ],
+  "per_worker": [
+    {
+      "p": "worker-setup-project",
+      "start": "2026-10-21T00:58:01.103560+00:00",
+      "end": "2026-10-21T00:59:23.221356+00:00",
+      "invalid": 0,
+      "modelCalls": 3,
+      "cutoffs": 0
+    },
+    {
+      "p": "worker-1-original_game_interface",
+      "start": "2026-10-21T01:00:06.942134+00:00",
+      "end": "2026-10-21T01:01:21.626155+00:00",
+      "invalid": 2,
+      "modelCalls": 15,
+      "cutoffs": 0
+    },
+    {
+      "p": "worker-1-simulation_foundation",
+      "start": "2026-10-21T01:00:06.944311+00:00",
+      "end": "2026-10-21T01:08:28.965661+00:00",
+      "invalid": 10,
+      "modelCalls": 41,
+      "cutoffs": 1
+    },
+    {
+      "p": "worker-2-multiworld_persistence_core",
+      "start": "2026-10-21T01:09:20.350923+00:00",
+      "end": "2026-10-21T01:13:29.480757+00:00",
+      "invalid": 5,
+      "modelCalls": 24,
+      "cutoffs": 1
+    },
+    {
+      "p": "worker-2-playable_canvas_integration",
+      "start": "2026-10-21T01:09:20.352044+00:00",
+      "end": "2026-10-21T01:13:10.971435+00:00",
+      "invalid": 6,
+      "modelCalls": 31,
+      "cutoffs": 2
+    },
+    {
+      "p": "worker-3-persistence_recovery_and_discovery",
+      "start": "2026-10-21T01:15:09.028037+00:00",
+      "end": "2026-10-21T01:17:25.626643+00:00",
+      "invalid": 0,
+      "modelCalls": 3,
+      "cutoffs": 0
+    },
+    {
+      "p": "worker-4-recover_browser_gameplay",
+      "start": "2026-10-21T01:18:09.991730+00:00",
+      "end": "2026-10-21T01:32:45.699227+00:00",
+      "invalid": 9,
+      "modelCalls": 46,
+      "cutoffs": 7
+    },
+    {
+      "p": "worker-5-verify_recovered_gameplay_browser",
+      "start": "2026-10-21T01:33:36.784160+00:00",
+      "end": "2026-10-21T01:47:09.829992+00:00",
+      "invalid": 13,
+      "modelCalls": 72,
+      "cutoffs": 6
+    },
+    {
+      "p": "worker-6-repair_stateful_browser_gameplay",
+      "start": "2026-10-21T01:49:03.924744+00:00",
+      "end": "2026-10-21T01:50:07.363523+00:00",
+      "invalid": 1,
+      "modelCalls": 15,
+      "cutoffs": 0
+    },
+    {
+      "p": "worker-7-implement_verified_canvas_from_baseline",
+      "start": "2026-10-21T01:51:00.257993+00:00",
+      "end": "2026-10-21T01:56:44.167698+00:00",
+      "invalid": 7,
+      "modelCalls": 49,
+      "cutoffs": 1
+    },
+    {
+      "p": "worker-8-wire_playable_canvas_session",
+      "start": "2026-10-21T01:57:41.587619+00:00",
+      "end": "2026-10-21T02:03:56.527869+00:00",
+      "invalid": 6,
+      "modelCalls": 41,
+      "cutoffs": 1
+    },
+    {
+      "p": "worker-9-repair_canvas_observability_and_assertions",
+      "start": "2026-10-21T02:04:50.621115+00:00",
+      "end": "2026-10-21T02:14:09.430098+00:00",
+      "invalid": 8,
+      "modelCalls": 44,
+      "cutoffs": 2
+    }
+  ],
+  "overlap_seconds_by_sprint": {
+    "1": 60.054,
+    "2": 170.39
+  },
+  "context": {
+    "receipts": 396,
+    "history_omissions": 66,
+    "compaction_calls": 0,
+    "max_original_bytes": 144478,
+    "max_submitted_bytes": 94959,
+    "input_allowance": 96000
+  },
+  "provenance": {
+    "recorded_agent_digest": "sha256:b321228c96bd33317ad5804e2f9198de0bb2a97fded17ece6a07fd7d6c529f3e",
+    "current_agent_digest": "sha256:724e945a1862200504179a9c547abfe32c2f9858eec90d9f40dbca9a08fc8d5f",
+    "reconstructed_digest_with_pre_FIX_0075_output_limit": "sha256:b321228c96bd33317ad5804e2f9198de0bb2a97fded17ece6a07fd7d6c529f3e"
+  },
+  "verification_lock_wait": {
+    "process_id": "worker-2-multiworld_persistence_core",
+    "queued_at": "2026-10-21T01:13:04.273948+00:00",
+    "acquired_at": "2026-10-21T01:13:10.966897+00:00",
+    "seconds": 6.693
+  },
+  "method": [
+    "Decode each artifact and verify its declared length and SHA-256.",
+    "Treat reservation intervals as half-open [admitted_at,released_at); sweep endpoints, releasing before admitting at equal timestamps. JavaScript Date truncates to milliseconds.",
+    "Measure queue delay from queued_at to admitted_at, separately from process/node durations.",
+    "Count invalid replies from consume-node protocol_errors > 0; count cutoffs from failed model effects, not duplicate event snapshots.",
+    "Count retained shell ownership events once per event regardless of matching change count.",
+    "Check conversation history content-ref process scopes against model effect owners; this is metadata consistency, not semantic leakage detection."
+  ],
+  "limitations": [
+    "First 24,313 journal events were pruned, including both concurrent pairs. Durable reservations cover the whole run; early global-lock histories do not.",
+    "Reservation occupancy establishes overlapping OS operations, not simultaneous provider GPU execution.",
+    "Historical browser/build results were inspected, not rerun. No generated project or retained state was modified."
+  ]
+}

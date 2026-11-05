@@ -1,0 +1,79 @@
+# Test suite
+
+[Developer onboarding](../dev-readme.md) · [Check commands](../docs/testing.md) · [Modules](../docs/modules/README.md)
+
+Offline fixtures use disposable repositories and transports. Tests are evidence
+for specific guarantees; live providers, physical scheduling and sandbox behavior
+need separately stated checks. Update affected docs and FIXES.md with every fix.
+
+| Module | Coverage responsibility |
+| --- | --- |
+| [conftest.py](conftest.py) | Shared runtime/agent configs, repositories, transport fixtures and isolated XDG machine preferences. |
+| [test_agent.py](test_agent.py) | Coding orchestration and acceptance. |
+| [test_agent_transitions.py](test_agent_transitions.py) | Validated attempts, retained long notes and replacement/replay. |
+| [test_anthropic.py](test_anthropic.py) | Anthropic wire framing, payload limits and response handling. |
+| [test_capability_boundary.py](test_capability_boundary.py) | Typed grants/ABI, native callbacks and non-coding programs. |
+| [test_context_safety.py](test_context_safety.py) | Prepared bounds, context modes, compaction and grouped settings. |
+| [test_contracts.py](test_contracts.py) | Packaged wire/schema invariants. |
+| [test_costs.py](test_costs.py) | Usage/pricing estimates and aggregation. |
+| [test_endpoints.py](test_endpoints.py) | Endpoint transport, admission, routing and concurrency. |
+| [test_history.py](test_history.py) | Shared snapshot archives, retention and failure isolation. |
+| [test_http_integration.py](test_http_integration.py) | Complete coding workflow over real local HTTP fixtures. |
+| [test_in_place_repository.py](test_in_place_repository.py) | Git setup, verified integration, concurrent/serial worktrees, source reuse and retained current-source review evidence. |
+| [test_inference_simulation.py](test_inference_simulation.py) | Opt-in/normal parity, TPS sharing, faults/cooldowns, usage, durable replay, cancellation/deadlines and real coding runs. |
+| [test_incident_fixes.py](test_incident_fixes.py) | Incident-derived lifecycle, provider and recovery regressions. |
+| [test_inference_lifecycle.py](test_inference_lifecycle.py) | Split UTF-8/SSE terminals, heartbeat/idle/total deadlines, native/caller quotas, shared adaptation allowance, physical holds, late-result fencing, generic probes and real loopback streaming. |
+| [test_model_retries.py](test_model_retries.py) | Durable bounded retries, accounting and recovery composition. |
+| [test_model_fallback.py](test_model_fallback.py) | Availability routing/window/restart, trusted native continuation, callback replay and original resource guards. |
+| [test_four_repairs.py](test_four_repairs.py) | Corrected error lifecycle/replay, independent context units/counters/priorities, focused diagnosis authority/search novelty and actual linked source recovery. |
+| [test_native_events.py](test_native_events.py) | Bounded native telemetry and terminal evidence. |
+| [test_native_worker.py](test_native_worker.py) | Native brokered coding phases and source authority. |
+| [test_os_config.py](test_os_config.py) | Nondefault OS tuning, persisted writer/inspector policy, validation, native buffers, private environments, workspace classification and config pins. |
+| [test_os.py](test_os.py) | Kernel resources, effects, publication and replay. |
+| [test_output_limits.py](test_output_limits.py) | Completion/cutoff classification and bounded smaller-output recovery. |
+| [test_outputs.py](test_outputs.py) | Explicit artifact delivery, conflicts and interrupted recovery. |
+| [test_resume.py](test_resume.py) | Generic automatic preparation, Responses/receipt recovery, predecessor compatibility, exactly-once steering, multi-worker source and restart activation. |
+| [test_recovery.py](test_recovery.py) | Persistent restart, known/uncertain effects and explicit recovery. |
+| [test_regressions.py](test_regressions.py) | Adversarial workflow, drain/replan and incident schedules. |
+| [test_runtime.py](test_runtime.py) | Runtime tools, scopes, cancellation and effect settlement. |
+| [test_runtime_general.py](test_runtime_general.py) | Non-coding/artifact-only HTTP/native lifecycles and generic operator resume signals. |
+| [test_saved_credentials.py](test_saved_credentials.py) | Data-only private key loading and environment precedence. |
+| [test_setup_tools.py](test_setup_tools.py) | Setup/check selection, durable task-start/quota accounting and bounded coding tool behavior. |
+| [test_sim_batch.py](test_sim_batch.py) | Invocation-only UI simulation, CLI/precedence, provider framing, admission/refill, saved settings and startup failures. |
+| [test_tool_environment.py](test_tool_environment.py) | Private homes/caches and command cleanup. |
+| [test_ui.py](test_ui.py) | UI launch/project picker/API/export/default settings, 128K machine preferences, owned Strata cleanup/signal exits and run-level Resume with both repository providers and durable recovery rejection. |
+| [test_ui_agents.py](test_ui_agents.py) | Coding task/review/history projections. |
+| [test_ui_frontend.py](test_ui_frontend.py) | Python wrapper invoking supported Node frontend checks. |
+| [test_ui_os.py](test_ui_os.py) | Generic OS snapshot/inspection projections. |
+| [test_user_briefs.py](test_user_briefs.py) | Durable notifications and evidence-based senior briefs. |
+| [test_workspace_outputs.py](test_workspace_outputs.py) | Declared output/source precedence and dependency environments. |
+| [ui_start.test.cjs](ui_start.test.cjs) | UI JavaScript launch/snapshot/inspection, direct Resume, optional persistent instructions, request replay, progress, guards and stale replies. |
+
+Documentation-tool regressions have their own feature guide:
+[test_project_docs.py](test_project_docs.py), described in
+[documentation tooling](../docs/modules/documentation.md).
+
+Run only appropriate checks, record actual results/limits, and keep historical
+results separate. Follow [documentation maintenance](../docs/maintenance.md)
+before finishing, including affected guide/settings/navigation updates.
+
+## Integrated reliability coverage
+
+- [test_check_diagnosis.py](test_check_diagnosis.py) checks bounded checking-agent observations and read expansion.
+- [test_exception_recovery.py](test_exception_recovery.py) checks fenced worker exceptions and inherited recovery limits.
+- [test_inference_retry.py](test_inference_retry.py) checks bounded response attempts, replacement windows and replay.
+- [test_module_planning.py](test_module_planning.py) checks versioned interfaces and dependency plans.
+- [test_progress.py](test_progress.py) checks execution observations and evidence-based stagnation.
+- [test_retry_export.py](test_retry_export.py) checks attempt provenance in shared run export.
+- [test_semantic_review.py](test_semantic_review.py) checks source-backed exact-tree completion.
+- [test_validation_feedback.py](test_validation_feedback.py) checks application-origin validation feedback without invented tools.
+
+- [test_cli.py](test_cli.py) checks private runtime status and delivery commands.
+
+- [test_branch_integration.py](test_branch_integration.py) verifies attached-source preservation, context compaction with response validation, shared response-repair bounds across transport retries, and physical-attempt certainty/admission through recovery and restart.
+
+[test_p0_repairs.py](test_p0_repairs.py) covers mandatory local file boundaries, cloud placement, immutable tuning, real proxy routing, inherited inspection timeouts, one local token pair/Strata restart configuration and uncapped native cloud completion with replay/accounting.
+
+[test_testing_tasks.py](test_testing_tasks.py) covers test-only assignments without implementation/result
+paths, empty write grants, optimistic-verdict correction, commit-free success/failure reporting,
+manager review and publication replay in isolated and in-place repositories.

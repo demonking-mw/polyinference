@@ -2,27 +2,28 @@
 
 from __future__ import annotations
 
-import asyncio
 import os
 import platform
 import shutil
-import signal
 import sys
 from pathlib import Path
 
-from ..contracts import CodeRevision
-from ..domain import canonical, digest
+from ..contracts import ArtifactRef, CodeRevision
+from ..os_config import DEFAULT_TUNING
+from ..primitives import canonical, digest
 from ..workspace_contracts import CopiedFile, DeltaChange, WorkspaceDelta, WorkspaceManifest, relative_path
+from .blocking import BlockingIO
+from .capabilities import WorkspaceGrant
+from .commands import command
+from .workspace_state import (
+    WriteScopeError,
+    copy_environment,
+    dependency_digest,
+    discard_environment,
+    storage_bytes,
+)
 
-IGNORED = {
-    "__pycache__",
-    ".pytest_cache",
-    ".ruff_cache",
-    ".mypy_cache",
-    "node_modules",
-    ".venv",
-    ".venv-linux",
-}
+IGNORED = frozenset(DEFAULT_TUNING.workspace_ignored_names)  # compatibility view; execution uses config.tuning
 ENVIRONMENT = digest(canonical({"adapter": "standalone-1", "tools": "configured-argv-1"}))
 
 
@@ -30,6 +31,10 @@ class Workspaces:
     def __init__(self, config, records, exclusive, artifacts, scope):
         self.config, self.records, self.exclusive = config, records, exclusive
         self.artifacts, self.scope = artifacts, scope
+        self.blocking = BlockingIO()
+        self.source_paths = set(config.allowed_write_paths)
+        for _, _, value in records.scan("runtime/source-paths/"):
+            self.source_paths.update(value["paths"])
         self.environment_digest = digest(
             canonical(
                 {
@@ -39,7 +44,8 @@ class Workspaces:
                     "shell_execution": config.shell_execution,
                     "python": sys.version,
                     "platform": platform.platform(),
-                    "environment_policy": "fixed-during-run",
+                    "environment_policy": "source-and-execution-state-v2",
+                    "execution_tuning": config.tuning.model_dump(mode="json"),
                 }
             )
         )
@@ -47,15 +53,25 @@ class Workspaces:
         self.gitdir = config.state_path / "repository.git"
         self.root.mkdir(parents=True, exist_ok=True)
 
-    async def prepare_snapshot(self, code, snapshot_id):
+    async def prepare_snapshot(self, code, snapshot_id, *, binding_ref=None):
         tree = await self.tree(code.commit_id, snapshot_id)
+        return await self._prepare_tree_snapshot(tree, code, snapshot_id, binding_ref=binding_ref)
+
+    async def prepare_workspace_snapshot(self, workspace_id, snapshot_id):
+        tree = await self.private_tree(workspace_id)
+        return await self._prepare_tree_snapshot(tree, self.code(tree), snapshot_id)
+
+    async def private_tree(self, workspace_id):
+        return await self.scan_async(self.root_for(self.current(workspace_id)))
+
+    async def _prepare_tree_snapshot(self, tree, code, snapshot_id, *, binding_ref=None):
         root = self.config.state_path / "snapshots" / snapshot_id
-        if root.exists() and self.scan(root) != tree:
+        if root.exists() and await self.scan_async(root) != tree:
             raise ValueError("An immutable native snapshot cannot be replaced")
-        self.materialize(root, tree)
-        endpoint = getattr(self.config, self.config.role_bindings["senior"])
+        await self.materialize_async(root, tree)
+        endpoint = getattr(self.config, binding_ref) if binding_ref else None
         proxy_root = None
-        if endpoint.protocol == "codex_proxy":
+        if endpoint and endpoint.protocol == "codex_proxy":
             expected = (self.config.state_path / "proxy-snapshot").resolve()
             if (
                 not endpoint.readonly_snapshot_root
@@ -67,13 +83,13 @@ class Workspaces:
                 raise ValueError("Proxy snapshot cannot be a symlink")
             proxy_root.mkdir(parents=True, exist_ok=True)
             # Preserve the directory inode: the separately launched proxy may use it as CWD.
-            self.scan(proxy_root)
+            await self.scan_async(proxy_root)
             for entry in proxy_root.iterdir():
                 if entry.is_dir():
                     shutil.rmtree(entry)
                 else:
                     entry.unlink()
-            self.materialize(proxy_root, tree)
+            await self.materialize_async(proxy_root, tree)
         self.records.put_once(
             "snapshot/" + snapshot_id,
             {
@@ -90,33 +106,48 @@ class Workspaces:
             raise ValueError("Unknown native snapshot")
         if retained[1].get("proxy_root"):
             return Path(retained[1]["proxy_root"])
-        return self.config.state_path / "snapshots" / snapshot_id
+        return self.config.state_path / "snapshots" / retained[1].get("directory_name", snapshot_id)
+
+    async def prepare_artifact_snapshot(self, snapshot_id, files):
+        """A read-only native input view that needs neither Git nor coding tasks."""
+        refs = {relative_path(path): ArtifactRef.model_validate(ref) for path, ref in files.items()}
+        directory = digest(snapshot_id.encode())[7:]
+        value = {"snapshot_id": snapshot_id, "directory_name": directory,
+                 "files": {path: ref.model_dump(mode="json") for path, ref in refs.items()}}
+        retained = self.records.get("snapshot/" + snapshot_id)
+        if retained and retained[1] != value:
+            raise ValueError("Immutable artifact snapshot cannot be replaced")
+        tree = {path: ("100644", self.artifacts.read(ref)) for path, ref in refs.items()}
+        root = self.config.state_path / "snapshots" / directory
+        if root.exists() and await self.scan_async(root) != tree:
+            raise ValueError("Immutable artifact snapshot files changed")
+        await self.materialize_async(root, tree)
+        self.records.put_once("snapshot/" + snapshot_id, value)
+        return snapshot_id
 
     async def command(self, args, process_id="runtime", input_data=None, env=None):
         permit = await self.exclusive.acquire("shell/installation", process_id)
-        process = None
         try:
-            process = await asyncio.create_subprocess_exec(
-                *args,
-                stdin=asyncio.subprocess.PIPE,
-                stdout=asyncio.subprocess.PIPE,
-                stderr=asyncio.subprocess.PIPE,
-                env={**os.environ, "GIT_CONFIG_NOSYSTEM": "1", **(env or {})},
-                start_new_session=True,
+            status, output, error = await command(
+                args,
+                timeout=self.config.max_command_seconds,
+                output_limit=self.config.max_workspace_bytes + self.config.limits.max_output_bytes,
+                input_data=input_data,
+                chunk_bytes=self.config.tuning.command_chunk_bytes,
+                stream_bytes=self.config.tuning.subprocess_stream_bytes,
+                env={
+                    **os.environ,
+                    "GIT_CONFIG_NOSYSTEM": "1",
+                    "GIT_CONFIG_GLOBAL": "/dev/null",
+                    **(env or {}),
+                },
             )
-            output, error = await process.communicate(input_data)
-            if process.returncode:
+            if status:
                 raise RuntimeError(
-                    f"Trusted command failed ({process.returncode}): {error.decode(errors='replace')[:1000]}"
+                    f"Trusted command failed ({status}): {error.decode(errors='replace')[:self.config.tuning.command_error_chars]}"
                 )
             return output
         finally:
-            if process is not None and process.returncode is None:
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-                await process.wait()
             # Trusted Git process groups have ended before ownership is released.
             await self.exclusive.release(permit, process_id)
 
@@ -139,6 +170,13 @@ class Workspaces:
 
     async def initialize(self):
         if not self.gitdir.exists():
+            source = self.config.repo_path
+            if source.exists() and not source.is_dir():
+                raise ValueError("Project path must be a directory")
+            if not source.exists():
+                if not self.config.prepare_repository:
+                    raise ValueError("Project directory does not exist; enable prepare_repository for setup")
+                source.mkdir(parents=True, exist_ok=True)
             has_head = False
             if (self.config.repo_path / ".git").exists():
                 try:
@@ -174,7 +212,7 @@ class Workspaces:
                 )
             elif self.config.prepare_repository:
                 await self.command(["git", "init", "--bare", "--initial-branch=main", str(self.gitdir)])
-                exclusions = [".git", ".polyinference", "node_modules", ".venv", ".venv-linux", "__pycache__"]
+                exclusions = self.config.tuning.initial_excluded_names
                 await self.git(
                     "--work-tree",
                     str(self.config.repo_path),
@@ -185,9 +223,7 @@ class Workspaces:
                     "--",
                     ".",
                     *[":(glob,exclude)**/" + name + "/**" for name in exclusions],
-                    ":(glob,exclude)**/.env*",
-                    ":(glob,exclude)**/*.pem",
-                    ":(glob,exclude)**/*.key",
+                    *[":(glob,exclude)" + pattern for pattern in self.config.tuning.initial_excluded_globs],
                 )
                 tree = (await self.git("write-tree")).decode().strip()
                 commit = (
@@ -239,7 +275,7 @@ class Workspaces:
         # The unchanged workspace SDK requires a nonempty dependency closure.
         # A useful ignore file supplies that seed without writing into the source checkout.
         env = {**self.identity(), "GIT_INDEX_FILE": str(self.config.state_path / "baseline.index")}
-        content = b".polyinference/\n.env\n.venv/\nnode_modules/\n__pycache__/\n"
+        content = self.config.tuning.empty_baseline_gitignore.encode()
         oid = (
             (await self.git("hash-object", "-w", "--stdin", input_data=content, process_id=process_id))
             .decode()
@@ -275,20 +311,18 @@ class Workspaces:
         await self.git("update-ref", "HEAD", result, process_id=process_id)
         return result
 
-    @staticmethod
-    def identity():
+    def identity(self):
         return {
-            "GIT_AUTHOR_NAME": "PolyInference",
-            "GIT_AUTHOR_EMAIL": "agent@localhost",
-            "GIT_COMMITTER_NAME": "PolyInference",
-            "GIT_COMMITTER_EMAIL": "agent@localhost",
+            "GIT_AUTHOR_NAME": self.config.tuning.setup_git_name,
+            "GIT_AUTHOR_EMAIL": self.config.tuning.setup_git_email,
+            "GIT_COMMITTER_NAME": self.config.tuning.setup_git_name,
+            "GIT_COMMITTER_EMAIL": self.config.tuning.setup_git_email,
         }
 
     async def select_branch(self, workspace_id, name, create=False):
         manifest = self.current(workspace_id)
-        spec = self.records.get(manifest.task_spec_ref)
-        if not spec or "repository.select_branch" not in spec[1]["allowed_capabilities"]:
-            raise ValueError("Branch selection is available only to the initial setup task")
+        if "repository.select_branch" not in self.grant(workspace_id).capabilities:
+            raise ValueError("Branch selection exceeds the workspace grant")
         if manifest.view != "development":
             raise ValueError("Select the base branch before integration")
         retained = self.records.get("branch-selection/" + workspace_id)
@@ -296,7 +330,7 @@ class Workspaces:
             if retained[1]["branch"] != name:
                 raise ValueError("The initial branch was already selected")
             return retained[1]
-        before = self.scan(self.root_for(manifest))
+        before = await self.scan_async(self.root_for(manifest))
         if any(
             digest(before[file.path][1]) != file.copied_digest
             for file in manifest.copied_files
@@ -344,7 +378,7 @@ class Workspaces:
                 ],
             }
         )
-        self.materialize(self.root_for(new), tree)
+        await self.materialize_async(self.root_for(new), tree)
         key = "workspace/" + workspace_id
         result = {"branch": name, "code": code.model_dump(mode="json"), "workspace_id": workspace_id}
         self.records.compare_and_publish(
@@ -357,7 +391,7 @@ class Workspaces:
         )
         return result
 
-    def retag_task_spec(self, workspace_id, spec_id, updates, immutable):
+    async def retag_task_spec(self, workspace_id, spec_id, updates, immutable):
         manifest = self.current(workspace_id)
         generation = manifest.generation + 1
         new = manifest.model_copy(
@@ -368,7 +402,7 @@ class Workspaces:
                 "private_root_ref": workspace_id + ":" + str(generation),
             }
         )
-        self.materialize(self.root_for(new), self.scan(self.root_for(manifest)))
+        await self.materialize_view(new, manifest, await self.scan_async(self.root_for(manifest)))
         updates = {**updates, "workspace/" + workspace_id: new.model_dump(mode="json")}
         self.records.compare_and_publish(
             {key: self.records.get(key)[0] for key in updates},
@@ -376,11 +410,53 @@ class Workspaces:
             {**immutable, "manifest/" + new.manifest_id: new.model_dump(mode="json")},
         )
 
-    def extend_setup_scope(self, workspace_id, paths):
+    def grant(self, workspace_id):
+        value = self.records.get("workspace-grant/" + workspace_id)
+        if not value:
+            raise ValueError("Workspace has no capability grant")
+        return WorkspaceGrant.model_validate(value[1])
+
+    def configure_grant(self, workspace_id, *, capabilities=None, check_names=None, expandable=None):
         manifest = self.current(workspace_id)
-        spec = self.records.get(manifest.task_spec_ref)
-        if not spec or not spec[1].get("extensions", {}).get("polyinference/project-write"):
+        key = "workspace-grant/" + workspace_id
+        retained = self.records.get(key)
+        prior = self.grant(workspace_id) if retained else None
+        grant = self._grant(manifest, prior, capabilities, check_names, expandable)
+        self.records.compare_and_publish({key: retained[0] if retained else 0},
+                                         {key: grant.model_dump(mode="json")})
+        return grant
+
+    def _grant(self, manifest, prior, capabilities, check_names, expandable):
+        process = self.records.get("process/" + manifest.process_id)
+        if not process:
+            raise ValueError("Workspace requires a registered process")
+        capabilities = list(capabilities if capabilities is not None else
+                            prior.capabilities if prior else process[1].get("capabilities", []))
+        if not set(capabilities) <= set(process[1].get("capabilities", [])):
+            raise ValueError("Workspace capability grant exceeds its process grant")
+        expandable = expandable if expandable is not None else prior.expandable if prior else False
+        if expandable and self.config.write_scope != "project":
+            raise ValueError("Write expansion exceeds the configured filesystem grant")
+        grant = WorkspaceGrant(
+            workspace_id=manifest.workspace_id, process_id=manifest.process_id, capabilities=capabilities,
+            check_names=list(check_names if check_names is not None else
+                             prior.check_names if prior else
+                             [value["name"] for _, _, value in self.records.scan("runtime/check/")]),
+            expandable=expandable,
+        )
+        return grant
+
+    def authority(self, workspace_id):
+        manifest, grant = self.current(workspace_id), self.grant(workspace_id)
+        return {"write_paths": manifest.allowed_write_paths, "may_add_project_paths": grant.expandable,
+                "capabilities": grant.capabilities, "check_names": grant.check_names,
+                "generation": manifest.generation}
+
+    async def extend_write_scope(self, workspace_id, paths):
+        manifest = self.current(workspace_id)
+        if not self.grant(workspace_id).expandable:
             raise ValueError("Write outside assigned scope")
+        paths = [relative_path(path) for path in paths]
         added = sorted(set(paths) - set(manifest.allowed_write_paths))
         if not added:
             return manifest
@@ -393,7 +469,7 @@ class Workspaces:
                 "allowed_write_paths": sorted(set(manifest.allowed_write_paths) | set(added)),
             }
         )
-        self.materialize(self.root_for(new), self.scan(self.root_for(manifest)))
+        await self.materialize_view(new, manifest, await self.scan_async(self.root_for(manifest)))
         key = "workspace/" + workspace_id
         self.records.compare_and_publish(
             {key: self.records.get(key)[0]},
@@ -421,6 +497,8 @@ class Workspaces:
             result[name] = (mode, data)
             if sum(len(v[1]) for v in result.values()) > self.config.max_workspace_bytes:
                 raise RuntimeError("Workspace copy budget exceeded")
+        self.source_paths.update(result)
+        self.records.put_once("runtime/source-paths/" + commit, {"paths": sorted(result)})
         return result
 
     def code(self, tree, commit=None):
@@ -441,13 +519,100 @@ class Workspaces:
 
     def root_for(self, manifest):
         # Root references are host-issued IDs, never caller paths.
+        attached = self.records.get("workspace-root/" + manifest.workspace_id)
+        if attached:
+            return Path(attached[1]["path"])
         return self.root / manifest.workspace_id / str(manifest.generation)
 
-    def scan(self, root):
+    def is_attached(self, workspace_id):
+        return self.records.get("workspace-root/" + workspace_id) is not None
+
+    async def attach(self, manifest, path, *, authorized_root, capabilities=None,
+                     check_names=None, expandable=False):
+        """Trusted bootstrap attaches a directory; models cannot choose host paths.
+
+        This mechanism knows no branch, task or repository policy. The caller
+        supplies the manifest and the filesystem ceiling it was authorized to use.
+        """
+        path, ceiling = Path(path).resolve(), Path(authorized_root).resolve()
+        if not path.is_dir() or not path.is_relative_to(ceiling):
+            raise ValueError("Attached workspace is outside its authorized filesystem root")
+        owner = self.records.get("process/" + manifest.process_id)
+        if not owner:
+            raise ValueError("Register the workspace owner before attaching a directory")
+        if self.config.write_scope == "explicit" and not set(manifest.allowed_write_paths) <= set(
+            self.config.allowed_write_paths
+        ):
+            raise ValueError("Attached write scope exceeds the configured filesystem grant")
+        key = "workspace/" + manifest.workspace_id
+        if self.records.get(key):
+            if self.current(manifest.workspace_id).process_id != manifest.process_id:
+                raise ValueError("Workspace belongs to another process")
+            return self.current(manifest.workspace_id)
+        grant = self._grant(manifest, None, capabilities, check_names, expandable)
+        self.records.compare_and_publish(
+            {key: 0, "workspace-root/" + manifest.workspace_id: 0,
+             "workspace-grant/" + manifest.workspace_id: 0},
+            {key: manifest.model_dump(mode="json"),
+             "workspace-root/" + manifest.workspace_id: {"path": str(path)},
+             "workspace-grant/" + manifest.workspace_id: grant.model_dump(mode="json")},
+            {"manifest/" + manifest.manifest_id: manifest.model_dump(mode="json")},
+        )
+        return manifest
+
+    def scan_policy(self, root):
+        outputs = {path for _, _, check in self.records.scan("runtime/check/")
+                   for path in check.get("output_paths", [])}
+        protected = set(self.source_paths)
+        for key, _, attached in self.records.scan("workspace-root/"):
+            if Path(attached["path"]) == root.resolve():
+                row = self.records.get("workspace/" + key.removeprefix("workspace-root/"))
+                if row:
+                    protected.update(row[1]["allowed_write_paths"])
+                    protected.update(file["path"] for file in row[1]["copied_files"])
+        try:
+            workspace, generation = root.relative_to(self.root).parts
+        except ValueError:
+            pass
+        else:
+            row = self.records.get("manifest/" + workspace + ":" + generation)
+            if row:
+                protected.update(row[1]["allowed_write_paths"])
+                protected.update(file["path"] for file in row[1]["copied_files"])
+        return tuple(outputs), frozenset(protected)
+
+    def scan(self, root, outputs=None, protected=None, exact=False):
+        if outputs is None:
+            outputs, protected = self.scan_policy(root)
+        protected = protected or frozenset()
         tree = {}
-        for path in sorted(root.rglob("*")):
+        total = 0
+        def excluded(name):
+            # Control data is never project source, including on attached roots.
+            if any(p in {".git", ".polyinference"} for p in Path(name).parts):
+                if exact:
+                    raise ValueError("Unexpected control data in an immutable source snapshot")
+                return True
+            if exact:
+                return False
+            return name not in protected and (any(p in self.config.tuning.workspace_ignored_names for p in Path(name).parts)
+                    or any(name == output or name.startswith(output + "/") for output in outputs))
+
+        def files():
+            for directory, names, filenames in os.walk(root, followlinks=False):
+                for name in list(names):
+                    path = Path(directory) / name
+                    relative = path.relative_to(root).as_posix()
+                    if excluded(relative) and not any(p.startswith(relative + "/") for p in protected):
+                        names.remove(name)
+                    elif path.is_symlink():
+                        raise ValueError("Workspace symlinks are forbidden")
+                for name in filenames:
+                    yield Path(directory) / name
+
+        for path in sorted(files()):
             relative = path.relative_to(root)
-            if any(p in IGNORED for p in relative.parts):
+            if excluded(relative.as_posix()):
                 continue
             if path.is_symlink():
                 raise ValueError("Workspace symlinks are forbidden")
@@ -455,36 +620,105 @@ class Workspaces:
                 continue
             name = relative.as_posix()
             relative_path(name)
-            tree[name] = ("100755" if path.stat().st_mode & 0o111 else "100644", path.read_bytes())
-            if sum(len(v[1]) for v in tree.values()) > self.config.max_workspace_bytes:
+            total += path.stat().st_size
+            if total > self.config.max_workspace_bytes:
                 raise RuntimeError("Workspace budget exceeded")
+            tree[name] = ("100755" if path.stat().st_mode & 0o111 else "100644", path.read_bytes())
         return tree
+
+    async def scan_async(self, root):
+        return await self.blocking.run(self.scan, root, *self.scan_policy(root))
+
+    async def scan_exact_async(self, root):
+        return await self.blocking.run(self.scan, root, (), frozenset(), True)
+
+    async def native_view(self, workspace_id, operation_id):
+        manifest = self.current(workspace_id)
+        root = self.config.state_path / "snapshots" / ("native-" + digest(operation_id.encode())[7:])
+        tree = await self.scan_async(self.root_for(manifest))
+        await self.materialize_async(root, tree)
+        return root
+
+    async def materialize_async(self, root, tree):
+        self.source_paths.update(tree)
+        return await self.blocking.run(self.materialize, root, tree)
+
+    async def prepare_environment(self, manifest):
+        if self.is_attached(manifest.workspace_id):
+            return  # The caller owns dependency preparation; never delete user environments.
+        root = self.root_for(manifest)
+        fingerprint = dependency_digest(await self.scan_async(root), self.config.tuning)
+        key = "workspace-environment/" + manifest.manifest_id
+        prior = self.records.get(key)
+        if not prior or prior[1]["dependency_digest"] != fingerprint:
+            await self.blocking.run(discard_environment, root, self.scan_policy(root)[1], self.config.tuning)
+        self.records.compare_and_publish({key: prior[0] if prior else 0},
+                                        {key: {"dependency_digest": fingerprint}})
+
+    async def capture_environment(self, manifest):
+        root = self.root_for(manifest)
+        if await self.blocking.run(storage_bytes, self.config.state_path) > self.config.max_workspace_total_bytes:
+            raise RuntimeError("Retained workspace storage budget exceeded")
+        key = "workspace-environment/" + manifest.manifest_id
+        prior = self.records.get(key)
+        self.records.compare_and_publish({key: prior[0] if prior else 0},
+            {key: {"dependency_digest": dependency_digest(await self.scan_async(root), self.config.tuning)}})
+
+    async def materialize_view(self, new, previous, tree):
+        root, old_root = self.root_for(new), self.root_for(previous)
+        # A cancelled copy can leave dependency files in an unpublished generation.
+        await self.blocking.run(discard_environment, root, self.scan_policy(old_root)[1], self.config.tuning)
+        await self.materialize_async(root, tree)
+        prior = self.records.get("workspace-environment/" + previous.manifest_id)
+        fingerprint = dependency_digest(tree, self.config.tuning)
+        if prior and prior[1]["dependency_digest"] == fingerprint:
+            await self.blocking.run(copy_environment, old_root, root, self.config.state_path,
+                                    self.config.max_workspace_total_bytes, self.scan_policy(old_root)[1], self.config.tuning)
+            await self.capture_environment(new)
 
     async def revision(self, workspace_id):
         manifest = self.current(workspace_id)
-        return self.code(self.scan(self.root_for(manifest)))
+        return self.code(await self.scan_async(self.root_for(manifest)))
 
     def materialize(self, root, tree):
+        size = sum(len(value[1]) for value in tree.values())
+        if size > self.config.max_workspace_bytes:
+            raise RuntimeError("Workspace copy budget exceeded")
+        roots = [self.root, self.config.state_path / "snapshots", self.config.state_path / "proxy-snapshot"]
+        used = sum(
+            p.stat().st_size
+            for directory in roots
+            for p in directory.rglob("*")
+            if p.is_file() and not p.is_symlink()
+        )
+        existing = sum(p.stat().st_size for p in root.rglob("*") if p.is_file()) if root.exists() else 0
+        if used + size - existing > self.config.max_workspace_total_bytes:
+            raise RuntimeError("Retained workspace storage budget exceeded")
         root.mkdir(parents=True, exist_ok=True)
+        # An interrupted materialization may have left files outside the new tree.
+        for path in root.rglob("*"):
+            if path.is_symlink():
+                raise ValueError("Workspace symlinks are forbidden")
+            if path.is_file() and path.relative_to(root).as_posix() not in tree:
+                path.unlink()
         for name, (mode, data) in tree.items():
             target = root / name
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_bytes(data)
             target.chmod(0o755 if mode == "100755" else 0o644)
 
-    async def create(self, workspace_id, process_id, task_ref, base, write_paths, read_paths):
+    async def create(self, workspace_id, process_id, task_ref, base, write_paths, read_paths,
+                     *, capabilities=None, check_names=None, expandable=False):
         existing = self.records.get("workspace/" + workspace_id)
         if existing:
+            if existing[1]["process_id"] != process_id:
+                raise ValueError("Workspace belongs to another process")
             return self.current(workspace_id)
+        if self.config.write_scope == "explicit" and not set(write_paths) <= set(self.config.allowed_write_paths):
+            raise ValueError("Workspace write scope exceeds the configured filesystem grant")
         tree = await self.tree(base.commit_id, process_id)
         paths = set(write_paths + read_paths + self.config.closure_paths)
         scoped = {p: data for p, data in tree.items() if p in paths}
-        # An otherwise empty newly initialized project has one host-prepared seed.
-        if not scoped and set(tree) == {".gitignore"}:
-            scoped = dict(tree)
-        # A new-file-only task still needs a pinned read/build closure.
-        if not scoped and tree:
-            raise ValueError("Assignment must include at least one existing closure file")
         manifest = WorkspaceManifest(
             manifest_id=workspace_id + ":1",
             workspace_id=workspace_id,
@@ -505,10 +739,13 @@ class Workspaces:
             closure_basis_ref=task_ref,
             preserved_delta_ref=None,
         )
-        self.materialize(self.root_for(manifest), scoped)
+        grant = self._grant(manifest, None, capabilities, check_names, expandable)
+        await self.materialize_async(self.root_for(manifest), scoped)
         self.records.put_once("manifest/" + manifest.manifest_id, manifest.model_dump(mode="json"))
         self.records.compare_and_publish(
-            {"workspace/" + workspace_id: 0}, {"workspace/" + workspace_id: manifest.model_dump(mode="json")}
+            {"workspace/" + workspace_id: 0, "workspace-grant/" + workspace_id: 0},
+            {"workspace/" + workspace_id: manifest.model_dump(mode="json"),
+             "workspace-grant/" + workspace_id: grant.model_dump(mode="json")}
         )
         return manifest
 
@@ -520,11 +757,12 @@ class Workspaces:
         if manifest.view != "development":
             raise RuntimeError("Only original development view defines the private delta")
         base = await self.tree(manifest.original_base.commit_id, manifest.process_id)
-        current = self.scan(self.root_for(manifest))
+        current = await self.scan_async(self.root_for(manifest))
         copied = {f.path for f in manifest.copied_files}
         changed = {p for p in copied | set(current) if base.get(p) != current.get(p)}
         if not changed <= set(manifest.allowed_write_paths):
-            raise ValueError("Private changes exceed write scope")
+            raise WriteScopeError(workspace_id, "development", changed - set(manifest.allowed_write_paths),
+                                  manifest.allowed_write_paths)
         changes = []
         modes = {}
         for path in sorted(changed):
@@ -553,6 +791,38 @@ class Workspaces:
         self.records.put_once("delta-modes/" + workspace_id, {"modes": modes})
         self.records.put_once(key, delta.model_dump(mode="json"))
         return key
+
+    async def validate_handoff(self, delta_ref, base, write_paths):
+        delta = WorkspaceDelta.model_validate(self.records.get(delta_ref)[1])
+        original = await self.tree(delta.original_base.commit_id)
+        target = await self.tree(base.commit_id)
+        if not {c.path for c in delta.changes} <= set(write_paths):
+            raise ValueError("Retained source exceeds replacement write grant")
+        for change in delta.changes:
+            if original.get(change.path) != target.get(change.path):
+                raise ValueError("Retained source conflicts with current base: " + change.path)
+        return delta
+
+    async def apply_handoff(self, workspace_id, delta_ref):
+        key = "handoff/" + workspace_id
+        existing = self.records.get(key)
+        if existing:
+            if existing[1]["delta_ref"] != delta_ref:
+                raise ValueError("Workspace source handoff is immutable")
+            return
+        manifest = self.current(workspace_id)
+        if manifest.view != "development":
+            raise ValueError("Source handoff requires an unstarted development view")
+        delta = await self.validate_handoff(delta_ref, manifest.original_base, manifest.allowed_write_paths)
+        tree = await self.scan_async(self.root_for(manifest))
+        modes = self.records.get("delta-modes/" + delta.workspace_id)[1]["modes"]
+        for change in delta.changes:
+            if change.action == "delete":
+                tree.pop(change.path, None)
+            else:
+                tree[change.path] = (modes[change.path], self.artifacts.read(change.content))
+        await self.materialize_view(manifest, manifest, tree)
+        self.records.put_once(key, {"delta_ref": delta_ref})
 
     async def integrate(self, workspace_id, head, permit_ref):
         manifest = self.current(workspace_id)
@@ -588,18 +858,21 @@ class Workspaces:
                         (scratch / label).write_bytes(value[1])
                     permit = await self.exclusive.acquire("shell/installation", manifest.process_id)
                     try:
-                        proc = await asyncio.create_subprocess_exec(
-                            "git",
-                            "merge-file",
-                            "-p",
-                            str(scratch / "current"),
-                            str(scratch / "base"),
-                            str(scratch / "private"),
-                            stdout=asyncio.subprocess.PIPE,
-                            stderr=asyncio.subprocess.PIPE,
+                        status, output, _ = await command(
+                            [
+                                "git",
+                                "merge-file",
+                                "-p",
+                                str(scratch / "current"),
+                                str(scratch / "base"),
+                                str(scratch / "private"),
+                            ],
+                            timeout=self.config.max_command_seconds,
+                            output_limit=self.config.max_workspace_bytes,
+                            chunk_bytes=self.config.tuning.command_chunk_bytes,
+                            stream_bytes=self.config.tuning.subprocess_stream_bytes,
                         )
-                        output, _ = await proc.communicate()
-                        if proc.returncode not in {0, 1}:
+                        if status not in range(128):
                             raise ValueError("Merge failed")
                         private = (private[0], output)
                     finally:
@@ -629,7 +902,7 @@ class Workspaces:
                 "preserved_delta_ref": delta_ref,
             }
         )
-        self.materialize(self.root_for(new), integrated)
+        await self.materialize_view(new, manifest, integrated)
         rev = self.records.get("workspace/" + workspace_id)[0]
         self.records.compare_and_publish(
             {"workspace/" + workspace_id: rev},
@@ -643,7 +916,9 @@ class Workspaces:
         if manifest.view == "development":
             return
         # Keep original delta and abandoned integrated files; retire old generation.
-        dev = self.records.get("manifest/" + workspace_id + ":1")[1]
+        preserved = self.records.get("private-delta/" + workspace_id)
+        dev_ref = preserved[1]["development_manifest_ref"] if preserved else workspace_id + ":1"
+        dev = self.records.get("manifest/" + dev_ref)[1]
         generation = manifest.generation + 1
         restored = WorkspaceManifest.model_validate(
             {
@@ -654,7 +929,7 @@ class Workspaces:
             }
         )
         original = WorkspaceManifest.model_validate(dev)
-        self.materialize(self.root_for(restored), self.scan(self.root_for(original)))
+        await self.materialize_view(restored, original, await self.scan_async(self.root_for(original)))
         rev = self.records.get("workspace/" + workspace_id)[0]
         self.records.compare_and_publish(
             {"workspace/" + workspace_id: rev},
@@ -667,20 +942,21 @@ class Workspaces:
         if existing:
             return CodeRevision.model_validate(existing[1])
         manifest = self.current(workspace_id)
-        final = self.scan(self.root_for(manifest))
+        final = await self.scan_async(self.root_for(manifest))
         previous = await self.tree(head.commit_id, manifest.process_id)
         changed = {p for p in final.keys() | previous.keys() if final.get(p) != previous.get(p)}
         if not changed <= set(manifest.allowed_write_paths):
-            raise ValueError("Final H-to-P delta exceeds write grant")
+            raise WriteScopeError(workspace_id, "publication", changed - set(manifest.allowed_write_paths),
+                                  manifest.allowed_write_paths)
         index = self.root / workspace_id / "trusted.index"
         env = {
             "GIT_INDEX_FILE": str(index),
-            "GIT_AUTHOR_NAME": "PolyInference",
-            "GIT_AUTHOR_EMAIL": "agent@polyinference.local",
-            "GIT_COMMITTER_NAME": "PolyInference",
-            "GIT_COMMITTER_EMAIL": "agent@polyinference.local",
-            "GIT_AUTHOR_DATE": "2000-01-01T00:00:00+0000",
-            "GIT_COMMITTER_DATE": "2000-01-01T00:00:00+0000",
+            "GIT_AUTHOR_NAME": self.config.tuning.publication_git_name,
+            "GIT_AUTHOR_EMAIL": self.config.tuning.publication_git_email,
+            "GIT_COMMITTER_NAME": self.config.tuning.publication_git_name,
+            "GIT_COMMITTER_EMAIL": self.config.tuning.publication_git_email,
+            "GIT_AUTHOR_DATE": self.config.tuning.publication_git_date,
+            "GIT_COMMITTER_DATE": self.config.tuning.publication_git_date,
         }
         await self.git("read-tree", "--empty", process_id=manifest.process_id, env=env)
         for path, (mode, content) in sorted(final.items()):
@@ -720,5 +996,18 @@ class Workspaces:
             .strip()
         )
         code = self.code(final, commit)
-        self.records.put_once("commit/" + operation_id, code.model_dump(mode="json"))
+        self.records.compare_and_publish(
+            {},
+            {},
+            {
+                "commit/" + operation_id: code.model_dump(mode="json"),
+                "commit-info/" + operation_id: {
+                    "code": code.model_dump(mode="json"),
+                    "parent": head.model_dump(mode="json"),
+                    "process_id": manifest.process_id,
+                    "workspace_id": workspace_id,
+                    "generation": manifest.generation,
+                },
+            },
+        )
         return code

@@ -14,13 +14,27 @@ from ..contracts import (
     Requirement,
     ReviewResolution,
     SprintPlan,
-    TaskAttempt,
     TaskSpec,
 )
 from ..domain import SeniorProposal, canonical, digest, now
+from ..ports import RecordConflict
+from .architecture import catalog, validate_local_tasks, validate_plan
+from .cloud_recovery import capabilities, policy_view
 from .design_basis import DESIGN_BASIS
-from .routing import allocate
+from .exceptions import obligation_satisfied, park_model_failure, review_view, validate_sources
+from .exceptions import validate as validate_exceptions
+from .review import (
+    check_view,
+    code_identity,
+    contract,
+    evidence_catalog,
+    fit_snapshot,
+    task_view,
+    validate_completion,
+)
+from .routing import allocate, development_history, was_started
 from .senior import build_senior
+from .services import ModelOperationFailure
 from .tasks import make_task
 from .worker import AppContext, build_worker
 
@@ -50,10 +64,11 @@ class ProjectAgent:
     async def initialize(self):
         app = self.app
         if app.ports.records.get("app/run"):
-            if app.get("app/run")["program"] != app.program.model_dump(mode="json"):
-                raise RuntimeError(
-                    "Program/graph/prompt version changed; resume requires the pinned implementation"
-                )
+            from .resume import migrate_program
+
+            migrate_program(app)
+            if app.repository:
+                await app.repository.initialize()
             return
         requirements = [
             Requirement(feature_id="runtime/" + name, version="1", necessity="required")
@@ -63,12 +78,15 @@ class ProjectAgent:
                 "global-shell-exclusion",
                 "verification-exclusion",
                 "atomic-record-publication",
-                "scoped-workspace-copy",
+                "attached-workspace" if app.repository else "scoped-workspace-copy",
                 "workspace-view",
                 "direct-tools",
                 "artifacts",
                 "persistent-checkpoints",
                 "fixed-role-routing",
+                "output-delivery",
+                "process-recovery",
+                "execution-progress",
             )
         ]
         for feature, enabled in (
@@ -84,7 +102,7 @@ class ProjectAgent:
         manifest = AgentProgram(
             **app.base("program/manifest"),
             program=app.program,
-            entry_points=["controller", "worker", "senior"],
+            entry_points=["controller", "worker", "senior", "check_diagnosis"],
             required_runtime_features=requirements,
             optional_runtime_features=[],
             migration_registry_ref=None,
@@ -95,7 +113,26 @@ class ProjectAgent:
             app.ports.records.compare_and_publish(
                 {}, {}, {manifest.record_id: manifest.model_dump(mode="json")}
             )
-        initial = await app.ports.workspaces.initialize()
+        app.process("controller", "senior")
+        if app.repository:
+            result, output = await app.capability({"process_id": "controller"}, "repository-prepare",
+                                                  "coding.prepare", {}, "shared_write")
+            if result.state != "succeeded":
+                raise ValueError(output.get("error", str(output)))
+            initial = CodeRevision.model_validate(output)
+        else:
+            initial = await app.ports.workspaces.initialize()
+        if not app.repository and hasattr(app.ports, "outputs"):
+            setup = app.get("repository/setup")
+            destination = app.config.output_directory or (
+                str(app.config.repo_path) if setup.get("git_initialized")
+                else str(app.config.state_path / "result")
+            )
+            baseline = await app.ports.workspaces.tree(initial.commit_id)
+            app.ports.outputs.prepare(destination, {
+                path: {"mode": mode, "digest": digest(content)}
+                for path, (mode, content) in baseline.items() if (app.config.repo_path / path).is_file()
+            } if destination == str(app.config.repo_path) else {})
         run = {
             "program": app.program.model_dump(mode="json"),
             "objective": app.config.objective,
@@ -124,26 +161,245 @@ class ProjectAgent:
         app.process("controller", "senior")
 
     async def run(self):
-        await self.initialize()
+        app = self.app
+        try:
+            await self.initialize()
+            result = await self._run()
+            # A known worker failure closes starts, but other started workers
+            # retain their finish paths. Do not tear them down with the runtime.
+            if self.workers and app.get("app/run")["status"] != "active" and not app.ports.operations.uncertain():
+                self.close_starts()
+                while self.workers:
+                    await asyncio.wait(self.workers.values(), return_when=asyncio.FIRST_COMPLETED)
+                    await self.consume()
+            return {**result, "outcome": app.get("app/run")["status"]}
+        except BaseException as exc:
+            row = app.ports.records.get("app/run")
+            run = row[1] if row else {}
+            if run.get("status") == "active":
+                app.update("app/run", {**run, "status": "paused", "starts_closed": True,
+                                       "blocker": str(exc)[:2000] or type(exc).__name__})
+            raise
+        finally:
+            if app.repository:
+                try:
+                    summary = await app.repository.summary()
+                    app.update("coding/repository-summary", summary)
+                    await app.capability({"process_id": "controller"}, "repository-summary-" + digest(canonical(summary)),
+                                         "user.notify", {"text": app.repository.summary_message(summary)}, "shared_write")
+                except Exception as exc:
+                    app.update("coding/repository-summary-error", {"error": str(exc)[:2000]})
+                finally:
+                    await app.repository.close_run()
+            if hasattr(app.ports, "processes"):
+                if app.ports.records.get("process/controller"):
+                    row = app.ports.records.get("app/run")
+                    app.ports.processes.finish(
+                        "controller", state="completed" if row and row[1]["status"] == "completed" else "paused"
+                    )
+
+    async def _run(self):
         if self.app.ports.operations.uncertain():
             raise RuntimeError("Uncertain effects require reconciliation; no replacement is dispatched")
+        if self.app.get("app/run")["status"] in {"active", "delivering"}:
+            controller = self.app.get("process/controller")
+            if controller["state"] in {"completed", "paused", "failed"}:
+                self.app.update("process/controller", {**controller, "state": "ready"})
+                self.app.process_status("controller", state="ready")
         if self.app.config.prepare_repository and not self.app.ports.records.get("setup/completed"):
             from .setup import prepare
 
             await prepare(self)
             if self.app.get("app/run")["status"] != "active":
                 return {"outcome": self.app.get("app/run")["status"]}
+        if self.app.get("app/run")["status"] == "delivering":
+            try:
+                await self.deliver_outputs()
+            finally:
+                # Acceptance may have committed immediately before a crash,
+                # leaving its old verification lease attached to the controller.
+                owner = self.app.ports.records.get("permit/verification/project")
+                if owner and owner[1].get("process_id") == "controller":
+                    await self.app.ports.exclusive.release(owner[1]["permit"], "controller")
+            if self.app.get("app/run")["status"] != "active":
+                return {"outcome": self.app.get("app/run")["status"]}
         saved = await self.controller.aget_state({"configurable": {"thread_id": "controller"}})
         initial = None if saved.next else {"process_id": "controller", "logical_step": 0}
-        return await self.controller.ainvoke(
+        result = await self.controller.ainvoke(
             initial,
             {"configurable": {"thread_id": "controller"}, "recursion_limit": 10000},
             context=self.context,
             durability="sync",
         )
+        return result
 
-    def steer(self, text):
+    async def deliver_outputs(self):
         app = self.app
+        run = app.get("app/run")
+        if app.repository:
+            receipt = app.get(run["acceptance_ref"])
+            await app.repository.assert_target(receipt["code"]["commit_id"])
+            app.update("app/run", {**run, "status": "completed", "output": {
+                "directory": str(app.config.repo_path), "branch": app.get("repository/setup")["base_branch"],
+                "commit": receipt["code"]["commit_id"], "in_place": True}})
+            return True
+        receipt = app.get(run["acceptance_ref"])
+        tree = await app.ports.workspaces.tree(receipt["code"]["commit_id"])
+        files = [{"path": path, "mode": mode,
+                  "content": app.ports.artifacts.put(content, app.scope(), "application/octet-stream").model_dump(mode="json")}
+                 for path, (mode, content) in sorted(tree.items())]
+        result, output = await app.capability(
+            {"process_id": "controller", "logical_step": "delivery"},
+            "deliver-" + run["acceptance_ref"] + "-" + str(run.get("output_delivery_attempt", 1)), "outputs.deliver",
+            {"delivery_id": run["acceptance_ref"], "files": files}, "shared_write",
+        )
+        if result.state != "succeeded":
+            app.update("app/run", {**app.get("app/run"), "status": "paused",
+                                   "blocker": output.get("error", "Output delivery failed")})
+            return False
+        version, current = app.ports.records.get("app/run")
+        head = app.ports.records.get("head/provisional")
+        reviewed = app.ports.records.get("head/reviewed")
+        current_acceptance = (
+            current["status"] == "delivering"
+            and current.get("acceptance_ref") == run["acceptance_ref"]
+            and current["steering_received"] == receipt["steering_through"]
+            and head[1]["code"] == reviewed[1]["code"] == receipt["code"]
+        )
+        if not current_acceptance:
+            app.update("app/run", {**current, "output": output,
+                                   "status": "active" if current["status"] == "delivering" else current["status"],
+                                   "starts_closed": True, "completion_proposed": False})
+            return False
+        try:
+            app.ports.records.compare_and_publish(
+                {"app/run": version, "head/provisional": head[0], "head/reviewed": reviewed[0]},
+                {"app/run": {**current, "status": "completed", "output": output}},
+            )
+            return True
+        except RecordConflict:
+            return False
+
+    def retry_outputs(self, reason):
+        app = self.app
+        run = app.get("app/run")
+        if not reason.strip() or run["status"] != "paused" or not run.get("acceptance_ref"):
+            raise ValueError("Output recovery needs a paused accepted run and an explicit reason")
+        receipt = app.get(run["acceptance_ref"])
+        if (app.ports.operations.uncertain() or run["active_workers"]
+                or receipt["code"] != app.get("head/provisional")["code"]
+                or receipt["code"] != app.get("head/reviewed")["code"]
+                or receipt["steering_through"] != run["steering_received"]):
+            raise ValueError("Output recovery requires current acceptance and known stopped effects")
+        app.update("app/run", {**run, "status": "delivering", "blocker": None,
+                               "output_delivery_attempt": run.get("output_delivery_attempt", 1) + 1,
+                               "output_delivery_reason": reason[:4000]})
+
+    async def retry_worker(self, task_id, reason):
+        """Explicitly recover a known model failure without repeating private edits."""
+        app = self.app
+        if not reason.strip():
+            raise ValueError("Recovery needs a reason")
+        if self.workers or app.get("app/run")["active_workers"] or app.ports.operations.uncertain():
+            raise ValueError("Drain active work and reconcile unknown effects before recovery")
+        key = "task/" + task_id
+        task = app.get(key)
+        failure = task.get("model_failure")
+        if task["execution"] != "interrupted" or not failure:
+            raise ValueError("Task has no recoverable model failure")
+        original = app.get("effect/" + failure["operation_id"])
+        if original["state"] != "failed" or original["result"]["execution_termination"] != "confirmed_stopped":
+            raise ValueError("Recovery requires a confirmed stopped model operation")
+        pid, wid = task["process_id"], task["workspace_id"]
+        control = app.ports.records.get("process-control/" + pid)
+        if control and control[1].get("cancel_requested"):
+            raise ValueError("A cancelled process cannot be recovered as a model retry")
+        if hasattr(app.ports.operations, "recovery_allowed"):
+            app.ports.operations.recovery_allowed(failure["operation_id"], app.scope(pid))
+        config = {"configurable": {"thread_id": pid}}
+        saved = await self.worker.aget_state(config)
+        values = dict(saved.values)
+        prepared_recovery = saved.next == ("progress",) and (values.get("model_recovery") or {}).get("operation_id") == failure["operation_id"]
+        if not values or not (saved.next == ("model",) or prepared_recovery):
+            raise ValueError("Recovery requires a checkpoint stopped at the model node or its prepared recovery")
+        manifest = app.ports.workspaces.current(wid)
+        if manifest.view == "integration":
+            # A previous recovery may have checkpointed the new phase before
+            # atomically activating its driver. Rebuild from the original delta.
+            await app.ports.workspaces.abort(wid)
+            owner = app.ports.records.get("permit/verification/project")
+            if owner and owner[1].get("process_id") == pid:
+                await app.ports.exclusive.release(owner[1]["permit"], pid)
+            manifest = app.ports.workspaces.current(wid)
+        updates = {"logical_step": values["logical_step"] + 1,
+                   "workspace_generation": manifest.generation,
+                   "verification_permit_ref": None,
+                   "model_recovery": {"operation_id": failure["operation_id"], "reason": reason[:4000]}}
+        if values["phase"] in {"reconciliation", "assessment"}:
+            permit = await app.ports.exclusive.acquire("verification/project", pid)
+            try:
+                manifest = await app.ports.workspaces.integrate(
+                    wid, CodeRevision.model_validate(app.get("head/provisional")["code"]), permit
+                )
+                updates.update(
+                    phase="reconciliation", workspace_view="integration",
+                    workspace_generation=manifest.generation, verification_permit_ref=permit,
+                    captured_head=manifest.captured_head.model_dump(mode="json"), evidence=[],
+                    reconciliation_turn_refs=[], assessment_turn_refs=[],
+                )
+                await self.worker.aupdate_state(config, updates, as_node="integrate")
+            except BaseException:
+                await app.ports.exclusive.release(permit, pid)
+                raise
+        else:
+            updates.update(phase="development", workspace_view="development")
+            await self.worker.aupdate_state(config, updates, as_node="load")
+        ledger = {key: {**task, "execution": "in_progress", "model_failure": None}}
+        attempt = app.get("attempt/" + task["attempt_id"])
+        ledger["attempt/" + task["attempt_id"]] = {**attempt, "execution": "in_progress",
+                                                  "revision": attempt["revision"] + 1, "stop_reason": None}
+        for process_id in (pid, "controller"):
+            process = app.get("process/" + process_id)
+            ledger["process/" + process_id] = {**process, "state": "ready", "error": None}
+            status = app.get("process-status/" + process_id)
+            ledger["process-status/" + process_id] = {
+                **status, "state": "ready", "revision": status["revision"] + 1,
+                **({"phase": updates["phase"], "cleanup_state": "none",
+                    "permit_refs": [updates["verification_permit_ref"]] if updates.get("verification_permit_ref") else []}
+                   if process_id == pid else {}),
+            }
+        run = app.get("app/run")
+        ledger["app/run"] = {**run, "status": "active", "starts_closed": True,
+                              "active_workers": [pid], "captured_workers": [pid],
+                              "completion_proposed": False, "blocker": None}
+        app.ports.records.compare_and_publish(
+            {name: app.ports.records.get(name)[0] for name in ledger}, ledger
+        )
+        await self.launch(key, resume=True)
+
+    async def resume(self, request_ref):
+        from .resume import resume_run
+
+        try:
+            await resume_run(self, request_ref)
+        except Exception as exc:
+            run = self.app.get("app/run")
+            if run["status"] != "completed":
+                self.app.update("app/run", {**run, "status": "paused", "starts_closed": True})
+            key = "resume-outcome/" + request_ref
+            if not self.app.ports.records.get(key):
+                self.app.update(key, {"state": "rejected", "error": str(exc)[:2000]})
+            self.app.update("resume-progress/" + request_ref, {"state": "failed", "error": str(exc)[:2000]})
+            raise
+
+    def steer(self, text, *, request_ref=None):
+        app = self.app
+        receipt_key = "coding/resume-steering/" + request_ref if request_ref else None
+        if receipt_key and app.ports.records.get(receipt_key):
+            return app.get(receipt_key)["sequence"]
+        process = app.get("process/controller")
+        app.update("process/controller", {**process, "state": "ready"})
+        app.process_status("controller", state="ready")
         version, run = app.ports.records.get("app/run")
         sequence = run["steering_received"] + 1
         active = set(run["active_workers"])
@@ -164,7 +420,8 @@ class ProjectAgent:
                     "sequence": sequence,
                     "text": text,
                     "received_at": now().isoformat(),
-                }
+                },
+                **({receipt_key: {"sequence": sequence}} if receipt_key else {}),
             },
         )
         return sequence
@@ -173,6 +430,8 @@ class ProjectAgent:
         app = self.app
         task = app.get(task_ref)
         pid = task["process_id"]
+        if task["execution"] != "in_progress" and not (resume and task["execution"] == "completed"):
+            return
         if pid in self.workers:
             return
         app.process(pid, task["assignment"]["role"], task["spec_ref"], task)
@@ -196,12 +455,39 @@ class ProjectAgent:
         saved = await self.worker.aget_state({"configurable": {"thread_id": pid}})
         if resume and saved.next:
             initial = None
+            if task["execution"] == "completed":
+                facts = app.ports.operations.settlement(pid)
+                if saved.next != ("release",) or facts["pending_operations"] or app.ports.operations.uncertain():
+                    raise RuntimeError("Published worker cleanup lacks settled execution")
+                process = app.get("process/" + pid)
+                if process["state"] == "paused":
+                    app.update("process/" + pid, {**process, "state": "ready"})
+        elif resume and task["execution"] == "completed":
+            status = app.get("process-status/" + pid)
+            facts = app.ports.operations.settlement(pid)
+            if (
+                status.get("cleanup_state") != "complete"
+                or facts["pending_operations"]
+                or facts["permit_refs"]
+            ):
+                raise RuntimeError(
+                    "Completed worker has no resumable cleanup checkpoint; reconcile ownership"
+                )
+            return  # A completed END checkpoint needs detachment, never a fresh invocation.
+        elif resume and saved.values:
+            raise RuntimeError("Finished worker graph disagrees with its active task")
 
         async def drive():
             try:
+                process = app.get("process/" + pid)
+                app.update("process/" + pid, {**process, "state": "running"})
+                app.process_status(pid, state="running", phase="development")
                 return await self.worker.ainvoke(
                     initial,
-                    {"configurable": {"thread_id": pid}, "recursion_limit": 2000},
+                    {
+                        "configurable": {"thread_id": pid},
+                        "recursion_limit": 6 * app.config.limits.max_steps + 128,
+                    },
                     context=self.context,
                     durability="sync",
                 )
@@ -209,9 +495,67 @@ class ProjectAgent:
                 # Retain unknown effects and ownership. Definite stopped work may be parked.
                 process = app.get("process/" + pid)
                 app.update("process/" + pid, {**process, "state": "paused", "error": str(exc)[:2000]})
+                unknown = [
+                    key
+                    for key in app.ports.operations.uncertain()
+                    if app.get("effect/" + key)["request"]["scope"]["process_id"] == pid
+                ]
+                published = bool(app.get(task_ref).get("report_ref"))
+                if not unknown and not published:
+                    await app.preserve_interrupted(task_ref)
+                    owner = app.ports.records.get("permit/verification/project")
+                    if owner and owner[1].get("process_id") == pid:
+                        await app.ports.workspaces.abort(task["workspace_id"])
+                        await app.ports.exclusive.release(owner[1]["permit"], pid)
+                    current_task = app.get(task_ref)
+                    failure = ({"operation_id": exc.result.operation_id,
+                                "error": exc.result.error.model_dump(mode="json") if exc.result.error else None,
+                                "diagnostics": exc.result.extensions,
+                                "execution_termination": exc.result.execution_termination, "effects": exc.result.effects}
+                               if isinstance(exc, ModelOperationFailure) else None)
+                    app.update(task_ref, {**current_task, "execution": "interrupted",
+                                          "exception": str(exc)[:2000], "model_failure": failure})
+                    attempt_key = "attempt/" + current_task["attempt_id"]
+                    attempt = app.get(attempt_key)
+                    updated_attempt = app.task_attempt(attempt, update={
+                        "revision": attempt["revision"] + 1, "execution": "interrupted",
+                        "stop_reason": str(exc)[:2000]})
+                    app.update(attempt_key, updated_attempt.model_dump(mode="json"))
+                app.process_status(
+                    pid,
+                    state="paused",
+                    cleanup_state="uncertain" if unknown else "pending" if published else "complete",
+                    **({} if unknown or published else {"permit_refs": [], "pending_operations": [], "wait": None}),
+                )
                 raise
 
-        self.workers[pid] = asyncio.create_task(drive())
+        processes = getattr(app.ports, "processes", None)
+        self.workers[pid] = processes.start(pid, drive) if processes else asyncio.create_task(drive())
+
+    async def settle_stopped_worker(self, task_ref, reason):
+        app = self.app
+        task = app.get(task_ref)
+        pid = task["process_id"]
+        if task.get("report_ref"):
+            return False  # Publication is immutable; resume the saved cleanup node.
+        if any(body["request"]["scope"].get("process_id") == pid
+               and body["state"] in {"prepared", "submitting", "active", "uncertain"}
+               for _, _, body in app.ports.records.scan("effect/")):
+            return False
+        if app.ports.records.get("workspace/" + task["workspace_id"]):
+            await app.ports.workspaces.abort(task["workspace_id"])
+        owner = app.ports.records.get("permit/verification/project")
+        if owner and owner[1].get("process_id") == pid:
+            await app.ports.exclusive.release(owner[1]["permit"], pid)
+        if task["execution"] != "completed":
+            app.update(task_ref, {**task, "execution": "interrupted", "exception": reason})
+            attempt_key = "attempt/" + task["attempt_id"]
+            attempt = app.get(attempt_key)
+            if attempt["execution"] != "interrupted":
+                app.update(attempt_key, {**attempt, "execution": "interrupted",
+                                         "revision": attempt["revision"] + 1, "stop_reason": reason})
+        app.process_status(pid, cleanup_state="complete", permit_refs=[], pending_operations=[], wait=None)
+        return True
 
     async def consume(self):
         app = self.app
@@ -220,22 +564,59 @@ class ProjectAgent:
         tasks = {body["process_id"]: key for key, _, body in app.ports.records.scan("task/")}
         for pid in run["active_workers"]:
             if pid not in self.workers:
+                if app.get("process/" + pid)["state"] in {"paused", "cancelled", "failed"} and app.get(tasks[pid])["execution"] != "completed":
+                    known = await self.settle_stopped_worker(tasks[pid], "Worker driver stopped; explicit recovery required")
+                    current = app.get("app/run")
+                    app.update("app/run", {**current, "status": "paused", "starts_closed": True,
+                                            "active_workers": [p for p in current["active_workers"] if p != pid] if known else current["active_workers"],
+                                            "blocker": "Worker driver stopped; explicitly recover or retire its retained work"})
+                    continue
                 await self.launch(tasks[pid], resume=True)
+                if pid not in self.workers:
+                    task = app.get(tasks[pid])
+                    if task["execution"] != "completed" and not task.get("exception_ref"):
+                        raise RuntimeError("Active worker lacks a resumable or safely completed invocation")
+                    version, current = app.ports.records.get("app/run")
+                    app.ports.records.compare_and_publish(
+                        {"app/run": version},
+                        {
+                            "app/run": {
+                                **current,
+                                "starts_closed": current["starts_closed"]
+                                or task["execution"] == "interrupted",
+                                "active_workers": [p for p in current["active_workers"] if p != pid],
+                                "captured_workers": [p for p in current["captured_workers"] if p != pid],
+                            }
+                        },
+                    )
         finished = [pid for pid, task in self.workers.items() if task.done()]
         for pid in finished:
             future = self.workers.pop(pid)
-            failure = future.exception()
+            failure = RuntimeError("Worker driver cancelled") if future.cancelled() else future.exception()
             version, run = app.ports.records.get("app/run")
             task_ref = tasks[pid]
             task = app.get(task_ref)
-            if failure or task["execution"] == "interrupted":
+            if failure and task.get("model_failure"):
+                checkpoint = await self.worker.aget_state({"configurable": {"thread_id": pid}})
+                if checkpoint.values and await park_model_failure(app, dict(checkpoint.values), task["model_failure"]):
+                    failure = None
+                    task = app.get(task_ref)
+                    version, run = app.ports.records.get("app/run")
+            if failure or (task["execution"] == "interrupted" and not task.get("exception_ref")):
+                known = await self.settle_stopped_worker(task_ref, str(failure) if failure else task.get("exception", "needs review"))
+                unknown = not known or bool(app.ports.operations.uncertain())
+                version, run = app.ports.records.get("app/run")
                 app.ports.records.compare_and_publish(
                     {"app/run": version},
                     {
                         "app/run": {
                             **run,
                             "starts_closed": True,
-                            "status": "paused",
+                            "status": "paused" if unknown or failure or task.get("model_failure") else "active",
+                            "active_workers": run["active_workers"]
+                            if unknown
+                            else [p for p in run["active_workers"] if p != pid],
+                            "captured_workers": [p for p in run["active_workers"] if p != pid],
                             "blocker": str(failure)
                             if failure
                             else task.get("exception", "worker needs review"),
@@ -248,6 +629,7 @@ class ProjectAgent:
                 {
                     "app/run": {
                         **run,
+                        "starts_closed": run["starts_closed"] or task["execution"] == "interrupted",
                         "active_workers": [p for p in run["active_workers"] if p != pid],
                         "captured_workers": [p for p in run["captured_workers"] if p != pid],
                     }
@@ -281,7 +663,7 @@ class ProjectAgent:
         app = self.app
         for key in self.ready():
             version, run = app.ports.records.get("app/run")
-            if run["starts_closed"] or len(run["active_workers"]) >= app.config.max_workers:
+            if run["starts_closed"] or len(run["active_workers"]) >= app.worker_limit:
                 break
             task_version, task = app.ports.records.get(key)
             if task["execution"] != "pending":
@@ -294,7 +676,7 @@ class ProjectAgent:
             )
             attempt_key = "attempt/" + task["attempt_id"]
             attempt_version, attempt_body = app.ports.records.get(attempt_key)
-            attempt = TaskAttempt.model_validate(attempt_body).model_copy(
+            attempt = app.task_attempt(attempt_body,
                 update={
                     "revision": attempt_body["revision"] + 1,
                     "task_spec_ref": spec_ref,
@@ -306,7 +688,8 @@ class ProjectAgent:
                 {"app/run": version, key: task_version, attempt_key: attempt_version},
                 {
                     "app/run": {**run, "active_workers": [*run["active_workers"], task["process_id"]]},
-                    key: {**task, "execution": "in_progress", "base": base, "spec_ref": spec_ref},
+                    key: {**task, "execution": "in_progress", "base": base, "spec_ref": spec_ref,
+                          "started_at": task.get("started_at") or now().isoformat()},
                     attempt_key: attempt.model_dump(mode="json"),
                 },
                 {spec_ref: spec.model_dump(mode="json")},
@@ -342,6 +725,12 @@ class ProjectAgent:
                 await asyncio.wait(self.workers.values(), return_when=asyncio.FIRST_COMPLETED)
             await self.consume()
         version, run = app.ports.records.get("app/run")
+        if app.repository and run["steering_received"]:
+            through = run["steering_received"]
+            await app.repository.apply_steering(app.user_updates(through))
+            version, run = app.ports.records.get("app/run")
+            if run["steering_received"] != through:
+                return
         if run["sprint"] >= app.config.max_sprints or run["senior_queries"] >= app.config.max_sprints * 3:
             app.update("app/run", {**run, "status": "budget_stopped", "blocker": "Sprint/query limit"})
             return
@@ -358,31 +747,66 @@ class ProjectAgent:
             if run["steering_applied"] < body["sequence"] <= run["steering_received"]
         ]
         pending = [v for _, _, v in app.ports.records.scan("task/") if v["execution"] == "pending"]
+        previous = app.ports.records.get(f"proposal/senior-{run['senior_queries']}")
+        report_views = [await app.review_report(report) for report in reports]
         snapshot = {
             "objective": run["objective"],
+            "reviewed_head": app.get("head/reviewed")["code"],
+            "previous_user_brief": previous[1]["proposal"].get("user_brief") if previous else None,
             "repository_setup": (app.ports.records.get("repository/setup") or (0, {}))[1],
             "development_allocation": {
                 "senior_fraction": app.config.senior_development_fraction,
                 "tasks": [
-                    {"task_id": body["assignment"]["task_id"], "role": body["assignment"]["role"]}
-                    for _, _, body in app.ports.records.scan("task/")
-                    if body.get("category", "development") == "development"
-                    and body["execution"] != "cancelled"
+                    {"task_id": body["assignment"]["task_id"], "role": body["assignment"]["role"],
+                     "started": was_started(body), "reserved": body["execution"] == "pending"}
+                    for body in development_history(
+                        (body for _, _, body in app.ports.records.scan("task/")), reserve_pending=True)
                 ],
             },
-            "repository_context": await app.repository_context(head),
+            "repository_context": await app.repository_context(
+                head, [p for r in report_views for p in r["changed_paths"]]
+            ),
             "head": head,
-            "reports": [app.review_report(report) for report in reports],
+            "reports": report_views,
+            "exceptions": review_view(app),
             "steering": steering,
-            "pending_tasks": pending,
+            "user_updates": app.user_updates(run["steering_received"]),
+            "pending_tasks": [task_view(task) for task in pending],
+            "interrupted_tasks": [
+                task_view(v) for _, _, v in app.ports.records.scan("task/") if v["execution"] == "interrupted"
+            ],
             "all_task_ids": [v["assignment"]["task_id"] for _, _, v in app.ports.records.scan("task/")],
             "allowed_write_paths": app.config.allowed_write_paths,
+            "write_scope": app.config.write_scope,
+            "write_authority": {
+                "mode": app.config.write_scope,
+                "may_assign_new_project_paths": app.config.write_scope == "project",
+                "explicit_paths": app.config.allowed_write_paths if app.config.write_scope == "explicit" else None,
+                "description": (
+                    "May assign new project-relative file paths. allowed_write_paths is the initial seed, not a ceiling."
+                    if app.config.write_scope == "project" else "Assignments must stay inside explicit_paths."
+                ),
+            },
+            "interface_contracts": [c.model_dump(mode="json") for c in catalog(app).values()],
             "memory": app.memory_view(),
             "closure_paths": app.config.closure_paths,
-            "configured_checks": [c.name for c in app.config.checks],
+            "configured_checks": [c.name for c in app.task_check_definitions],
+            "runtime_capabilities": capabilities(app.config),
+            "acceptance_checks": [c.name for c in app.acceptance_check_definitions],
             "previous_acceptance": run.get("acceptance_failure"),
+            "acceptance_contract": contract(app, head),
         }
-        fingerprint = digest(canonical(snapshot))
+        snapshot["cloud_recovery_policy"] = await policy_view(app, snapshot["exceptions"], head)
+        if app.repository:
+            references = [r["candidate_commit_id"] for r in reports if r.get("code_location") == "private"]
+            references += [v["preserved_source_ref"] for v in snapshot["interrupted_tasks"]
+                           if v.get("preserved_source_ref")]
+            snapshot["retained_sources"] = [await app.repository.source_offer(ref, head)
+                                            for ref in dict.fromkeys(references)]
+        progress = {k: v for k, v in snapshot.items()
+                    if k not in {"memory", "all_task_ids", "development_allocation", "previous_user_brief"}}
+        progress["exceptions"] = [{k: v for k, v in e.items() if k != "action"} for e in snapshot["exceptions"]]
+        fingerprint = digest(canonical(progress))
         if fingerprint == run.get("last_review_fingerprint"):
             app.update(
                 "app/run",
@@ -395,12 +819,34 @@ class ProjectAgent:
         expected_version = app.ports.records.get("app/run")[0]
         pid = f"senior-{query_index}"
         app.process(pid, "senior")
-        if reports:
-            evidence = await self.review_checks(pid, query_index, head)
-            snapshot["independent_review_evidence"] = evidence
+        # Check the current head even when all reports were resolved previously.
+        # A source review or a syntax check alone is not project acceptance.
+        evidence = await self.review_checks(pid, query_index, head)
+        snapshot["independent_review_evidence"] = [
+            {key: e[key] for key in ("evidence_id", "criterion_ref", "status")}
+            | {"checked_code": code_identity(e["checked_code"])}
+            for e in evidence
+        ]
+        snapshot["independent_check_diagnostics"] = [check_view(app, e, cap=1500) for e in evidence]
+        snapshot["review_evidence_catalog"] = evidence_catalog(snapshot)
+        try:
+            snapshot = fit_snapshot(app, snapshot)
+        except ValueError as exc:
+            app.update(
+                "app/run",
+                {
+                    **app.get("app/run"),
+                    "status": "paused",
+                    "blocker": str(exc),
+                    "review_input_ref": app.artifact(snapshot).model_dump(mode="json"),
+                },
+            )
+            return
         endpoint = getattr(app.config, app.config.role_bindings["senior"])
         if endpoint.protocol in {"codex_app_server", "codex_proxy"}:
-            await app.ports.workspaces.prepare_snapshot(CodeRevision.model_validate(head), pid)
+            await app.ports.workspaces.prepare_snapshot(
+                CodeRevision.model_validate(head), pid, binding_ref=app.config.role_bindings["senior"]
+            )
         query = {
             "process_id": pid,
             "mode": "initial" if run["plan_ref"] is None else "sprint_review",
@@ -411,19 +857,26 @@ class ProjectAgent:
         }
         result = await self.senior.ainvoke(
             query,
-            {"configurable": {"thread_id": pid}, "recursion_limit": 20},
+            {
+                "configurable": {"thread_id": pid, "corrections": app.config.max_senior_corrections},
+                "recursion_limit": 80,
+            },
             context=self.context,
             durability="sync",
         )
         if result.get("error"):
             app.update("app/run", {**app.get("app/run"), "status": "paused", "blocker": result["error"]})
             return
+        # Retrieval changes the pinned review packet; retain exactly what was seen.
+        snapshot = result["input"]
         app.ports.records.compare_and_publish(
             {},
             {},
             {
                 "proposal/" + pid: {
                     "proposal": result["proposal"],
+                    "model_proposal": result.get("model_proposal", result["proposal"]),
+                    "policy_adjustments": result.get("policy_adjustments", []),
                     "head": head,
                     "steering_through": run["steering_received"],
                 }
@@ -456,14 +909,28 @@ class ProjectAgent:
             app.update("review-batch/active", {**batch, "state": "done"})
             return
         proposal = SeniorProposal.model_validate(batch["proposal"])
+        replacements = validate_exceptions(app, proposal, snapshot)
+        interfaces = validate_plan(proposal, [v for _, _, v in app.ports.records.scan("task/")], catalog(app))
+        await validate_sources(app, proposal, replacements, head)
+        for task_id in proposal.cancel_pending_task_ids:
+            task = app.get("task/" + task_id)
+            if task["execution"] == "interrupted":
+                facts = app.ports.operations.settlement(task["process_id"])
+                if facts["pending_operations"] or facts["permit_refs"]:
+                    raise ValueError("Interrupted work must settle and release ownership before retirement")
         retained = [
             body
             for _, _, body in app.ports.records.scan("task/")
-            if body["assignment"]["task_id"] not in proposal.cancel_pending_task_ids
+            if body["assignment"]["task_id"] not in proposal.cancel_pending_task_ids or was_started(body)
         ]
         proposal = proposal.model_copy(
-            update={"tasks": allocate(proposal.tasks, retained, app.config.senior_development_fraction)}
+            update={"tasks": allocate(
+                proposal.tasks, retained, app.config.senior_development_fraction,
+                protected_task_ids=replacements,
+            )}
         )
+        validate_local_tasks(proposal, app.config)
+        replacements = validate_exceptions(app, proposal, snapshot)
         plan_ref = f"plan/{run['sprint'] + 1}"
         for assignment in proposal.tasks:
             if app.ports.records.get("task/" + assignment.task_id):
@@ -483,6 +950,17 @@ class ProjectAgent:
             app.update("review-batch/active", {**batch, "state": "superseded"})
             return
         final_head = app.get("head/provisional")["code"]
+        await validate_sources(app, proposal, replacements, final_head)
+        completion = proposal.complete
+        completion_failure = None
+        if completion:
+            try:
+                validate_completion(proposal, snapshot)
+                if final_head != head:
+                    raise ValueError("Head-changing dispositions require a fresh resulting-tree review")
+            except ValueError as exc:
+                completion = False
+                completion_failure = {"semantic_review": str(exc)}
         unresolved = self.unresolved()
         updates = {}
         immutable_specs = {}
@@ -495,15 +973,36 @@ class ProjectAgent:
                 plan_ref,
                 final_head,
                 f"{run['sprint'] + 1}-{assignment.task_id}",
+                interfaces=interfaces,
+                predecessor=replacements.get(assignment.task_id),
             )
             expected[key] = 0
             updates[key] = task
             immutable_specs.update(specs)
+        for decision in proposal.exception_dispositions:
+            packet = app.get(decision.exception_ref)
+            old_key = "task/" + packet["task_id"]
+            old_version, old_task = app.ports.records.get(old_key)
+            queue_key = "exception-queue/" + old_task["attempt_id"]
+            queue_version, queue = app.ports.records.get(queue_key)
+            expected[queue_key] = queue_version
+            updates[queue_key] = {
+                **queue,
+                **decision.model_dump(mode="json"),
+                "review_ref": "proposal/" + pid,
+            }
+            if decision.action == "retry":
+                expected[old_key] = old_version
+                updates[old_key] = {**old_task, "replacement_task_id": decision.replacement_task_id}
+        for interface in proposal.interface_contracts:
+            key = "interface-contract/" + interface.reference
+            if not app.ports.records.get(key):
+                immutable_specs[key] = interface.model_dump(mode="json")
         for task_id in proposal.cancel_pending_task_ids:
             key = "task/" + task_id
             retained = app.ports.records.get(key)
-            if not retained or retained[1]["execution"] != "pending":
-                raise ValueError("Only an existing unstarted task may be cancelled")
+            if not retained or retained[1]["execution"] not in {"pending", "interrupted"}:
+                raise ValueError("Only an unstarted or safely interrupted task may be retired")
             task = retained[1]
             expected[key] = retained[0]
             updates[key] = {**task, "execution": "cancelled", "stop_reason": "superseded_by_plan"}
@@ -511,8 +1010,7 @@ class ProjectAgent:
             attempt_version, attempt_body = app.ports.records.get(attempt_key)
             expected[attempt_key] = attempt_version
             updates[attempt_key] = (
-                TaskAttempt.model_validate(attempt_body)
-                .model_copy(
+                app.task_attempt(attempt_body,
                     update={
                         "revision": attempt_body["revision"] + 1,
                         "execution": "cancelled",
@@ -545,11 +1043,34 @@ class ProjectAgent:
             "sprint": run["sprint"] + 1,
             "plan_ref": plan_ref,
             "steering_applied": run["steering_received"],
-            "starts_closed": proposal.complete,
+            "starts_closed": completion,
             "captured_workers": [],
-            "completion_proposed": proposal.complete,
+            "completion_proposed": completion,
+            "semantic_completion": {
+                "proposal_ref": "proposal/" + pid,
+                "head": head,
+                "contract": snapshot.get("acceptance_contract"),
+                "assessment": proposal.completion_assessment.model_dump(mode="json"),
+            }
+            if completion
+            else None,
             "last_review_fingerprint": fingerprint,
+            "blocker": None,
         }
+        if completion_failure:
+            updates["app/run"]["acceptance_failure"] = completion_failure
+        if any(d.action == "stop" for d in proposal.exception_dispositions):
+            updates["app/run"].update(
+                status="paused", starts_closed=True, blocker="Senior stopped worker exception recovery"
+            )
+        if completion:
+            semantic = {
+                **updates["app/run"]["semantic_completion"],
+                "review_ref": "completion-review/" + pid,
+                "evidence_catalog": snapshot["review_evidence_catalog"],
+            }
+            updates["app/run"]["semantic_completion"] = semantic
+            immutable_specs[semantic["review_ref"]] = semantic
         if proposal.memory_update is not None:
             memory = app.ports.records.get("memory/working")
             expected["memory/working"] = memory[0] if memory else 0
@@ -559,10 +1080,27 @@ class ProjectAgent:
                 "source_query": pid,
                 "source_head": final_head,
             }
+        actionable = any(
+            body["execution"] == "pending" and body["assignment"]["task_id"] not in proposal.cancel_pending_task_ids
+            for _, _, body in app.ports.records.scan("task/")
+        ) or bool(proposal.tasks)
+        if not proposal.complete and not actionable and not proposal.dispositions:
+            updates["app/run"].update(
+                status="paused", starts_closed=True,
+                blocker="Plan has no actionable tasks and does not propose completion; waiting for new input",
+            )
         app.ports.records.compare_and_publish(
             expected, updates, {**immutable_specs, plan_ref: plan.model_dump(mode="json")}
         )
         app.update("review-batch/active", {**batch, "state": "done"})
+        if (not proposal.complete and not proposal.dispositions and not self.ready()
+                and not app.get("app/run")["active_workers"]):
+            blocked = [item["reason"] for item in snapshot.get("cloud_recovery_policy", {}).get("offers", [])
+                       if not item["eligible"]]
+            reason = ("No runnable tasks; cloud recovery unavailable: " + "; ".join(dict.fromkeys(blocked))[:1200]
+                      if blocked else "No runnable tasks; resolve the blocker or supply new input")
+            app.update("app/run", {**app.get("app/run"), "status": "paused", "starts_closed": True,
+                                   "blocker": reason})
         app.process_status(pid, state="completed", phase="reviewed", terminal_result_ref="proposal/" + pid)
 
     async def review_checks(self, pid, query_index, head):
@@ -587,7 +1125,7 @@ class ProjectAgent:
                 "logical_step": "review",
                 "verification_permit_ref": permit,
             }
-            return await app.checks(state, [c.name for c in app.config.checks])
+            return await app.checks(state, [c.name for c in app.task_check_definitions])
         finally:
             if not app.ports.operations.uncertain():
                 await app.ports.exclusive.release(permit, pid)
@@ -607,7 +1145,14 @@ class ProjectAgent:
         old = app.ports.records.get(key)
         if old and old[1].get("query") == query_index:
             return
-        if disposition.action == "revert":
+        report = app.get(disposition.report_ref)
+        private = report.get("code_location") == "private"
+        testing = report.get("kind") == "test_report"
+        if testing and report["verdict"] != "successful" and disposition.action == "keep":
+            raise ValueError("Only successful test results can be kept")
+        if private and disposition.action == "keep":
+            raise ValueError("Private failed code cannot be kept; reject it or assign a repair")
+        if disposition.action == "revert" and not private and not testing:
             await self.revert(pid, query_index, index, disposition)
             return
         resolution = ReviewResolution(
@@ -683,7 +1228,7 @@ class ProjectAgent:
                 )
                 if result.state != "succeeded":
                     raise RuntimeError(str(output))
-            evidence = await app.checks(state, [c.name for c in app.config.checks])
+            evidence = await app.checks(state, [c.name for c in app.check_definitions])
             if any(e["status"] != "passed" for e in evidence):
                 raise RuntimeError("Reverted resulting tree did not pass independent checks")
             result, code = await app.capability(
@@ -737,14 +1282,41 @@ class ProjectAgent:
         app = self.app
         self.close_starts()
         version, run = app.ports.records.get("app/run")
+        if not app.acceptance_check_definitions:
+            app.update("app/run", {**run, "completion_proposed": False,
+                                   "acceptance_failure": {"reason": "No final product acceptance checks configured"}})
+            return False
         if run["active_workers"] or self.unresolved() or run["steering_received"] != run["steering_applied"]:
             return False
-        if any(
-            t["execution"] not in {"completed", "cancelled"} for _, _, t in app.ports.records.scan("task/")
-        ):
+        if any(not obligation_satisfied(app, t) for _, _, t in app.ports.records.scan("task/")):
             return False
         head = app.get("head/provisional")["code"]
         if app.get("head/reviewed")["code"] != head:
+            return False
+        semantic = run.get("semantic_completion")
+        retained = app.ports.records.get(semantic["review_ref"]) if semantic else None
+        proposal_record = app.ports.records.get(semantic["proposal_ref"]) if semantic else None
+        if (
+            not semantic
+            or not retained
+            or retained[1] != semantic
+            or not proposal_record
+            or semantic["head"] != head
+            or semantic["contract"] != contract(app, head)
+            or proposal_record[1]["head"] != head
+            or proposal_record[1]["steering_through"] != run["steering_applied"]
+            or proposal_record[1]["proposal"].get("completion_assessment") != semantic["assessment"]
+        ):
+            app.update(
+                "app/run",
+                {
+                    **run,
+                    "completion_proposed": False,
+                    "acceptance_failure": {
+                        "semantic_review": "Missing or stale source-backed completion review"
+                    },
+                },
+            )
             return False
         permit = await app.ports.exclusive.acquire("verification/project", "controller")
         try:
@@ -777,9 +1349,9 @@ class ProjectAgent:
                 "logical_step": attempt,
                 "verification_permit_ref": permit,
             }
-            evidence = await app.checks(state, [c.name for c in app.config.checks])
+            evidence = await app.checks(state, [c.name for c in app.acceptance_check_definitions])
             current = await app.ports.workspaces.revision(wid)
-            passing = all(
+            passing = bool(evidence) and all(
                 e["status"] == "passed"
                 and e["checked_code"]["effective_tree_digest"] == head["effective_tree_digest"]
                 and e["checked_code"]["environment_digest"] == head["environment_digest"]
@@ -811,20 +1383,24 @@ class ProjectAgent:
                     "head/provisional": head_version,
                     "head/reviewed": reviewed_version,
                 },
-                "updates": {"app/run": {**run, "status": "completed", "acceptance_ref": receipt}},
+                "updates": {"app/run": {**run, "status": "delivering", "acceptance_ref": receipt,
+                                         "output_delivery_attempt": 1}},
                 "immutable": {
                     receipt: {
                         "code": head,
                         "plan_ref": run["plan_ref"],
                         "steering_through": run["steering_applied"],
                         "evidence": evidence,
+                        "semantic_review": semantic,
                     }
                 },
             }
             result, _ = await app.capability(
                 state, f"acceptance-publish-{attempt}", "records.publish", args, "shared_write"
             )
-            return result.state == "succeeded" and app.ports.records.get(receipt) is not None
+            if result.state == "succeeded" and app.ports.records.get(receipt) is not None:
+                return await self.deliver_outputs()
+            return False
         finally:
             if not app.ports.operations.uncertain():
                 await app.ports.exclusive.release(permit, "controller")
@@ -846,7 +1422,7 @@ async def tick(state, runtime: Runtime[AppContext]):
     ready = engine.ready()
     if run["starts_closed"] or (not ready and not run["active_workers"]):
         return {"next_transition": "review"}
-    if ready and len(run["active_workers"]) < app.config.max_workers:
+    if ready and len(run["active_workers"]) < app.worker_limit:
         return {"next_transition": "dispatch"}
     return {"next_transition": "wait"}
 
@@ -866,7 +1442,8 @@ async def wait(state, runtime: Runtime[AppContext]):
     if engine.workers:
         await asyncio.wait(engine.workers.values(), return_when=asyncio.FIRST_COMPLETED)
     else:
-        raise RuntimeError("No actionable work or active worker")
+        if not engine.app.get("app/run")["starts_closed"]:
+            raise RuntimeError("No actionable work or active worker")
     return {"logical_step": state["logical_step"] + 1}
 
 

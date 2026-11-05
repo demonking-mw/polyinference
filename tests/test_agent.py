@@ -9,8 +9,8 @@ from polyinference.contracts import PublicationReceipt, TaskReport
 from polyinference.runtime.adapter import StandaloneRuntime
 
 
-@pytest.mark.parametrize("verdict", ["successful", "fail", "uncertain"])
-async def test_two_workers_publish_all_verdicts_and_accept_exact_tree(config, verdict):
+@pytest.mark.parametrize("verdict", ["successful", "uncertain"])
+async def test_two_workers_publish_provisional_verdicts_and_accept_exact_tree(config, verdict):
     runtime = await StandaloneRuntime(config).open()
     scripted = ScriptedAgent(verdict)
     await runtime.clients["local"].close()

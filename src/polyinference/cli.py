@@ -5,52 +5,150 @@ from __future__ import annotations
 import argparse
 import asyncio
 import json
+import os
+import shlex
 import subprocess
 import sys
 import tempfile
+import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 
 from .agent.controller import ProjectAgent
 from .agent.services import AgentServices
 from .config import AgentConfig
-from .runtime.adapter import StandaloneRuntime
+from .history import save_run_history
+from .os_config import BOUNDS
+from .primitives import canonical
+from .runtime.kernel import KernelRuntime
 from .runtime.storage import Conflict, Records
 
 
-def load_config(path):
+def load_saved_credentials():
+    """Read the private credential file as data, without executing shell code."""
+    if "ANTHROPIC_API_KEY" in os.environ:
+        return
+    path = Path.home() / ".config" / "polyinference" / "anthropic.env"
+    if not path.is_file():
+        return
+    for number, line in enumerate(path.read_text().splitlines(), 1):
+        try:
+            parts = shlex.split(line, comments=True)
+        except ValueError:
+            raise ValueError(f"Invalid credential file syntax at {path}:{number}") from None
+        if parts[:1] == ["export"]:
+            parts = parts[1:]
+        if not parts:
+            continue
+        if len(parts) != 1 or "=" not in parts[0]:
+            raise ValueError(f"Expected KEY=value at {path}:{number}")
+        name, value = parts[0].split("=", 1)
+        if name == "ANTHROPIC_API_KEY":
+            os.environ.setdefault(name, value)
+
+
+def load_config(path, *, context=None):
     source = Path(path).resolve()
-    config = AgentConfig.model_validate_json(source.read_text())
+    text = source.read_text()
+    model = AgentConfig
+    document = json.loads(text) if '"inference_simulation"' in text else None
+    if isinstance(document, dict) and "inference_simulation" in document:
+        from .agent.inference_simulation import SimulationAgentConfig
+
+        model = SimulationAgentConfig
+        context = {**(context or {}), "resolve_environment_capacity": False}
+    config = model.model_validate_json(text, context=context)
     return config.model_copy(
         update={
             "repository": str((source.parent / config.repository).resolve()),
             "state_directory": str((source.parent / config.state_directory).resolve()),
+            **({"local_strata_config": str((source.parent / config.local_strata_config).resolve())}
+               if config.local_strata_config is not None else {}),
+            **({"output_directory": str((source.parent / config.output_directory).resolve())}
+               if config.output_directory is not None else {}),
         }
     )
 
 
-async def execute(config):
-    runtime = StandaloneRuntime(config)
+async def apply_resume(engine, request_ref):
+    """Compatibility entry point; coding policy belongs to the agent."""
+    if engine.app.ports.records.get("resume-outcome/" + request_ref):
+        raise ValueError("This resume request has already been handled")
+    await engine.resume(request_ref)
+
+
+async def execute(config, *, save_history=True, retry_task=None, retry_reason=None, retry_output_reason=None,
+                  resume_request_ref=None):
+    metadata = {
+        "id": uuid.uuid4().hex[:12],
+        "state": str(config.state_path),
+        "repository": config.repository,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "error": None,
+    }
+    runtime = KernelRuntime(config)
     try:
         await runtime.open()
+        if config.local_strata_config:
+            from .agent.local_provider import sync_local_provider
+            facts = sync_local_provider(config)
+            key = "coding/local-provider-startup"
+            prior = runtime.records.get(key)
+            runtime.records.compare_and_publish({key: prior[0] if prior else 0}, {key: facts})
+            if facts["restart_required"]:
+                raise ValueError("Local Strata startup configuration updated from local_token_limits; "
+                                 "restart Strata before starting this fresh run")
+        if getattr(config, "inference_simulation", None) is not None:
+            from .agent.inference_simulation import install_simulation
+
+            await install_simulation(runtime, config.inference_simulation)
         app = AgentServices(runtime, config)
         engine = ProjectAgent(app)
+        if resume_request_ref is not None:
+            await engine.initialize()
+            await engine.resume(resume_request_ref)
+        if retry_task is not None:
+            await engine.initialize()
+            await engine.retry_worker(retry_task, retry_reason or "explicit model recovery")
+        if retry_output_reason is not None:
+            await engine.initialize()
+            engine.retry_outputs(retry_output_reason)
         await engine.run()
         return app.get("app/run")
+    except BaseException as exc:
+        metadata["error"] = str(exc)[:config.tuning.diagnostic_error_chars] or type(exc).__name__
+        raise
     finally:
-        await runtime.close()
+        try:
+            await runtime.close()
+        finally:
+            if save_history:
+                metadata["finished_at"] = datetime.now(timezone.utc).isoformat()
+                await save_run_history(config, metadata=metadata)
 
 
 async def probe_endpoint(config, name):
     """One small readiness request; never starts an application run."""
     from .runtime.codex import CodexAppServer
-    from .runtime.inference import HTTPInference
+    from .runtime.inference import CompletedBudgetExceeded, HTTPInference
 
     endpoint = getattr(config, name)
     messages = [{"role": "user", "content": 'Return only {"status":"ready"}. Use no tools.'}]
     if endpoint.protocol == "codex_proxy":
         raise ValueError("Probe the proxy through its separately pinned snapshot configuration")
-    client = CodexAppServer(endpoint) if endpoint.protocol == "codex_app_server" else HTTPInference(endpoint)
+    client = CodexAppServer(endpoint, tuning=config.tuning) if endpoint.protocol == "codex_app_server" else HTTPInference(endpoint, tuning=config.tuning)
+    client.output_cap = config.max_model_response_bytes
+    pair = config.token_limits_for_binding(name)
     try:
+        if pair and endpoint.protocol != "codex_app_server":
+            prepared = client.prepare(messages, pair.output_tokens)
+            size = len(canonical(prepared))
+            if size > config.request_byte_limit():
+                raise ValueError("Readiness probe exceeds the request byte ceiling")
+            measured = await asyncio.wait_for(client.count_input(prepared), endpoint.timeout_seconds) if endpoint.input_token_count_path else None
+            tokens = measured["tokens"] if measured else size
+            if tokens > pair.input_tokens:
+                raise ValueError("Readiness probe exceeds the local input token cap")
         if endpoint.protocol == "codex_app_server":
             with tempfile.TemporaryDirectory(prefix="polyinference-probe-") as directory:
                 result = await client.generate_job(
@@ -64,7 +162,10 @@ async def probe_endpoint(config, name):
                     },
                 )
         else:
-            result = await client.generate(messages, 64)
+            result = await client.generate(messages, pair.output_tokens if pair else None)
+        emitted = (result.get("usage") or {}).get("outputTokens")
+        if pair and isinstance(emitted, int) and emitted > pair.output_tokens:
+            raise CompletedBudgetExceeded(result, pair.output_tokens, scope="native_thread_total")
         return {
             "endpoint": name,
             "protocol": endpoint.protocol,
@@ -78,8 +179,8 @@ async def probe_endpoint(config, name):
 
 def record_steering(state_directory, text):
     """Share the same atomic steering write between the CLI and local UI."""
-    if not isinstance(text, str) or not text.strip() or len(text) > 16000:
-        raise ValueError("Enter steering instructions of 1–16000 characters")
+    if not isinstance(text, str) or not text.strip() or len(text) > BOUNDS["resume_chars"]:
+        raise ValueError(f"Enter steering instructions of 1–{BOUNDS['resume_chars']} characters")
     path = Path(state_directory).resolve() / "records.sqlite"
     if not path.is_file():
         raise ValueError("Wait until the run has initialized")
@@ -99,6 +200,7 @@ def record_steering(state_directory, text):
                     {
                         "app/run": {
                             **run,
+                            "status": "active" if run["status"] == "paused" else run["status"],
                             "starts_closed": True,
                             "steering_received": sequence,
                             "captured_workers": sorted(
@@ -123,13 +225,30 @@ def main():
     for name in ("run", "resume", "validate-config"):
         item = sub.add_parser(name)
         item.add_argument("config")
+        if name == "resume":
+            item.add_argument("--text", default="", help="Optional instructions for continuing the run")
     item = sub.add_parser("ui")
     item.add_argument("--port", type=int, default=8765)
     item.add_argument("--config")
     item.add_argument("--state")
+    def simulation_slots(value):
+        try:
+            count = int(value)
+        except ValueError:
+            raise argparse.ArgumentTypeError("--sim-batch requires an integer from 1 to 16") from None
+        if not 1 <= count <= 16:
+            raise argparse.ArgumentTypeError("--sim-batch requires an integer from 1 to 16")
+        return count
+    item.add_argument("--sim-batch", type=simulation_slots, metavar="N",
+                      help="Invocation-only remote Haiku simulation with N workers/slots (1..16)")
+    item.add_argument("--sim-inference", action="store_true",
+                      help="Show opt-in normal/buggy/slow-buggy inference controls before Start")
     item = sub.add_parser("probe")
     item.add_argument("config")
     item.add_argument("--endpoint", choices=["local", "cloud"], default="cloud")
+    item = sub.add_parser("configure-local")
+    item.add_argument("config")
+    item.add_argument("--strata-config", help="Existing Strata launch JSON to synchronize before restarting Strata")
     item = sub.add_parser("status")
     item.add_argument("state_directory")
     item = sub.add_parser("steer")
@@ -141,12 +260,68 @@ def main():
     item = sub.add_parser("operation")
     item.add_argument("state_directory")
     item.add_argument("operation_id")
+    item = sub.add_parser("events")
+    item.add_argument("state_directory")
+    item.add_argument("--after", type=int, default=0)
+    item = sub.add_parser("cancel")
+    item.add_argument("state_directory")
+    item.add_argument("process_id")
+    item.add_argument("--reason", default="operator cancellation")
+    item = sub.add_parser("reconcile")
+    item.add_argument("config")
+    item.add_argument("operation_id")
+    item.add_argument(
+        "--confirm-stopped",
+        action="store_true",
+        required=True,
+        help="Attest that provider execution AND host descendants have ended",
+    )
+    item.add_argument("--evidence", required=True, help="Text file recording termination evidence")
+    item = sub.add_parser("retry-model")
+    item.add_argument("config")
+    item.add_argument("task_id")
+    item.add_argument("--reason", required=True)
+    item = sub.add_parser("retry-output")
+    item.add_argument("config")
+    item.add_argument("--reason", required=True)
     args = parser.parse_args()
     try:
+        load_saved_credentials()
+        if args.command == "configure-local":
+            from .agent.local_provider import sync_local_provider
+            print(json.dumps(sync_local_provider(load_config(args.config), args.strata_config), indent=2))
+            return
+        if args.command == "retry-output":
+            result = asyncio.run(execute(load_config(args.config), retry_output_reason=args.reason))
+            print(json.dumps(result, indent=2))
+            if result["status"] != "completed":
+                sys.exit(2)
+            return
+        if args.command == "retry-model":
+            result = asyncio.run(execute(load_config(args.config), retry_task=args.task_id, retry_reason=args.reason))
+            print(json.dumps(result, indent=2))
+            if result["status"] != "completed":
+                sys.exit(2)
+            return
+        if args.command == "reconcile":
+
+            async def recover():
+                runtime = KernelRuntime(load_config(args.config))
+                try:
+                    await runtime.open()
+                    AgentServices(runtime, runtime.config)
+                    await runtime.reconcile_stopped(args.operation_id, Path(args.evidence).read_text())
+                    return runtime.diagnostics()
+                finally:
+                    await runtime.close()
+
+            print(json.dumps(asyncio.run(recover()), indent=2))
+            return
         if args.command == "ui":
             from .ui import serve
 
-            serve(args.port, args.config, args.state)
+            serve(args.port, args.config, args.state, sim_batch=args.sim_batch,
+                  **({"sim_inference": True} if args.sim_inference else {}))
             return
         if args.command == "probe":
             print(json.dumps(asyncio.run(probe_endpoint(load_config(args.config), args.endpoint)), indent=2))
@@ -156,24 +331,50 @@ def main():
             if args.command == "validate-config":
                 print("Configuration valid; endpoint availability has not been tested.")
                 return
-            result = asyncio.run(execute(config))
+            request_ref = None
+            if args.command == "resume":
+                from .runtime.processes import request_resume
+
+                records = Records(config.state_path / "records.sqlite")
+                try:
+                    request_ref = request_resume(records, text=args.text)
+                finally:
+                    records.db.close()
+            result = asyncio.run(execute(config, resume_request_ref=request_ref))
             print(json.dumps(result, indent=2))
             if result["status"] != "completed":
                 sys.exit(2)
             return
         records = Records(Path(args.state_directory).resolve() / "records.sqlite")
         try:
-            if args.command == "status":
+            if args.command == "events":
+                print(json.dumps(records.events(args.after), indent=2))
+            elif args.command == "cancel":
+                from .agent.services import close_for_cancellation
+                from .runtime.processes import request_cancel
+
+                request_cancel(records, args.process_id, args.reason)
+                close_for_cancellation(records, args.process_id)
+                print("Cancellation recorded; the current effect settles before the process stops.")
+            elif args.command == "status":
                 run = records.get("app/run")
                 report = {
                     "run": run[1] if run else None,
+                    "processes": [value for _, _, value in records.scan("process-status/")],
+                    "reservations": [
+                        value for _, _, value in records.scan("reservation/") if value["state"] == "held"
+                    ],
+                    "owners": [value for _, _, value in records.scan("permit/") if value.get("process_id")],
                     "provisional": records.get("head/provisional"),
                     "reviewed": records.get("head/reviewed"),
+                    "repository_setup": records.get("repository/setup"),
+                    "repository_summary": records.get("coding/repository-summary"),
                     "tasks": [
                         {
                             **body,
                             "resolved": bool(
-                                records.get("resolution/" + body["report_ref"])
+                                body.get("report_ref")
+                                and records.get("resolution/" + body["report_ref"])
                                 and records.get("resolution/" + body["report_ref"])[1]["action"]
                                 in {"keep", "revert"}
                             ),
@@ -186,21 +387,43 @@ def main():
                 }
                 print(json.dumps(report, indent=2))
             elif args.command == "export":
+                setup = records.get("repository/setup")
+                git_directory = (setup[1].get("common_git_directory") if setup else None) or str(
+                    Path(args.state_directory).resolve() / "repository.git")
                 initial = records.get("head/initial")[1]["code"]["commit_id"]
                 final = records.get("head/provisional")[1]["code"]["commit_id"]
                 patch = subprocess.check_output(
                     [
                         "git",
                         "--git-dir",
-                        str(Path(args.state_directory).resolve() / "repository.git"),
+                        git_directory,
                         "diff",
                         "--binary",
                         initial,
                         final,
                     ]
                 )
-                Path(args.output).resolve().write_bytes(patch)
-                print(str(Path(args.output).resolve()))
+                destination = Path(args.output).resolve()
+                destination.write_bytes(patch)
+                run = records.get("app/run")[1]
+                accepted = run["status"] == "completed" and bool(run.get("acceptance_ref"))
+                metadata = {
+                    "artifact_status": "accepted" if accepted else "partial_provisional",
+                    "run_status": run["status"],
+                    "provisional_code": records.get("head/provisional")[1]["code"],
+                    "reviewed_code": records.get("head/reviewed")[1]["code"],
+                    "acceptance_ref": run.get("acceptance_ref"),
+                    "semantic_review": run.get("semantic_completion"),
+                    "blocker": run.get("blocker"),
+                    "unresolved_reports": [
+                        key
+                        for key, _, _ in records.scan("report/")
+                        if not records.get("resolution/" + key)
+                        or records.get("resolution/" + key)[1]["action"] in {"retry", "defer"}
+                    ],
+                }
+                Path(str(destination) + ".status.json").write_text(json.dumps(metadata, indent=2) + "\n")
+                print(str(destination))
             elif args.command == "operation":
                 value = records.get("effect/" + args.operation_id)
                 print(json.dumps(value[1] if value else None, indent=2))

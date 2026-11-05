@@ -6,16 +6,27 @@ import asyncio
 import os
 import shutil
 import signal
+from contextlib import AsyncExitStack
 from pathlib import Path
 
-from ..domain import canonical, digest, now
+from ..execution_contracts import Check
+from ..primitives import canonical, digest, now
 from ..workspace_contracts import relative_path
+from .tool_environment import tool_environment
 
 
 class Tools:
     def __init__(self, config, workspaces, exclusive, artifacts, scope):
         self.config, self.workspaces, self.exclusive = config, workspaces, exclusive
         self.artifacts, self.scope = artifacts, scope
+
+    def register_check(self, check):
+        check = Check.model_validate(check)
+        self.workspaces.records.put_once("runtime/check/" + check.name, check.model_dump(mode="json"))
+        return check
+
+    def check_definitions(self):
+        return [Check.model_validate(value) for _, _, value in self.workspaces.records.scan("runtime/check/")]
 
     async def call(self, payload, arguments):
         manifest = self.workspaces.current(payload.workspace_id)
@@ -42,22 +53,62 @@ class Tools:
 
             return await run(self, manifest, arguments)
         if tool == "checks.run":
+            if arguments["name"] not in self.workspaces.grant(manifest.workspace_id).check_names:
+                raise ValueError("Check exceeds the workspace grant")
             return await self.check(manifest.workspace_id, arguments["name"])
         if tool == "files.list":
-            return {"paths": sorted(self.workspaces.scan(root))}
+            paths = sorted((await self.workspaces.scan_async(root)))
+            limit = min(max(int(arguments.get("limit") or self.config.tuning.file_list_default), 1), self.config.tuning.file_list_max)
+            offset = max(int(arguments.get("offset") or 0), 0)
+            return {
+                "paths": paths[offset : offset + limit],
+                "total": len(paths),
+                "offset": offset,
+                "truncated": offset + limit < len(paths),
+            }
+        if tool == "files.search":
+            pattern = arguments.get("pattern")
+            if not isinstance(pattern, str) or not pattern or len(pattern) > self.config.tuning.search_pattern_chars:
+                raise ValueError(f"Search requires a nonempty literal pattern of at most {self.config.tuning.search_pattern_chars} characters")
+            matches, size = [], 0
+            for path, (_, content) in (await self.workspaces.scan_async(root)).items():
+                if b"\x00" in content:
+                    continue
+                for line, text in enumerate(content.decode(errors="replace").splitlines(), 1):
+                    if pattern in text:
+                        match = {"path": path, "line": line, "text": text[:self.config.tuning.search_line_chars]}
+                        size += len(canonical(match))
+                        if len(matches) >= self.config.tuning.search_matches or size > self.config.limits.max_output_bytes:
+                            return {"matches": matches, "truncated": True, "view": manifest.view}
+                        matches.append(match)
+            return {"matches": matches, "truncated": False, "view": manifest.view}
         path = relative_path(arguments["path"])
         target = root / path
         if not target.resolve().is_relative_to(root.resolve()) or target.is_symlink():
             raise ValueError("Path escapes workspace")
         if tool == "files.read":
+            cap = self.config.limits.max_output_bytes
+            offset = arguments.get("offset") or 0
+            requested = arguments.get("max_bytes") or arguments.get("limit") or cap
+            if (
+                isinstance(offset, bool)
+                or not isinstance(offset, int)
+                or offset < 0
+                or isinstance(requested, bool)
+                or not isinstance(requested, int)
+                or not 1 <= requested <= cap
+            ):
+                raise ValueError("Read needs a nonnegative offset and bounded positive max_bytes")
             if not target.exists():
+                if path in {entry.path for entry in manifest.copied_files}:
+                    raise ValueError("File was deleted in this workspace")
                 # Bounded closure expansion at pinned B; no write authority expansion.
                 base = await self.workspaces.tree(manifest.original_base.commit_id, manifest.process_id)
                 if path not in base:
                     raise ValueError("Path does not exist at pinned base")
                 if manifest.view != "development":
                     raise ValueError("Unknown path in complete integration tree")
-                updated_tree = self.workspaces.scan(root)
+                updated_tree = await self.workspaces.scan_async(root)
                 updated_tree[path] = base[path]
                 from ..workspace_contracts import CopiedFile
 
@@ -77,7 +128,7 @@ class Tools:
                         ],
                     }
                 )
-                self.workspaces.materialize(self.workspaces.root_for(new), updated_tree)
+                await self.workspaces.materialize_view(new, manifest, updated_tree)
                 key = "workspace/" + manifest.workspace_id
                 rev = self.workspaces.records.get(key)[0]
                 self.workspaces.records.compare_and_publish(
@@ -87,16 +138,20 @@ class Tools:
                 )
                 target = self.workspaces.root_for(new) / path
             data = target.read_bytes()
-            cap = self.config.limits.max_output_bytes
+            excerpt = data[offset : offset + requested]
             return {
                 "path": path,
-                "content": data[:cap].decode(errors="replace"),
+                "content": excerpt.decode(errors="replace"),
                 "digest": digest(data),
-                "truncated": len(data) > cap,
+                "offset": offset,
+                "returned_bytes": len(excerpt),
+                "next_offset": offset + len(excerpt) if offset + len(excerpt) < len(data) else None,
+                "total_bytes": len(data),
+                "truncated": offset + len(excerpt) < len(data),
                 "generation": self.workspaces.current(manifest.workspace_id).generation,
             }
         if path not in manifest.allowed_write_paths:
-            manifest = self.workspaces.extend_setup_scope(manifest.workspace_id, [path])
+            manifest = await self.workspaces.extend_write_scope(manifest.workspace_id, [path])
             root = self.workspaces.root_for(manifest)
             target = root / path
         existing = target.read_bytes() if target.exists() else None
@@ -104,8 +159,17 @@ class Tools:
             raise ValueError("Write requires the current file digest (null only for new files)")
         if tool == "files.delete":
             target.unlink()
-        elif tool == "files.write":
-            data = arguments["content"].encode()
+        elif tool in {"files.write", "files.patch"}:
+            if tool == "files.patch":
+                old, new = arguments.get("old_text"), arguments.get("new_text")
+                if not existing or not isinstance(old, str) or not old or not isinstance(new, str):
+                    raise ValueError("Patch requires an existing file and literal old_text/new_text")
+                text = existing.decode()
+                if text.count(old) != 1:
+                    raise ValueError("Patch must match exactly one occurrence")
+                data = text.replace(old, new, 1).encode()
+            else:
+                data = arguments["content"].encode()
             if len(data) > self.config.limits.max_output_bytes:
                 raise ValueError("File write exceeds output limit")
             if existing is None:
@@ -120,14 +184,21 @@ class Tools:
             temporary.replace(target)
         else:
             raise ValueError("Unknown capability")
-        return {"path": path, "changed": True}
+        return {
+            "path": path,
+            "changed": True,
+            "digest": digest(target.read_bytes()) if target.exists() else None,
+        }
 
     async def check(self, workspace_id, name):
         manifest = self.workspaces.current(workspace_id)
-        check = next((c for c in self.config.checks if c.name == name), None)
+        check = next((c for c in self.check_definitions() if c.name == name), None)
         if not check:
             raise ValueError("Only configured check names may execute")
-        before = await self.workspaces.revision(workspace_id)
+        await self.workspaces.prepare_environment(manifest)
+        root = self.workspaces.root_for(manifest)
+        before_tree = await self.workspaces.scan_async(root)
+        before = self.workspaces.code(before_tree)
         invocation = self.artifacts.put(canonical(check), self.scope)
         if self.config.check_execution == "disabled":
             content = b"Configured checks are disabled; select a trusted or sandboxed check backend."
@@ -135,31 +206,24 @@ class Tools:
         else:
             argv = list(check.argv)
             root = self.workspaces.root_for(manifest)
-            if self.config.check_execution == "bubblewrap":
-                if not shutil.which("bwrap"):
-                    raise ValueError("bubblewrap requested but unavailable")
-                prefix = ["bwrap", "--unshare-all", "--die-with-parent", "--new-session"]
-                for system in ("/usr", "/bin", "/lib", "/lib64", "/etc"):
-                    if Path(system).exists():
-                        prefix += ["--ro-bind", system, system]
-                argv = prefix + [
-                    "--bind",
-                    str(root),
-                    "/workspace",
-                    "--chdir",
-                    "/workspace",
-                    "--tmpfs",
-                    "/tmp",
-                    "--proc",
-                    "/proc",
-                    "--dev",
-                    "/dev",
-                    "--",
-                    *argv,
-                ]
+            sandboxed = self.config.check_execution == "bubblewrap"
+            if sandboxed and not shutil.which("bwrap"):
+                raise ValueError("bubblewrap requested but unavailable")
             permit = await self.exclusive.acquire("shell/installation", manifest.process_id)
             proc = None
+            resources = AsyncExitStack()
             try:
+                environment, mounts = await resources.enter_async_context(tool_environment(self.workspaces, sandboxed))
+                if sandboxed:
+                    prefix = ["bwrap", "--unshare-all", "--die-with-parent", "--new-session"]
+                    for system in self.config.tuning.sandbox_readonly_paths:
+                        if Path(system).exists():
+                            prefix += ["--ro-bind", system, system]
+                    argv = prefix + [
+                        "--bind", str(root), "/workspace", *mounts,
+                        "--chdir", "/workspace", "--tmpfs", "/tmp",
+                        "--proc", "/proc", "--dev", "/dev", "--", *argv,
+                    ]
                 proc = await asyncio.create_subprocess_exec(
                     *argv,
                     cwd=root,
@@ -167,20 +231,15 @@ class Tools:
                     stderr=asyncio.subprocess.STDOUT,
                     stdin=asyncio.subprocess.DEVNULL,
                     start_new_session=True,
-                    env={
-                        "PATH": os.environ.get("PATH", ""),
-                        "HOME": str(root),
-                        "PYTHONDONTWRITEBYTECODE": "1",
-                        "PYTEST_ADDOPTS": "-p no:cacheprovider",
-                        "LANG": "C.UTF-8",
-                    },
+                    env=environment,
+                    limit=self.config.tuning.subprocess_stream_bytes,
                 )
                 collected = bytearray()
                 truncated = False
 
                 async def drain():
                     nonlocal truncated
-                    while chunk := await proc.stdout.read(8192):
+                    while chunk := await proc.stdout.read(self.config.tuning.tool_chunk_bytes):
                         remaining = self.config.limits.max_output_bytes - len(collected)
                         collected.extend(chunk[: max(remaining, 0)])
                         truncated |= len(chunk) > remaining
@@ -203,14 +262,26 @@ class Tools:
             except FileNotFoundError:
                 status, exit_code, content = "unavailable", None, b"Configured executable unavailable"
             finally:
-                if proc is not None and proc.returncode is None:
-                    os.killpg(proc.pid, signal.SIGKILL)
-                    await proc.wait()
-                await self.exclusive.release(permit, manifest.process_id)
-        after = await self.workspaces.revision(workspace_id)
+                try:
+                    if proc is not None and proc.returncode is None:
+                        os.killpg(proc.pid, signal.SIGKILL)
+                        await proc.wait()
+                finally:
+                    try:
+                        await resources.aclose()
+                    finally:
+                        await self.exclusive.release(permit, manifest.process_id)
+        await self.workspaces.capture_environment(manifest)
+        after_tree = await self.workspaces.scan_async(root)
+        after = self.workspaces.code(after_tree)
         if after.effective_tree_digest != before.effective_tree_digest:
             status = "inconclusive"
-            content += b"\nCheck modified source; evidence invalidated."
+            changed = sorted(path for path in before_tree.keys() | after_tree.keys()
+                             if before_tree.get(path) != after_tree.get(path))
+            cap = self.config.limits.max_output_bytes
+            notice = ("\nCheck modified source; evidence invalidated.\nChanged source paths: "
+                      + ", ".join(changed)).encode()[:cap]
+            content = content[:max(0, cap - len(notice))] + notice
         output = self.artifacts.put(content, self.scope, "text/plain")
         return {
             "evidence_id": digest(

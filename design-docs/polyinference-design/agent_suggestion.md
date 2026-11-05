@@ -1,6 +1,6 @@
 # Agent suggestions
 
-The HTML remains the agent design, including OS-handled responsibilities. The [concurrency contract](concurrent_coding_protocol.md) and [graph](modified_agent_graph.html) now use your private-copy/two-mutex model.
+The HTML remains the agent design, including OS-handled responsibilities. The [concurrency contract](concurrent_coding_protocol.md) and [graph](ai-modified_agent_graph.html) now use your private-copy/two-mutex model.
 
 - **S1 — Give each in-progress agent a private code copy.** Record its base and tool workspace. **Why:** development can overlap without mixing edits.
 - **S2 — Show serialized reconciliation before final assessment.** Acquire verification ownership, merge the latest head, run at least one specially prompted development loop, then final assessment. **Why:** clean merges can still change assumptions.

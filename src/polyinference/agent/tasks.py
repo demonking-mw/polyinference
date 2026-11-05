@@ -3,18 +3,37 @@
 from __future__ import annotations
 
 from ..contracts import CodeRevision, Prerequisite, TaskAttempt, TaskSpec
+from .architecture import catalog, task_context, validate_local_tasks
+from .routing import cloud_recovery
 
 
-def coding_tools(config, setup=False):
-    tools = ["files.list", "files.read", "files.write", "files.delete", "checks.run"]
+def coding_tools(config, setup=False, *, test=False):
+    tools = [
+        "files.list",
+        "files.read",
+        "files.search",
+        "files.patch",
+        "files.write",
+        "files.delete",
+        "checks.run",
+        "user.notify",
+    ]
+    if test:
+        tools = [tool for tool in tools if tool not in {"files.patch", "files.write", "files.delete"}]
     if config.shell_execution != "disabled":
         tools.append("shell.run")
     if setup:
         tools.append("repository.select_branch")
+        tools.append("checks.configure")
     return tools
 
 
-def make_task(app, assignment, plan_ref, base, attempt, category="development"):
+def make_task(
+    app, assignment, plan_ref, base, attempt, category="development", *, interfaces=None, predecessor=None
+):
+    if category == "development":
+        from types import SimpleNamespace
+        validate_local_tasks(SimpleNamespace(tasks=[assignment]), app.config)
     task = {
         "assignment": assignment.model_dump(mode="json"),
         "category": category,
@@ -26,12 +45,19 @@ def make_task(app, assignment, plan_ref, base, attempt, category="development"):
         "attempt_id": attempt,
         "workspace_id": "workspace-" + attempt,
         "report_ref": None,
+        "root_task_id": predecessor["root_task_id"] if predecessor else assignment.task_id,
+        "recovery_depth": predecessor["recovery_depth"] + 1 if predecessor else 0,
+        "cloud_recoveries": (predecessor.get("cloud_recoveries", 0)
+                             + int(cloud_recovery(app.config, predecessor, assignment)))
+        if predecessor else 0,
+        "previous_process_id": predecessor["process_id"] if predecessor else None,
+        "recovery_condition": predecessor.get("changed_condition") if predecessor else None,
+        "source_delta_ref": predecessor["source_delta_ref"]
+        if predecessor and assignment.resume_from
+        else None,
     }
     spec = TaskSpec(
         **app.base(task["spec_ref"]),
-        extensions={"polyinference/project-write": True}
-        if category == "setup" and app.config.write_scope == "project"
-        else {},
         task_id=assignment.task_id,
         plan_ref=plan_ref,
         objective=app.artifact(assignment.objective),
@@ -41,11 +67,11 @@ def make_task(app, assignment, plan_ref, base, attempt, category="development"):
         ],
         base=CodeRevision.model_validate(base),
         acceptance_spec=app.artifact(assignment.checks),
-        context_refs=[],
+        context_refs=task_context(app, assignment, catalog(app) if interfaces is None else interfaces),
         memory_snapshot_refs=[],
-        allowed_capabilities=coding_tools(app.config, category == "setup"),
+        allowed_capabilities=coding_tools(app.config, category == "setup", test=assignment.kind == "test"),
         worker_process_spec_ref="process-spec/" + task["process_id"],
-        report_schema_ref="task-report/2",
+        report_schema_ref="test-report/1" if assignment.kind == "test" else "task-report/2",
     )
     task_attempt = TaskAttempt(
         **app.base("attempt/" + attempt),
@@ -53,7 +79,7 @@ def make_task(app, assignment, plan_ref, base, attempt, category="development"):
         process_spec_ref=spec.worker_process_spec_ref,
         workspace_id=task["workspace_id"],
         original_base=spec.base,
-        previous_attempt_ref=None,
+        previous_attempt_ref=predecessor["attempt_ref"] if predecessor else None,
         execution="pending",
         report_ref=None,
         stop_reason=None,

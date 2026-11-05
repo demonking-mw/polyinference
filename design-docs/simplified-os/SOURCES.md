@@ -1,13 +1,23 @@
 # Source consolidation and decisions
 
-17 October 2026. Read this alongside the [minimal OS specification](README.md); use the [design index](../README.md) for the current reading route.
+Original consolidation: 17 October 2026; accepted decisions aligned 20 October 2026.
+Read the [minimal OS specification](README.md) and [design index](../README.md).
+
+> **Edited 2026-10-20 because** later fixes explicitly reverse the scoped-copy,
+> all-verdict publication and mandatory physical-memory assumptions and add optional
+> context services. [DESIGN_REVISIONS.md](DESIGN_REVISIONS.md) records why, which
+> original artifacts remain historical, and which implementation gaps are not
+> authorized revisions. Earlier source evidence is preserved below.
 
 The subsequent [joint integration audit](../INTEGRATION_AUDIT.md) tightens review/acceptance barriers, gate-abort recovery, worker residency and scoped-delta validation in the paired current designs. Older research's plan-quarantine rule does not revoke captured workers merely because ordinary review or steering was received. The hybrid map remains the default; explicit comparison runs may choose another feasible fixed map before starting.
 
 ## Precedence
 
-1. The latest user direction requires a simplified fundamental OS, private copies of assigned code, a merge/test/commit critical section, local continuous batching/cloud execution and additive framework integration.
-2. The merged agent architecture supplies the current execution protocol. Its memory view was intentionally preserved unchanged; expanded execution contracts resolve duplicated behavioral conflicts.
+1. Latest user directions and their recorded accepted revisions govern the current
+   OS/agent profile: default full tracked worktrees in the actual project, verified
+   integration, generic OS services and optional submitted-context assistance.
+2. The merged graph supplies the original execution/memory baseline. Keep its bytes
+   and identity; later R02–R04 supersede its copy/publication/commit assumptions.
 3. The five lecture-derived notes, prior OS proposal and concurrency protocol explain mechanisms and rationale. Older defaults do not override the current scope.
 4. Historical agent graphs and reference handbooks explain alternatives and evolution.
 
@@ -33,7 +43,7 @@ The low-level lecture mechanisms—spinlocks, MCS, native atomics/cache-line lay
 | [Prior OS project design](../polyinference-design/project_design.md), [main concurrency protocol](../polyinference-design/concurrent_coding_protocol.md), [research copy](../polyinference-design/os-research/concurrent_coding_protocol.md), [agent suggestions](../polyinference-design/agent_suggestion.md), [research index](../polyinference-design/os-research/README.md) | Retain private development, two permits, mandatory reconciliation/assessment, provisional publication, unresolved results, delayed steering and effect-safe recovery. The copied protocol is duplicate content, not another independent requirement. |
 | [Agent design](../langgraph-agent/README.md), [wire models](../langgraph-agent/contracts.py), [schema](../langgraph-agent/contract.schema.json), [examples](../langgraph-agent/examples.json), validation helper | Reuse 2.0 process/query/report/publication contracts. Add a negotiated scoped-workspace/core-profile extension instead of forcing every future runtime feature into the minimal OS. |
 | [Root brief](../../PROJECT_BRIEF.md), [design brief](../polyinference-design/PROJECT_BRIEF.md) | Keep the small reference workload and outcome-based comparison. Their discovery-first/one-worker framing is historical, not the current complete execution policy. |
-| [Older user graph](../polyinference-design/polyinference-agent-graph.html), [AI-modified graph](../polyinference-design/ai-modified_agent_graph.html), [AI JSON](../polyinference-design/modified_agent_graph.json), v0/v1 graphs below | Historical provenance. Do not restore private-only failed commits, bypass assessment or treat a raw response as a completed native job. |
+| [Older user graph](../polyinference-design/polyinference-agent-graph.html), [AI-modified graph](../polyinference-design/ai-modified_agent_graph.html), [AI JSON](../polyinference-design/modified_agent_graph.json), v0/v1 graphs below | Historical provenance. Current private-failure rules come from explicit later O04/FIX-0040 decisions, not an implicit restoration of an old graph. Do not bypass assessment or treat raw inference as a completed native job. |
 | [v0 JSON](../../references/docs/polyinference-agent-structure-v0.json), [v1 JSON](../../references/docs/polyinference-agent-structure-v1.json), [v1 HTML](../../references/docs/polyinference-agent-v1.html), [v1-1 HTML](../../references/docs/polyinference-agent-v1-1.html), [editor sources/notes](../../references/docs/agent-design/README.md), [architecture study](../../references/docs/agent-structures.html) | Preserve the evolution toward deterministic sprint orchestration. Editor/template assets and their checks are not an OS engine. |
 | [mini-SWE handbook](../../references/docs/mini-swe-agent-handbook.md) | Reuse narrow model/environment boundaries and bounded action/observation loops. Do not adopt a shell completion marker as proof of project acceptance. |
 | [Deep Agents handbook](../../references/docs/deepagents-agent-handbook.md) | Keep graph/checkpoint/store/backend distinctions and per-process context. Its MCP, skills, subagents and terminal host are not core requirements. |
@@ -48,12 +58,15 @@ Vendored agent source trees are supporting implementations rather than additiona
 | Older statement | Core decision now |
 | --- | --- |
 | One coding worker and one local decode initially | Permit bounded multiple workers/in-flight local requests in the completed core. One-worker bring-up remains a test configuration. |
-| Full working tree first; partial copying later | Private scoped copy plus declared/expanded dependency closure now. Complete private integration view before final checks. |
-| Optional provisional-all publication | Required by the current merged graph for every normal assessed verdict. |
+| Full versus partial development copies | Default in-place coding uses full tracked worktrees with bounded writes (FIX-0040). Scoped copies and complete private integration remain the explicit legacy path. |
+| All normally assessed verdicts publish provisionally | Superseded by O04/FIX-0040: default in-place fail/uncertain stays private; successful verified candidates integrate. Legacy isolated uncertain assessment still publishes provisionally. |
 | Snapshot/pause a running model as though it were a CPU thread | Checkpoint explicit graph state at supported boundaries; reconcile active external work. Backend token/KV scheduling is separate. |
-| General memory/MCP/resource platform | Generic direct tools/records/artifacts now. Rich memory, MCP lifecycle and automatic routing are future negotiated capabilities. |
+| General memory/MCP/resource platform | Generic tools/records/artifacts plus optional context packing/compaction now. Canonical memory stays agent-owned. Rich tiers/indexes, MCP lifecycle and automatic routing remain deferred. |
 | OS intercepts arbitrary graph execution | Explicit public-API effect nodes and an external LangGraph adapter; no private framework patch. |
-| One semaphore called concurrency | Separate worker residency, local requests/context, engine batching, cloud sessions, shell and verification. |
+| One semaphore called concurrency | Separate driver admission, endpoint requests/context, shell and verification. The server owns batching; original paused-worker residency semantics remain an open implementation gap. |
+| OS-managed physical fit and automatic cleanup | Physical RAM/VRAM admission, migration and automatic GC are explicitly deferred; configured quotas and explicit archival have narrower guarantees. |
+| Caller-only provider/output recovery | OS bounded known-ended transient/cutoff recovery uses durable charged identities; agents retain grammar and semantic decomposition. |
+| Mandatory external SDK/shared agent library | Current RuntimePorts is directly usable. The optional shared library is deferred until demonstrated reuse. |
 
 ## Primary technical checks
 
