@@ -161,7 +161,10 @@ def main():
             if result["status"] != "completed":
                 sys.exit(2)
             return
-        records = Records(Path(args.state_directory).resolve() / "records.sqlite")
+        db_path = Path(args.state_directory).resolve() / "records.sqlite"
+        if args.command == "status" and not db_path.is_file():
+            raise ValueError(f"State database not found: {db_path}")
+        records = Records(db_path)
         try:
             if args.command == "status":
                 run = records.get("app/run")
