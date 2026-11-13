@@ -220,6 +220,7 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0176](#fix-0176) | 2026-11-04 | Record the revised agent prompting proposal and first current implementation issue |
 | [FIX-0177](#fix-0177) | 2026-11-04 | Audit the prompting proposal against prior fixes and correct unsafe workflow shortcuts |
 | [FIX-0178](#fix-0178) | 2026-11-04 | Support test-only assignments without implementation or result files |
+| [FIX-0179](#fix-0179) | 2026-11-06 | Set Haiku worker allowances and trace input-failure escalation |
 | [FIX-0168](#fix-0168) | 2026-11-02 | Persist machine-local Qwen/Strata UI defaults |
 | [FIX-0167](#fix-0167) | 2026-10-29 | Unify local token settings and remove cloud per-call caps |
 
@@ -8730,3 +8731,80 @@ no setup/configuration, check ABI/purpose or OS execution changes needed edits.
 Documentation generation and `--check` passed for 339 files and 150 feature/doc
 leaves, including links and navigation; guide-length advisories are nonblocking.
 The retained project-rule note in AGENTS.md was saved and read back.
+
+<a id="fix-0179"></a>
+## FIX-0179 — 2026-11-06 — Set the Haiku worker preset to 96K input/32K output and trace input-failure escalation
+
+Status: application setting implemented; escalation investigation only, no recovery behavior changed.
+Related: [FIX-0150](#fix-0150), [FIX-0154](#fix-0154), [FIX-0155](#fix-0155),
+[FIX-0167](#fix-0167), [FIX-0168](#fix-0168).
+Investigation: [run dd20b7d98b80](current-iter-issues.md#run-dd20b7d98b80).
+
+### Problem
+
+The supplied run paused before its first database implementation generation. Required
+prepared input remained 29240 bytes after optional packing, against a saved 24000
+input allowance using conservative byte-based token bounds. The user requested a
+Haiku 96000-input/32000-output setting and analysis of absent Codex escalation,
+explicitly excluding any other implementation repair.
+
+### What was wrong
+
+The ordinary application Haiku UI inherited generic 24000/4000 defaults; Haiku
+examples used 96000/4096. Required prompts could already exceed the smaller setting.
+The provider was never called for either overflow. InputOverflow is not transient
+retryable output: ModelRetries._blocked rejects its nonretryable result, and agent
+park_model_failure excludes that code. Thus no semantic exception reached the cloud
+takeover policy despite max_cloud_recoveries=1. FIX-0154's optional provider counter
+was not enabled; FIX-0155 deliberately covers selected unusable outputs, not input
+construction failures. This is existing main behavior, unrelated to the status patch.
+
+### How it was fixed or established
+
+agent/system_settings.py now supplies one application Haiku pair, 96000/32000,
+for the fresh UI preset and complete remote-Haiku endpoint replacement. Existing
+remote Anthropic custom pairs remain authoritative. Updated mixed/Anthropic examples
+and existing UI preference assertions. No generic OS default, retry/classification,
+cloud policy, measurement, native Codex setting or provider lifecycle changed.
+Updated owning settings/token/configuration/launch/tester references, current issue,
+consolidated settings prose and retained project knowledge. Existing navigation owns
+all edited paths; no new maintained file was added. Saved runs remain untouched.
+
+### Design principle enforced or reconstructed
+
+Application/provider presets own deployment allowances; the generic OS retains
+provider-neutral defaults and enforces the resolved pair. Retry, semantic coding
+handoff and provider availability fallback are distinct mechanisms. Preserve required
+constraints, immutable failed evidence, original grants/accounts/deadlines and explicit
+configuration. This investigation does not broaden escalation or authorize resuming
+old pinned runs; changed agent source requires fresh program/configuration state.
+
+### Verification
+
+The earlier analysis verified all 216 exported artifact hashes and reproduced both
+saved InputOverflow receipts exactly in memory, with matching agent/prompt pins and
+six relevant files byte-identical to main. No inference or saved-state writes occurred.
+The final focused run passed 74 cases in 29.55 seconds: the existing UI preference
+regression plus complete sim-batch and inference-simulation suites. They cover the
+requested pair, 128000 context/256000 two-slot reservation, real-local preference
+precedence, explicit remote configs and provider payloads. All five examples validate;
+Haiku examples send max_tokens=32000. Generic 24000/4000 defaults and the exported
+historical configuration remain unchanged. An offline replay of the saved prompts
+under a fresh 96000/32000 context fits both requests (26795 diagnostic and 37791
+worker prepared bytes); this does not Resume or change the saved run. Direct calls
+to the unchanged retry/parking filters confirm both overflows remain ineligible.
+The first positive replay lacked put_once on its disposable record stub; adding that
+stub method completed the probe without a production repair.
+
+Ruff, settings-schema agreement and Git whitespace checks pass. Ordinary documentation
+generation and --check both remain blocked by the pre-existing unregistered PR file
+tests/test_cli_status.py, already found during the requested review. It is deliberately
+not repaired in this settings-only task. Supplemental read-only validation excluding
+exactly that file passes for 339 files/150 leaves with generated navigation unchanged;
+existing guide-length advisories remain. All 329 other starting tracked-file hashes,
+including retry/recovery/kernel/CLI sources and the existing PR test, remain unchanged.
+Retained AGENTS knowledge was saved/read back. Adjacent context/recovery/runtime-boundary,
+onboarding, simulator and provider guides retain their contracts and need no behavior
+edits; the affected preset references and investigation are updated. No full suite,
+provider request, service restart, saved-state write, Resume, commit or push occurred.
+No live convergence or provider maximum-output qualification is claimed.

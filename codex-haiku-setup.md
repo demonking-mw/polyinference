@@ -32,7 +32,7 @@ comparing results.
    ```
 
    The variable applies only to this launch. The default UI has one worker,
-   trusted shell/check execution and 27 sprints. The local input/output defaults come from the canonical pair (24000/4000);
+   trusted shell/check execution and 27 sprints. The bundled Haiku pair is 96000 input/32000 output tokens;
    native Codex cloud agents have no OS per-call token cap. The mixed JSON example has different concurrency.
 4. Follow the [greeting smoke test](docs/guides/first-run.md). Inspect worker
    calls on `local` and senior/specialist calls on `cloud`; the saved config must

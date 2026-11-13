@@ -11,6 +11,7 @@ import sys
 from pathlib import Path
 
 from ..domain import Check, default_limits
+from ..os_config import LocalTokenLimits
 from ..system_settings import ContextPolicy, Endpoint, InferenceLifecycle
 
 
@@ -35,14 +36,21 @@ def haiku_endpoint():
                     lifecycle=InferenceLifecycle())
 
 
+def haiku_token_limits():
+    """Application preset for fresh remote Haiku worker runs."""
+    return LocalTokenLimits(input_tokens=96000, output_tokens=32000)
+
+
 def simulation_config(config, slots):
     """Pure invocation policy; the OS receives ordinary fully validated settings."""
     if type(slots) is not int or not 1 <= slots <= 16:
         raise ValueError("--sim-batch requires an integer from 1 to 16")
-    endpoint = (config.local if config.local.protocol == "anthropic"
-                and config.local.inference_location != "local" else haiku_endpoint())
+    preserve_endpoint = (config.local.protocol == "anthropic"
+                         and config.local.inference_location != "local")
+    endpoint = config.local if preserve_endpoint else haiku_endpoint()
     local = {**endpoint.model_dump(), "max_inflight": slots}
     return type(config).model_validate({**config.model_dump(), "local": local, "max_workers": slots,
+        "local_token_limits": config.local_token_limits if preserve_endpoint else haiku_token_limits(),
         "role_bindings": {**config.role_bindings, "worker": "local"}},
         context={"resolve_environment_capacity": False})
 
@@ -65,6 +73,7 @@ def ui_system_settings(source):
         checks=[Check(name="greeting", argv=[sys.executable, "-m", "unittest", "-q"])],
         check_execution="trusted",
         local=haiku_endpoint(),
+        local_token_limits=haiku_token_limits(),
         cloud=endpoint.model_copy(update={"brokered_tools": True}),
         max_workers=1,
         limits=default_limits(),

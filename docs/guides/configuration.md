@@ -28,6 +28,8 @@ cp examples/agent.mixed.json .polyinference/agent.json
 
 UI-only `--sim-batch N` applies a validated invocation overlay after base loading, overriding the legacy
 capacity environment variable. It preserves custom remote Anthropic fields; declared local endpoints and other protocols select Haiku. New-run config.json records effective values, not a future preference.
+The bundled Haiku preset uses 96000 input/32000 output tokens; selecting the complete Haiku preset
+also selects this pair. Existing remote Anthropic configurations keep their explicit limits.
 See [scope/precedence and recovery](../../codex-haiku-setup.md). UI --sim-inference additionally reveals
 per-run fault/pacing controls. Only an explicitly buggy/slow run saves an application-level
 inference_simulation block outside system; absent lifecycle/policy fields preserve legacy serialization.

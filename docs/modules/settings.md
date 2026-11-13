@@ -39,7 +39,10 @@ validation context can skip that legacy overlay; system views reflect resolved
 values without rereading ambient overrides. No simulation flag is serialized.
 The coding settings module owns the complete Haiku factory and pure simulation
 overlay (worker binding/cap, slots, full-context reservations), preserving custom
-Anthropic fields and other providers/bindings. OS admission remains generic.
+Anthropic fields and other providers/bindings. haiku_token_limits supplies the application
+96000-input/32000-output preset for fresh Haiku UI runs and complete endpoint replacement;
+explicit remote Anthropic pairs, machine preferences and generic OS defaults remain authoritative.
+OS admission remains generic.
 The optional [application simulator](inference-simulation.md) uses
 SimulationAgentConfig for enabled buggy/slow runs; its saved inference_simulation
 block pins settings/seed for recovery. RuntimeConfig has no simulator policy.

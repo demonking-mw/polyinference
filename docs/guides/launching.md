@@ -26,7 +26,8 @@ engine automatically before the UI opens. Its launch JSON must use the matching
 context and parallel=1, batch_groups=1. Machine preferences retain the project picker and grants.
 Explicit `ui --config` bypasses them; saved-run Resume retains its saved settings.
 `--sim-batch` applies afterward and selects remote Haiku for a declared local endpoint,
-even when Strata uses the Anthropic wire protocol. Invalid preferences fail visibly.
+even when Strata uses the Anthropic wire protocol, selecting the Haiku 96000-input/32000-output
+pair. Already configured remote Anthropic endpoints retain their explicit pair. Invalid preferences fail visibly.
 These are coding-application preferences; generic OS defaults remain unchanged.
 With local_strata_profile and a declared loopback local endpoint, UI startup reuses
 a ready engine or starts a stopped profile and waits for generation readiness.

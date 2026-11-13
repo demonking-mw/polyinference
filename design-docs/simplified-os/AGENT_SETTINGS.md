@@ -362,10 +362,11 @@ above with max_repairs=2 and the finishing reserve above.
 UI preferences in the same module select endpoints, grants, checks, one worker,
 96000 input / 32000 output allowances and trusted shell/check backends. The Haiku
 examples use the same allowances with 128000-token endpoint context envelopes.
-The Anthropic adapter sends the effective output target as `max_tokens`, bounded
-by the OS hard ceiling. Fresh UI/mixed/Anthropic examples request 4096 tokens
-inside the 32000 ceiling; custom configs without a smaller target use their
-ceiling. Native jobs have no enforced hard generation-token parameter.
+The Anthropic adapter sends the local pair's 32000 output cap as `max_tokens`;
+there is no separate smaller target. Explicit configuration and machine preferences
+retain their own pairs. Selecting a complete remote Haiku simulation preset replaces
+the local pair with 96000/32000; existing remote Anthropic configurations retain their
+explicit pair. Native cloud jobs have no enforced hard generation-token parameter.
 
 Coding-only fields remain outside system: objective, repository_mode, git_policy,
 dependency_prepare, prerequisite_checks, acceptance_checks,
@@ -389,8 +390,9 @@ Local Strata startup settings can be synchronized with configure-local; cloud na
 output-token allowance. local_strata_profile opts the UI into named-runtime startup;
 new instances are bound to its process and cleaned up at exit, while reused ones
 remain separately owned. See [launch lifecycle](../../docs/guides/launching.md).
-Fresh UI chooses one caller retry and the canonical 24000/4000 local pair unless
+Fresh UI chooses one caller retry and the application Haiku 96000/32000 pair unless
 machine preferences replace it; this machine selects 114688/16384 (128K total).
+Generic OS defaults remain 24000/4000.
 See [endpoint lifecycle/testing](../../docs/guides/endpoint-testing.md).
 max_protocol_corrections defaults to 3
 consecutive malformed-reply corrections (0–16); valid replies reset the count.

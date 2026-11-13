@@ -18,9 +18,13 @@ one worker/slot. The 112K/16K split favors code/tool/history with output room fo
 reasoning and edits. It is a practical starting choice, not a benchmarked optimum.
 Change preferences before a fresh run; old runs retain their saved pair.
 
-The OS and UI share the canonical defaults: 24000 input and 4000 output tokens;
-the UI has no competing token preset. Changing this pair before a
-fresh run changes OS input enforcement/packing, provider request output tokens,
+Generic OS defaults remain 24000 input and 4000 output tokens. The bundled Haiku
+UI preset and mixed/Anthropic examples select 96000 input + 32000 output = 128000.
+Explicit simulation that replaces a different/local endpoint with the complete
+Haiku preset selects that same pair; an already configured remote Anthropic
+endpoint retains its explicit pair. Machine preferences and explicit configurations
+remain authoritative, and saved runs keep their original limits.
+Changing this pair before a fresh run changes OS input enforcement/packing, provider request output tokens,
 worker budget instructions, saved capacity profiles and endpoint admission.
 Local context is input + output (65536 in the example); aggregate reservation is
 that sum times local max_inflight. Thinking counts toward output.
