@@ -1,6 +1,6 @@
 # Select checks for setup, tasks and product acceptance
 
-[Configuration](configuration.md) · [Project runs](projects.md) · [Worker protocol](../modules/agent-workers.md)
+Configuration (`docs/guides/configuration.md`) · Project runs (`docs/guides/projects.md`) · Worker protocol (`docs/modules/agent-workers.md`)
 
 Check commands run as executable/argument lists, not shell scripts. Configure
 named task `checks` in `system`; agent-only `prerequisite_checks` and
@@ -51,7 +51,9 @@ for repair, and a failing command cannot become passing evidence.
 Planning must inspect the actual runner, required filenames and source closure.
 Check `required_paths` explicitly names runner/fixture/entry inputs. A new assignment
 must cover them through its read/write/closure paths or an explicit dependency owner.
-Use optional assignment `behavior`/`focused_check` for the one behavior being tested.
+Local edit assignments require `behavior` and an assigned `focused_check` for the
+one behavior being tested. See `docs/modules/assignment-contracts.md` for the
+separate contract for test-only assignments.
 These structures do not prove semantic task size; planning and review still own it.
 Shared runner preparation has one declared owner and explicit dependent tasks;
 another worker's private runner is unavailable. Interface contracts and narrow
@@ -59,10 +61,10 @@ grants do not prove those exact required files were assigned correctly.
 
 Choose checks that observe requested behavior. A passing syntax/build/storage
 test cannot establish rendered gameplay or working menus. The
-[retained local test](../../development-docs/local-strata-live-test-2026-10-26.md)
+retained local test (`docs/temporary/investigations/2026-10-26-local-strata-live-test.md`)
 passed 25 narrow tests while the browser remained unplayable. Preserve that
 distinction when reporting task milestones and full product acceptance.
 
-The [qualification harness](qualification.md) supplies independently checked short
+The qualification harness (`docs/guides/qualification.md`) supplies independently checked short
 tasks and a real Chromium entry/input/pause/save/reload command. Browser dependencies
 must pass preflight; an unavailable browser is not replaced by a fabricated DOM.

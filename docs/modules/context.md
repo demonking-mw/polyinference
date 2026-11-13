@@ -1,7 +1,5 @@
 # Optional context preparation
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 The OS measures prepared adapter input and can derive a smaller view under caller-declared permissions.
 
 | File | Responsibility |
@@ -12,10 +10,10 @@ The OS measures prepared adapter input and can derive a smaller view under calle
 
 ContextPolicy resolves defaults, process preferences and request overrides. Async or
 synchronous adapter measurements separate input tokens/provenance from serialized
-bytes. The [local pair](../guides/local-token-limits.md) supplies local input/output limits; cloud per-call token
+bytes. The local pair (`docs/guides/local-token-limits.md`) supplies local input/output limits; cloud per-call token
 capacity belongs to the provider and receipts label it accordingly. Serialized byte guards remain independent;
 native hidden context remains unmeasured. An opt-in same-provider counter never generates output; failure
-retains a labeled conservative bound. See [measurement and configuration](../guides/context-measurement.md).
+retains a labeled conservative bound. See measurement and configuration (`docs/guides/context-measurement.md`).
 `auto_deal_context` permits optional-group omission; `auto_compaction` separately
 permits eligible summaries. Hard bounds always apply, including manual mode.
 The OS Memory / context inspector exposes retained originals, prepared views,
@@ -25,7 +23,7 @@ Summary helpers inherit the effective parent lifecycle cutoff, including queue/
 preparation time; they cannot extend a logical call by receiving a fresh timer.
 
 Packing headroom and compaction input/chunk/temperature controls now use
-[central OS tuning](../guides/os-tuning.md); caller eligibility/trust and original
+central OS tuning (`docs/guides/os-tuning.md`); caller eligibility/trust and original
 resource envelopes retain their prior meaning.
 
 ## Principles to preserve
@@ -44,8 +42,8 @@ resource envelopes retain their prior meaning.
 [Context safety](../../tests/test_context_safety.py), [four-repair regressions](../../tests/test_four_repairs.py)
 and [model retries](../../tests/test_model_retries.py).
 
-[Settings/modes](../../design-docs/simplified-os/AGENT_SETTINGS.md) · [Memory report](../../development-docs/memory-implementation-report-2026-10-20.md).
+Settings/modes (`design-docs/simplified-os/AGENT_SETTINGS.md`) · Memory report (`docs/temporary/investigations/2026-10-20-memory-implementation.md`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.

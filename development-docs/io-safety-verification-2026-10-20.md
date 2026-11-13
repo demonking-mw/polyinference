@@ -1,8 +1,8 @@
 # I/O safety implementation verification — 2026-10-20
 
-The user resumed the [recorded stop-point](HANDOFF-2026-10-20-IO.md).
+The user resumed the recorded stop-point (`docs/temporary/handoffs/2026-10-20-io-safety-handoff.md`).
 This completes the current OS/agent work from
-[the agreed plan](optional-os-context-management-proposal-2026-10-20.md).
+the agreed plan (`docs/temporary/proposals/2026-10-20-optional-os-context-proposal.md`).
 The repository already contained substantial unrelated changes; this work did
 not reset, stage or claim those changes. No commit, push, live provider request,
 historical-run resume or gameplay validation was performed.
@@ -27,7 +27,7 @@ historical-run resume or gameplay validation was performed.
   contracts and regenerated the design JSON schema with installed Pydantic.
   Generator-format changes remove redundant singleton enums and add dictionary
   key constraints; the Python schemas are tested against one another.
-- Completed the [central settings reference](../design-docs/simplified-os/AGENT_SETTINGS.md)
+- Completed the central settings reference (`design-docs/simplified-os/AGENT_SETTINGS.md`)
   and linked README/boundary/plan/handoff. A regression checks every exported
   field is present and all five grouped example configs validate.
 - Confirmed interrupted-source grant/base-conflict refusal before partial copying.
@@ -102,12 +102,12 @@ WSL test logs (temporary, not committed):
 - Fresh state is required because configuration/program pins changed. The
   original Minecraft run was not migrated, retried or resumed.
 - Shared agent-library work stays deferred in
-  [next-iteration.md](next-iteration.md#shared-agent-support-library).
+  `development-docs/next-iteration.md#shared-agent-support-library`.
 
 ## Where to continue
 
 Current implementation and documentation are complete subject to the limits
-above. Use [AGENT_SETTINGS.md](../design-docs/simplified-os/AGENT_SETTINGS.md) for
+above. Use `design-docs/simplified-os/AGENT_SETTINGS.md` for
 all exported OS settings and manual/packing/compaction/hybrid usage. Optional next
 validation is a fresh-state local/cloud canary or the original application
 scenario under an explicit new run; it has not been silently launched.

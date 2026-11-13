@@ -1,7 +1,5 @@
 # Optional workspaces and source classification
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 Generic source views, grants and private execution state support attached directories and explicit isolated copies.
 
 | File | Responsibility |
@@ -18,7 +16,7 @@ WriteScopeError is defined in public ports; workspace_state re-exports the same
 class for existing callers, preserving structured details and catch identity.
 
 Ignore/exclusion lists, dependency/environment classification and compatibility
-Git identity defaults use [central OS tuning](../guides/os-tuning.md). The coding
+Git identity defaults use central OS tuning (`docs/guides/os-tuning.md`). The coding
 provider consumes the resolved ignore list; protected source still takes precedence.
 Resolved tuning also participates in the environment digest used by check evidence.
 
@@ -35,11 +33,11 @@ Resolved tuning also participates in the environment digest used by check eviden
 [Workspace outputs](../../tests/test_workspace_outputs.py), [in-place repository](../../tests/test_in_place_repository.py),
 [runtime](../../tests/test_runtime.py) and [capability boundary](../../tests/test_capability_boundary.py).
 
-[Repository policy](repository.md) · [FIX-0034–0035](../../development-docs/FIXES.md#fix-0034).
+Repository policy (`docs/modules/repository.md`) · FIX-0034–0035 (`development-docs/FIXES.md#fix-0034`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.
 
 ## Integrated reliability branch (2026-10-26)
 

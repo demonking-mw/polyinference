@@ -2,7 +2,7 @@
 
 ## Current agent concurrency contract
 
-Updated using the full agent HTML and the user's later clarifications. The HTML is the agent design, including OS-handled parts; the LLM OS is an application operating endpoints, not a computer-kernel subsystem. [Concurrent coding protocol](concurrent_coding_protocol.md) defines the current operational contract. It supersedes any earlier screenshot-based alternatives below where their scope differs.
+Updated using the full agent HTML and the user's later clarifications. The HTML is the agent design, including OS-handled parts; the LLM OS is an application operating endpoints, not a computer-kernel subsystem. Concurrent coding protocol (`design-docs/polyinference-design/concurrent_coding_protocol.md`) defines the current operational contract. It supersedes any earlier screenshot-based alternatives below where their scope differs.
 
 Every in-progress coding process owns a codebase copy. Private development overlaps. Every shell/script command, including test/Git commands, acquires a global `shell_mutex`. A separate `verification_gate` serializes latest-head merge, at least one specially prompted development/reconciliation loop, the final one/few local-model testing/examination/assessment iterations, commit and provisional shared-head/report publication. Release verification only after that boundary; release shell after each confirmed command. When both are needed the order is **verification then shell**; an outside shell owner releases before requesting verification. The application coordinator keeps running throughout.
 
@@ -16,7 +16,7 @@ Assessment produces `fail / uncertain / successful`; every normal local completi
 | L3-C04 | Publication stays provisional/unresolved; unknown active effects retain applicable exclusion and senior rollback checks dependents. |
 
 
-**Lecture basis:** CS350-3.pdf, Threads, 29 pages / 29 numbered slides. Builds on [the kernel boundary](01-CS350-1-foundations.md) and [process/request contracts](02-CS350-2-processes.md), using lectures 1–3 only. **Project context:** the small LangGraph subset, residual-memory constraint and supplied cloud-strategy/local-execution design. **Revision/research date:** 2026-10-16.
+**Lecture basis:** CS350-3.pdf, Threads, 29 pages / 29 numbered slides. Builds on the kernel boundary (`design-docs/polyinference-design/os-research/01-CS350-1-foundations.md`) and process/request contracts (`design-docs/polyinference-design/os-research/02-CS350-2-processes.md`), using lectures 1–3 only. **Project context:** the small LangGraph subset, residual-memory constraint and supplied cloud-strategy/local-execution design. **Revision/research date:** 2026-10-16.
 
 ## 1. Selected execution model
 
@@ -178,4 +178,4 @@ Trace one task through cloud proposal → TaskSpec → local inference → tool 
 
 Before G1, repeat with several workers sharing one local decode slot and limited tool memory. A healthy result is bounded memory and fair progress, not one host thread or model copy per agent. General graph fan-out and distributed driver takeover remain later features whose synchronization is defined when enabled.
 
-**Next:** [Lecture 4 — synchronization of the actual queue, reports and resources](04-CS350-4-concurrency.md).
+**Next:** Lecture 4 — synchronization of the actual queue, reports and resources (`design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md`).

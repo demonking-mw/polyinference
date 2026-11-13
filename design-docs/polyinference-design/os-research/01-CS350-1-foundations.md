@@ -2,7 +2,7 @@
 
 ## Current agent concurrency contract
 
-Updated using the full agent HTML and the user's later clarifications. The HTML is the agent design, including OS-handled parts; the LLM OS is an application operating endpoints, not a computer-kernel subsystem. [Concurrent coding protocol](concurrent_coding_protocol.md) defines the current operational contract. It supersedes any earlier screenshot-based alternatives below where their scope differs.
+Updated using the full agent HTML and the user's later clarifications. The HTML is the agent design, including OS-handled parts; the LLM OS is an application operating endpoints, not a computer-kernel subsystem. Concurrent coding protocol (`design-docs/polyinference-design/concurrent_coding_protocol.md`) defines the current operational contract. It supersedes any earlier screenshot-based alternatives below where their scope differs.
 
 Every in-progress coding process owns a codebase copy. Private development overlaps. Every shell/script command, including test/Git commands, acquires a global `shell_mutex`. A separate `verification_gate` serializes latest-head merge, at least one specially prompted development/reconciliation loop, the final one/few local-model testing/examination/assessment iterations, commit and provisional shared-head/report publication. Release verification only after that boundary; release shell after each confirmed command. When both are needed the order is **verification then shell**; an outside shell owner releases before requesting verification. The application coordinator keeps running throughout.
 
@@ -166,4 +166,4 @@ G0 contains one controller context, one coding worker at a time, a small persist
 
 The first research comparison should hold the coding objective and acceptance checks constant while comparing the supplied strategy/local-execution split with cloud-only execution and a local-only baseline where feasible. Measure accepted outcomes, cloud cost, total time, memory peaks and repair frequency. These are proposed evaluation requirements, not experiments performed in this task. Model choice, hardware fit and thresholds remain open until measured.
 
-**Next:** [Lecture 2 — process and request contracts](02-CS350-2-processes.md).
+**Next:** Lecture 2 — process and request contracts (`design-docs/polyinference-design/os-research/02-CS350-2-processes.md`).

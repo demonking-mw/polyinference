@@ -1,6 +1,6 @@
 # Reliability implementation and verification — 27 October 2026
 
-[Approved plan](run-reliability-implementation-plan-2026-10-27.md) · [Current issues](current-iter-issues.md) · [Qualification](../docs/guides/qualification.md)
+Approved plan (`docs/temporary/proposals/2026-10-27-run-reliability-plan.md`) · Current issues (`development-docs/current-iter-issues.md`) · Qualification (`docs/guides/qualification.md`)
 
 The user authorized implementation after reviewing FIX-0133. The prior report's
 analysis-only restriction described that original task. Work preserves HEAD

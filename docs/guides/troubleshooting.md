@@ -1,7 +1,5 @@
 # Troubleshooting
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
 | Symptom | What to check |
 | --- | --- |
 | `polyinference: command not found` | Activate the virtual environment and install this checkout with `python -m pip install -e '.[test]'`. |

@@ -3,7 +3,7 @@
 > **Status clarified 2026-10-20 because** the static readers preserve the original
 > 17 October design and stories. Their scoped copies, all-verdict publication,
 > sole-parent commits and resource descriptions are historical where superseded
-> by the [accepted revisions](../simplified-os/DESIGN_REVISIONS.md). They are not
+> by the accepted revisions (`design-docs/simplified-os/DESIGN_REVISIONS.md`). They are not
 > a current runtime monitor or conformance claim. This documentation alignment
 > does not regenerate readers, alter source graphs or update fingerprints alone.
 

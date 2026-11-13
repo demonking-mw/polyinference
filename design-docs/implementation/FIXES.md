@@ -17,7 +17,7 @@ The full schema constraints remain in prompts, rendered without redundant schema
 display titles/whitespace so the added recovery schema does not crowd out previously
 working module review packets. No objective, contract or authority pins are removed.
 
-Implementation details and historical regression constraints: [worker recovery](WORKER_RECOVERY.md).
+Implementation details and historical regression constraints: worker recovery (`design-docs/implementation/WORKER_RECOVERY.md`).
 
 Validation: 27 focused recovery, diagnosis and inference-retry tests pass, plus lint,
 compile and whitespace checks. The broader run passed 158 tests; its one failure
@@ -49,7 +49,7 @@ primary result. Native jobs are sampled between jobs rather than cancelled by ti
 
 Defaults are eight idle decisions to warn and twelve to escalate, with observe/off
 modes available. Live false-positive rates and effectiveness remain to be measured;
-no preserved live run was replayed. Details: [progress monitoring](PROGRESS_MONITORING.md).
+no preserved live run was replayed. Details: progress monitoring (`design-docs/implementation/PROGRESS_MONITORING.md`).
 
 Final validation: all 174 tests pass, including HTTP UI/export, native broker paths,
 restart/cleanup, source reuse, budgets, planning and progress-policy regressions.

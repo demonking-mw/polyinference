@@ -46,7 +46,7 @@ uncertainty. The worker can change approach, finish a candidate or request revie
 Warnings describe a boundary between settled operations; only the fenced exception
 packet claims confirmed process termination after cleanup.
 Evidence gain clears the current stall episode. Continued stagnation enters the
-[clean exception workflow](WORKER_RECOVERY.md), preserving source and releasing
+clean exception workflow (`design-docs/implementation/WORKER_RECOVERY.md`), preserving source and releasing
 ownership before the senior decides recovery. It never fabricates assessment.
 
 Counters, seen evidence, warning IDs and cached decisions survive replay/restart.

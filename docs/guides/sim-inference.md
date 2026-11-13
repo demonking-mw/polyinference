@@ -1,7 +1,5 @@
 # Simulate slower, less reliable local inference
 
-[Documentation](../README.md) · [Launch](launching.md) · [Tester setup](../../codex-haiku-setup.md)
-
 ```bash
 polyinference ui --sim-inference
 ```

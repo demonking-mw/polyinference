@@ -4,7 +4,7 @@ Original proposal: revision 4, 17 October 2026 · current profile aligned 20 Oct
 
 > **Edited 2026-10-20 because** later repository, generic-agent and I/O fixes
 > supersede the all-verdict publication, partial-copy and service-placement
-> assumptions of revision 4. The [revision ledger](../simplified-os/DESIGN_REVISIONS.md)
+> assumptions of revision 4. The revision ledger (`design-docs/simplified-os/DESIGN_REVISIONS.md`)
 > gives the reasons and separates unresolved implementation gaps. Source graphs,
 > fixtures and historical audit results remain unchanged.
 
@@ -24,11 +24,11 @@ file, write target or result path and creates no source commit. The same worker 
 captures the integrated revision, runs checks and assesses observations; an agent-owned
 test result reaches senior review. Successful keep releases dependencies, while reject
 changes no Git history. Test authoring and repairs remain edits. Required final
-acceptance stays independent. See [worker guide](../../docs/modules/agent-workers.md)
-and [FIX-0178](../../development-docs/FIXES.md#fix-0178); historical diagrams/fixtures
+acceptance stays independent. See worker guide (`docs/modules/agent-workers.md`)
+and `development-docs/FIXES.md#fix-0178`; historical diagrams/fixtures
 remain provenance for the coding path, not a requirement to commit test-only work.
 
-The current build target is the [simplified OS profile](../simplified-os/README.md):
+The current build target is the simplified OS profile (`design-docs/simplified-os/README.md`):
 configured endpoint lanes, concurrent admission, default full tracked task
 worktrees and exact-tree integration checks. The UI's serial cloud-backed
 bring-up does not demonstrate physical local batching. General OS agents need
@@ -36,22 +36,22 @@ no coding workflow. Rich allocation, tiered memory and MCP remain future
 interfaces; current memory is ordinary records/artifacts with optional submitted-
 context packing/compaction, not background canonical-memory management.
 
-The [joint integration audit](../INTEGRATION_AUDIT.md) records corrections, supporting sources and remaining implementation checks. It refines the paired executable contracts while preserving the merged diagram's source identity and memory view.
+The joint integration audit (`design-docs/INTEGRATION_AUDIT.md`) records corrections, supporting sources and remaining implementation checks. It refines the paired executable contracts while preserving the merged diagram's source identity and memory view.
 
 ## 1. Sources and authority
 
-The user-designated current baseline is [polyinference-agent-design-merged.html](../polyinference-design/polyinference-agent-design-merged.html), with its matching [JSON export](../polyinference-design/polyinference-agent-design-merged.json) and [merge notes](../polyinference-design/merged-agent-design-notes.md). This supersedes revision 1's use of the older user graph as the behavioral authority. Both merged datasets were inspected; the HTML and JSON match semantically, and its memory dataset matches the original graph exactly.
+The user-designated current baseline is [polyinference-agent-design-merged.html](../polyinference-design/polyinference-agent-design-merged.html), with its matching [JSON export](../polyinference-design/polyinference-agent-design-merged.json) and merge notes (`design-docs/polyinference-design/merged-agent-design-notes.md`). This supersedes revision 1's use of the older user graph as the behavioral authority. Both merged datasets were inspected; the HTML and JSON match semantically, and its memory dataset matches the original graph exactly.
 
 | Material examined | Contribution/status |
 | --- | --- |
 | Merged graph: 23 execution nodes/57 edges; 19 memory nodes/21 edges | Historical source for private development, two gates, required reconciliation/assessment and separate senior review. Later R02–R04 supersede its workspace/publication assumptions; original layout and memory bytes remain retained. |
 | [Older user graph](../polyinference-design/polyinference-agent-graph.html) | Historical source: 15 execution nodes/19 edges and 19 memory nodes/21 edges. Current private-candidate rules come from O04/FIX-0040 and the in-place design, not an implicit restoration of this older graph. |
-| [AI-modified HTML](../polyinference-design/ai-modified_agent_graph.html), [JSON](../polyinference-design/modified_agent_graph.json), [suggestions](../polyinference-design/agent_suggestion.md) | Historical merge input: 23 execution nodes/57 edges and 24 memory nodes/29 edges. The merged file now determines which additions apply. |
-| [OS design](../polyinference-design/project_design.md), [concurrency protocol](../polyinference-design/concurrent_coding_protocol.md), [five ordered OS research notes](../polyinference-design/os-research/README.md) | Process/operation identities, admission, private copies, two gates, recovery, assessment, provisional publication and growth. The research copy of the concurrency protocol is identical. |
-| [Root brief](../../PROJECT_BRIEF.md), [design brief](../polyinference-design/PROJECT_BRIEF.md) | Small LangGraph workload and measured mixed-inference goal. Their local-discovery-first wording predates the cloud-led sprint design. |
-| [v0 JSON](../../references/docs/polyinference-agent-structure-v0.json), [v1 JSON](../../references/docs/polyinference-agent-structure-v1.json), [v1 HTML](../../references/docs/polyinference-agent-v1.html), [v1-1 HTML](../../references/docs/polyinference-agent-v1-1.html), [editor source/notes](../../references/docs/agent-design/README.md) | Evolution from generic routing to eight sprint nodes and then the expanded agent. Current and v1-1 execution-node prose matches; current memory view is richer. Editor/template code concerns presentation. |
-| [Architecture comparison](../../references/docs/agent-structures.html), [mini-SWE](../../references/docs/mini-swe-agent-handbook.md), [Deep Agents](../../references/docs/deepagents-agent-handbook.md), [Claude Code](../../references/docs/claude-code-agent-handbook.md) studies | Reference architecture: narrow model/environment contracts; LangGraph composition and context views; capability mediation and provenance. Their entire feature sets are not required. |
-| [Mapping guide](../../references/docs/repo-mapping-guide.md), [proxy brief](../../references/codex-agent-proxy-brief.md) | Optional bounded navigation; raw inference versus a complete external agent job. No proxy selected here. |
+| [AI-modified HTML](../polyinference-design/ai-modified_agent_graph.html), [JSON](../polyinference-design/modified_agent_graph.json), suggestions (`design-docs/polyinference-design/agent_suggestion.md`) | Historical merge input: 23 execution nodes/57 edges and 24 memory nodes/29 edges. The merged file now determines which additions apply. |
+| OS design (`design-docs/polyinference-design/project_design.md`), concurrency protocol (`design-docs/polyinference-design/concurrent_coding_protocol.md`), five ordered OS research notes (`design-docs/polyinference-design/os-research/README.md`) | Process/operation identities, admission, private copies, two gates, recovery, assessment, provisional publication and growth. The protocol is the single historical reference. |
+| Root brief (`PROJECT_BRIEF.md`), design brief (`design-docs/polyinference-design/PROJECT_BRIEF.md`) | Small LangGraph workload and measured mixed-inference goal. Their local-discovery-first wording predates the cloud-led sprint design. |
+| [v0 JSON](../../references/docs/polyinference-agent-structure-v0.json), [v1 JSON](../../references/docs/polyinference-agent-structure-v1.json), [v1 HTML](../../references/docs/polyinference-agent-v1.html), [v1-1 HTML](../../references/docs/polyinference-agent-v1-1.html), editor source/notes (`references/docs/agent-design/README.md`) | Evolution from generic routing to eight sprint nodes and then the expanded agent. Current and v1-1 execution-node prose matches; current memory view is richer. Editor/template code concerns presentation. |
+| [Architecture comparison](../../references/docs/agent-structures.html), mini-SWE (`references/docs/mini-swe-agent-handbook.md`), Deep Agents (`references/docs/deepagents-agent-handbook.md`), Claude Code (`references/docs/claude-code-agent-handbook.md`) studies | Reference architecture: narrow model/environment contracts; LangGraph composition and context views; capability mediation and provenance. Their entire feature sets are not required. |
+| Mapping guide (`references/docs/repo-mapping-guide.md`), proxy brief (`references/codex-agent-proxy-brief.md`) | Optional bounded navigation; raw inference versus a complete external agent job. No proxy selected here. |
 
 The planning/lecture PDFs cited by older notes are absent. This review uses their supplied derivations, not a claim to have inspected the PDFs. Vendored repositories are reference implementations rather than additional PolyInference specifications.
 
@@ -79,7 +79,7 @@ the coding agent selects an integration branch in the supplied real repository,
 workers use full linked worktrees there, and verified candidates fast-forward the
 root checkout. Read visibility and write grants remain separate. The private-copy
 provider is an explicit legacy option. See the
-[current boundary and repository guide](../simplified-os/RUNTIME_BOUNDARY.md#in-place-coding-repositories).
+current boundary and repository guide (`design-docs/simplified-os/boundary/repository.md#in-place-coding-repositories`).
 Multiple model requests may be admitted concurrently; verification remains one
 critical section and never grants exclusive use of all inference capacity.
 
@@ -224,7 +224,7 @@ scoped copies, pinned closure expansion and complete private integration views;
 an omitted path is never a deletion. Both preserve attributable deltas and bind
 final tools/checks/model input to the exact integrated content. Stale generations
 and unauthorized write expansion remain rejected. See the
-[current workspace protocol](../simplified-os/README.md#6-each-agents-private-part-of-the-code).
+current workspace protocol (`design-docs/simplified-os/README.md#6-each-agents-private-part-of-the-code`).
 
 The complete view does not expand allowed writes: validate the worker's H-to-P delta, including rename sources/destinations. An omitted file is not proof that an add destination is absent in B. Commands/checks/hooks that change assessed inputs invalidate evidence; generation checks do not replace content preconditions. After a reconciled verification abort, retire the integration view and rebuild from the original preserved development delta at fresh H; abandoned integration repairs remain artifacts for explicit reapplication. Repeat reconciliation and assessment, with a new generation/steps. Do not reuse the old integrated tree as a B-relative delta or publish its old assessment. If the original publication receipt exists, finish that attempt instead of rebuilding.
 
@@ -249,7 +249,7 @@ outside ordinary task-share rounding and semantic depth. Raw senior decisions
 remain distinct from effective policy; pending consumers are rewired atomically.
 Original grants/accounts/deadlines and unknown-effect guards remain authoritative.
 The planner sees actual tools and limitations: no browser/MCP/persistent service
-API. Details and limits: [worker recovery](../implementation/WORKER_RECOVERY.md).
+API. Details and limits: worker recovery (`design-docs/implementation/WORKER_RECOVERY.md`).
 
 An `agent_job` backend owns its internal loop. LangGraph submits/tracks the bounded job once, consumes artifacts, then enforces reconciliation/assessment/report. Observational tool events must not be executed again. An endpoint must prove workspace scope, tool brokerage, bounded limits, phase control and evidence visibility. Otherwise it is incompatible with that profile; use the model-query worker. Cross-harness migration normally starts a linked new attempt.
 
@@ -307,13 +307,13 @@ Short waits use async I/O. A long wait may use a dedicated `interrupt` node whos
 
 Use synchronous checkpoint durability initially. The saver persists graph state; the record/effect journal persists process authority and operations. Co-location is optional; there is no assumed transaction with providers or Git. [Checkpointers](https://docs.langchain.com/oss/python/langgraph/checkpointers)
 
-The OS driver does not hold a global execution permit while awaiting `ainvoke` or a generation. Several process coroutines submit independent model requests to the same server, which owns token batching. Local admission bounds submitted requests and reserved context; it is distinct from resident worker count, cloud capacity and the two exclusion objects. [Core scheduling contract](../simplified-os/README.md#5-scheduling-local-continuous-batching-and-cloud-work)
+The OS driver does not hold a global execution permit while awaiting `ainvoke` or a generation. Several process coroutines submit independent model requests to the same server, which owns token batching. Local admission bounds submitted requests and reserved context; it is distinct from resident worker count, cloud capacity and the two exclusion objects. Core scheduling contract (`design-docs/simplified-os/README.md#5-scheduling-local-continuous-batching-and-cloud-work`)
 
 ### Additive framework boundary
 
 Use the current RuntimePorts boundary over public StateGraph nodes, runtime
 context, async invocation and the persistent saver interface. A third shared
-agent library is deferred by FIX-0054; it is not required for direct OS access. Agent changes are explicit effect nodes and workspace/phase metadata. Do not patch LangGraph/Pregel internals or installed source. A small compatibility module and supported-version conformance checks handle future public API changes; running graph/state/saver versions stay pinned. This is additive integration, not a promise that every future framework version is compatible. [Integration shape](../simplified-os/README.md#9-agent-cooperation-and-additive-langgraph-integration)
+agent library is deferred by FIX-0054; it is not required for direct OS access. Agent changes are explicit effect nodes and workspace/phase metadata. Do not patch LangGraph/Pregel internals or installed source. A small compatibility module and supported-version conformance checks handle future public API changes; running graph/state/saver versions stay pinned. This is additive integration, not a promise that every future framework version is compatible. Integration shape (`design-docs/simplified-os/README.md#9-agent-cooperation-and-additive-langgraph-integration`)
 
 ### 4.5 Mapping the merged components
 
@@ -348,7 +348,7 @@ Preserve source identity when binding nodes: `state_45l9fwoc` is the cloud Resul
 > forward-looking interface, not a list of callable installed methods. Use
 > [src/polyinference/ports.py](../../src/polyinference/ports.py) for the implemented
 > API: there is no separate required MemoryPort or EventsPort, and records carry
-> current notes/history. The [settings reference](../simplified-os/AGENT_SETTINGS.md)
+> current notes/history. The settings reference (`design-docs/simplified-os/AGENT_SETTINGS.md`)
 > describes optional context services and defaults.
 
 ```python
@@ -383,7 +383,7 @@ retention_priority (0–100, default zero and omitted when zero), synchronized i
 design Python/JSON schema. Numeric priority is caller policy; the generic OS keeps
 whole groups and required parts, without interpreting coding relevance. Explicit eligibility permits a derived input
 summary, never canonical-memory rewriting; instructions and tool pairs remain
-protected. See the [current OS settings reference](../simplified-os/AGENT_SETTINGS.md).
+protected. See the current OS settings reference (`design-docs/simplified-os/AGENT_SETTINGS.md`).
 Historical audit statements below describe their original baseline.
 
 [contracts.py](contracts.py) defines validated proposed wire models. [contract.schema.json](contract.schema.json) exports JSON Schema; [examples.json](examples.json) provides linked examples. These are design artifacts, not an agent/OS implementation. Semantic checks below supplement structural validation.
@@ -429,6 +429,13 @@ Fingerprints bind canonical semantic input/policy versions, excluding transport 
 
 ### Scheduler-visible process information
 
+For the proposed V1 standalone scheduler (`docs/temporary/proposals/2026-11-08-standalone-scheduler-design.md`),
+visibility is not resource authority. Its only decisions are run, wait or request
+preemption for an individual process ID. The OS uses the resource/binding contracts
+below to distribute resources and execute operations; the scheduler cannot choose
+backends, edit limits, claim capacity or submit model/tool operations. The agent
+still owns task readiness, program/continuation meaning and acceptance.
+
 ProcessSpec carries program/entry/parent/role, pinned input refs, optional task/attempt, workspace, feature requirements, schedule/fidelity, budget/limits, output schema and continuation policy. The OS can schedule without parsing prompts: dependencies/dispositions, urgency/deadline/age, eligible backends, capability floor, distribution, data placement, context/output size, resource estimates, budget ancestry, phase, safe boundaries, effects and locality. An optional capability-floor reference names a versioned evaluated profile; a binding can retain the evaluation reference supporting its eligibility. Capability profiles distinguish required protocol/tool support from empirically calibrated coding ability. Pressure or a model's self-confidence cannot certify that a weaker backend meets that floor.
 
 Priority has a class (`interactive/critical/normal/background`), bounded relative value, optional deadline and aging flag. Role, priority and fidelity are independent. The runtime validates requested priority against the grant. A high-priority process with infeasible fidelity waits/fails its deadline rather than acquiring permission to violate it.
@@ -457,11 +464,16 @@ Record parsing also rejects applied steering beyond received input, an open stee
 
 ## 7. Distribution and fidelity
 
+Resource distribution and any authorized binding choice in this section belong to
+the OS. V1 standalone scheduler admission/preemption cannot change these policies,
+model/harness/effort or actual allocation. Its fidelity preference remains future
+work. The current OS still enforces the supported static profile.
+
 This section specifies richer future distribution semantics. The current OS
 uses static role bindings and FIFO admission; weighted scheduling, pressure-based
 rebindings and priority inheritance are not implemented. Mandatory unsupported
 semantics are rejected by the current static process policy. Historical U01/U02
-and its bounded implementation are in the [revision ledger](../simplified-os/DESIGN_REVISIONS.md#open-implementation-gaps).
+and its bounded implementation are in the revision ledger (`design-docs/simplified-os/DESIGN_REVISIONS.md#open-implementation-gaps`).
 
 **Fidelity is adherence to the declared execution distribution.** It is independent of model quality, priority, determinism and memory-summary accuracy.
 
@@ -586,14 +598,14 @@ Worker `Publication`/PublicationReceipt records carry an unresolved TaskReport a
 
 Project acceptance is a separate guarded publication. With new starts closed and started coding workers settled, acquire verification, confirm the senior completion proposal matches the accepted reviewed/provisional head, and run independent final acceptance checks on the provider's complete view of that revision. Keep shell ownership per command. Complete only after an atomic comparison of head/plan/input versions, current permit, no active coding worker, no unresolved contributing work and no relevant uncertain effects. All required criteria must have current passing evidence on that content/environment. Steering received during checks invalidates the snapshot. A failed/stale attempt releases after effects settle and returns to review; it does not await a worker or senior while holding verification.
 
-> **Edited 2026-10-21 because** [FIX-0086](../../development-docs/FIXES.md#fix-0086)
+> **Edited 2026-10-21 because** `development-docs/FIXES.md#fix-0086`
 > separates prerequisite, task and final product criteria in the coding agent.
 > Initial discovery is pinned per purpose; discovered task checks never implicitly
 > authorize final completion. Explicit legacy checks retain their task/final
 > fallback unless overridden. The default in-place provider checks its integration
 > checkout; isolated mode retains a private complete view. The OS still interprets
 > only generic commands/evidence, not coding purposes. See
-> [configuration](../../docs/guides/configuration.md).
+> configuration (`docs/guides/configuration.md`).
 
 Write immutable Git/evidence objects before short record publication. In-place
 Git is the user's actual repository, not merely a repaired metadata projection.

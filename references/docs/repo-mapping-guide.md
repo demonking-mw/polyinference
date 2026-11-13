@@ -8,19 +8,19 @@ Product behavior is grounded in linked primary documentation and source code ins
 
 ## Contents
 
-1. [What a repo map is](#1-what-a-repo-map-is)
-2. [Comparison with other context techniques](#2-comparison-with-other-context-techniques)
-3. [How automated maps are built](#3-how-automated-maps-are-built)
-4. [A useful map format](#4-a-useful-map-format)
-5. [Tools and practical commands](#5-tools-and-practical-commands)
-6. [Adopting mapping in a large repository](#6-adopting-mapping-in-a-large-repository)
-7. [Building a mapping service](#7-building-a-mapping-service)
-8. [Freshness and incomplete code](#8-freshness-and-incomplete-code)
-9. [Using maps during an agent task](#9-using-maps-during-an-agent-task)
-10. [Evaluating whether mapping helps](#10-evaluating-whether-mapping-helps)
-11. [Common failure modes](#11-common-failure-modes)
-12. [A staged implementation plan](#12-a-staged-implementation-plan)
-13. [Sources and further reading](#13-sources-and-further-reading)
+1. [What a repo map is](#1.%20What%20a%20repo%20map%20is)
+2. [Comparison with other context techniques](#2.%20Comparison%20with%20other%20context%20techniques)
+3. [How automated maps are built](#3.%20How%20automated%20maps%20are%20built)
+4. [A useful map format](#4.%20A%20useful%20map%20format)
+5. [Tools and practical commands](#5.%20Tools%20and%20practical%20commands)
+6. [Adopting mapping in a large repository](#6.%20Adopting%20mapping%20in%20a%20large%20repository)
+7. [Building a mapping service](#7.%20Building%20a%20mapping%20service)
+8. [Freshness and incomplete code](#8.%20Freshness%20and%20incomplete%20code)
+9. [Using maps during an agent task](#9.%20Using%20maps%20during%20an%20agent%20task)
+10. [Evaluating whether mapping helps](#10.%20Evaluating%20whether%20mapping%20helps)
+11. [Common failure modes](#11.%20Common%20failure%20modes)
+12. [A staged implementation plan](#12.%20A%20staged%20implementation%20plan)
+13. [Sources and further reading](#13.%20Sources%20and%20further%20reading)
 
 ## 1. What a repo map is
 
@@ -356,7 +356,7 @@ Use workspace overview → package map → task-specific symbols → current sou
 
 Missing modules, unresolved aliases, unavailable generated files, and absent project configuration weaken relationships even if parsing succeeds. Say “no references found within indexed scope,” rather than “unused.”
 
-At research time, this workspace contains a nested checkout at `references/claude-code` and an existing [source-study handbook](claude-code-agent-handbook.md). Mapping that material should treat the nested checkout as its own scope and retain the handbook's documented completeness limitations. This guide does not establish buildability or create an index of that snapshot.
+At research time, this workspace contains a nested checkout at `references/claude-code` and an existing source-study handbook (`references/docs/claude-code-agent-handbook.md`). Mapping that material should treat the nested checkout as its own scope and retain the handbook's documented completeness limitations. This guide does not establish buildability or create an index of that snapshot.
 
 ### Maps expose selected repository information
 

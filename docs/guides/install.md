@@ -1,7 +1,5 @@
 # Install PolyInference
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
 Run the commands in **Bash** on macOS, Linux or WSL. On macOS, install Python 3.10+
 and Git using your preferred package manager; skip the Ubuntu package commands.
 `bubblewrap` execution requires Linux; use explicitly enabled `trusted` commands
@@ -40,4 +38,4 @@ complete tested environment. To reproduce those transitive versions, install
 
 
 
-Next: [Codex login](codex-login.md) and [Anthropic credentials](anthropic-key.md), then [launch](launching.md).
+Next: Codex login (`docs/guides/codex-login.md`) and Anthropic credentials (`docs/guides/anthropic-key.md`), then launch (`docs/guides/launching.md`).

@@ -23,36 +23,36 @@ Source links are relative to this document for local use. The pinned commit fixe
 
 ## Contents
 
-1. [Executive summary](#1-executive-summary)
-2. [The coding agent in detail](#2-the-coding-agent-in-detail)
-3. [Architecture graphs](#3-architecture-graphs)
-4. [Monorepo map and reading route](#4-monorepo-map-and-reading-route)
-5. [The three framework layers](#5-the-three-framework-layers)
-6. [Agent construction and middleware assembly](#6-agent-construction-and-middleware-assembly)
-7. [The model-tool loop](#7-the-model-tool-loop)
-8. [State, reducers, checkpoints, and stores](#8-state-reducers-checkpoints-and-stores)
-9. [Tools and filesystem middleware](#9-tools-and-filesystem-middleware)
-10. [Backends and path routing](#10-backends-and-path-routing)
-11. [Shell execution and coding feedback](#11-shell-execution-and-coding-feedback)
-12. [Permissions and human approval](#12-permissions-and-human-approval)
-13. [Context budgets, offloading, and compaction](#13-context-budgets-offloading-and-compaction)
-14. [Prompts, profiles, and model selection](#14-prompts-profiles-and-model-selection)
-15. [Memory and skills](#15-memory-and-skills)
-16. [Synchronous subagents](#16-synchronous-subagents)
-17. [Conversation forks](#17-conversation-forks)
-18. [Asynchronous subagents](#18-asynchronous-subagents)
-19. [The terminal coding application](#19-the-terminal-coding-application)
-20. [MCP integration](#20-mcp-integration)
-21. [Web search and page retrieval](#21-web-search-and-page-retrieval)
-22. [Hooks, plugins, and Python extensions](#22-hooks-plugins-and-python-extensions)
-23. [Completion rubrics and verification](#23-completion-rubrics-and-verification)
-24. [Sessions, cancellation, and operational behavior](#24-sessions-cancellation-and-operational-behavior)
-25. [Other packages and deployment surfaces](#25-other-packages-and-deployment-surfaces)
-26. [A complete coding-task walkthrough](#26-a-complete-coding-task-walkthrough)
-27. [Failure modes and design lessons](#27-failure-modes-and-design-lessons)
-28. [A blueprint for building a similar agent](#28-a-blueprint-for-building-a-similar-agent)
-29. [Testing and evaluation](#29-testing-and-evaluation)
-30. [Source index, limitations, and glossary](#30-source-index-limitations-and-glossary)
+1. [Executive summary](#1.%20Executive%20summary)
+2. [The coding agent in detail](#2.%20The%20coding%20agent%20in%20detail)
+3. [Architecture graphs](#3.%20Architecture%20graphs)
+4. [Monorepo map and reading route](#4.%20Monorepo%20map%20and%20reading%20route)
+5. [The three framework layers](#5.%20The%20three%20framework%20layers)
+6. [Agent construction and middleware assembly](#6.%20Agent%20construction%20and%20middleware%20assembly)
+7. [The model-tool loop](#7.%20The%20model-tool%20loop)
+8. [State, reducers, checkpoints, and stores](#8.%20State%2C%20reducers%2C%20checkpoints%2C%20and%20stores)
+9. [Tools and filesystem middleware](#9.%20Tools%20and%20filesystem%20middleware)
+10. [Backends and path routing](#10.%20Backends%20and%20path%20routing)
+11. [Shell execution and coding feedback](#11.%20Shell%20execution%20and%20coding%20feedback)
+12. [Permissions and human approval](#12.%20Permissions%20and%20human%20approval)
+13. [Context budgets, offloading, and compaction](#13.%20Context%20budgets%2C%20offloading%2C%20and%20compaction)
+14. [Prompts, profiles, and model selection](#14.%20Prompts%2C%20profiles%2C%20and%20model%20selection)
+15. [Memory and skills](#15.%20Memory%20and%20skills)
+16. [Synchronous subagents](#16.%20Synchronous%20subagents)
+17. [Conversation forks](#17.%20Conversation%20forks)
+18. [Asynchronous subagents](#18.%20Asynchronous%20subagents)
+19. [The terminal coding application](#19.%20The%20terminal%20coding%20application)
+20. [MCP integration](#20.%20MCP%20integration)
+21. [Web search and page retrieval](#21.%20Web%20search%20and%20page%20retrieval)
+22. [Hooks, plugins, and Python extensions](#22.%20Hooks%2C%20plugins%2C%20and%20Python%20extensions)
+23. [Completion rubrics and verification](#23.%20Completion%20rubrics%20and%20verification)
+24. [Sessions, cancellation, and operational behavior](#24.%20Sessions%2C%20cancellation%2C%20and%20operational%20behavior)
+25. [Other packages and deployment surfaces](#25.%20Other%20packages%20and%20deployment%20surfaces)
+26. [A complete coding-task walkthrough](#26.%20A%20complete%20coding-task%20walkthrough)
+27. [Failure modes and design lessons](#27.%20Failure%20modes%20and%20design%20lessons)
+28. [A blueprint for building a similar agent](#28.%20A%20blueprint%20for%20building%20a%20similar%20agent)
+29. [Testing and evaluation](#29.%20Testing%20and%20evaluation)
+30. [Source index, limitations, and glossary](#30.%20Source%20index%2C%20limitations%2C%20and%20glossary)
 
 ## 1. Executive summary
 
@@ -199,7 +199,7 @@ The graphs are conceptual ownership diagrams, not a dump of every generated midd
 | `libs/evals/`, `examples/` | Evaluation and application examples |
 | `openwiki/` | Generated evidence/navigation material; source remains authoritative |
 
-Recommended reading order: SDK assembly; backend protocol; filesystem tool construction; LangChain factory loop; summarization/state; subagent dispatch; memory/skills; coding application assembly; MCP and terminal-client lifecycle. The in-repository [SDK architecture](../deepagents/libs/ARCHITECTURE.md) and [coding application architecture](../deepagents/libs/code/ARCHITECTURE.md) provide useful orientation, but verify defaults against current assembly code.
+Recommended reading order: SDK assembly; backend protocol; filesystem tool construction; LangChain factory loop; summarization/state; subagent dispatch; memory/skills; coding application assembly; MCP and terminal-client lifecycle. The SDK architecture (`references/deepagents/libs/ARCHITECTURE.md`) and coding application architecture (`references/deepagents/libs/code/ARCHITECTURE.md`) provide useful orientation. Verify defaults against current assembly code.
 
 ## 5. The three framework layers
 

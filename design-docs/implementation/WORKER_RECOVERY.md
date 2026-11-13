@@ -92,7 +92,7 @@ runtime reliability commits present here. The implementation preserves:
 - `191076c`: immutable interface versions and resulting-plan dependency validation.
 
 The larger profiles-branch ledger is not copied or rewritten on this implementation
-branch. The local [fix log](FIXES.md) records the changes made here.
+branch. The local fix log (`design-docs/implementation/FIXES.md`) records the changes made here.
 
 Integrated source responsibilities:
 

@@ -1,7 +1,5 @@
 # Export code and diagnostic evidence
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
 There are two separate exports:
 
 - **UI Save run · JSON** downloads the selected run's OS overview, full durable
@@ -22,7 +20,7 @@ polyinference status .polyinference/ui/runs/RUN_ID/state
 polyinference export .polyinference/ui/runs/RUN_ID/state /tmp/polyinference-result.patch
 ```
 
-For the custom CLI configuration in the [configuration guide](configuration.md):
+For the custom CLI configuration in the configuration guide (`docs/guides/configuration.md`):
 
 ```bash
 polyinference export .polyinference/my-project-state /tmp/polyinference-result.patch
@@ -64,4 +62,4 @@ in the project's Git database. For a historical isolated run, use
 `git --git-dir=STATE/repository.git archive COMMIT_ID` instead. Retain state for
 execution evidence and retain unfinished worktrees for their uncommitted files.
 
-Related: [Result locations](results.md) · [State layout](state-layout.md).
+Related: Result locations (`docs/guides/results.md`) · State layout (`docs/guides/state-layout.md`).

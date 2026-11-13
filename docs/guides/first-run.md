@@ -1,7 +1,5 @@
 # First run
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
 Start with the built-in task before selecting a real project:
 
 1. Launch `polyinference ui` without `--config` and open the page.
@@ -25,7 +23,9 @@ one active test at a time and retains previous runs in its run selector. A run
 can stop with a blocker or exhausted allowance; a recorded worker response alone
 does not mean the project completed.
 
-The configured defaults are `claude-haiku-5-5` and `gpt-6.1-sol`. These are model
-IDs pinned by this project, not a promise that every account can access them.
-If a provider rejects an ID, use a configuration with an available model as
-explained below.
+The bundled worker preset uses `claude-haiku-5-5`; the senior preset uses
+`gpt-6.1-sol`. A machine preference can replace the worker endpoint. Check
+the effective models in the UI before starting. If an account cannot access
+a model, select one it can access in your run configuration.
+
+- [Run on your project](projects.md)

@@ -1,12 +1,12 @@
 # Measure input capacity without mixing units
 
-[Context module](../modules/context.md) · [Settings](../../design-docs/simplified-os/AGENT_SETTINGS.md) · [Configuration](configuration.md)
+Context module (`docs/modules/context.md`) · Settings (`design-docs/simplified-os/AGENT_SETTINGS.md`) · Configuration (`docs/guides/configuration.md`)
 
 `simple-os/6` separates three facts: serialized adapter UTF-8 bytes, measured or
 conservatively bounded input tokens, and output reservation. It requires fresh
 state; old runs keep their original source, receipts, settings and accounts.
 
-The [local pair](local-token-limits.md) supplies the local input cap and raw output reservation.
+The local pair (`docs/guides/local-token-limits.md`) supplies the local input cap and raw output reservation.
 A caller may request a narrower local context. Cloud inference has no OS per-call input/output token cap;
 its receipts identify the provider as limit owner. Native hidden context remains unmeasured. Actual
 provider usage settles campaign accounts; visible-input reservation cannot bound hidden native consumption.

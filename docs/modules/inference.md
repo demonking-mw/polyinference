@@ -1,7 +1,5 @@
 # Endpoint admission and provider adapters
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 Raw inference and native tool-using jobs have different wire/effect behavior and share bounded admission.
 
 | File | Responsibility |
@@ -18,7 +16,7 @@ CodexProxy forwards query-only work to a separately installed service.
 HTTPInference.count_input optionally posts the exact prepared raw body to an explicitly declared
 same-provider counting route. Response size/type/deadline are bounded, redirects remain disabled,
 and failures retain conservative measurement provenance. No generation is issued or charged. See
-[context measurement](../guides/context-measurement.md).
+context measurement (`docs/guides/context-measurement.md`).
 HTTPInference.recover_operation retrieves a Responses result only with a retained
 response ID, verifies its identity and terminal state, and applies normal output
 validation. Lookup failures and unknown status preserve uncertainty. Resume bounds
@@ -28,7 +26,7 @@ do not gain automatic termination proof. No new generation is submitted by looku
 terminal_call is the cancellation-safe invocation helper for opt-in operation-aware
 HTTP adapters: retrieve terminal evidence even when cancellation handling raises.
 Default HTTP/native invocations retain their original path. The application-owned
-[simulator](inference-simulation.md) supplies pacing/fault policy; generic Admission
+simulator (`docs/modules/inference-simulation.md`) supplies pacing/fault policy; generic Admission
 has no simulated TPS, Haiku scheduling or coding semantics.
 
 Optional endpoint.lifecycle explicitly selects SSE or buffered transport. SSE is
@@ -37,10 +35,10 @@ first-output and output-idle watchdogs; pings do not extend them. Complete termi
 metadata remains mandatory. Missing terminals retain unknown physical execution;
 transport class and lifecycle stage survive in diagnostics. Buffered mode makes no
 incremental progress claim. Absent lifecycle keeps legacy timeout semantics.
-See [profiles, retry policy and testing](../guides/endpoint-testing.md).
+See profiles, retry policy and testing (`docs/guides/endpoint-testing.md`).
 
 Telemetry buffers, adapter error/body caps, shutdown/status polling, API version
-and progress precision use [central OS tuning](../guides/os-tuning.md). Standalone
+and progress precision use central OS tuning (`docs/guides/os-tuning.md`). Standalone
 helpers and kernel-created primary/fallback clients share the canonical defaults.
 
 ## Principles to preserve
@@ -60,11 +58,11 @@ helpers and kernel-created primary/fallback clients share the canonical defaults
 [Endpoints](../../tests/test_endpoints.py), [Anthropic](../../tests/test_anthropic.py),
 [native events](../../tests/test_native_events.py) and [output limits](../../tests/test_output_limits.py).
 
-[Provider setup](../guides/providers.md) · [Runtime boundary](../../design-docs/simplified-os/RUNTIME_BOUNDARY.md).
+Provider setup (`docs/guides/providers.md`) · Runtime boundary (`design-docs/simplified-os/RUNTIME_BOUNDARY.md`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.
 
 ## Integrated reliability branch (2026-10-26)
 

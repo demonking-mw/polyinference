@@ -1,10 +1,8 @@
 # Providers and model routing
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
 `local` and `cloud` are the names of two endpoint **lanes**. They do not guarantee
 where inference happens: the bundled `local` preset points to Anthropic's cloud API.
-Plain UI launches can replace it using [machine defaults](configuration.md).
+Plain UI launches can replace it using machine defaults (`docs/guides/configuration.md`).
 Physical inference location is recorded separately.
 
 The default bindings are:
@@ -21,7 +19,7 @@ for a run. To change models, providers or bindings, start a fresh state director
 One system.local_token_limits input/output pair configures the local lane,
 including API stand-ins and Strata startup preparation. Cloud agents own their
 per-call token limits; Codex has no OS token cap even on the local worker binding.
-See [token settings and required-field API differences](local-token-limits.md).
+See token settings and required-field API differences (`docs/guides/local-token-limits.md`).
 
 | Backend | Endpoint configuration | Authentication / example |
 | --- | --- | --- |

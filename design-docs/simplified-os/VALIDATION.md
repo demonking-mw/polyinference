@@ -68,7 +68,7 @@ phase/usage handling and complete application path, not general model quality.
 ## Boundaries
 
 This final OS revision was tested on macOS. The earlier agent-only validation
-records Linux/WSL evidence in [implementation/VALIDATION.md](../implementation/VALIDATION.md);
+records Linux/WSL evidence in implementation/VALIDATION.md (`design-docs/implementation/VALIDATION.md`);
 new Linux/WSL deployment runs remain necessary. Native Windows is not supported.
 Linux bubblewrap was not exercised on this host. Trusted host scripts/checks are
 explicitly enabled capabilities, not a filesystem security boundary.
@@ -80,4 +80,4 @@ concurrency is demonstrated; physical GPU/VRAM admission is intentionally deferr
 
 Unknown provider execution and hard host crashes can require operator evidence.
 Automatic remote cancellation, exactly-once remote effects and distributed
-failover are not claimed. See [the recovery and retention procedures](RUNBOOK.md).
+failover are not claimed. See the recovery and retention procedures (`design-docs/simplified-os/RUNBOOK.md`).

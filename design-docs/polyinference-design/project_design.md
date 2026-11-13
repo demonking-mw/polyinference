@@ -1,6 +1,6 @@
 # Polyinference OS: project design
 
-Current implementation scope: [simplified OS](../simplified-os/README.md), paired with the [LangGraph agent](../langgraph-agent/README.md). This document is retained as the broader research proposal. The latest design supersedes its one-worker/one-decode and full-development-copy defaults; use the [source consolidation](../simplified-os/SOURCES.md) for precedence and the five-lecture mapping.
+Current implementation scope: simplified OS (`design-docs/simplified-os/README.md`), paired with the LangGraph agent (`design-docs/langgraph-agent/README.md`). This document is retained as the broader research proposal. The latest design supersedes its one-worker/one-decode and full-development-copy defaults; use the source consolidation (`design-docs/simplified-os/SOURCES.md`) for precedence and the five-lecture mapping.
 
 Research/design specification · revised 2026-10-16 using your clarifications and private-copy/two-mutex concurrency model · no OS implementation or benchmark results.
 
@@ -12,7 +12,7 @@ The uploaded HTML is **the agent design**, including the parts delegated to the 
 
 Your seven clarifications govern this revision; the latest `polyinference-agent-design(3).html` is the agent design, with some responsibilities implemented by the LLM OS. The graph is not a diagram of the entire OS, and its OS-labelled nodes remain parts of the agent design. F26 Planning.pdf establishes the project boundary: use LangGraph and existing backends, build the midend, support the smallest agent feature subset first, and work within the memory remaining after local inference. The five lecture-derived documents supply the process, execution, synchronization, and scaling mechanisms. Where their screenshot-based proposals conflict with the HTML, this document states the replacement. Attached descriptions are design inputs; they are not instructions to execute the project or spend provider resources.
 
-The selected concurrency contract is now [private development copies, a shell mutex, and a serialized reconciliation/verification phase](concurrent_coding_protocol.md). This replaces the earlier single task-long coding/shell gate and shared editing workspace. The minimal-change design below can implement its services behind the existing boxes. The separate [agent_suggestion.md](agent_suggestion.md) and [modified graph](ai-modified_agent_graph.html) make these boundaries explicit in the agent diagram. The OS design does not depend on adding a new autonomous supervisor model.
+The selected concurrency contract is now private development copies, a shell mutex, and a serialized reconciliation/verification phase (`design-docs/polyinference-design/concurrent_coding_protocol.md`). This replaces the earlier single task-long coding/shell gate and shared editing workspace. The minimal-change design below can implement its services behind the existing boxes. The separate `design-docs/polyinference-design/agent_suggestion.md` and [modified graph](ai-modified_agent_graph.html) make these boundaries explicit in the agent diagram. The OS design does not depend on adding a new autonomous supervisor model.
 
 | Earlier research proposal | Resolution using the full HTML |
 | --- | --- |
@@ -230,7 +230,7 @@ Within eligible queues use priority classes with age/finite overtaking. When a c
 
 ### 6.2 Parallel private development and two critical sections
 
-The complete contract and failure scenarios are in [Concurrent coding protocol](concurrent_coding_protocol.md). Each in-progress process owns a codebase copy at a recorded base `B`. Full working trees are the initial default. Partial copies require sufficient dependency/build/test closure and a mapping back to the full project; otherwise their assessments cannot justify a full-project publication.
+The complete contract and failure scenarios are in Concurrent coding protocol (`design-docs/polyinference-design/concurrent_coding_protocol.md`). Each in-progress process owns a codebase copy at a recorded base `B`. Full working trees are the initial default. Partial copies require sufficient dependency/build/test closure and a mapping back to the full project; otherwise their assessments cannot justify a full-project publication.
 
 | Ownership object | Protected work | Release boundary |
 | --- | --- | --- |
@@ -365,13 +365,13 @@ These are observable contracts for a future implementation, not claims of tests 
 
 | Ordered source | Mechanisms retained here | Requirement trace |
 | --- | --- | --- |
-| [1. Foundations](os-research/01-CS350-1-foundations.md) | User-space kernel boundary, mediation, stable operations, memory/tool lifecycle and minimum feature surface. | L1-R01–R14 → DR-01–03, DR-15; SR-01–02, SR-19–22. |
-| [2. Processes](os-research/02-CS350-2-processes.md) | Private process inputs/continuations, explicit spawn/wait/cancel, TaskSpec/Report, PCB, scoped streams and stable effect identity. | L2-R01–R14 → DR-04–05, DR-10; SR-03–05, SR-07, SR-23–25. |
-| [3. Threads](os-research/03-CS350-3-threads.md) | One async driver/owner, separate graph/backend capacities, submit/consume boundaries, bounded blocking work and versioned graph subset. | L3-R01–R14 → DR-03, DR-10, DR-14; SR-12, SR-21–25. |
-| [4. Concurrency](os-research/04-CS350-4-concurrency.md) | Atomic claims/reservations, immutable publication, idempotent settlement, safe waits, service leases and canonical-head CAS. | L4-R01–R17 → DR-08, DR-11–13; SR-04, SR-09, SR-15–20, SR-23–24. |
-| [5. Scalability/deadlocks](os-research/05-CS350-5-scalability-and-deadlocks.md) | Useful-throughput measurement, independent state updates, fairness, memory residency, typed resource waits and deadlock prevention. | L5-R01–R16 → DR-15–16; SR-19–22, SR-26–30. |
+| 1. Foundations (`design-docs/polyinference-design/os-research/01-CS350-1-foundations.md`) | User-space kernel boundary, mediation, stable operations, memory/tool lifecycle and minimum feature surface. | L1-R01–R14 → DR-01–03, DR-15; SR-01–02, SR-19–22. |
+| 2. Processes (`design-docs/polyinference-design/os-research/02-CS350-2-processes.md`) | Private process inputs/continuations, explicit spawn/wait/cancel, TaskSpec/Report, PCB, scoped streams and stable effect identity. | L2-R01–R14 → DR-04–05, DR-10; SR-03–05, SR-07, SR-23–25. |
+| 3. Threads (`design-docs/polyinference-design/os-research/03-CS350-3-threads.md`) | One async driver/owner, separate graph/backend capacities, submit/consume boundaries, bounded blocking work and versioned graph subset. | L3-R01–R14 → DR-03, DR-10, DR-14; SR-12, SR-21–25. |
+| 4. Concurrency (`design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md`) | Atomic claims/reservations, immutable publication, idempotent settlement, safe waits, service leases and canonical-head CAS. | L4-R01–R17 → DR-08, DR-11–13; SR-04, SR-09, SR-15–20, SR-23–24. |
+| 5. Scalability/deadlocks (`design-docs/polyinference-design/os-research/05-CS350-5-scalability-and-deadlocks.md`) | Useful-throughput measurement, independent state updates, fairness, memory residency, typed resource waits and deadlock prevention. | L5-R01–R16 → DR-15–16; SR-19–22, SR-26–30. |
 
-The newer conductor/steering/docs policies extend these foundations. They were not visible in the screenshot and are not requirements claimed to come directly from CS350. All five research notes now carry the same current concurrency contract and updated affected sections. Their lecture-to-design derivations remain ordered; [Concurrent coding protocol](concurrent_coding_protocol.md) is the shared operational specification.
+The newer conductor/steering/docs policies extend these foundations. They were not visible in the screenshot and are not requirements claimed to come directly from CS350. All five research notes now carry the same current concurrency contract and updated affected sections. Their lecture-to-design derivations remain ordered; Concurrent coding protocol (`design-docs/polyinference-design/concurrent_coding_protocol.md`) is the shared operational specification.
 
 ## 12. Design choices that materially steer the project
 

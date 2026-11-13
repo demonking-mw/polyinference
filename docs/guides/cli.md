@@ -1,7 +1,5 @@
 # Command line
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
 You can run without the UI using the same configuration and environment:
 
 ```bash
@@ -16,7 +14,7 @@ any saved commit as final success.
 | Command | Purpose |
 | --- | --- |
 | `polyinference validate-config CONFIG` | Validate configuration structure. |
-| `polyinference configure-local CONFIG [--strata-config FILE]` | Derive Strata startup context from the [local token pair](local-token-limits.md), preserving the original file. Restart Strata before running. Makes no inference request. |
+| `polyinference configure-local CONFIG [--strata-config FILE]` | Derive Strata startup context from the local token pair (`docs/guides/local-token-limits.md`), preserving the original file. Restart Strata before running. Makes no inference request. |
 | `polyinference probe CONFIG --endpoint local` | Make one readiness request to the worker lane. Use `cloud` for the other lane. |
 | `polyinference run CONFIG` | Start/drive a run in the configured state directory. Use fresh state for a new run. |
 | `polyinference status STATE` | Inspect application status, task reports, heads and uncertain effects. |
@@ -26,7 +24,7 @@ any saved commit as final success.
 | `polyinference export STATE OUTPUT.patch` | Export the initial-to-provisional code diff. |
 | `polyinference ui --state STATE` | View a persisted run in the UI. |
 | `polyinference ui --sim-batch N` | New-run remote Haiku simulation with N workers/slots (1..16), scoped to this server invocation. Works with --port/--config/--state; explicit resume keeps old state's saved settings. |
-| `polyinference ui --sim-inference` | Reveal per-run normal/buggy/slow-buggy controls. TPS, batch, bug rate and optional seed are selected before Start. [Details](sim-inference.md). |
+| `polyinference ui --sim-inference` | Reveal per-run normal/buggy/slow-buggy controls. TPS, batch, bug rate and optional seed are selected before Start. Details (`docs/guides/sim-inference.md`). |
 
 Run `polyinference --help` or `polyinference COMMAND --help` for argument syntax.
 `ui --state` imports an existing run for inspection; **Start run** still creates a

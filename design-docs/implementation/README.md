@@ -1,21 +1,21 @@
 # Agent implementation notes
 
 > **Edited 2026-10-20 because** these notes describe the initial isolated-copy
-> implementation. The current [revision ledger](../simplified-os/DESIGN_REVISIONS.md)
-> and [boundary guide](../simplified-os/RUNTIME_BOUNDARY.md) supersede old private
+> implementation. The current revision ledger (`design-docs/simplified-os/DESIGN_REVISIONS.md`)
+> and boundary guide (`design-docs/simplified-os/RUNTIME_BOUNDARY.md`) supersede old private
 > Git/setup/copy-back details, all-verdict publication and caller-only recovery.
 > Default coding uses the actual repository, full task worktrees, private
 > failed/uncertain candidates and OS optional context/output services. The older
 > details below retain their historical provider/setup evidence.
 
 The bundled runtime is now simple OS v1. The current OS audit decisions and
-failure policy are recorded in [the OS implementation plan](../simplified-os/IMPLEMENTATION.md);
-see its [runbook](../simplified-os/RUNBOOK.md) and [validation](../simplified-os/VALIDATION.md).
+failure policy are recorded in the OS implementation plan (`design-docs/simplified-os/IMPLEMENTATION.md`);
+see its runbook (`design-docs/simplified-os/RUNBOOK.md`) and validation (`design-docs/simplified-os/VALIDATION.md`).
 
 The behavioral sources are the LangGraph revision 4 design, simplified OS, merged
 execution contract, integration audit A1–A9, and the user's
 [user-agent-review.json](user-agent-review.json). Historical diagrams and research
-remain unchanged. The implementation plan is [at the repository root](../../IMPLEMENTATION_PLAN.md).
+remain unchanged. The implementation plan is at the repository root (`IMPLEMENTATION_PLAN.md`).
 
 ## Package boundary
 
@@ -181,7 +181,9 @@ bubblewrap mode enforces a restricted workspace environment when available.
 
 ## Integrated reliability branch (2026-10-26)
 
-- [Worker exception recovery](WORKER_RECOVERY.md)
-- [Execution observations and progress policy](PROGRESS_MONITORING.md)
+- Worker exception recovery (`design-docs/implementation/WORKER_RECOVERY.md`)
+- Execution observations and progress policy (`design-docs/implementation/PROGRESS_MONITORING.md`)
 - [Reliability branch fix log](FIXES.md), retained as historical implementation evidence.
-- [Integration record](../../development-docs/FIXES.md#fix-0127) for the combined simple OS branch.
+- Integration record (`development-docs/FIXES.md#fix-0127`) for the combined simple OS branch.
+
+- [Validation record â€” 17 October 2026](VALIDATION.md)

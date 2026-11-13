@@ -1,7 +1,5 @@
 # Budgets and command execution
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
 Additional settings worth reviewing:
 
 | Setting | Effect |
@@ -17,7 +15,7 @@ Additional settings worth reviewing:
 | `control_token_reserve` | Parent token allowance reserved for control processes; the coding agent reserves 32,000 for planning/review. The former `review_token_reserve` input spelling is accepted. |
 | `run_spend_budget_microusd` | Optional estimated run cost bound; requires an explicit endpoint token-price estimate. |
 | `max_sprints` | UI/mixed example use 27 sprints and up to 81 senior queries; generic config default is 8 sprints. |
-| `local_token_limits` | One local-lane input/output pair; provider requests and OS settings derive from it. [Startup/restart](local-token-limits.md). Cloud per-call token caps are provider-owned. |
+| `local_token_limits` | One local-lane input/output pair; provider requests and OS settings derive from it. Startup/restart (`docs/guides/local-token-limits.md`). Cloud per-call token caps are provider-owned. |
 | `limits` / `run_token_budget` | Per-process allowances, final-phase reserves and parent token allowance. Set them before starting. |
 
 **`trusted` shell/check execution runs code on your host.** Workspace-relative
@@ -44,8 +42,8 @@ starting a project run; it does not prove the entire coding/tool workflow works.
 The UI uses your configuration as its template, but still gives every **Start run**
 click a new state directory under `.polyinference/ui/runs/`.
 
-Related: [Configuration](configuration.md) · [OS settings](../../design-docs/simplified-os/AGENT_SETTINGS.md).
+Related: Configuration (`docs/guides/configuration.md`) · OS settings (`design-docs/simplified-os/AGENT_SETTINGS.md`).
 
 Operational buffers, polling, journal retention and shell defaults use
-[central OS tuning](os-tuning.md). Values are resolved before launch and pinned;
+central OS tuning (`docs/guides/os-tuning.md`). Values are resolved before launch and pinned;
 changing them cannot replenish or modify an existing resource account.

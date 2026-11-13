@@ -2,7 +2,7 @@
 
 ## Current agent concurrency contract
 
-Updated using the full agent HTML and the user's later clarifications. The HTML is the agent design, including OS-handled parts; the LLM OS is an application operating endpoints, not a computer-kernel subsystem. [Concurrent coding protocol](concurrent_coding_protocol.md) defines the current operational contract. It supersedes any earlier screenshot-based alternatives below where their scope differs.
+Updated using the full agent HTML and the user's later clarifications. The HTML is the agent design, including OS-handled parts; the LLM OS is an application operating endpoints, not a computer-kernel subsystem. Concurrent coding protocol (`design-docs/polyinference-design/concurrent_coding_protocol.md`) defines the current operational contract. It supersedes any earlier screenshot-based alternatives below where their scope differs.
 
 Every in-progress coding process owns a codebase copy. Private development overlaps. Every shell/script command, including test/Git commands, acquires a global `shell_mutex`. A separate `verification_gate` serializes latest-head merge, at least one specially prompted development/reconciliation loop, the final one/few local-model testing/examination/assessment iterations, commit and provisional shared-head/report publication. Release verification only after that boundary; release shell after each confirmed command. When both are needed the order is **verification then shell**; an outside shell owner releases before requesting verification. The application coordinator keeps running throughout.
 
@@ -16,7 +16,7 @@ Assessment produces `fail / uncertain / successful`; every normal local completi
 | L2-C04 | Publication stays provisional/unresolved; unknown active effects retain applicable exclusion and senior rollback checks dependents. |
 
 
-**Lecture basis:** CS350-2.pdf, Process abstraction, 32 PDF pages / 31 numbered slides. Builds on [document 1](01-CS350-1-foundations.md) using lectures 1–2 only. **Project context:** planning pp. 1–3, the uploaded agent HTML and subsequent user clarifications. **Revision/research date:** 2026-10-16.
+**Lecture basis:** CS350-2.pdf, Process abstraction, 32 PDF pages / 31 numbered slides. Builds on document 1 (`design-docs/polyinference-design/os-research/01-CS350-1-foundations.md`) using lectures 1–2 only. **Project context:** planning pp. 1–3, the uploaded agent HTML and subsequent user clarifications. **Revision/research date:** 2026-10-16.
 
 ## 1. Decide what a process means in this application
 
@@ -185,4 +185,4 @@ Use one controller context plus one coding worker at a time, compact records in 
 
 For a reference workload such as adding JSON output to a toy CLI, cloud strategy may propose T1 formatter, T2 CLI wiring depending on T1, and T3 documentation. The host validates these tasks. G0 executes them serially with explicit bases and checks. G1 may run eligible independent tasks concurrently; integration still validates their shared project assumptions. This is an illustrative workload for design reasoning, not project code to build in this task.
 
-**Next:** [Lecture 3 — LangGraph execution and bounded host tasks](03-CS350-3-threads.md).
+**Next:** Lecture 3 — LangGraph execution and bounded host tasks (`design-docs/polyinference-design/os-research/03-CS350-3-threads.md`).

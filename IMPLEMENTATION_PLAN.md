@@ -1,5 +1,9 @@
 # Agent implementation plan
 
+Historical implementation plan. Use the current runtime boundary at
+`design-docs/simplified-os/RUNTIME_BOUNDARY.md` and the accepted revisions
+for current state pins, repository behavior and publication rules.
+
 The current authority is `design-docs/langgraph-agent`, the simplified OS contracts,
 the merged execution diagram and `design-docs/INTEGRATION_AUDIT.md` (A1–A9).
 Historical research informs the implementation without expanding the placeholder OS.

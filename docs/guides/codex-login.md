@@ -1,7 +1,5 @@
 # Codex installation and login
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
 Install Codex in the **same macOS/Linux/WSL environment as the backend**. WSL
 needs its own Linux installation even if you use the Windows desktop app. Skip the installation command if `codex --version` already works there.
 The official Linux installer is documented in the
@@ -39,4 +37,4 @@ method. For the default mixed setup, an `OPENAI_API_KEY` is not required.
 
 
 
-Next: [Anthropic credentials](anthropic-key.md) · [Launch](launching.md).
+Next: Anthropic credentials (`docs/guides/anthropic-key.md`) · Launch (`docs/guides/launching.md`).

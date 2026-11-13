@@ -1,7 +1,5 @@
 # Run on your project
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
 1. Choose a project path on the host filesystem (inside Linux for WSL). The folder
    may be new: startup creates it and any missing parents and initializes Git there.
    For an existing Git checkout, commit or stash changes, including untracked files you want to keep.

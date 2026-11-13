@@ -1,7 +1,5 @@
 # Coding repository policy and retained source
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 Default coding work uses the selected actual repository, integration branch and linked task worktrees.
 
 | File | Responsibility |
@@ -29,7 +27,7 @@ rejecting the result does not run a Git revert. Source offers skip these non-can
 reports, preserving normal private-source handoffs when both result kinds coexist.
 
 The repository provider consumes the resolved OS workspace ignore names from
-[central tuning](../guides/os-tuning.md); branch/commit/acceptance policy remains
+central tuning (`docs/guides/os-tuning.md`); branch/commit/acceptance policy remains
 owned by this application.
 
 ## Principles to preserve
@@ -45,11 +43,11 @@ owned by this application.
 [In-place repository](../../tests/test_in_place_repository.py), [recovery](../../tests/test_recovery.py)
 and [workspace outputs](../../tests/test_workspace_outputs.py).
 
-[Boundary: repository guarantees](../../design-docs/simplified-os/RUNTIME_BOUNDARY.md#in-place-coding-repositories) · [FIX-0001](../../development-docs/FIXES.md#fix-0001) · [FIX-0060](../../development-docs/FIXES.md#fix-0060).
+Boundary: repository guarantees (`design-docs/simplified-os/boundary/repository.md#in-place-coding-repositories`) · `development-docs/FIXES.md#fix-0001` · `development-docs/FIXES.md#fix-0060`.
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.
 
 ## Integrated reliability branch (2026-10-26)
 

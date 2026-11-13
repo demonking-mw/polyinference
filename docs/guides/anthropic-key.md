@@ -1,7 +1,5 @@
 # Anthropic credentials
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
 Get an API key for your own Anthropic account. Set `ANTHROPIC_API_KEY` in the
 **same terminal that will launch the backend**. This Bash prompt avoids putting
 the value directly in shell history:
@@ -37,4 +35,4 @@ environment, while configurations contain only environment variable names.
 
 
 
-Next: [Launch](launching.md) · [Other providers](providers.md).
+Next: Launch (`docs/guides/launching.md`) · Other providers (`docs/guides/providers.md`).

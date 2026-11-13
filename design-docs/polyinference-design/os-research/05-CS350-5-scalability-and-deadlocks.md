@@ -2,7 +2,7 @@
 
 ## Current agent concurrency contract
 
-Updated using the full agent HTML and the user's later clarifications. The HTML is the agent design, including OS-handled parts; the LLM OS is an application operating endpoints, not a computer-kernel subsystem. [Concurrent coding protocol](concurrent_coding_protocol.md) defines the current operational contract. It supersedes any earlier screenshot-based alternatives below where their scope differs.
+Updated using the full agent HTML and the user's later clarifications. The HTML is the agent design, including OS-handled parts; the LLM OS is an application operating endpoints, not a computer-kernel subsystem. Concurrent coding protocol (`design-docs/polyinference-design/concurrent_coding_protocol.md`) defines the current operational contract. It supersedes any earlier screenshot-based alternatives below where their scope differs.
 
 Every in-progress coding process owns a codebase copy. Private development overlaps. Every shell/script command, including test/Git commands, acquires a global `shell_mutex`. A separate `verification_gate` serializes latest-head merge, at least one specially prompted development/reconciliation loop, the final one/few local-model testing/examination/assessment iterations, commit and provisional shared-head/report publication. Release verification only after that boundary; release shell after each confirmed command. When both are needed the order is **verification then shell**; an outside shell owner releases before requesting verification. The application coordinator keeps running throughout.
 
@@ -16,7 +16,7 @@ Assessment produces `fail / uncertain / successful`; every normal local completi
 | L5-C04 | Publication stays provisional/unresolved; unknown active effects retain applicable exclusion and senior rollback checks dependents. |
 
 
-**Lecture basis:** CS350-5.pdf, Synchronization, 51 PDF pages / 44 numbered slides. Uses lectures 1–5 cumulatively with [kernel boundary](01-CS350-1-foundations.md), [process/handoff contracts](02-CS350-2-processes.md), [LangGraph execution](03-CS350-3-threads.md) and [synchronization protocols](04-CS350-4-concurrency.md). **Project references:** F26 Planning.pdf and the supplied agent-v1 screenshot. **Revision/research date:** 2026-10-16.
+**Lecture basis:** CS350-5.pdf, Synchronization, 51 PDF pages / 44 numbered slides. Uses lectures 1–5 cumulatively with kernel boundary (`design-docs/polyinference-design/os-research/01-CS350-1-foundations.md`), process/handoff contracts (`design-docs/polyinference-design/os-research/02-CS350-2-processes.md`), LangGraph execution (`design-docs/polyinference-design/os-research/03-CS350-3-threads.md`) and synchronization protocols (`design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md`). **Project references:** F26 Planning.pdf and the supplied agent-v1 screenshot. **Revision/research date:** 2026-10-16.
 
 ## 1. Selected scaling direction
 

@@ -1,7 +1,5 @@
 # Process lifecycle
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 Generic explicitly started process continuations run under durable identities and bounded admission.
 request_resume(records, process_id=None, text=None, request_id=None) records an
 immutable operator intent under resume-request/. Explicit process signals validate
@@ -24,7 +22,7 @@ decompose objectives. Resident worker capacity and model endpoint admission are
 independent. Control/management treatment is explicit rather than inferred from roles.
 
 Resume text/request-ID bounds share canonical definitions with CLI/UI control
-validation. See [central OS configuration](../guides/os-tuning.md); process state
+validation. See central OS configuration (`docs/guides/os-tuning.md`); process state
 transitions and resource ownership are unchanged.
 
 ## Principles to preserve
@@ -35,7 +33,10 @@ transitions and resource ownership are unchanged.
 - Registration rejects unequal process/runtime limits before effects.
 - Replacement drivers use the earlier process cutoff or inherited account deadline, including while waiting without effects.
 - Durable process-residency admissions survive a paused driver; finish alone does not hibernate it.
-- hibernate(process_id) requires pause, settled/fenced driver, known effects and released permits/reservations; start explicitly readmits.
+- `hibernate(process_id)` releases resident capacity after pause, driver settlement or
+  fencing, known effects and released permits and reservations. `start` rejects a
+  paused process even after hibernation. Operator Resume records intent for the
+  application to handle, and linked recovery can start a new ready process.
 - Clean fenced parking performs safe hibernation. Unknown physical work never gains capacity from a lost driver.
 - Worker publication uses OS finish; returned terminal drivers also settle residency. Paused drivers retain it.
 
@@ -44,8 +45,8 @@ transitions and resource ownership are unchanged.
 [General lifecycle](../../tests/test_runtime_general.py), [runtime](../../tests/test_runtime.py)
 and [regressions](../../tests/test_regressions.py).
 
-[Boundary responsibilities](../../design-docs/simplified-os/RUNTIME_BOUNDARY.md#responsibilities).
+Boundary responsibilities (`design-docs/simplified-os/RUNTIME_BOUNDARY.md#responsibilities`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.

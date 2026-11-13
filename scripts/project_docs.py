@@ -20,6 +20,7 @@ from urllib.parse import quote, unquote, urlsplit
 ROOT = Path(__file__).resolve().parents[1]
 TREE = "docs/file-tree.json"
 OUTPUT = "docs/file-tree.html"
+ENTRYPOINT = "README.md"
 EXTERNAL = (
     "references/claude-code",
     "references/deepagents",
@@ -73,7 +74,7 @@ def markdown_links(source):
     source = without_code(source)
     # Balance parentheses so links to names such as graph(1).html work too.
     links = []
-    for match in re.finditer(r"\[[^\]\n]*\]\(", source):
+    for match in re.finditer(r"(?<!\\)\[(?:[^\[\]\n]|\n(?![ \t]*\n))*\]\(", source):
         start = match.end()
         depth = 1
         end = start
@@ -108,8 +109,9 @@ def anchors(source):
     counts = {}
     for heading in re.findall(r"^ {0,3}#{1,6}\s+(.+?)(?:\s+#+)?$", source, re.M):
         heading = re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", heading)
-        heading = re.sub(r"<[^>]*>", "", html.unescape(heading)).lower()
-        slug = re.sub(r"[^\w -]", "", heading).replace(" ", "-")
+        heading = re.sub(r"<[^>]*>", "", html.unescape(heading)).replace("`", "")
+        found.add(heading)  # Obsidian uses the heading text rather than a GitHub slug.
+        slug = re.sub(r"[^\w -]", "", heading.lower()).replace(" ", "-")
         count = counts.get(slug, 0)
         counts[slug] = count + 1
         found.add(slug + (f"-{count}" if count else ""))
@@ -143,13 +145,15 @@ def safe_path(value):
 
 
 def validate_tree(data, root, inventory):
-    if not isinstance(data, dict) or data.get("schema_version") != 1:
+    if not isinstance(data, dict) or data.get("schema_version") != 2:
         raise DocumentationError("Unsupported file-tree schema_version")
+    if data.get("entrypoint") != ENTRYPOINT:
+        raise DocumentationError(f"file-tree entrypoint must be {ENTRYPOINT}")
     if data.get("external_sources") != list(EXTERNAL):
         raise DocumentationError("External boundaries must match the documented reference checkouts")
-    ids, owners, leaves = set(), {}, []
+    ids, owners, children_by_doc = set(), {}, {}
 
-    def visit(node):
+    def visit(node, *, is_root=False):
         if not isinstance(node, dict):
             raise DocumentationError("Every tree node must be an object")
         identity = node.get("id")
@@ -158,24 +162,24 @@ def validate_tree(data, root, inventory):
         ids.add(identity)
         if not isinstance(node.get("title"), str) or not node["title"].strip():
             raise DocumentationError(f"Missing title: {identity}")
-        if "children" in node:
-            if set(node) != {"id", "title", "children"} or not isinstance(node["children"], list) or not node["children"]:
-                raise DocumentationError(f"Branch needs nonempty children and no doc/files: {identity}")
-            for child in node["children"]:
-                visit(child)
-            return
-        if set(node) != {"id", "title", "doc", "files"}:
-            raise DocumentationError(f"Leaf needs exactly one doc and a files list: {identity}")
+        required = {"id", "title", "doc", "files"}
+        if not required <= node.keys() or node.keys() - required - {"children"}:
+            raise DocumentationError(f"Every node needs exactly one doc and a files list: {identity}")
         doc = safe_path(node["doc"])
+        if is_root and doc != ENTRYPOINT:
+            raise DocumentationError(f"Tree root doc must be {ENTRYPOINT}")
         if not doc.endswith(".md") or not (root / doc).is_file():
             raise DocumentationError(f"Primary doc must be an existing Markdown file: {doc}")
         if not isinstance(node["files"], list):
             raise DocumentationError(f"files must be a list: {identity}")
-        doc_links = {resolve_link(doc, target)[0] for target in markdown_links((root / doc).read_text(encoding="utf-8"))}
+        doc_links = {
+            resolve_link(doc, target)[0]
+            for target in markdown_links((root / doc).read_text(encoding="utf-8"))
+        }
         for path in [doc, *node["files"]]:
             path = safe_path(path)
             if path.endswith(".md") and path != doc:
-                raise DocumentationError(f"Additional docs need their own primary-doc leaf: {path}")
+                raise DocumentationError(f"Additional docs need their own primary-doc node: {path}")
             if path in owners:
                 raise DocumentationError(f"Duplicate ownership: {path} ({owners[path]}, {identity})")
             if external(path) or (path != OUTPUT and not (root / path).is_file()):
@@ -183,14 +187,18 @@ def validate_tree(data, root, inventory):
             owners[path] = identity
             if Path(path).suffix in CODE and path not in doc_links:
                 raise DocumentationError(f"Primary doc {doc} must link and explain code module {path}")
-        leaves.append(node)
+        children = node.get("children", [])
+        if not isinstance(children, list) or ("children" in node and not children):
+            raise DocumentationError(f"Branch needs a nonempty children list: {identity}")
+        children_by_doc[doc] = {visit(child) for child in children}
+        return doc
 
-    visit(data.get("root"))
+    visit(data.get("root"), is_root=True)
     missing = sorted(inventory - owners.keys())
     extra = sorted(owners.keys() - inventory)
     if missing or extra:
         raise DocumentationError(f"Inventory mismatch; uncovered={missing}; outside inventory={extra}")
-    return leaves
+    return children_by_doc
 
 
 def resolve_link(origin, target):
@@ -208,7 +216,7 @@ def resolve_link(origin, target):
     return resolved, unquote(parsed.fragment)
 
 
-def validate_links(root, inventory, generated):
+def validate_links(root, inventory, generated, children_by_doc):
     sources = {path: (root / path).read_text(encoding="utf-8") for path in inventory if path.endswith(".md")}
     # UI routes and the unrendered template have different URL bases. Only maintained
     # documentation HTML is interpreted as repository-relative output here.
@@ -226,6 +234,8 @@ def validate_links(root, inventory, generated):
     errors = []
     for origin, source in sources.items():
         if origin.endswith(".md"):
+            if re.search(r"(?<!\\)\[\[[^\]\n]+\]\]", without_code(source)):
+                errors.append(f"{origin}: use relative Markdown note links instead of wikilinks")
             links = markdown_links(source)
         else:
             parser = HTMLLinks()
@@ -240,12 +250,22 @@ def validate_links(root, inventory, generated):
                 if not (root / path).exists() and path not in generated and not external(path):
                     errors.append(f"{origin}: missing {target}")
                     continue
+                if origin.endswith(".md") and path.endswith(".md") and path not in children_by_doc:
+                    errors.append(f"{origin}: note link is outside the maintained tree: {target}")
                 graph[origin].add(path)
                 if fragment and path in document_anchors and fragment not in document_anchors[path]:
                     errors.append(f"{origin}: missing anchor {target}")
             except (DocumentationError, ValueError) as error:
                 errors.append(f"{origin}: {error}")
-    reached, queue = set(), deque(["README.md"])
+    notes = children_by_doc.keys()
+    for note, expected in children_by_doc.items():
+        actual = (graph[note] & notes) - {note}
+        if actual != expected:
+            errors.append(
+                f"{note}: note links must match file-tree children; "
+                f"missing={sorted(expected - actual)}; extra={sorted(actual - expected)}"
+            )
+    reached, queue = set(), deque([ENTRYPOINT])
     while queue:
         path = queue.popleft()
         if path not in reached:
@@ -260,30 +280,31 @@ def validate_links(root, inventory, generated):
 
 def render_tree(node):
     title = html.escape(node["title"])
-    if "children" in node:
-        children = "\n".join(render_tree(child) for child in node["children"])
-        opened = " open" if node["id"] in {"polyinference", "start"} else ""
-        return f'<li class="branch"><details{opened}><summary>{title}</summary><ul>{children}</ul></details></li>'
     doc = node["doc"]
     def href(path):
         return quote(posixpath.relpath(path, "docs"), safe="/")
     files = "".join(f'<li><a href="{href(path)}">{html.escape(path)}</a></li>' for path in node["files"])
     attached = f'<details class="files"><summary>{len(node["files"])} related files</summary><ul>{files}</ul></details>' if files else ""
     search = html.escape(" ".join([node["title"], doc, *node["files"]]), quote=True)
-    return (
+    feature = (
         f'<li class="feature" id="{node["id"]}" data-search="{search}"><article>'
         f'<a class="primary-doc" href="{href(doc)}">{title}</a><p class="path">{html.escape(doc)}</p>'
         f'{attached}</article></li>'
     )
+    if "children" not in node:
+        return feature
+    children = "\n".join(render_tree(child) for child in node["children"])
+    opened = " open" if doc == ENTRYPOINT else ""
+    return f'<li class="branch"><details{opened}><summary>{title}</summary><ul>{feature}{children}</ul></details></li>'
 
 
-def render(root, data, raw, leaves):
+def render(root, data, raw, note_count, file_count):
     template = (root / "docs/tree-template.html").read_text(encoding="utf-8")
     replacements = {
         "{{TREE}}": render_tree(data["root"]),
         "{{DATA}}": raw.replace("<", "\\u003c"),
-        "{{FEATURE_COUNT}}": str(len(leaves)),
-        "{{FILE_COUNT}}": str(sum(1 + len(leaf["files"]) for leaf in leaves)),
+        "{{FEATURE_COUNT}}": str(note_count),
+        "{{FILE_COUNT}}": str(file_count),
     }
     for token, value in replacements.items():
         if token not in template:
@@ -298,19 +319,22 @@ def run(root=ROOT, check=False):
     inventory = repository_files(root)
     # The generated file is part of the inventory even on the first build.
     inventory.add(OUTPUT)
-    leaves = validate_tree(data, root, inventory)
-    output = render(root, data, raw, leaves)
-    validate_links(root, inventory, {OUTPUT: output})
+    children_by_doc = validate_tree(data, root, inventory)
+    output = render(root, data, raw, len(children_by_doc), len(inventory))
+    validate_links(root, inventory, {OUTPUT: output}, children_by_doc)
     target = root / OUTPUT
     if check:
         if not target.exists() or target.read_text(encoding="utf-8") != output:
             raise DocumentationError("Stale docs/file-tree.html; run python scripts/project_docs.py")
     else:
         target.write_text(output, encoding="utf-8", newline="\n")
-    message = f"Documentation OK: {len(inventory)} files, {len(leaves)} feature/doc leaves; links and README reachability verified."
+    message = (
+        f"Documentation OK: {len(inventory)} files, {len(children_by_doc)} notes; "
+        f"{len(children_by_doc) - 1} Obsidian tree links and README reachability verified."
+    )
     long_guides = sorted(p for p in inventory if p.endswith(".md")
                          and p.startswith(("docs/modules/", "docs/guides/"))
-                         and len((root / p).read_text().splitlines()) > 80)
+                         and len((root / p).read_text(encoding="utf-8").splitlines()) > 80)
     if long_guides:
         message += "\nGuide length advisory (>80 lines): " + ", ".join(long_guides)
     return message

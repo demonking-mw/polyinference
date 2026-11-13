@@ -1,7 +1,5 @@
 # Capability registration and tool ABI
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 Explicit typed descriptors connect trusted host handlers to process-granted operations.
 
 | File | Responsibility |
@@ -26,8 +24,8 @@ use the same grants and journaled subordinate effects.
 
 [Capability boundary](../../tests/test_capability_boundary.py) and [setup tools](../../tests/test_setup_tools.py).
 
-[Bootstrap guide](../../design-docs/simplified-os/RUNTIME_BOUNDARY.md#bootstrap-and-the-capability-boundary).
+Bootstrap guide (`design-docs/simplified-os/boundary/capabilities.md#bootstrap-and-the-capability-boundary`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.

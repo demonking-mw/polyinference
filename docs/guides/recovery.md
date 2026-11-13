@@ -1,9 +1,7 @@
 # Limits, steering and recovery
 
-For confirmed model capacity failures, [availability fallback](model-fallback.md)
+For confirmed model capacity failures, availability fallback (`docs/guides/model-fallback.md`)
 preserves original accounts and can continue a trusted native thread after tools.
-
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
 
 The default per-process allowance is 512 model calls, 2,048 steps and a one-hour
 wall-clock deadline, with reserved reconciliation, assessment, publication and
@@ -19,7 +17,7 @@ estimates can bound admission; they are not a provider billing guarantee.
 > **Edited 2026-10-20 because** the in-place repository change keeps failed and
 > unverifiable work out of the user's integration checkout. The old unconditional
 > uncertain-publication and private-copy descriptions are superseded by the
-> [recorded revisions](../../design-docs/simplified-os/DESIGN_REVISIONS.md).
+> recorded revisions (`design-docs/simplified-os/DESIGN_REVISIONS.md`).
 
 The execution protocol is:
 
@@ -41,7 +39,7 @@ senior defers/stops/omits them. Actual cloud coding is protected from quota demo
 Linked replacements retain source evidence, original account/deadline and narrower
 grants. Ineligible defer/stop decisions leave an unresolved completion obligation;
 unknown effects and exhausted physical budgets remain blockers. See
-[agent reliability](agent-reliability.md).
+agent reliability (`docs/guides/agent-reliability.md`).
 
 Steering follows the drain-before-review behavior described above. It does not
 reset budgets. UI Resume and CLI `resume CONFIG [--text instructions]` record a
@@ -62,10 +60,10 @@ A lost HTTP/RPC connection does not prove that an external job stopped. Uncertai
 native/tool/effectful operations stay recorded, retain ownership/capacity and
 block runtime dispatch until reconciled. Explicitly consenting generation-only
 queries can instead isolate undelivered computation with physical holds retained;
-replacement still needs spare capacity. See [endpoint lifecycle policy](endpoint-testing.md). Status and inspection remain available. The runtime can reconcile verifiable host publication
+replacement still needs spare capacity. See endpoint lifecycle policy (`docs/guides/endpoint-testing.md`). Status and inspection remain available. The runtime can reconcile verifiable host publication
 receipts; it does not blindly retry remote requests. Inspect `status` and
 `operation`, preserve the state, and establish the provider-side outcome before
 attempting recovery. Use the explicit `reconcile --confirm-stopped --evidence`
 command only after both provider work and host descendants are known to have
-ended. See the [recovery procedure](../../design-docs/simplified-os/RUNBOOK.md#recovery).
+ended. See the recovery procedure (`design-docs/simplified-os/RUNBOOK.md#recovery`).
 Do not delete journal rows to force a retry.

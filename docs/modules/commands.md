@@ -1,7 +1,5 @@
 # File tools, checks and foreground commands
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 The broker executes explicitly granted file/command operations and records truthful bounded outcomes.
 
 | File | Responsibility |
@@ -18,7 +16,7 @@ Applications choose checks/dependency commands and declared outputs. Check argv
 is not a shell script. Tool environment does not inherit provider credentials.
 
 Buffer sizes, list/search bounds, shell defaults/ceiling/argv, system mounts and
-non-path tool environment defaults use [central OS tuning](../guides/os-tuning.md).
+non-path tool environment defaults use central OS tuning (`docs/guides/os-tuning.md`).
 Shell/check schema ceilings share canonical definitions; private paths stay host-issued.
 
 ## Principles to preserve
@@ -34,11 +32,11 @@ Shell/check schema ceilings share canonical definitions; private paths stay host
 [Tool environment](../../tests/test_tool_environment.py), [setup tools](../../tests/test_setup_tools.py),
 [workspace outputs](../../tests/test_workspace_outputs.py) and [runtime](../../tests/test_runtime.py).
 
-[Budgets/execution](../guides/budgets.md) · [Runtime boundary](../../design-docs/simplified-os/RUNTIME_BOUNDARY.md).
+Budgets/execution (`docs/guides/budgets.md`) · Runtime boundary (`design-docs/simplified-os/RUNTIME_BOUNDARY.md`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.
 
 ## Integrated reliability branch (2026-10-26)
 
@@ -50,4 +48,4 @@ Read results retain next_offset for existing paged readers as well as returned-b
 coverage. Cache-like names such as .npm remain source during checks/scope auditing;
 real tool caches stay in the separate invocation environment.
 
-The application configure-local command derives Strata startup context from the [local token pair](../guides/local-token-limits.md); it starts no server or inference.
+The application configure-local command derives Strata startup context from the local token pair (`docs/guides/local-token-limits.md`); it starts no server or inference.
