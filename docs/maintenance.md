@@ -1,71 +1,72 @@
-# Maintaining documentation and navigation
+# Maintain the documentation
 
-[Documentation](README.md) · [Developer onboarding](../dev-readme.md)
+Find the feature in the [JSON tree](file-tree.json). Read its primary `doc` and
+the relevant FIX entries before changes. In the same task, update affected
+module, setup, usage, settings, design and task docs. A primary guide names each
+owned source file, its interface, invariants and meaningful checks. Group related
+files under one guide when their responsibilities belong together.
 
-**A fix or feature is unfinished until its affected documentation is current.**
-Humans and agents follow this contract in the same change:
+## Add or move a note
 
-1. Find the owning feature in [file-tree.json](file-tree.json) or the
-   [HTML tree](file-tree.html); read its single primary `doc` and related fixes.
-2. Update that guide's purpose, file responsibilities, interfaces, invariants and
-   verification pointers when behavior changes. For OS work, read the
-   [runtime boundary](../design-docs/simplified-os/RUNTIME_BOUNDARY.md) first.
-3. Update affected setup, usage, configuration, design and issue documents.
-   State which were reviewed and why no edit was needed when they still apply.
-4. Add/move/remove file paths and feature leaves in `file-tree.json`; give each
-   leaf exactly one primary doc. Group closely related code files in one leaf.
-   Every first-party code file needs a named responsibility in that doc.
-5. Append an evidence-based [FIX entry](../development-docs/FIXES.md), then run:
+1. Give the note one purpose: a tutorial, a procedure, a reference or an
+   explanation. Keep entry pages short; split unrelated topics. A coherent
+   specification or append-only ledger may be longer.
+2. Add a relative Markdown link from its single parent, such as
+   `[Configuration](guides/configuration.md)`. Use `/` in paths, explicit `.md`
+   and percent encoding for spaces. Same-page heading links can use the heading
+   text, e.g. `[Example](#Add%20or%20move%20a%20note)`.
+3. Match the parent/child relationship in `docs/file-tree.json`. Use inline
+   code for citations across branches: `development-docs/FIXES.md#fix-0080`.
+   Use Quick Switcher to open a cited path and Find to locate the section or
+   FIX ID. Source code, external sites and supporting HTML/data can stay
+   clickable. Cite upstream Markdown by path so it stays outside the vault's
+   note tree. The offline file map is generated from the same JSON.
+4. Put working notes in `docs/temporary/` and name them `YYYY-MM-DD-short-topic.md`.
+   Record date, source and status. When decisions land, update the maintained
+   guide and mark the temporary note. Preserve unique evidence linked by a FIX.
+   Before removing a script, check references, callers, CI and reusable tests.
+5. Update the Obsidian module group for new or moved notes. Review the key
+   navigation group, reading map and searches when a primary route changes.
+   Validate the shared preset before handing off.
 
-   ```bash
-   python scripts/project_docs.py
-   python scripts/project_docs.py --check
-   ```
+## Finish the change
 
-6. Include documentation updates/review and actual verification in the handoff.
-   Do not leave documentation maintenance to a later task or agent.
+Append a FIX entry in `development-docs/FIXES.md`. Keep stable IDs, preserve
+earlier text and report symptoms, ownership, the change, design and actual checks.
+Mark investigation-only work and later corrections explicitly. Check adjacent
+docs and explain those that need no change. Refresh `docs/contributor-onboarding.md`
+and `docs/project-memory.md` when rules, ownership, setup or automation change.
 
-When rules, design ownership, setup or automation change, update the
-[contributor onboarding procedure](contributor-onboarding.md) and
-[project memory checklist](project-memory.md), then refresh retained project notes.
+```bash
+python scripts/project_docs.py
+python scripts/project_docs.py --check
+python scripts/obsidian_graph.py --check
+```
 
-`file-tree.json` is the authored navigation source. The script embeds that exact
-JSON in `file-tree.html` and renders working links before JavaScript runs, so the
-tree works from `file://` without a server or fetch. Never edit generated HTML.
-The check rejects uncovered files, duplicate ownership, missing docs/paths,
-broken local Markdown links, unreachable files and stale generated tree HTML.
-It checks Markdown, the generated tree and maintained documentation HTML/anchors.
-The raw tree template and application/upstream URL boundaries are explicitly excluded.
-It checks that source links exist, not that their
-explanations are correct. Prose accuracy and length require explicit review.
-The same check runs on pushes and pull requests through the
-[documentation workflow](../.github/workflows/docs.yml).
+CI verifies file ownership, source links, note-tree structure, maintained HTML
+links and generated output. It does not prove prose accuracy. For changed settings
+schemas/defaults also run `python scripts/settings_docs.py` and
+`python scripts/settings_docs.py --check` in the project environment.
+Keep ignored state, local Obsidian preferences, private logs and upstream
+checkouts outside the first-party doc tree.
 
-Keep new overview/module guides around 80 lines or less. Split long procedures
-into focused pages with obvious links. Existing specifications, append-only fix
-history and historical evidence retain their stable paths/anchors; concise hubs
-lead to them. Preserve earlier decisions and mark supersession explicitly.
+In Obsidian, open this checkout as a vault and start at the root `README.md`.
+For a WSL checkout, run Linux Obsidian through WSLg so the file watcher uses
+the Linux filesystem directly. From the repository root in Ubuntu, run
+`bash scripts/open_obsidian.sh --install`. This downloads the official Debian
+package and uses `sudo` to install it if needed. In the vault picker, select
+**Open folder as vault** and choose this checkout's Linux path. After that,
+`bash scripts/open_obsidian.sh` opens `README.md` in the registered vault.
 
-For semantic review, compare defaults/ranges with the owning schemas, follow the
-actual call path and distinguish configured ceilings from effective request
-values. Check adjacent overviews after merges; integrate new behavior into the
-guide rather than accumulating duplicate dated appendices. Link meaningful
-regressions and preserve their failure trigger/design rule in FIXES. Identify
-unimplemented requirements as code follow-ups; do not redefine them as policy.
-Report historical run outcomes separately from today's checks and distinguish
-task tests, accepted increments and product completion.
+If Obsidian looks blurry, quit it completely and relaunch with the script.
+It selects native Wayland when the display socket is available. Use
+`bash scripts/open_obsidian.sh --x11` if the Wayland window fails to open.
 
-The inventory includes repository-owned files and excludes ignored state,
-environments, builds, OS download metadata and upstream reference checkouts.
-[References](../references/README.md) identifies those external boundaries and
-their upstream entry points. Runtime snapshots and private credentials are not
-source documentation.
+Set **New link format** to **Relative path to file** and disable **Use Wikilinks**.
+In Graph view, turn off Tags and Attachments, and turn on Existing files only.
+If the vault also contains local state or upstream repositories, exclude
+`testing/`, `references/claude-code/`, `references/deepagents/`,
+`references/mini-swe-agent/` and other local output folders in **Files and links
+→ Excluded files**. Keep `docs/temporary/` visible.
 
-The root [AGENTS.md](../AGENTS.md) is also this repository's persistent Codex
-project instruction. Its completion rule applies to future Codex chats opened
-in the PolyInference checkout; it travels with the project.
-See the [official Codex instruction-loading guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md).
-
-After settings schema/default changes, run `python scripts/settings_docs.py` and
-`python scripts/settings_docs.py --check` in the activated project environment.
-The generated schema proves exported type/default agreement; prose still needs review.
+- [Browse and maintain the Obsidian graph](obsidian-graph.md)

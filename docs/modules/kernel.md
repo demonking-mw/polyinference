@@ -1,7 +1,5 @@
 # Kernel and durable effect execution
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 KernelRuntime composes OS services and settles stable operation intents with retained execution evidence.
 
 | File | Responsibility |
@@ -18,10 +16,10 @@ Open KernelRuntime, install trusted application handlers/protocols and register
 processes before dispatch. execute(original) follows retained OS retry outcomes;
 individual attempts remain immutable. Generic publication invokes installed policy.
 Endpoint retry_model is caller-selected; the kernel runs durable availability
-routing through [ModelFallback](retries.md) without choosing a coding model default.
+routing through ModelFallback (`docs/modules/retries.md`) without choosing a coding model default.
 Context preparation measures the complete adapter body, bounds counting by the original deadline,
 enforces a separate byte ceiling and reserves measured/bounded input tokens plus output. The
-OS accepts caller priorities without interpreting coding relevance; see [context](context.md).
+OS accepts caller priorities without interpreting coding relevance; see context (`docs/modules/context.md`).
 prepare_resume accepts a retained intent under the runtime coordinator lease,
 recovers host receipts/completed query artifacts or an adapter-retrievable response,
 and records OS-owned resume-preparation/ readiness separately from agent progress.
@@ -41,10 +39,10 @@ messages, max_output, prepared=...). This optional adapter owns its transport
 timeout/service pacing inside the original operation deadline; normal clients retain
 their old call path. Admission/grants/budgets/completion bounds still surround it.
 terminal_call retrieves cancellation outcomes before settlement. The
-[application simulator](inference-simulation.md) is one caller; the kernel imports
+application simulator (`docs/modules/inference-simulation.md`) is one caller; the kernel imports
 no simulation settings or provider-specific pacing policy.
 
-The resolved [OS tuning](../guides/os-tuning.md) reaches records, primary/fallback
+The resolved OS tuning (`docs/guides/os-tuning.md`) reaches records, primary/fallback
 adapters, tools and context/recovery helpers and is retained for independent writers.
 Kernel diagnostics and the durable version pin use one identity constant.
 
@@ -65,16 +63,16 @@ Kernel diagnostics and the durable version pin use one identity constant.
 [OS](../../tests/test_os.py), [runtime](../../tests/test_runtime.py), [recovery](../../tests/test_recovery.py)
 and [general-agent](../../tests/test_runtime_general.py) fixtures.
 
-[Runtime boundary](../../design-docs/simplified-os/RUNTIME_BOUNDARY.md) · [Open gaps](../../design-docs/simplified-os/DESIGN_REVISIONS.md#open-implementation-gaps).
+Runtime boundary (`design-docs/simplified-os/RUNTIME_BOUNDARY.md`) · Open gaps (`design-docs/simplified-os/DESIGN_REVISIONS.md#open-implementation-gaps`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.
 
 ## Integrated reliability branch (2026-10-26)
 
 The kernel composes generic settlement/account lineage and read-only execution
 observations through `runtime/lifecycle.py` and `runtime/progress.py`. The historical
 adapter remains an import alias. No new OS dependency on coding-agent grammar or
-Git policy is introduced. See [recovery](../../design-docs/implementation/WORKER_RECOVERY.md)
-and [observations](../../design-docs/implementation/PROGRESS_MONITORING.md).
+Git policy is introduced. See recovery (`design-docs/implementation/WORKER_RECOVERY.md`)
+and observations (`design-docs/implementation/PROGRESS_MONITORING.md`).

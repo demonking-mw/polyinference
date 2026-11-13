@@ -1,100 +1,26 @@
 # Onboard a human or development agent
 
-[Project](../README.md) · [Developer guide](../dev-readme.md) · [Project memory](project-memory.md)
+1. Start at `README.md`. Get a readable checkout and follow `setup.md` for
+   Linux, WSL or macOS. Offline verification needs no provider credentials.
+2. Read `AGENTS.md` and all of `development-docs/FIXES.md`, in chunks if needed.
+   Search related entries and read their design rules and verification limits.
+3. Read `docs/architecture.md` and the runtime/agent boundary before agent or OS
+   work. Use the [JSON tree](file-tree.json) to find the primary `doc` for each
+   affected module. Review the relevant current tasks and historical evidence.
+4. If you are an agent, **save the project memory checklist** to available
+   project memory, project rules or a project-specific `content.md`. Record
+   the source revision and review date, read back the save and report the
+   location. If persistence is unavailable, report session-only context and
+   reload next session. Do not save secrets, private instructions or run state.
+5. Inspect the working tree and preserve existing edits, staged work and
+   historical pins. Review `docs/maintenance.md` before handing off. Update the
+   relevant docs and fix log in the same task. When notes or reading routes
+   change, follow `docs/obsidian-graph.md` to keep Graph View and the reading
+   map current. Report the checks actually run.
 
-Use this procedure before contributing, including when an AI is asked to read the
-project docs and onboard itself. It establishes shared knowledge and a repeatable
-work routine. These are contributor instructions; they do not add requirements
-to programs running on the PolyInference OS.
+For another harness, supply the project rules and readable documentation through
+its instruction mechanism. Onboarding by itself does not authorize implementation,
+provider calls or historical Resume. Refresh from source before each task and
+after context loss; pass these requirements along if delegation is authorized.
 
-## Human setup checklist
-
-- Give collaborators access to the current checkout and its documentation. Start
-  at README; use the [human tree](file-tree.html) or [agent tree](file-tree.json).
-- Follow [setup](../setup.md) on Linux, WSL or macOS. Install the test extra using
-  [testing](testing.md). Configure credentials only when needed; offline checks
-  need no live provider. Keep secrets outside source and agent memory.
-- Open the assistant in this checkout and confirm it receives [AGENTS.md](../AGENTS.md).
-  For another harness or a ChatGPT project, explicitly supply the instructions and
-  readable repository/docs access or current copies. A path/link alone does not
-  establish access. Use its project-instruction entry point to require this
-  procedure at session startup and before project work.
-- Enable an available project-scoped memory/rules mechanism or project-specific
-  `content.md`. Ask the agent to add the knowledge below and verify the save.
-  If persistence is unavailable, supply this route each session.
-- Use the prompt below and review the onboarding receipt. Resolve missing access
-  before work depends on unread guidance; do not assume every AI auto-loads it.
-
-## Required reading and agent setup
-
-1. Read [AGENTS.md](../AGENTS.md) and the complete [fix history](../development-docs/FIXES.md),
-   including maintenance rules, prior decisions, supersession and verification limits.
-   Read long output in chunks; a truncated response is not a completed reading.
-2. Read [architecture](architecture.md), the [current design route](../design-docs/README.md),
-   [runtime/agent boundary](../design-docs/simplified-os/RUNTIME_BOUNDARY.md) and
-   [accepted revisions/open gaps](../design-docs/simplified-os/DESIGN_REVISIONS.md).
-   Follow the route to the agent and OS primary designs; distinguish current rules
-   from historical graphs and proposed interfaces.
-3. Read [developer onboarding](../dev-readme.md), [maintenance](maintenance.md),
-   [testing](testing.md) and the [project memory checklist](project-memory.md).
-   The [field guide](onboarding.html) adds illustrated background and the lecture.
-4. Walk the JSON tree to understand ownership. For the assigned area, read each
-   primary `doc`, related fixes and linked usage/settings/design guides. Review
-   [current work](../development-docs/current-iter-issues.md) and
-   [future work](../development-docs/next-iteration.md); a proposal is not implementation.
-   For reliability work, read the [current stage record](../development-docs/reliability-implementation-2026-10-27.md)
-   and [qualification procedure](guides/qualification.md). Keep fixture, browser
-   runner and actual live-model results separate; use fresh state for changed pins.
-   Current pins are simple-os/6, agent-9-local-contracts/state 2.8. Read the
-   [four-repair record](../development-docs/four-repairs-implementation-2026-10-28.md),
-   [context measurement](guides/context-measurement.md) and [model fallback](guides/model-fallback.md);
-   caller preferences do not alter old runs, original resources or uncertainty rules.
-   [FIX-0178](../development-docs/FIXES.md#fix-0178) adds agent `kind: test` assignments
-   without implementation/result files or source commits. Preserve edit contracts and
-   independent final acceptance; the changed source/prompt fingerprints require fresh
-   state. Historical runs remain on their original implementation.
-5. **If you are an agent, you MUST add this project's rules, important information
-   and design/preservation principles to your available memory, project rules or
-   project-specific `content.md`.** Use the [memory checklist](project-memory.md),
-   retaining its meaning and source pointers with checkout/revision and review date.
-   Preserve existing rules, verify the save and report its location. If persistent
-   storage is unavailable, explicitly report session-only context and reload next
-   session; never claim unavailable platform memory or an unverified save.
-
-## Every request, restart and handoff
-
-Before project work, refresh instructions/history and retained knowledge against
-current sources; read affected feature guides and newer decisions. Inspect the
-working tree and preserve other people's edits, staged work and active operations.
-Choose checks appropriate to the task. Remembered facts point to current evidence;
-resolve design contradictions explicitly instead of accepting bugs as policy.
-A new request does not authorize an unrelated backlog or saved-run task.
-
-Before finishing, update affected docs, navigation and FIXES in the same task;
-run required checks and report results/limits, adjacent-doc review and memory status.
-For authorized delegation, pass this route, scope, constraints and preservation
-requirements; the receiver must read the same guidance before work. After context
-loss, repeat setup before dependent work. Follow [maintenance](maintenance.md).
-
-## Reusable onboarding request
-
-> Read README.md and follow docs/contributor-onboarding.md through the project tree.
-> Onboard with the rules, current designs, fix history and project-memory checklist.
-> If you are an agent, you MUST add these rules and important design information
-> to your memory, project rules or project-specific content.md. Verify and report
-> where you saved them; if persistence is unavailable, report session-only context
-> and reload each session. Refresh relevant guidance before every task. Report the
-> checkout/revision, documents actually read, agent/OS ownership, preservation rules,
-> checks/automation understood and unread/inaccessible material. Onboarding alone
-> does not authorize implementation, live provider calls or historical-run execution.
-
-For generic OS defaults/operational limits, edit the canonical
-[OS configuration](guides/os-tuning.md) and trace nondefault values to consumers.
-Keep application presets and protocol/safety invariants in their existing ownership.
-
-For UI provider changes, preserve runtime identity: only a newly started Strata
-instance is tied to the UI process and cleaned up. Reused runtimes and saved-run
-pins remain separately owned; see [launch lifecycle](guides/launching.md).
-
-Current P0 ownership, token settings and preservation limits are in the [implementation record](../development-docs/p0-repairs-2026-10-29.md).
-Read the [remaining current-version fixes](../development-docs/current-iter-issues.md#p0-repairs-2026-10-29) before follow-up.
+- [Project knowledge to retain](project-memory.md)

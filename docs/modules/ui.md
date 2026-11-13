@@ -1,7 +1,5 @@
 # Loopback UI and project selection
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 The local test runner hosts fresh runs, project selection and inspection without a frontend build.
 
 | File | Responsibility |
@@ -14,18 +12,18 @@ The local test runner hosts fresh runs, project selection and inspection without
 ## Interface and ownership
 
 Without machine preferences, the preset uses Haiku workers/Codex seniors with one worker/slot.
-[Machine defaults](../guides/configuration.md) replace local serving settings for plain UI launches. The launch footer displays the effective model, location/protocol, context, slots, workers
+Machine defaults (`docs/guides/configuration.md`) replace local serving settings for plain UI launches. The launch footer displays the effective model, location/protocol, context, slots, workers
 and sprint limit. Opt-in local_strata_profile preparation runs before saved-run
 restoration and HTTP serving; startup failure prevents opening an unusable UI.
 serve closes its owned provider on normal exit, Ctrl+C, SIGTERM/SIGHUP and later
 startup errors, restoring prior signal handlers. Strata's process-death watcher
 covers uncatchable termination. Reused runtimes are never adopted; see the
-[launch lifecycle and bounded drain](../guides/launching.md).
+launch lifecycle and bounded drain (`docs/guides/launching.md`).
 Every Start run creates fresh state. A custom config preserves its grants/providers.
 Snapshot viewing makes no provider requests. Endpoint testing offers explicit
 cloud/local/buffered timing profiles and an on-click warm-up using an ordinary
 bounded query. Probes serialize with launches/resumes; unknown probe state remains
-a blocker across UI restart. See [endpoint testing](../guides/endpoint-testing.md). Picker observations are not acceptance.
+a blocker across UI restart. See endpoint testing (`docs/guides/endpoint-testing.md`). Picker observations are not acceptance.
 Probe scheduling declares the endpoint protocol, not guessed physical placement;
 the original run-wide data policy still blocks disallowed or unknown locations.
 Paused/interrupted runs show Resume with inline optional instructions. One click
@@ -49,9 +47,9 @@ bug rate, seed and timing controls. Normal omits simulation config/client change
 ordinary launches hide the controls and send the original payload. An active mode's
 batch overrides --sim-batch for that run. Progress/incidents are separate from real
 provider costs; live/saved inspection retains the same facts. See the
-[simulator module](inference-simulation.md) and [usage](../guides/sim-inference.md).
+simulator module (`docs/modules/inference-simulation.md`) and usage (`docs/guides/sim-inference.md`).
 
-Activity paging/labels share the resolved [OS tuning](../guides/os-tuning.md) in
+Activity paging/labels share the resolved OS tuning (`docs/guides/os-tuning.md`) in
 live and saved views. Resume text bounds are enforced by the canonical server
 definition; the client retains rejected drafts without an independent fixed cap.
 
@@ -69,16 +67,11 @@ definition; the client retains rejected drafts without an independent fixed cap.
 [UI](../../tests/test_ui.py), [frontend wrapper](../../tests/test_ui_frontend.py)
 and [browser logic](../../tests/ui_start.test.cjs).
 
-[UI guide](../guides/ui.md) · [Project guide](../guides/projects.md) · [Inspection](inspection.md).
+UI guide (`docs/guides/ui.md`) · Project guide (`docs/guides/projects.md`) · Inspection (`docs/modules/inspection.md`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.
 
-## Integrated reliability branch (2026-10-26)
-
-Live task rows expose the last worker progress observation. Shared Save/export
-snapshots retain physical inference attempts and expanded attempted context,
-retry windows, diagnoses, exception decisions, resource lineage, progress events,
-review artifacts and interface contracts, alongside the existing schema-v2 records,
-OS inspection, artifacts and checkpoints. Earlier saved snapshots remain viewable.
+Live and saved views project retry, diagnosis, resource and progress evidence
+from the same records. See `docs/modules/inspection.md` for the projection contract.

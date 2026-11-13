@@ -1,6 +1,6 @@
 # OS constants audit inventory
 
-[Central configuration](guides/os-tuning.md) · [Runtime boundary](../design-docs/simplified-os/RUNTIME_BOUNDARY.md)
+Central configuration (`docs/guides/os-tuning.md`) · Runtime boundary (`design-docs/simplified-os/RUNTIME_BOUNDARY.md`)
 
 The audit read every file in `src/polyinference/runtime/`, then the shared contracts,
 configuration, ports, execution definitions, primitives and inspection/entry-point

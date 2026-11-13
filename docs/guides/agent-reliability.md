@@ -1,8 +1,5 @@
 # Coding-agent reliability settings
 
-[Configuration](configuration.md) · [Settings schema](../modules/settings.md) · [Worker
-protocol](../modules/agent-workers.md)
-
 These fields belong at the top level of AgentConfig, outside `system`. Defaults and bounds come from
 [config.py](../../src/polyinference/config.py). An explicit nested object uses that object's schema
 defaults; it does not recursively merge an earlier application preset. Use fresh state when changing pinned
@@ -27,7 +24,7 @@ settings.
 
 Each acceptance criterion has `criterion_id` (1–80 letters/digits/underscore/hyphen), `description` (1–4000
 characters) and `required_checks` (default []). IDs are unique; `objective` is reserved. Required check
-names must be configured in task or final checks. See [check purposes](checks.md). Passing checks alone
+names must be configured in task or final checks. See check purposes (`docs/guides/checks.md`). Passing checks alone
 cannot replace the source-backed assessment of every criterion on the exact reviewed tree. Each read range
 has a relative path, offset (default 0) and max_bytes (default 2000; 1–4000). Requested ranges consume the
 allowance even within one proposal.
@@ -45,55 +42,7 @@ configurations.
 Response validation, transport retry, output adaptation and worker grammar correction are separate
 mechanisms. `inference_retry` is not an extra transport budget for every failed attempt: response-repair
 exhaustion cannot restart through transport retry. Physical calls remain charged to their original resource
-account. Native jobs with brokered tools and unknown effects cannot be blindly repeated. See [retry
-ownership and records](../modules/retries.md) and [endpoint policy](endpoint-testing.md) for
+account. Native jobs with brokered tools and unknown effects cannot be blindly repeated. See retry records (`docs/modules/retries.md`) and endpoint policy (`docs/guides/endpoint-testing.md`) for
 OS-native/caller retry allowances.
 
-Clean worker exceptions preserve a scoped development delta and abandoned-view snapshot. Eligible local
-exceptions transfer to a specialist bound to `cloud`, including retry/defer/stop/omitted senior decisions.
-The application records the raw model proposal and effective policy adjustments. This is coding takeover,
-not merely cloud review or read-only diagnosis. Ordinary allocation cannot demote it. Cloud failures cannot
-bounce back to local or reset their cloud count. Ineligible exceptions retain retry/defer/stop semantics and
-exact blocker reasons. Explicit `resume_from=exception_ref` selects the retained delta; without it the
-replacement starts fresh. Replacement grants cannot exceed the original grant; accounts, reserves and
-absolute deadlines carry forward. Deferring an exception allows independent work but leaves a completion
-obligation. Source conflicts use a fresh current base for automatic cloud repair while preserving the old
-delta. Pending consumers are replaced transitively; started contracts stay pinned. No role change bypasses
-unknown effects, explicit cancellation, publication, exhausted resources or unavailable cloud binding. See
-[worker recovery](../../design-docs/implementation/WORKER_RECOVERY.md).
-
-Progress uses new tree identities, nonoverlapping file-read coverage and new check evidence. Repeated
-reads/checks, renamed/empty search queries, narration and rewritten memory do not reset stagnation. Active or unknown execution suppresses
-semantic escalation; native jobs are sampled between settled jobs. Thresholds are initial tuning values, not
-a measured guarantee that a worker will complete. See [progress
-policy](../../design-docs/implementation/PROGRESS_MONITORING.md).
-
-Planner inputs include actual tools/capability limits and cloud eligibility. Local edit planning requires one production file plus an explicit local_contract, one
-observable behavior and focused check per task: movement, collision, save/load and migration are separate
-work. Focused source/check evidence must establish consumer integration; existing APIs alone do not.
-Test assignments (`kind: test`) run existing configured checks with no implementation/result file or
-writable source target. They retain actual tested revision/results without a commit; failed tests
-reach manager review without automatic coding diagnosis. A code fix or new test file needs a separate
-edit assignment. Test retries preserve the original read-only scope and resources, without a source
-handoff. Successful kept results release dependencies; they do not replace final acceptance. Native
-diagnosis may read its frozen source and cataloged check outputs through bounded readonly capabilities;
-matching passing/failing receipts also reach senior exception review. Raw diagnosis uses previews.
-Resolved search/protocol errors retire from worker hints and retention priority; old histories stay immutable.
-Clean retryable output exhaustion after OS repair receives bounded diagnosis before linked recovery. Local edit assignments require the explicit single-file contract and focused check at planning and dispatch;
-actual semantic task difficulty still needs qualification. cloud_only_reason protects irreducible work from
-ordinary quota demotion; all existing accounts and authority still apply. Browser/MCP/persistent service APIs are
-unavailable; installed foreground test dependencies must be established with real evidence.
-
-The integrated reliability implementation requires fresh program/state pins. The exact historical graph-only
-Resume exception does not authorize arbitrary migration across this merge. Keep old runs with their original
-code and config. The [27 October stage](../../development-docs/reliability-implementation-2026-10-27.md)
-used runtime simple-os/3; current [four repairs](../../development-docs/four-repairs-implementation-2026-10-28.md)
-historically required simple-os/5, agent-8-evidence-recovery/state 2.7; current P0 work
-requires simple-os/6, agent-9-local-contracts/state 2.8 and preserve [model fallback](model-fallback.md). Bounded worker memory, explicit finishing resources and error-conditioned physical response
-repair are included. An unstarted linked recovery consumer may be retargeted with its original
-predecessor/contract/account; started contracts and source authority stay pinned. See
-[qualification](qualification.md) for separate fixture/live completion gates. The [integration
-audit](../../development-docs/branch-integration-audit-2026-10-26.md) records offline verification and
-outstanding baseline failures; the [local live
-investigation](../../development-docs/local-strata-live-test-2026-10-26.md) records the separate failed
-product test.
+For execution behavior after a failure, see [worker recovery and progress](worker-recovery.md).

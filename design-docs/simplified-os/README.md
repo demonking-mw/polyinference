@@ -9,7 +9,7 @@ Original design: 17 October 2026 · aligned with accepted revisions on 20 Octobe
 > their historical semantics; they do not override the current profile.
 
 For the current implementation, start with the [deployment guide](RUNBOOK.md)
-and [runtime/agent wiring guide](RUNTIME_BOUNDARY.md). Agent developers configure
+and runtime/agent wiring guide (`design-docs/simplified-os/RUNTIME_BOUNDARY.md`). Agent developers configure
 all OS preferences through the [consolidated settings reference](AGENT_SETTINGS.md).
 The boundary guide documents the separation of coding policy from OS services, including
 capability grants, native calls, publication hooks and restart compatibility.
@@ -22,14 +22,14 @@ and user messages without Git or coding tasks. LangGraph owns the bundled
 agent's workflow; PolyInference schedules model/tool operations and owns their
 effects. The serving backend owns token batching and GPU execution.
 
-This is the implementation scope for the reference agent. The broader [agent design](../langgraph-agent/README.md) and its wire contract retain extension points, but they do not require implementing every future feature. [SOURCES.md](SOURCES.md) consolidates the scattered evidence and maps all five lecture derivations to this design.
+This is the implementation scope for the reference agent. The broader agent design (`design-docs/langgraph-agent/README.md`) and its wire contract retain extension points, but they do not require implementing every future feature. [SOURCES.md](SOURCES.md) consolidates the scattered evidence and maps all five lecture derivations to this design.
 
-The [joint integration audit](../INTEGRATION_AUDIT.md) records the paired-design corrections and the implementation scenarios needed to verify them.
+The joint integration audit (`design-docs/INTEGRATION_AUDIT.md`) records the paired-design corrections and the implementation scenarios needed to verify them.
 
 ## 1. Scope and authority
 
-Later user-directed changes recorded in the [revision ledger](DESIGN_REVISIONS.md)
-and [fix history](../../development-docs/FIXES.md) govern the current profile.
+Later user-directed changes recorded in the revision ledger (`design-docs/simplified-os/DESIGN_REVISIONS.md`)
+and fix history (`development-docs/FIXES.md`) govern the current profile.
 The [merged graph](../polyinference-design/polyinference-agent-design-merged.html)
 remains the source for cloud-first planning, private development, reconciliation,
 assessment, steering and separate senior review. Its historical all-verdict
@@ -178,6 +178,14 @@ Start a few bounded workers so they can overlap model calls with tools. `W` and 
 
 ### 5.2 Dispatch policy
 
+The standalone scheduler proposal is a separate process-control layer. Its V1
+authority is only to admit, defer or request preemption of an individual process.
+The OS retains the operation queues and resource distribution described below;
+it owns endpoint selection within authority, reservations, quotas, dispatch and
+confirmed release. A scheduler decision cannot directly assign these resources.
+This distinction is proposed-interface guidance, not an implemented scheduler;
+see the corrected design (`docs/temporary/proposals/2026-11-08-standalone-scheduler-design.md`).
+
 Keep separate local, cloud, shell and verification wait queues. Ordinary requests use FIFO. The current verification owner has a local finishing lane; when both finishing and ordinary requests wait, alternate admitted opportunities between those lanes. This gives the critical-section owner progress without making every other ready agent wait for its model reasoning. A lane contains only the owner's bounded mandatory phase requests. No inactive verifier receives a reserved decode slot.
 
 Submit each eligible request as soon as capacity is available. Never wait for an entire batch to fill, never put a global mutex around the local client call, and never await the complete generation while holding a dispatch/metadata lock. Results return independently by operation ID. The serving backend decides how tokens from those requests share batches.
@@ -219,7 +227,7 @@ trust/classification, complete tool pairs and required verbatim inputs are
 preserved. Receipts expose original/derived views and interventions. Agents own
 canonical memory, grammar, output units and semantic recovery. Generic smaller-
 output feedback preserves the caller's declared protocol, including plain text.
-U05 was resolved by [FIX-0085](../../development-docs/FIXES.md#fix-0085).
+U05 was resolved by `development-docs/FIXES.md#fix-0085`.
 
 > **Edited 2026-10-21 because** FIX-0085 removed the JSON-specific recovery
 > wording; the earlier open-gap description no longer reflects implementation.
@@ -370,7 +378,7 @@ For project acceptance, close starts and settle the captured workers before acqu
 > task and final acceptance criteria. Setup/environment checks cannot by themselves
 > establish product completion; the OS still executes ordinary granted commands.
 > The default in-place provider checks the integration checkout; explicit isolated
-> mode uses its private complete view. See [check-purpose configuration](../../docs/guides/configuration.md).
+> mode uses its private complete view. See check-purpose configuration (`docs/guides/configuration.md`).
 
 ### Failure and abort
 
@@ -477,7 +485,7 @@ facts permit one undelivered query per lane to be isolated while physical holds
 remain. Its delivery is discarded; replacements require spare capacity and the
 shared native/caller retry allowance/deadline. This narrower exception permits
 independent work, not arbitrary program isolation or automatic remote cancellation.
-See [current boundary/policy](RUNTIME_BOUNDARY.md#bounded-inference-retries).
+See current boundary/policy (`design-docs/simplified-os/boundary/retries.md#bounded-inference-retries`).
 
 On crash: stop dispatch; establish the old coordinator/driver cannot keep writing; load journal/owners/checkpoints; reconcile submitted/unknown effects and publication; repair ref/event projections; then resume one driver per compatible process. This is single-coordinator recovery, not distributed failover. Retain resources for unresolved external work until termination/effects are known. Full power-loss snapshots and hidden provider state restoration are not promised.
 
@@ -511,9 +519,13 @@ Reject task dependency cycles before starting. Release ended inference capacity 
 
 Measure accepted project outcomes and exact final checks, total local/cloud usage, latency, local request overlap/queue time/context reservations, backend TTFT/token timing where exposed, shell/verification wait and hold time, merge repairs, peak memory and copied/staged bytes. More graph completions or fewer cloud tokens alone do not show a useful result. The original 17 October proposal executed no runtime benchmark. Later fixture
 and native-provider validation is recorded in the fix history and
-[I/O completion report](../../development-docs/io-safety-verification-2026-10-20.md).
+I/O completion report (`development-docs/io-safety-verification-2026-10-20.md`).
 No physical local-serving benchmark or measured hardware fit is established.
 
 ## 12. Contract artifact checks
 
 Run `python -B design-docs/simplified-os/contracts.py` to export the schema and `python -B design-docs/simplified-os/validate_contracts.py` to check the core fixtures and their links to the agent examples. The fixtures use a synthetic three-file repository: each development view copies two files; each integration view contains all three. Their capacity numbers are illustrative, not hardware measurements or recommended deployment limits. Schema/Pydantic validation covers shapes and selected invariants; actual copy isolation, merge correctness, continuous batching, ownership, cancellation and framework compatibility require the implementation tests in section 11.
+
+- [Simple OS v1 implementation](IMPLEMENTATION.md)
+- [Simple OS v1 validation â€” 17 October 2026](VALIDATION.md)
+- [os-v1-prompt](../os-v1-prompt.md)

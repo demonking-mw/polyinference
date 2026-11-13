@@ -1,7 +1,5 @@
 # Runtime state layout
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
 UI data is relative to the directory from which you started the server:
 
 ```text
@@ -26,4 +24,4 @@ whole state directory if you need recovery; copying just a SQLite file is not a
 complete backup. Prefer patch/Git exports over copying an arbitrary temporary
 workspace, which may represent only one task or an intermediate integration view.
 
-Related: [Result locations](results.md) · [Exports](exports.md) · [Archives](archives.md).
+Related: Result locations (`docs/guides/results.md`) · Exports (`docs/guides/exports.md`) · Archives (`docs/guides/archives.md`).

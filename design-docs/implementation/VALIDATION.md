@@ -70,7 +70,7 @@ assessment turns, a real publication, senior keep and independent acceptance.
 The source checkout remained unchanged. The native profile, dynamic tool schema,
 strict output grammar and token usage events were verified against this CLI.
 The new shell/branch callback schema was also exercised by the live setup check.
-See [setup and live evidence](PROVIDER_SETUP.md).
+See setup and live evidence (`design-docs/implementation/PROVIDER_SETUP.md`).
 
 Anthropic's real Messages endpoint returned HTTP 401 for the user-supplied
 placeholder key, which remains in the private user configuration for replacement.

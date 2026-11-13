@@ -1,7 +1,5 @@
 # Launch the local UI
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
 From the PolyInference checkout, with the virtual environment active and credentials
 loaded:
 
@@ -26,7 +24,8 @@ engine automatically before the UI opens. Its launch JSON must use the matching
 context and parallel=1, batch_groups=1. Machine preferences retain the project picker and grants.
 Explicit `ui --config` bypasses them; saved-run Resume retains its saved settings.
 `--sim-batch` applies afterward and selects remote Haiku for a declared local endpoint,
-even when Strata uses the Anthropic wire protocol. Invalid preferences fail visibly.
+even when Strata uses the Anthropic wire protocol, selecting the Haiku 96000-input/32000-output
+pair. Already configured remote Anthropic endpoints retain their explicit pair. Invalid preferences fail visibly.
 These are coding-application preferences; generic OS defaults remain unchanged.
 With local_strata_profile and a declared loopback local endpoint, UI startup reuses
 a ready engine or starts a stopped profile and waits for generation readiness.
@@ -54,9 +53,9 @@ and remote Haiku inference slots, with matching context reservation. N is 1..16.
 It overrides the legacy capacity environment variable for this invocation only.
 The launch/UI label names the effective model and limits; Start run still requires
 an objective/project and a nonempty referenced credential. See
-[simulation details](../../codex-haiku-setup.md) before interpreting concurrency.
+simulation details (`codex-haiku-setup.md`) before interpreting concurrency.
 To add opt-in latency/fault controls before Start, use `polyinference ui
---sim-inference`; see [the three modes and their limits](sim-inference.md).
+--sim-inference`; see the three modes and their limits (`docs/guides/sim-inference.md`).
 Without this flag, ordinary launches retain their existing behavior and UI.
 
 For later launches:
@@ -72,4 +71,4 @@ port is occupied. After the active run settles, **Ctrl+C** stops the foreground
 server. Closing the browser tab does not stop the server or its run. Stopping the
 backend during work is an interruption, not a graceful pause/cancel feature.
 
-Next: [First run](first-run.md) · [Project runs](projects.md).
+Next: First run (`docs/guides/first-run.md`) · Project runs (`docs/guides/projects.md`).

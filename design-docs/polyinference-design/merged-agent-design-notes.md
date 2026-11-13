@@ -33,9 +33,12 @@ The full architecture incorporates the AI's private-development, reconciliation,
 
 Focus views preserve the original positions and include relevant additional nodes. Design notes describe the merged behavior. Full node titles wrap rather than being truncated in architecture views; the memory view retains its original rendering.
 
-## Verification and reproduction
+## Verification and provenance
 
-`merge-agent-graphs.py USER.html AI.html` rebuilds the HTML and JSON, checks exact original names and positions, verifies byte-for-byte memory preservation, and validates unique identifiers and transition endpoints.
+The 17 October one-off merger used the exact supplied exports and fixed node IDs.
+The retained user/AI copies rebuild a different memory view; the preserved merged
+HTML and JSON remain the record of the original result. The retired script is
+recoverable from commit `b95816e` for provenance.
 
 `node check-merged-graph.cjs` checks JavaScript syntax and runs the actual routing code across all five views. The 159 visible routes have attached endpoints and orthogonal segments. Architecture/focus views have no overlapping cards or routes through unrelated cards. Original memory geometry is preserved rather than rearranged. Static layout previews were visually inspected; browser-based interaction testing was unavailable because local file URLs were blocked by browser policy.
 

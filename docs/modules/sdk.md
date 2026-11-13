@@ -1,7 +1,5 @@
 # Contracts and runtime ports
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 The packaged boundary between agent programs and replaceable OS implementations.
 
 | File | Responsibility |
@@ -25,7 +23,7 @@ include_isolated=True also reports pending generation-only computation. WriteSco
 belongs to ports; runtime.workspace_state retains a compatibility re-export.
 ContextPart.retention_priority is an optional caller retention hint from 0 to 100; zero is omitted
 from serialization. Required parts and whole tool groups retain their protections. This generic
-mechanism conveys no task-completion or memory policy; see [context](context.md).
+mechanism conveys no task-completion or memory policy; see context (`docs/modules/context.md`).
 Some shared wire types retain coding
 records for compatibility; their presence does not make coding mandatory.
 The shared `TaskSpec.allowed_change_scope` accepts an empty list to represent no source-write
@@ -45,11 +43,11 @@ permission or task policy. The agent still rejects empty scope for edits. Test o
 [Contract tests](../../tests/test_contracts.py), [general-agent fixtures](../../tests/test_runtime_general.py)
 and [capability boundary](../../tests/test_capability_boundary.py).
 
-[Runtime boundary](../../design-docs/simplified-os/RUNTIME_BOUNDARY.md) · [Design contracts](../../design-docs/langgraph-agent/README.md).
+Runtime boundary (`design-docs/simplified-os/RUNTIME_BOUNDARY.md`) · Design contracts (`design-docs/langgraph-agent/README.md`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.
 
 ## Integrated reliability branch (2026-10-26)
 

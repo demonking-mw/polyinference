@@ -1,7 +1,5 @@
 # Settings and example configurations
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 One OS settings schema, adjacent coding defaults, and explicit application workflow preferences.
 
 | File | Responsibility |
@@ -27,10 +25,10 @@ Legacy flat input remains accepted, but duplicate placements are rejected.
 DEFAULTS and is inherited by AgentConfig; cloud native timeouts warn and continue.
 The coding UI preset uses a 1800-second cloud threshold and does not override
 the OS false default. Set true for interruption; raw/local calls, explicit cancellation and original
-deadlines remain bounded. See [timeout behavior](../guides/os-tuning.md).
+deadlines remain bounded. See timeout behavior (`docs/guides/os-tuning.md`).
 Operational buffer/retention controls use `system.tuning`;
-[central tuning](../guides/os-tuning.md) explains precedence, fresh-state rules and the
-[per-file audit](../os-config-inventory.md).
+central tuning (`docs/guides/os-tuning.md`) explains precedence, fresh-state rules and the
+per-file audit (`docs/os-config-inventory.md`).
 Agent-only prerequisite_checks and acceptance_checks stay at top level; legacy
 checks remain combined task/final criteria unless acceptance_checks overrides them.
 `POLYINFERENCE_LOCAL_BATCH_SIZE` overrides local endpoint admission only, unless
@@ -39,22 +37,25 @@ validation context can skip that legacy overlay; system views reflect resolved
 values without rereading ambient overrides. No simulation flag is serialized.
 The coding settings module owns the complete Haiku factory and pure simulation
 overlay (worker binding/cap, slots, full-context reservations), preserving custom
-Anthropic fields and other providers/bindings. OS admission remains generic.
-The optional [application simulator](inference-simulation.md) uses
+Anthropic fields and other providers/bindings. haiku_token_limits supplies the application
+96000-input/32000-output preset for fresh Haiku UI runs and complete endpoint replacement;
+explicit remote Anthropic pairs, machine preferences and generic OS defaults remain authoritative.
+OS admission remains generic.
+The optional application simulator (`docs/modules/inference-simulation.md`) uses
 SimulationAgentConfig for enabled buggy/slow runs; its saved inference_simulation
 block pins settings/seed for recovery. RuntimeConfig has no simulator policy.
 Absent Endpoint.lifecycle and agent inference_policy fields are omitted. Cloud endpoint context-token
 caps are absent. Legacy token fields migrate to system.local_token_limits; see
-[one local pair and provider startup](../guides/local-token-limits.md). --sim-inference is a UI invocation flag.
+one local pair and provider startup (`docs/guides/local-token-limits.md`). --sim-inference is a UI invocation flag.
 
 Optional Endpoint.lifecycle selects explicit transport/connect/first-output/idle/
 total timing. The coding application chooses profiles; bare runtime fields contain
 no cloud/local timing presets. AgentConfig.inference_policy is an application preference;
-local_token_limits alone configures local input/output tokens. Cloud per-call token limits belong to the provider. See [testing profiles and defaults](../guides/endpoint-testing.md).
+local_token_limits alone configures local input/output tokens. Cloud per-call token limits belong to the provider. See testing profiles and defaults (`docs/guides/endpoint-testing.md`).
 
 The UI preset optionally overlays machine local endpoint/token/worker/Strata settings;
-see [configuration precedence](../guides/configuration.md). Optional agent
-local_strata_profile enables [automatic UI startup](../guides/launching.md). A declared local Anthropic
+see configuration precedence (`docs/guides/configuration.md`). Optional agent
+local_strata_profile enables automatic UI startup (`docs/guides/launching.md`). A declared local Anthropic
 endpoint selects the remote preset when explicit simulation is requested.
 
 ## Principles to preserve
@@ -67,32 +68,9 @@ endpoint selects the remote preset when explicit simulation is requested.
 
 ## Verification and related reading
 
-[Settings/context cases](../../tests/test_context_safety.py), [UI export assertions](../../tests/test_ui.py)
-and [endpoint tests](../../tests/test_endpoints.py). Validate all five examples.
+[Settings/context](../../tests/test_context_safety.py), [UI](../../tests/test_ui.py)
+and [endpoints](../../tests/test_endpoints.py) cover settings and provider behavior.
 
-[Complete field/default reference](../../design-docs/simplified-os/AGENT_SETTINGS.md) · [Configuration](../guides/configuration.md).
-
-After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
-
-## Reliability settings
-
-Top-level `inference_retry`, `check_diagnosis`, `acceptance_criteria`,
-`max_review_reads`, `max_worker_recoveries`, `max_cloud_recoveries` and
-`progress_monitor` are agent policy.
-`max_review_reads` defaults to 16 ranges per senior invocation (0–16); each proposal still allows eight.
-The planner receives the configured, used and remaining allowances on every message.
-Their defaults, ranges and recovery interactions are in the
-[agent reliability reference](../guides/agent-reliability.md).
-Endpoint supports_temperature defaults true; unsupported explicit sampling rejects.
-Native reasoning_effort defaults medium; the turn overrides command-line startup.
-The UI launcher supplies no conflicting low-effort override.
-Agent `default_retry_model` selects the native cloud alternate (Terra/high/seven).
-Generic Endpoint.retry_model is optional with no OS default. Explicit null disables
-and survives serialization; see [fallback configuration](../guides/model-fallback.md).
-Endpoint.input_token_count_path opts raw endpoints into same-provider measurement.
-System max_model_request_bytes separates the byte ceiling from token allowances;
-null uses the canonical 4 MiB request ceiling. See [measurement](../guides/context-measurement.md).
-Optional system.data_policy constrains processes/replacements; ProcessSpec can narrow it.
-Constrained endpoints need declared location. Fresh state pins these contracts.
+Read the field tables in `design-docs/simplified-os/AGENT_SETTINGS.md` and the
+agent policy settings in `docs/guides/agent-reliability.md`. Use
+`docs/guides/configuration.md` to configure a fresh run.

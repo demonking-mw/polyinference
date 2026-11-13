@@ -1,6 +1,6 @@
 # Retry an unavailable model
 
-[Configuration](configuration.md) · [OS retries](../modules/retries.md) · [Recovery](recovery.md)
+Configuration (`docs/guides/configuration.md`) · OS retries (`docs/modules/retries.md`) · Recovery (`docs/guides/recovery.md`)
 
 Fresh coding-agent configurations with a native Codex cloud endpoint default to
 `gpt-6.1-terra`, effort `high`, with seven subsequent fallback invocations. Choose

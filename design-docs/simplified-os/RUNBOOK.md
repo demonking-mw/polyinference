@@ -2,14 +2,14 @@
 
 > **Edited 2026-10-20 because** later repository and I/O fixes supersede the
 > original publication, private-copy and caller-recovery defaults. The
-> [revision ledger](DESIGN_REVISIONS.md) records the reasons and unresolved
+> revision ledger (`design-docs/simplified-os/DESIGN_REVISIONS.md`) records the reasons and unresolved
 > contract gaps; this guide describes the current default and explicit legacy mode.
 
 The CLI and existing test UI now use `KernelRuntime`. `StandaloneRuntime` remains
 an import alias for agent integrations. The OS branch is `codex/simple-os-v1`;
 main is reserved for the separate agent testing effort. Historical source graphs
 and proposal fixtures remain preserved; later optional contract fields and their
-synchronized schemas are recorded explicitly in the fix history. [Implementation decisions](IMPLEMENTATION.md) record the
+synchronized schemas are recorded explicitly in the fix history. Implementation decisions (`design-docs/simplified-os/IMPLEMENTATION.md`) record the
 audit answers and the newer private-failure policy.
 
 ## OS boundary and non-coding agents
@@ -71,8 +71,8 @@ replacement consent. A missing terminal never proves remote termination. An
 isolated generation keeps capacity/budget and discards delivery; replacing it
 requires spare capacity. Native jobs/tools/external writes remain strict. Old
 saved endpoints without lifecycle preserve their legacy policy. See
-[endpoint testing](../../docs/guides/endpoint-testing.md) and the
-[settings reference](AGENT_SETTINGS.md) for current configuration and v1 limits.
+endpoint testing (`docs/guides/endpoint-testing.md`) and the
+settings reference (`design-docs/simplified-os/AGENT_SETTINGS.md`) for current configuration and v1 limits.
 
 ## Deployment
 
@@ -101,7 +101,7 @@ in configuration resolve relative to that JSON file. Existing source repositorie
 must be clean. New coding runs use the actual repository by default: the coding
 agent resolves Git instructions and creates/selects the integration branch and
 linked task worktrees. The OS attaches authorized directories and enforces grants;
-it does not choose branches. See the [current boundary guide](RUNTIME_BOUNDARY.md#in-place-coding-repositories).
+it does not choose branches. See the current boundary guide (`design-docs/simplified-os/boundary/repository.md#in-place-coding-repositories`).
 
 ```bash
 polyinference validate-config /absolute/path/to/agent.json
@@ -130,7 +130,7 @@ inspection. The model name must be available to the signed-in account.
 Configured limits and capability grants do not implement every rich wire-contract
 promise. Current conflicting process data policies/hard allocations, narrower
 process limits, paused-worker residency and JSON-specific recovery feedback remain
-[open implementation gaps](DESIGN_REVISIONS.md#open-implementation-gaps).
+open implementation gaps (`design-docs/simplified-os/DESIGN_REVISIONS.md#open-implementation-gaps`).
 Documentation alignment does not approve ignoring those constraints.
 
 `local` and `cloud` are routing lanes; either can represent a cloud endpoint.
@@ -210,7 +210,7 @@ and events is read-only; neither starts a model request.
 
 ## Recovery
 
-The [runtime/agent wiring guide](RUNTIME_BOUNDARY.md) documents the current
+The runtime/agent wiring guide (`design-docs/simplified-os/RUNTIME_BOUNDARY.md`) documents the current
 capability and publication-policy registration order. New runs use kernel ABI
 `simple-os/2`; existing run directories are not automatically migrated. Reinstall
 the owning application's handlers and policy before issuing new effects after a

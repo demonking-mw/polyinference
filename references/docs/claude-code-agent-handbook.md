@@ -6,7 +6,7 @@ An architectural study of the source snapshot in `references/claude-code`, prepa
 
 This handbook explains the checked-out snapshot, rather than today's Claude Code or every configuration of the historical product. Its purpose is to let a builder understand the agent without repeatedly rediscovering the repository.
 
-The mirror's HEAD is `a371abbe75ffa0d0a3c92290e2bbf56a7ef54367`. Its latest commit describes a README correction, dated 2026-04-05 in the commit's timezone. The mirror's [README](../claude-code/README.md) attributes the exposure to a source map published through npm on 2026-03-31. That is the mirror's account; this study does not independently authenticate the original package, exposure date, completeness, or reconstruction process. A mirror commit date is not an upstream Claude Code release date.
+The mirror's HEAD is `a371abbe75ffa0d0a3c92290e2bbf56a7ef54367`. Its latest commit describes a README correction, dated 2026-04-05 in the commit's timezone. The mirror's `references/claude-code/README.md` attributes the exposure to a source map published through npm on 2026-03-31. That is the mirror's account; this study does not independently authenticate the original package, exposure date, completeness, or reconstruction process. A mirror commit date is not an upstream Claude Code release date.
 
 The available `src` tree contains 1,902 files totaling about 30.4 MB. Some files contain embedded source-map data, so that byte count is not a measure of handwritten implementation. There is no root `package.json`, `tsconfig.json`, or Bun lockfile in this checkout. Referenced modules are missing, including `src/query/transitions.ts`, `src/coordinator/workerAgent.ts`, `src/services/contextCollapse/index.ts`, and `src/daemon/main.ts`. Consequently, this is a static architectural investigation, not a successful build or runtime validation.
 
@@ -20,34 +20,34 @@ Source links are relative to this document for portability. `#L123` fragments id
 
 ## Contents
 
-1. [Executive summary of the whole design](#1-executive-summary-of-the-whole-design)
-2. [The coding agent in detail](#2-the-coding-agent-in-detail)
-3. [Coding-agent structure graph](#3-coding-agent-structure-graph)
-4. [Repository map and reading route](#4-repository-map-and-reading-route)
-5. [Runtime layers and ownership of state](#5-runtime-layers-and-ownership-of-state)
-6. [A complete coding turn](#6-a-complete-coding-turn)
-7. [The model adapter and streaming protocol](#7-the-model-adapter-and-streaming-protocol)
-8. [The tool contract and execution pipeline](#8-the-tool-contract-and-execution-pipeline)
-9. [Scheduling, concurrency, and cancellation](#9-scheduling-concurrency-and-cancellation)
-10. [Permissions, trust, and sandboxing](#10-permissions-trust-and-sandboxing)
-11. [Coding tools and environment feedback](#11-coding-tools-and-environment-feedback)
-12. [Prompt and instruction assembly](#12-prompt-and-instruction-assembly)
-13. [Context management and prompt caching](#13-context-management-and-prompt-caching)
-14. [Memory systems](#14-memory-systems)
-15. [Subagents, forks, and agent definitions](#15-subagents-forks-and-agent-definitions)
-16. [Background tasks, teams, and coordinator mode](#16-background-tasks-teams-and-coordinator-mode)
-17. [MCP integration](#17-mcp-integration)
-18. [Commands, skills, plugins, and hooks](#18-commands-skills-plugins-and-hooks)
-19. [Transcripts, resume, and file history](#19-transcripts-resume-and-file-history)
-20. [Interactive UI, SDK, IDE, and remote surfaces](#20-interactive-ui-sdk-ide-and-remote-surfaces)
-21. [Operations, observability, and feature gates](#21-operations-observability-and-feature-gates)
-22. [Experiments and peripheral systems](#22-experiments-and-peripheral-systems)
-23. [Failure modes and engineering lessons](#23-failure-modes-and-engineering-lessons)
-24. [A blueprint for building a similar agent](#24-a-blueprint-for-building-a-similar-agent)
-25. [Verification strategy for your own implementation](#25-verification-strategy-for-your-own-implementation)
-26. [Source index and investigation recipes](#26-source-index-and-investigation-recipes)
-27. [What the snapshot does and does not establish](#27-what-the-snapshot-does-and-does-not-establish)
-28. [Glossary](#28-glossary)
+1. [Executive summary of the whole design](#1.%20Executive%20summary%20of%20the%20whole%20design)
+2. [The coding agent in detail](#2.%20The%20coding%20agent%20in%20detail)
+3. [Coding-agent structure graph](#3.%20Coding-agent%20structure%20graph)
+4. [Repository map and reading route](#4.%20Repository%20map%20and%20reading%20route)
+5. [Runtime layers and ownership of state](#5.%20Runtime%20layers%20and%20ownership%20of%20state)
+6. [A complete coding turn](#6.%20A%20complete%20coding%20turn)
+7. [The model adapter and streaming protocol](#7.%20The%20model%20adapter%20and%20streaming%20protocol)
+8. [The tool contract and execution pipeline](#8.%20The%20tool%20contract%20and%20execution%20pipeline)
+9. [Scheduling, concurrency, and cancellation](#9.%20Scheduling%2C%20concurrency%2C%20and%20cancellation)
+10. [Permissions, trust, and sandboxing](#10.%20Permissions%2C%20trust%2C%20and%20sandboxing)
+11. [Coding tools and environment feedback](#11.%20Coding%20tools%20and%20environment%20feedback)
+12. [Prompt and instruction assembly](#12.%20Prompt%20and%20instruction%20assembly)
+13. [Context management and prompt caching](#13.%20Context%20management%20and%20prompt%20caching)
+14. [Memory systems](#14.%20Memory%20systems)
+15. [Subagents, forks, and agent definitions](#15.%20Subagents%2C%20forks%2C%20and%20agent%20definitions)
+16. [Background tasks, teams, and coordinator mode](#16.%20Background%20tasks%2C%20teams%2C%20and%20coordinator%20mode)
+17. [MCP integration](#17.%20MCP%20integration)
+18. [Commands, skills, plugins, and hooks](#18.%20Commands%2C%20skills%2C%20plugins%2C%20and%20hooks)
+19. [Transcripts, resume, and file history](#19.%20Transcripts%2C%20resume%2C%20and%20file%20history)
+20. [Interactive UI, SDK, IDE, and remote surfaces](#20.%20Interactive%20UI%2C%20SDK%2C%20IDE%2C%20and%20remote%20surfaces)
+21. [Operations, observability, and feature gates](#21.%20Operations%2C%20observability%2C%20and%20feature%20gates)
+22. [Experiments and peripheral systems](#22.%20Experiments%20and%20peripheral%20systems)
+23. [Failure modes and engineering lessons](#23.%20Failure%20modes%20and%20engineering%20lessons)
+24. [A blueprint for building a similar agent](#24.%20A%20blueprint%20for%20building%20a%20similar%20agent)
+25. [Verification strategy for your own implementation](#25.%20Verification%20strategy%20for%20your%20own%20implementation)
+26. [Source index and investigation recipes](#26.%20Source%20index%20and%20investigation%20recipes)
+27. [What the snapshot does and does not establish](#27.%20What%20the%20snapshot%20does%20and%20does%20not%20establish)
+28. [Glossary](#28.%20Glossary)
 
 ## 1. Executive summary of the whole design
 

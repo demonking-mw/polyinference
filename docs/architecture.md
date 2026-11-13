@@ -1,6 +1,6 @@
 # Architecture at a glance
 
-[Documentation](README.md) · [Setup](../setup.md) · [Developer guide](../dev-readme.md)
+Documentation (`docs/README.md`) · Setup (`setup.md`) · Developer guide (`dev-readme.md`)
 
 | Path | Purpose |
 | --- | --- |
@@ -15,10 +15,10 @@
 | `.polyinference/` | Ignored local state, fixtures and artifacts; project-local task worktrees. Only explicit legacy isolated mode owns a private Git store. |
 
 Start with the [design documentation index](../design-docs/README.md),
-[LangGraph agent design](../design-docs/langgraph-agent/README.md),
-[simplified OS design](../design-docs/simplified-os/README.md),
-[implementation/adapter notes](../design-docs/implementation/README.md) and
-[implementation plan](../IMPLEMENTATION_PLAN.md). The implementation incorporates
+LangGraph agent design (`design-docs/langgraph-agent/README.md`),
+simplified OS design (`design-docs/simplified-os/README.md`),
+implementation/adapter notes (`design-docs/implementation/README.md`) and
+implementation plan (`IMPLEMENTATION_PLAN.md`). The implementation incorporates
 [the user's agent-review answers](../design-docs/implementation/user-agent-review.json).
 The canonical wire/workspace data structures remain the integration boundary for
 current and future runtimes; provider transport details stay inside the kernel's
@@ -30,12 +30,19 @@ The coding agent decides tasks, Git workflow, check selection, canonical memory
 and acceptance. The OS supplies generic process/effect, resource, capability,
 storage and optional workspace/context services. General agents can finish
 without Git, source edits or checks. Provider token/GPU scheduling is external.
-The optional [inference simulator](modules/inference-simulation.md) is installed
+The proposed V1 standalone scheduler (`docs/temporary/proposals/2026-11-08-standalone-scheduler-design.md`)
+can only admit, defer or request preemption of individual OS processes. The OS
+distributes resources and owns placement, capacity/quota enforcement and physical
+dispatch/release. Process eligibility is not a resource grant; this scheduler
+interface remains proposed, not implemented.
+The optional inference simulator (`docs/modules/inference-simulation.md`) is installed
 by application bootstrap only for explicitly simulated configs. It supplies test
 provider pacing/faults through a generic raw-adapter hook; it does not move task,
 Git or recovery policy into OS admission. Ordinary adapter/config paths remain.
 
 Use the [module index](modules/README.md) for source responsibilities and
 the [tree](file-tree.html) for every file. Update the owning guides whenever
-implementation changes. See [documentation maintenance](maintenance.md).
+implementation changes. See documentation maintenance (`docs/maintenance.md`).
 
+
+- [Reference materials](../references/README.md)

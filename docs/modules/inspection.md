@@ -1,7 +1,5 @@
 # Inspection, snapshots, history and costs
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 Projections expose OS facts and coding history, sharing one diagnostic snapshot format.
 The run toolbar exposes Resume and an optional instructions field for paused or
 interrupted execution. Clicking submits a run-level request immediately; internal
@@ -31,15 +29,15 @@ snapshots retain their original evidence and use the same cautious rendering.
 Schema-v2 snapshots also retain physical inference attempts, response-repair
 windows, worker exceptions/recovery lineage and progress observations. The UI
 shows the last worker progress observation; its novelty heuristic does not
-certify correctness. See [progress policy](../../design-docs/implementation/PROGRESS_MONITORING.md).
+certify correctness. See progress policy (`design-docs/implementation/PROGRESS_MONITORING.md`).
 The agent projection includes bounded worker-state views and the same canonical
 physical-attempt/kept-source quality metrics in live and saved data. Native jobs,
 raw generations and full product acceptance remain separate quantities; see
-[qualification](../guides/qualification.md).
+qualification (`docs/guides/qualification.md`).
 Direct effectful native jobs count once even without response-retry attempt rows;
 per-task summaries retain bounded lineage, resource and identical-query metrics.
 
-Journal retention and activity pages use resolved [OS tuning](../guides/os-tuning.md)
+Journal retention and activity pages use resolved OS tuning (`docs/guides/os-tuning.md`)
 instead of independent constants. Live/offline activity paging shares the resolved
 page size; old snapshots derive it from their retained visible event sequences.
 Saved old events are not reconstructed; unbounded
@@ -62,10 +60,10 @@ retention affects future events only.
 [OS monitor](../../tests/test_ui_os.py), [agent monitor](../../tests/test_ui_agents.py),
 [history](../../tests/test_history.py), [costs](../../tests/test_costs.py) and [frontend](../../tests/ui_start.test.cjs).
 
-[Archives](../guides/archives.md) · [Memory inspector design and coverage](../../development-docs/current-iter-issues.md#os-memory-context-inspector).
+Archives (`docs/guides/archives.md`) · Memory inspector design and coverage (`docs/temporary/incidents/2026-10-20-context-inspector-design.md#os-memory-context-inspector`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.
 
 Cloud lane token capacity is labeled provider-managed; its visible-input reservation is not shown as a token ceiling. Native cloud harnesses retain that policy even on the local worker binding.

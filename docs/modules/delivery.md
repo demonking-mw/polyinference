@@ -1,7 +1,5 @@
 # Artifact delivery and user messages
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 Optional OS capabilities deliver explicit files and durable plain-text notifications for any agent.
 
 | File | Responsibility |
@@ -27,8 +25,8 @@ isolated coding and other applications may use it. user.notify requires a grant.
 [Outputs](../../tests/test_outputs.py), [user briefs](../../tests/test_user_briefs.py),
 [history](../../tests/test_history.py) and [recovery](../../tests/test_recovery.py).
 
-[Results](../guides/results.md) · [Explicit recovery](../guides/retrying.md).
+Results (`docs/guides/results.md`) · Explicit recovery (`docs/guides/retrying.md`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.

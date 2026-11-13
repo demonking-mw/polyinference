@@ -30,6 +30,8 @@ def test_machine_ui_defaults_preserve_project_selection_and_explicit_config(tmp_
     directory.mkdir(parents=True)
     manager = TestUI(tmp_path / "ui")
     original = manager.configuration()
+    assert original.local_token_limits == LocalTokenLimits(input_tokens=96000, output_tokens=32000)
+    assert original.local.max_context_tokens == original.local.reserved_context_tokens == 128000
     preferences = {
         "local": {"protocol": "anthropic", "base_url": "http://127.0.0.1:8080/v1",
                   "model": "qwen3.8-flash-next-coder-iq1_m", "api_key_env": None,
@@ -61,6 +63,8 @@ def test_machine_ui_defaults_preserve_project_selection_and_explicit_config(tmp_
     simulated = TestUI(tmp_path / "simulation-ui", sim_batch=2).configuration()
     assert simulated.local.inference_location == "cloud" and simulated.local.api_key_env == "ANTHROPIC_API_KEY"
     assert simulated.local.max_inflight == simulated.max_workers == 2
+    assert simulated.local_token_limits == original.local_token_limits
+    assert simulated.local.reserved_context_tokens == 256000
     path.write_text('{"repository": "/unexpected"}')
     with pytest.raises(ValueError, match="expected only"):
         manager.configuration()
@@ -1045,7 +1049,7 @@ def test_repository_picker_rejects_subdirectories_and_non_repositories(config, t
         repository(str(subdir))
 
 
-@pytest.mark.parametrize("output_target", [LocalTokenLimits().output_tokens, 12000])
+@pytest.mark.parametrize("output_target", [32000, 12000])
 async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_sprint_cap(
     config, tmp_path, monkeypatch
 , output_target):
@@ -1160,7 +1164,7 @@ async def test_default_ui_routes_workers_to_haiku_and_finishes_after_former_spri
             await runtime.close()
 
     manager = TestUI(tmp_path / "ui", runner=mixed_run)
-    if output_target != LocalTokenLimits().output_tokens:
+    if output_target != 32000:
         default_configuration = manager.configuration
         def configuration_with_local_pair():
             selected = default_configuration()

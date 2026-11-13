@@ -1,6 +1,6 @@
 # Polyinference OS research notes
 
-The five lecture derivations remain ordered. All now incorporate the current [private-copy/two-mutex concurrency protocol](concurrent_coding_protocol.md), the full agent HTML and user clarifications. The LLM OS is an application operating endpoints; no computer-OS kernel work is implied.
+The five lecture derivations remain ordered. All now incorporate the current private-copy/two-mutex concurrency protocol (`design-docs/polyinference-design/concurrent_coding_protocol.md`), the full agent HTML and user clarifications. The LLM OS is an application operating endpoints; no computer-OS kernel work is implied.
 
 ## Read in lecture order
 

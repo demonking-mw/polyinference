@@ -1,12 +1,10 @@
 # Use the UI
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
 | Control or display | Behavior |
 | --- | --- |
 | Start run | Shows startup progress and selects the new run immediately. Rejected starts receive a run ID and startup process ID, remain selected as failed runs, and retain their error across polling. |
-| Inference mode (only with --sim-inference) | Choose normal, normal and buggy, or slow and buggy before Start. Set shared TPS, batch, bug rate and optional seed; inspect synthetic progress separately from actual provider costs. [Simulation guide](sim-inference.md). |
-| Endpoint testing | Choose configured, small-cloud, local-inference or buffered timings for the local lane; click Test endpoint / warm up for one bounded query. No call on page open. [Policy and limits](endpoint-testing.md). |
+| Inference mode (only with --sim-inference) | Choose normal, normal and buggy, or slow and buggy before Start. Set shared TPS, batch, bug rate and optional seed; inspect synthetic progress separately from actual provider costs. Simulation guide (`docs/guides/sim-inference.md`). |
+| Endpoint testing | Choose configured, small-cloud, local-inference or buffered timings for the local lane; click Test endpoint / warm up for one bounded query. No call on page open. Policy and limits (`docs/guides/endpoint-testing.md`). |
 | Run selector | Reopen saved runs, including failed or interrupted runs. |
 | Process/node list | Inspect the recorded execution order and individual node details. |
 | Resume | Select a paused/interrupted run, optionally type instructions beside Resume, then click once. Recovery and process selection happen internally. Resuming shows preparation; Running shows activation. The advanced process drawer remains available for inspection. |
@@ -34,7 +32,7 @@ Queue/hold timing is recorded for new requests; older telemetry may be absent.
 The journal retains up to 10,000 transactions and reports pruning. Save captures
 records/events together, then checkpoints/artifacts separately: a running workload
 can advance during capture. Binary artifacts use base64; integrity/read errors are
-listed. Private Git objects are absent. See [snapshot limits](archives.md).
+listed. Private Git objects are absent. See snapshot limits (`docs/guides/archives.md`).
 
 Memory / context defaults to the newest outstanding caller invocation, otherwise
 its latest retained outcome; compaction helpers stay separate. An operation opens
@@ -54,7 +52,7 @@ termination. Drafts/request identity survive lost acknowledgements and restart;
 duplicate submission does not create a second run. Saved authority, config, source,
 budgets and deadlines persist. New-launch settings do not alter resumed runs.
 Unsupported provider recovery or incompatible program pins produce a plain error.
-See [recovery and compatibility](recovery.md) and [explicit retries](retrying.md).
+See recovery and compatibility (`docs/guides/recovery.md`) and explicit retries (`docs/guides/retrying.md`).
 Snapshots are read-only; external --state needs saved config.json or matching
 --config. Restart after Python updates and use the HTTP URL (default
 http://127.0.0.1:8765); opening ui.html through file:// has no API.

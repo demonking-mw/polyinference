@@ -2,7 +2,7 @@
 
 > **Edited 2026-10-20 because** this plan originally described the first OS
 > implementation, while later fixes changed repository layout, publication and
-> I/O ownership. [Accepted revisions](DESIGN_REVISIONS.md) govern the current
+> I/O ownership. Accepted revisions (`design-docs/simplified-os/DESIGN_REVISIONS.md`) govern the current
 > profile; original test counts and platform observations below retain their
 > historical scope. They are not a fresh test result for today's working tree.
 
@@ -63,9 +63,9 @@ implemented fallback and must retain real tool brokerage and terminal evidence.
 ## Validation
 
 The initial OS revision was implemented and validated; see its historical
-[validation record](VALIDATION.md) and the current [deployment guide](RUNBOOK.md).
+validation record (`design-docs/simplified-os/VALIDATION.md`) and the current deployment guide (`design-docs/simplified-os/RUNBOOK.md`).
 Later I/O/settings/source-handoff completion is recorded in FIX-0058–0060 and the
-[I/O verification report](../../development-docs/io-safety-verification-2026-10-20.md),
+I/O verification report (`development-docs/io-safety-verification-2026-10-20.md`),
 including a 327-pass full run followed by 73 focused cases after its last two edits.
 Those results retain their recorded timing and limits; this documentation edit
 reruns no full runtime suite. The initial full suite passed 97 tests, followed

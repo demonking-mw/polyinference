@@ -1,7 +1,5 @@
 # Application services and runtime policy installation
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 AgentServices assembles coding state and requests without making the OS interpret coding records.
 
 Worker processes, task specs, raw prompts and native jobs use the same kind-aware tool selection.
@@ -34,7 +32,7 @@ retained-source offers; these guide explicit dependencies and resume_from grants
 Each planner message refreshes `review_limits` (read/correction totals, usage, remaining allowance and
 schema bounds) and `planning_limits`. Both planners and workers receive process `resource_limits`,
 current `resources`, `finishing_reserve` and `response_budget`. Per-call token fields reflect the actual
-local pair or provider ownership, not legacy cloud token placeholders. See [reliability settings](../guides/agent-reliability.md).
+local pair or provider ownership, not legacy cloud token placeholders. See reliability settings (`docs/guides/agent-reliability.md`).
 Mode-specific prompts distinguish in-place private uncertainty from legacy publication.
 The agent optionally pins InferencePolicy as runtime/inference-policy version 1
 on model requests. It owns additional retry consent and smaller raw-query output
@@ -52,11 +50,11 @@ targets; the OS executes bounded retries without reading coding task/grammar pol
 [Setup tools](../../tests/test_setup_tools.py), [agent transitions](../../tests/test_agent_transitions.py),
 [boundary](../../tests/test_capability_boundary.py) and [context](../../tests/test_context_safety.py).
 
-[Memory implementation](../../development-docs/memory-implementation-report-2026-10-20.md) · [Runtime boundary](../../design-docs/simplified-os/RUNTIME_BOUNDARY.md).
+Memory implementation (`docs/temporary/investigations/2026-10-20-memory-implementation.md`) · Runtime boundary (`design-docs/simplified-os/RUNTIME_BOUNDARY.md`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.
 
 ## Integrated reliability branch (2026-10-26)
 

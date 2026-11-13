@@ -1,14 +1,14 @@
 # Model availability and existing browser repairs — 2026-10-28
 
-[Current issues](current-iter-issues.md) · [Failure analysis](minecraft-failure-isolation-2026-10-28.md) · [Fallback policy](../docs/guides/model-fallback.md)
+Current issues (`development-docs/current-iter-issues.md`) · Failure analysis (`docs/temporary/investigations/2026-10-28-minecraft-failure-isolation.md`) · Fallback policy (`docs/guides/model-fallback.md`)
 
 The user authorized an OS alternate-model retry and repairs to existing tests and
 missed browser behavior, with no new gameplay. Earlier analysis-only restrictions
 remain historical; convergence, context sizing and worker-memory fixes below are
 **plans only**. No old run was resumed, model/config pins changed or account refilled.
 
-The plan below records this earlier batch. The later authorized [scheduled four-repair
-implementation](four-repairs-implementation-2026-10-28.md) supersedes its plan-only status;
+The plan below records this earlier batch. The later authorized implementation
+(`development-docs/four-repairs-implementation-2026-10-28.md`) supersedes its plan-only status;
 the original evidence and routing policy remain intact.
 
 ## Four-area plan and ownership

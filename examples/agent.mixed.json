@@ -79,7 +79,7 @@
     },
     "local_token_limits": {
       "input_tokens": 96000,
-      "output_tokens": 4096
+      "output_tokens": 32000
     }
   },
   "objective": "Describe the bounded coding objective here.",

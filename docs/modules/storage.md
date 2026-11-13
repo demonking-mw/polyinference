@@ -1,7 +1,5 @@
 # Persistence, exclusive resources and blocking I/O
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 Durable generic records/artifacts and bounded host resource ownership underpin replay and inspection.
 
 | File | Responsibility |
@@ -17,7 +15,7 @@ semantics. Artifacts are content-addressed. Exclusive resource keys coordinate
 cooperating runtimes; filesystem work is serialized off the event loop.
 
 Retention/page defaults, SQLite busy timeout and exclusive lock polling now come from
-[central OS configuration](../guides/os-tuning.md). Independent record writers inherit
+central OS configuration (`docs/guides/os-tuning.md`). Independent record writers inherit
 `runtime/os-tuning`; inspection/export/checkpoint readers inherit the saved SQLite timeout too.
 A standalone database uses the canonical timeout only to discover its saved policy. Canonical records and
 WAL/FULL durability are preserved.
@@ -34,8 +32,8 @@ WAL/FULL durability are preserved.
 [OS/storage](../../tests/test_os.py), [runtime](../../tests/test_runtime.py),
 [recovery](../../tests/test_recovery.py) and [workspace output](../../tests/test_workspace_outputs.py) checks.
 
-[Concurrency audit scope](../../development-docs/current-iter-issues.md#os-concurrency-audit).
+Concurrency audit scope (`docs/temporary/incidents/2026-10-20-concurrency-audit.md#os-concurrency-audit`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.

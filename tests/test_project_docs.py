@@ -18,7 +18,7 @@ def checkout(tmp_path):
     subprocess.run(["git", "init", "-q", str(tmp_path)], check=True)
     (tmp_path / "docs").mkdir()
     files = {
-        "README.md": "# Project\n[Browse](docs/file-tree.html)\n",
+        "README.md": "# Project\n[Module](docs/module.md) · [Browse](docs/file-tree.html)\n",
         "docs/module.md": "# Module\n[module.py](../module.py) · [tree.js](tree.js)\n"
         "[Styles](tree.css) · [Template](tree-template.html) · [Tree](file-tree.html)\n",
         "module.py": "VALUE = 1\n",
@@ -31,10 +31,10 @@ def checkout(tmp_path):
     for path, text in files.items():
         (tmp_path / path).write_text(text, encoding="utf-8")
     data = {
-        "schema_version": 1,
+        "schema_version": 2,
+        "entrypoint": "README.md",
         "external_sources": list(docs.EXTERNAL),
-        "root": {"id": "project", "title": "Project", "children": [
-            {"id": "intro", "title": "Introduction", "doc": "README.md", "files": []},
+        "root": {"id": "project", "title": "Project", "doc": "README.md", "files": [], "children": [
             {"id": "module", "title": "Module", "doc": "docs/module.md", "files": [
                 "module.py", "docs/tree.css", "docs/tree.js", "docs/tree-template.html",
                 "docs/file-tree.json", "docs/file-tree.html",
@@ -83,13 +83,13 @@ def test_non_object_tree_is_an_actionable_validation_error(checkout, data):
 
 
 @pytest.mark.parametrize("update,message", [
-    (lambda d: d["root"]["children"][0]["files"].append("module.py"), "must link and explain"),
-    (lambda d: d["root"]["children"][1]["files"].append("module.py"), "Duplicate ownership"),
-    (lambda d: d["root"]["children"][1].update(doc=["docs/module.md"]), "path"),
-    (lambda d: d["root"]["children"][1]["files"].append("README.md"), "Additional docs"),
-    (lambda d: d["root"].update(doc="README.md"), "Branch needs"),
-    (lambda d: d["root"]["children"][1].update(id="intro"), "duplicate node id"),
-    (lambda d: d["root"]["children"][1]["files"].append("../secret.py"), "Unsafe"),
+    (lambda d: d["root"]["files"].append("module.py"), "must link and explain"),
+    (lambda d: d["root"]["children"][0]["files"].append("module.py"), "Duplicate ownership"),
+    (lambda d: d["root"]["children"][0].update(doc=["docs/module.md"]), "path"),
+    (lambda d: d["root"]["children"][0]["files"].append("README.md"), "Additional docs"),
+    (lambda d: d["root"].update(children=[]), "Branch needs"),
+    (lambda d: d["root"]["children"][0].update(id="project"), "duplicate node id"),
+    (lambda d: d["root"]["children"][0]["files"].append("../secret.py"), "Unsafe"),
 ])
 def test_ambiguous_or_unsafe_feature_ownership_fails(checkout, update, message):
     change_tree(checkout, update)
@@ -115,9 +115,50 @@ def test_broken_links_and_anchors_fail(checkout, link, message):
         docs.run(checkout)
 
 
-def test_disconnected_document_cycle_is_not_findable(checkout):
-    (checkout / "README.md").write_text("# Project\n")
-    with pytest.raises(docs.DocumentationError, match="unreachable from README"):
+def test_html_index_cannot_hide_missing_obsidian_link(checkout):
+    (checkout / "README.md").write_text("# Project\n[Browse](docs/file-tree.html)\n")
+    with pytest.raises(docs.DocumentationError, match=r"missing=\['docs/module.md'\]"):
+        docs.run(checkout)
+
+
+def test_backlink_to_root_creates_a_cycle(checkout):
+    with (checkout / "docs/module.md").open("a") as output:
+        output.write("\n[Back to\n the parent](../README.md)\n")
+    with pytest.raises(docs.DocumentationError, match=r"extra=\['README.md'\]"):
+        docs.run(checkout)
+
+
+def test_second_parent_is_rejected_even_if_all_notes_are_findable(checkout):
+    (checkout / "docs/other.md").write_text("# Other\n[Module](module.md)\n")
+    with (checkout / "README.md").open("a") as output:
+        output.write("\n[Other](docs/other.md)\n")
+    change_tree(checkout, lambda d: d["root"]["children"].append(
+        {"id": "other", "title": "Other", "doc": "docs/other.md", "files": []}
+    ))
+    with pytest.raises(docs.DocumentationError, match=r"docs/other\.md:.*extra=\['docs/module.md'\]"):
+        docs.run(checkout)
+
+
+def test_note_and_heading_links_with_encoded_spaces(checkout):
+    (checkout / "docs/module.md").rename(checkout / "docs/module guide.md")
+    (checkout / "README.md").write_text("# Project\n[Start](docs/module%20guide.md#Use%20RuntimePorts)\n")
+    with (checkout / "docs/module guide.md").open("a") as output:
+        output.write("\n## Use `RuntimePorts`\n[This section](#Use%20RuntimePorts)\n")
+    change_tree(checkout, lambda d: d["root"]["children"][0].update(doc="docs/module guide.md"))
+    assert docs.run(checkout).startswith("Documentation OK")
+
+
+def test_wikilink_cannot_bypass_tree_validation(checkout):
+    with (checkout / "docs/module.md").open("a") as output:
+        output.write("\n[[README|Parent]]\n")
+    with pytest.raises(docs.DocumentationError, match="instead of wikilinks"):
+        docs.run(checkout)
+
+
+def test_note_link_to_upstream_adds_an_edge_outside_the_tree(checkout):
+    with (checkout / "README.md").open("a") as output:
+        output.write(f"\n[Upstream note]({docs.EXTERNAL[0]}/README.md)\n")
+    with pytest.raises(docs.DocumentationError, match="outside the maintained tree"):
         docs.run(checkout)
 
 
@@ -151,18 +192,18 @@ def test_ignored_runtime_state_and_external_code_are_outside_inventory(checkout)
 
 
 def test_embedded_tree_data_cannot_break_out_of_json_script(checkout):
-    change_tree(checkout, lambda d: d["root"]["children"][1].update(title="</script><script>bad()</script>"))
+    change_tree(checkout, lambda d: d["root"]["children"][0].update(title="</script><script>bad()</script>"))
     docs.run(checkout)
     output = (checkout / docs.OUTPUT).read_text()
     assert "<script>bad()" not in output
     embedded = output.split('type="application/json">')[1].split("</script>")[0]
-    assert json.loads(embedded)["root"]["children"][1]["title"] == "</script><script>bad()</script>"
+    assert json.loads(embedded)["root"]["children"][0]["title"] == "</script><script>bad()</script>"
 
 
 def test_maintained_html_anchor_is_checked_and_template_is_not_a_rendered_page(checkout):
     page = checkout / "docs/example.html"
     page.write_text('<div id="actual"></div><a href="#missing">broken</a>')
-    change_tree(checkout, lambda d: d["root"]["children"][1]["files"].append("docs/example.html"))
+    change_tree(checkout, lambda d: d["root"]["children"][0]["files"].append("docs/example.html"))
     with (checkout / "docs/module.md").open("a") as output:
         output.write('\n[HTML](example.html)\n')
     with pytest.raises(docs.DocumentationError, match="missing anchor"):

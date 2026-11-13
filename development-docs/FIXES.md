@@ -2,7 +2,7 @@
 
 This is the repository's durable record of fixes and the reasoning they must
 preserve. Every agent must read it before starting repository work and update it
-before finishing or handing off. [The root agent instructions](../AGENTS.md)
+before finishing or handing off. The root agent instructions (`AGENTS.md`)
 establish that requirement for this repository.
 
 ## Maintenance rules
@@ -10,7 +10,7 @@ establish that requirement for this repository.
 - Append an entry for each independent fix. For work that only investigates an
   issue, record its findings and explicitly say no implementation changed.
 - Use the next unused `FIX-NNNN` ID, an ISO date, a descriptive title, and a status.
-  Use the user's local date when available. Keep IDs and existing links stable.
+  Use the user's local date when available. Keep stable IDs and existing anchors.
 - Explain the symptom, root cause, implementation, and design principle
   separately. A file list or "fixed the bug" is not an explanation.
 - State which layer owns the decision. Keep application policy in its agent;
@@ -27,10 +27,10 @@ establish that requirement for this repository.
 - Preserve earlier entries. Add an explicit correction or superseding entry
   when the explanation or design changes. Do not erase failed approaches or
   unresolved limits that are needed to understand a recurrence.
-- Keep detailed investigations in
-  [current-iter-issues.md](current-iter-issues.md) and other relevant development
-  notes, and link them here. Those notes remain historical evidence; this file
-  is the required starting point and index of fixes going forward.
+- Put open tasks under `development-docs/current-iter-issues.md`. Keep detailed
+  investigations in dated notes under `docs/temporary/` and cite their paths here.
+  Use same-note links for related FIX entries and repo-relative code spans for
+  other notes, so evidence citations do not add edges to the Obsidian tree.
 
 FIX-0001 through FIX-0004 were established from this chat on 2026-10-19.
 The historical backfill in FIX-0005 through FIX-0041 was added afterward from
@@ -50,178 +50,191 @@ not cover the later provider's enclosing-repository trigger.
 
 | ID | Date | Fix |
 | --- | --- | --- |
-| [FIX-0001](#fix-0001) | 2026-10-19 | Start a selected project inside an enclosing repository |
-| [FIX-0002](#fix-0002) | 2026-10-19 | Let the coding agent correct recoverable Git setup errors |
-| [FIX-0003](#fix-0003) | 2026-10-19 | Let the coding agent repair failed dependency preparation |
-| [FIX-0004](#fix-0004) | 2026-10-19 | Require agents to read and maintain a durable fix history |
-| [FIX-0005](#fix-0005) | 2026-10-16 | Preserve the editable graph while clarifying views and labels |
-| [FIX-0006](#fix-0006) | 2026-10-17 | Recover graph information lost across design versions |
-| [FIX-0007](#fix-0007) | 2026-10-17 | Define portable contracts and close agent/OS handoff gaps |
-| [FIX-0008](#fix-0008) | 2026-10-17 | Make design review inspectable and keep translations as data |
-| [FIX-0009](#fix-0009) | 2026-10-17 | Build the agent against replaceable runtime and provider interfaces |
-| [FIX-0010](#fix-0010) | 2026-10-17 | Expose run processes, project selection, exports, costs, and steering |
-| [FIX-0011](#fix-0011) | 2026-10-17 | Correct worker bindings and short demonstration budgets |
-| [FIX-0012](#fix-0012) | 2026-10-17 | Give setup and senior coders the tools needed for prerequisite work |
-| [FIX-0013](#fix-0013) | 2026-10-17 | Load saved provider credentials without executing environment files |
-| [FIX-0014](#fix-0014) | 2026-10-17 | Capture OS inspection evidence in live and saved views |
-| [FIX-0015](#fix-0015) | 2026-10-18 | Keep generated projects and runtime history out of version control |
-| [FIX-0016](#fix-0016) | 2026-10-18 | Use one serializer for manual save and rolling run archives |
-| [FIX-0017](#fix-0017) | 2026-10-18 | Relax the existing-directory prerequisite for starting a project |
-| [FIX-0018](#fix-0018) | 2026-10-18 | Make successful and failed launches visible and exportable |
-| [FIX-0019](#fix-0019) | 2026-10-18 | Let the coding agent discover an omitted check command |
-| [FIX-0020](#fix-0020) | 2026-10-18 | Report core run and task events in the UI server terminal |
-| [FIX-0021](#fix-0021) | 2026-10-18 | Deliver accepted artifacts instead of leaving results only in private state |
-| [FIX-0022](#fix-0022) | 2026-10-18 | Allow processes to finish without code, Git, or coding reports |
-| [FIX-0023](#fix-0023) | 2026-10-18 | Represent phase transitions as current host requests |
-| [FIX-0024](#fix-0024) | 2026-10-18 | Retain structured provider failure facts |
-| [FIX-0025](#fix-0025) | 2026-10-18 | Preserve effective authority and full requirements through task handoffs |
-| [FIX-0026](#fix-0026) | 2026-10-18 | Stop non-actionable planning and repeated known failures |
-| [FIX-0027](#fix-0027) | 2026-10-18 | Recover a known failed model operation with a new linked intent |
-| [FIX-0028](#fix-0028) | 2026-10-19 | Bound retained native telemetry without aborting healthy generation |
-| [FIX-0029](#fix-0029) | 2026-10-19 | Keep reporting failures from replacing execution outcomes |
-| [FIX-0030](#fix-0030) | 2026-10-19 | Recover bounded incomplete model output without executing partial JSON |
-| [FIX-0031](#fix-0031) | 2026-10-19 | Keep tool home/cache housekeeping outside source authority |
-| [FIX-0032](#fix-0032) | 2026-10-19 | Move coding grammar and policy out of generic OS dispatch |
-| [FIX-0033](#fix-0033) | 2026-10-19 | Validate agent lifecycle updates and preserve long diagnostic notes |
-| [FIX-0034](#fix-0034) | 2026-10-19 | Separate declared build outputs from protected source |
-| [FIX-0035](#fix-0035) | 2026-10-19 | Preserve dependencies across workspace generations |
-| [FIX-0036](#fix-0036) | 2026-10-19 | Verify native harness permissions and detect unbrokered edits |
-| [FIX-0037](#fix-0037) | 2026-10-19 | Separate OS monitoring from agent task and review history |
-| [FIX-0038](#fix-0038) | 2026-10-19 | Provide generic durable agent-to-user messages |
-| [FIX-0039](#fix-0039) | 2026-10-19 | Request evidence-based sprint briefs and working-commit claims |
-| [FIX-0040](#fix-0040) | 2026-10-19 | Work and integrate in the user's actual repository by default |
-| [FIX-0041](#fix-0041) | 2026-10-19 | Record remaining run-quality and generalization findings without calling them fixed |
-| [FIX-0042](#fix-0042) | 2026-10-19 | Backfill the fix ledger from past repository chats |
-| [FIX-0043](#fix-0043) | 2026-10-19 | Diagnose a completed model response with no visible text |
-| [FIX-0044](#fix-0044) | 2026-10-20 | Retain facts for unusable completed model responses |
-| [FIX-0045](#fix-0045) | 2026-10-20 | Filter safe one-off model failures with durable OS retries |
-| [FIX-0046](#fix-0046) | 2026-10-20 | Scope permanent-failure containment to the request being repaired |
-| [FIX-0047](#fix-0047) | 2026-10-20 | Keep OS retries separate from application recovery allowances |
-| [FIX-0048](#fix-0048) | 2026-10-20 | Document the Codex and serial Haiku tester setup |
-| [FIX-0049](#fix-0049) | 2026-10-20 | Diagnose context-packing overflow after gameplay recovery |
-| [FIX-0050](#fix-0050) | 2026-10-20 | Audit input and output cap safeguards across inference adapters |
-| [FIX-0051](#fix-0051) | 2026-10-20 | Propose bounded OS recovery for inference overflow |
-| [FIX-0052](#fix-0052) | 2026-10-20 | Separate OS overflow guarantees from reusable agent recovery policy |
-| [FIX-0053](#fix-0053) | 2026-10-20 | Propose agent-controlled OS context handling and optional compaction |
-| [FIX-0054](#fix-0054) | 2026-10-20 | Defer the shared library and assign current fixes to OS or agent |
-| [FIX-0055](#fix-0055) | 2026-10-20 | Implement OS context and output recovery; final verification pending |
-| [FIX-0056](#fix-0056) | 2026-10-20 | Consolidate exported OS settings and coding configuration |
-| [FIX-0057](#fix-0057) | 2026-10-20 | Preserve interrupted coding edits and improve scope/evidence handling |
-| [FIX-0058](#fix-0058) | 2026-10-20 | Complete OS I/O safety and compaction verification |
-| [FIX-0059](#fix-0059) | 2026-10-20 | Finish the unified OS settings reference and grouped validation |
-| [FIX-0060](#fix-0060) | 2026-10-20 | Verify interrupted-source handoff and consecutive correction policy |
-| [FIX-0061](#fix-0061) | 2026-10-20 | Research concurrent Claude requests for local inference simulation |
-| [FIX-0062](#fix-0062) | 2026-10-20 | Inspect UI memory visibility and propose an OS context drawer |
-| [FIX-0063](#fix-0063) | 2026-10-20 | Design a launch-scoped UI batch simulation flag |
-| [FIX-0064](#fix-0064) | 2026-10-20 | Design OS memory and effective-context inspection for this version |
-| [FIX-0065](#fix-0065) | 2026-10-20 | Clarify Codex proxy authentication and plan usage |
-| [FIX-0066](#fix-0066) | 2026-10-20 | Audit current memory implementation and management ownership |
-| [FIX-0067](#fix-0067) | 2026-10-20 | Trace coding-agent concurrency and OS admission ownership |
-| [FIX-0068](#fix-0068) | 2026-10-20 | Analyze an interrupted native inventory repair and retained progress |
-| [FIX-0069](#fix-0069) | 2026-10-20 | Assess single-thread compatibility and find inconsistent worker-cap routing |
-| [FIX-0070](#fix-0070) | 2026-10-20 | Measure historical memory pressure and OS context interventions |
-| [FIX-0071](#fix-0071) | 2026-10-20 | Record a current-version OS concurrency and deadlock audit |
-| [FIX-0072](#fix-0072) | 2026-10-20 | Align current OS and agent documentation with justified revisions |
-| [FIX-0073](#fix-0073) | 2026-10-20 | Record automatic and explicit memory management for this version |
-| [FIX-0074](#fix-0074) | 2026-10-20 | Confirm the current UI setting for two Claude requests |
-| [FIX-0075](#fix-0075) | 2026-10-20 | Raise Haiku generation and OS output limits to 32k |
-| [FIX-0076](#fix-0076) | 2026-10-20 | Triple the UI and mixed-example sprint allowance |
-| [FIX-0077](#fix-0077) | 2026-10-20 | Analyze the first two-slot run and record recovery/concurrency findings |
-| [FIX-0078](#fix-0078) | 2026-10-20 | Locate and summarize the current-version implementation tracker |
-| [FIX-0079](#fix-0079) | 2026-10-20 | Assess evidence, implementation readiness and ownership of seven backlog items |
-| [FIX-0080](#fix-0080) | 2026-10-20 | Add concise module docs and a complete human/agent navigation tree |
-| [FIX-0081](#fix-0081) | 2026-10-21 | Reassess unfinished older backlog items against current implementation |
-| [FIX-0082](#fix-0082) | 2026-10-21 | Preserve a tested current-version checkpoint and schedule sequential fixes |
-| [FIX-0083](#fix-0083) | 2026-10-21 | Wait at the effective coding-worker capacity |
-| [FIX-0084](#fix-0084) | 2026-10-21 | Retain cancelled development starts in accounting and allocation |
-| [FIX-0085](#fix-0085) | 2026-10-21 | Preserve caller grammar in generic output recovery |
-| [FIX-0086](#fix-0086) | 2026-10-21 | Separate setup prerequisites from final product acceptance |
-| [FIX-0087](#fix-0087) | 2026-10-21 | Record future learned routing and quota-aware task scheduling (ID corrected from duplicate 0085) |
-| [FIX-0088](#fix-0088) | 2026-10-21 | Declare shared-check preparation owners before parallel dispatch |
-| [FIX-0089](#fix-0089) | 2026-10-21 | Make explicit retained-source handoff actionable during planning |
-| [FIX-0090](#fix-0090) | 2026-10-21 | Separate inherited ancestry from accepted task contributions |
-| [FIX-0091](#fix-0091) | 2026-10-21 | Inspect retained original and effective OS context with provenance |
-| [FIX-0092](#fix-0092) | 2026-10-21 | Add an invocation-only remote Haiku simulation preset |
-| [FIX-0093](#fix-0093) | 2026-10-21 | Verify and close the nine-item current-version implementation queue |
-| [FIX-0094](#fix-0094) | 2026-10-21 | Recheck queue documentation and correct missed overview/settings references |
-| [FIX-0095](#fix-0095) | 2026-10-21 | Propose optional local-inference latency and fault simulation |
-| [FIX-0096](#fix-0096) | 2026-10-21 | Add opt-in shared-TPS and fault simulation without changing normal launches |
-| [FIX-0097](#fix-0097) | 2026-10-21 | Recover the exact saved Minecraft test prompt |
-| [FIX-0098](#fix-0098) | 2026-10-21 | Confirm automatic project documentation instructions and their limits |
-| [FIX-0099](#fix-0099) | 2026-10-21 | Create a source-backed illustrated developer onboarding guide |
-| [FIX-0100](#fix-0100) | 2026-10-21 | Diagnose a Haiku timeout boundary after a retained foundation handoff |
-| [FIX-0101](#fix-0101) | 2026-10-21 | Lead developer onboarding with the project vision and impact |
-| [FIX-0102](#fix-0102) | 2026-10-21 | Resume a selected paused process with optional steering from the UI |
-| [FIX-0103](#fix-0103) | 2026-10-21 | Verify the implemented scope of endpoint retries and UI recovery |
-| [FIX-0104](#fix-0104) | 2026-10-21 | Explain the local-cloud Agent OS premise and shorten developer onboarding |
-| [FIX-0105](#fix-0105) | 2026-10-21 | Expose resume beside the selected paused run |
-| [FIX-0106](#fix-0106) | 2026-10-22 | Preserve the agent-router distillation tutorial and link both version trackers |
-| [FIX-0107](#fix-0107) | 2026-10-22 | Add a navigable HTML learning guide for router distillation and RLAIF |
-| [FIX-0108](#fix-0108) | 2026-10-22 | Compare Flash-Next Coder with the earlier coding shortlist |
-| [FIX-0109](#fix-0109) | 2026-10-22 | Estimate Coder memory, speed and batching on the reported laptop |
-| [FIX-0110](#fix-0110) | 2026-10-23 | Design one-click run resume across frontend, agent and OS |
-| [FIX-0111](#fix-0111) | 2026-10-23 | Make Resume run directly through frontend, agent and OS |
-| [FIX-0112](#fix-0112) | 2026-10-23 | Count retries and assess the saved Haiku timeout pause |
-| [FIX-0113](#fix-0113) | 2026-10-23 | Explain recurring Claude pauses against official transport guidance |
-| [FIX-0114](#fix-0114) | 2026-10-23 | Propose portable endpoint resilience and faster failure testing |
-| [FIX-0115](#fix-0115) | 2026-10-23 | Split endpoint resilience into agent policy and independent OS mechanisms |
-| [FIX-0116](#fix-0116) | 2026-10-23 | Establish shared human and agent onboarding with required project memory |
-| [FIX-0117](#fix-0117) | 2026-10-23 | Implement bounded streaming lifecycle and native/caller retry policy |
-| [FIX-0118](#fix-0118) | 2026-10-23 | Add explicit endpoint profiles, generic warm-up and timing inspection |
-| [FIX-0119](#fix-0119) | 2026-10-23 | Move workspace scope errors to the public agent/OS port |
-| [FIX-0127](#fix-0127) | 2026-10-26 | Integrate reliability fixes into the simple OS branch |
-| [FIX-0128](#fix-0128) | 2026-10-26 | Establish real local Strata setup and mixed-lane capacity evidence |
-| [FIX-0129](#fix-0129) | 2026-10-27 | Correct documentation drift and assess retained workflow reliability |
-| [FIX-0130](#fix-0130) | 2026-10-27 | Explain long-run stopping rules and management qualification gates |
-| [FIX-0131](#fix-0131) | 2026-10-27 | Verify preserved cloud-resolution fixes and distinguish review from repair |
-| [FIX-0132](#fix-0132) | 2026-10-27 | Make local stalls transfer to bounded cloud coding and narrow planner assignments |
-| [FIX-0133](#fix-0133) | 2026-10-27 | Plan remaining reliability fixes by ownership and map historical failure coverage |
-| [FIX-0134](#fix-0134) | 2026-10-27 | Enforce static process data/allocation policy and uniform limits |
-| [FIX-0135](#fix-0135) | 2026-10-27 | Retain paused residency until explicit safe hibernation |
-| [FIX-0136](#fix-0136) | 2026-10-27 | Preserve bounded worker state and condition response repair on real errors |
-| [FIX-0137](#fix-0137) | 2026-10-27 | Retarget unstarted recovery consumers without new resource accounts |
-| [FIX-0138](#fix-0138) | 2026-10-27 | Add reproducible workflow qualification and physical-attempt metrics |
-| [FIX-0139](#fix-0139) | 2026-10-27 | Validate maintained HTML/settings and correct smoke/baseline fixtures |
-| [FIX-0140](#fix-0140) | 2026-10-27 | Remove conflicting native startup effort from the UI preset |
-| [FIX-0141](#fix-0141) | 2026-10-27 | Bound replacement host drivers by the original account deadline |
-| [FIX-0142](#fix-0142) | 2026-10-27 | Preflight browser qualification in the actual check environment |
-| [FIX-0143](#fix-0143) | 2026-10-27 | Trigger qualification interruption after settled patch operations |
-| [FIX-0144](#fix-0144) | 2026-10-27 | Include direct native worker effects in physical job reporting |
-| [FIX-0145](#fix-0145) | 2026-10-27 | Keep bounded worker-state eviction replay idempotent |
-| [FIX-0146](#fix-0146) | 2026-10-27 | Keep endpoint probing compatible with mandatory placement policy |
-| [FIX-0147](#fix-0147) | 2026-10-27 | Prepare the scheduled real-local Minecraft test without early inference |
-| [FIX-0148](#fix-0148) | 2026-10-28 | Record the scheduled live result and preserve checked partial delivery |
-| [FIX-0149](#fix-0149) | 2026-10-28 | Isolate Minecraft live failures against frozen source and canonical evidence |
-| [FIX-0150](#fix-0150) | 2026-10-28 | Verify no-edit task necessity and trace current context and worker-state behavior |
+| [FIX-0001](#FIX-0001%20%E2%80%94%202026-10-19%20%E2%80%94%20Start%20a%20selected%20project%20inside%20an%20enclosing%20repository) | 2026-10-19 | Start a selected project inside an enclosing repository |
+| [FIX-0002](#FIX-0002%20%E2%80%94%202026-10-19%20%E2%80%94%20Let%20the%20coding%20agent%20correct%20recoverable%20Git%20setup%20errors) | 2026-10-19 | Let the coding agent correct recoverable Git setup errors |
+| [FIX-0003](#FIX-0003%20%E2%80%94%202026-10-19%20%E2%80%94%20Let%20the%20coding%20agent%20repair%20failed%20dependency%20preparation) | 2026-10-19 | Let the coding agent repair failed dependency preparation |
+| [FIX-0004](#FIX-0004%20%E2%80%94%202026-10-19%20%E2%80%94%20Require%20agents%20to%20read%20and%20maintain%20a%20durable%20fix%20history) | 2026-10-19 | Require agents to read and maintain a durable fix history |
+| [FIX-0005](#FIX-0005%20%E2%80%94%202026-10-16%20%E2%80%94%20Preserve%20the%20editable%20graph%20while%20clarifying%20views%20and%20labels) | 2026-10-16 | Preserve the editable graph while clarifying views and labels |
+| [FIX-0006](#FIX-0006%20%E2%80%94%202026-10-17%20%E2%80%94%20Recover%20graph%20information%20lost%20across%20design%20versions) | 2026-10-17 | Recover graph information lost across design versions |
+| [FIX-0007](#FIX-0007%20%E2%80%94%202026-10-17%20%E2%80%94%20Define%20portable%20contracts%20and%20close%20agent%2FOS%20handoff%20gaps) | 2026-10-17 | Define portable contracts and close agent/OS handoff gaps |
+| [FIX-0008](#FIX-0008%20%E2%80%94%202026-10-17%20%E2%80%94%20Make%20design%20review%20inspectable%20and%20keep%20translations%20as%20data) | 2026-10-17 | Make design review inspectable and keep translations as data |
+| [FIX-0009](#FIX-0009%20%E2%80%94%202026-10-17%20%E2%80%94%20Build%20the%20agent%20against%20replaceable%20runtime%20and%20provider%20interfaces) | 2026-10-17 | Build the agent against replaceable runtime and provider interfaces |
+| [FIX-0010](#FIX-0010%20%E2%80%94%202026-10-17%20%E2%80%94%20Expose%20run%20processes%2C%20project%20selection%2C%20exports%2C%20costs%2C%20and%20steering) | 2026-10-17 | Expose run processes, project selection, exports, costs, and steering |
+| [FIX-0011](#FIX-0011%20%E2%80%94%202026-10-17%20%E2%80%94%20Correct%20worker%20bindings%20and%20short%20demonstration%20budgets) | 2026-10-17 | Correct worker bindings and short demonstration budgets |
+| [FIX-0012](#FIX-0012%20%E2%80%94%202026-10-17%20%E2%80%94%20Give%20setup%20and%20senior%20coders%20the%20tools%20needed%20for%20prerequisite%20work) | 2026-10-17 | Give setup and senior coders the tools needed for prerequisite work |
+| [FIX-0013](#FIX-0013%20%E2%80%94%202026-10-17%20%E2%80%94%20Load%20saved%20provider%20credentials%20without%20executing%20environment%20files) | 2026-10-17 | Load saved provider credentials without executing environment files |
+| [FIX-0014](#FIX-0014%20%E2%80%94%202026-10-17%20%E2%80%94%20Capture%20OS%20inspection%20evidence%20in%20live%20and%20saved%20views) | 2026-10-17 | Capture OS inspection evidence in live and saved views |
+| [FIX-0015](#FIX-0015%20%E2%80%94%202026-10-18%20%E2%80%94%20Keep%20generated%20projects%20and%20runtime%20history%20out%20of%20version%20control) | 2026-10-18 | Keep generated projects and runtime history out of version control |
+| [FIX-0016](#FIX-0016%20%E2%80%94%202026-10-18%20%E2%80%94%20Use%20one%20serializer%20for%20manual%20save%20and%20rolling%20run%20archives) | 2026-10-18 | Use one serializer for manual save and rolling run archives |
+| [FIX-0017](#FIX-0017%20%E2%80%94%202026-10-18%20%E2%80%94%20Relax%20the%20existing-directory%20prerequisite%20for%20starting%20a%20project) | 2026-10-18 | Relax the existing-directory prerequisite for starting a project |
+| [FIX-0018](#FIX-0018%20%E2%80%94%202026-10-18%20%E2%80%94%20Make%20successful%20and%20failed%20launches%20visible%20and%20exportable) | 2026-10-18 | Make successful and failed launches visible and exportable |
+| [FIX-0019](#FIX-0019%20%E2%80%94%202026-10-18%20%E2%80%94%20Let%20the%20coding%20agent%20discover%20an%20omitted%20check%20command) | 2026-10-18 | Let the coding agent discover an omitted check command |
+| [FIX-0020](#FIX-0020%20%E2%80%94%202026-10-18%20%E2%80%94%20Report%20core%20run%20and%20task%20events%20in%20the%20UI%20server%20terminal) | 2026-10-18 | Report core run and task events in the UI server terminal |
+| [FIX-0021](#FIX-0021%20%E2%80%94%202026-10-18%20%E2%80%94%20Deliver%20accepted%20artifacts%20instead%20of%20leaving%20results%20only%20in%20private%20state) | 2026-10-18 | Deliver accepted artifacts instead of leaving results only in private state |
+| [FIX-0022](#FIX-0022%20%E2%80%94%202026-10-18%20%E2%80%94%20Allow%20processes%20to%20finish%20without%20code%2C%20Git%2C%20or%20coding%20reports) | 2026-10-18 | Allow processes to finish without code, Git, or coding reports |
+| [FIX-0023](#FIX-0023%20%E2%80%94%202026-10-18%20%E2%80%94%20Represent%20phase%20transitions%20as%20current%20host%20requests) | 2026-10-18 | Represent phase transitions as current host requests |
+| [FIX-0024](#FIX-0024%20%E2%80%94%202026-10-18%20%E2%80%94%20Retain%20structured%20provider%20failure%20facts) | 2026-10-18 | Retain structured provider failure facts |
+| [FIX-0025](#FIX-0025%20%E2%80%94%202026-10-18%20%E2%80%94%20Preserve%20effective%20authority%20and%20full%20requirements%20through%20task%20handoffs) | 2026-10-18 | Preserve effective authority and full requirements through task handoffs |
+| [FIX-0026](#FIX-0026%20%E2%80%94%202026-10-18%20%E2%80%94%20Stop%20non-actionable%20planning%20and%20repeated%20known%20failures) | 2026-10-18 | Stop non-actionable planning and repeated known failures |
+| [FIX-0027](#FIX-0027%20%E2%80%94%202026-10-18%20%E2%80%94%20Recover%20a%20known%20failed%20model%20operation%20with%20a%20new%20linked%20intent) | 2026-10-18 | Recover a known failed model operation with a new linked intent |
+| [FIX-0028](#FIX-0028%20%E2%80%94%202026-10-19%20%E2%80%94%20Bound%20retained%20native%20telemetry%20without%20aborting%20healthy%20generation) | 2026-10-19 | Bound retained native telemetry without aborting healthy generation |
+| [FIX-0029](#FIX-0029%20%E2%80%94%202026-10-19%20%E2%80%94%20Keep%20reporting%20failures%20from%20replacing%20execution%20outcomes) | 2026-10-19 | Keep reporting failures from replacing execution outcomes |
+| [FIX-0030](#FIX-0030%20%E2%80%94%202026-10-19%20%E2%80%94%20Recover%20bounded%20incomplete%20model%20output%20without%20executing%20partial%20JSON) | 2026-10-19 | Recover bounded incomplete model output without executing partial JSON |
+| [FIX-0031](#FIX-0031%20%E2%80%94%202026-10-19%20%E2%80%94%20Keep%20tool%20home%2Fcache%20housekeeping%20outside%20source%20authority) | 2026-10-19 | Keep tool home/cache housekeeping outside source authority |
+| [FIX-0032](#FIX-0032%20%E2%80%94%202026-10-19%20%E2%80%94%20Move%20coding%20grammar%20and%20policy%20out%20of%20generic%20OS%20dispatch) | 2026-10-19 | Move coding grammar and policy out of generic OS dispatch |
+| [FIX-0033](#FIX-0033%20%E2%80%94%202026-10-19%20%E2%80%94%20Validate%20agent%20lifecycle%20updates%20and%20preserve%20long%20diagnostic%20notes) | 2026-10-19 | Validate agent lifecycle updates and preserve long diagnostic notes |
+| [FIX-0034](#FIX-0034%20%E2%80%94%202026-10-19%20%E2%80%94%20Separate%20declared%20build%20outputs%20from%20protected%20source) | 2026-10-19 | Separate declared build outputs from protected source |
+| [FIX-0035](#FIX-0035%20%E2%80%94%202026-10-19%20%E2%80%94%20Preserve%20dependencies%20across%20workspace%20generations) | 2026-10-19 | Preserve dependencies across workspace generations |
+| [FIX-0036](#FIX-0036%20%E2%80%94%202026-10-19%20%E2%80%94%20Verify%20native%20harness%20permissions%20and%20detect%20unbrokered%20edits) | 2026-10-19 | Verify native harness permissions and detect unbrokered edits |
+| [FIX-0037](#FIX-0037%20%E2%80%94%202026-10-19%20%E2%80%94%20Separate%20OS%20monitoring%20from%20agent%20task%20and%20review%20history) | 2026-10-19 | Separate OS monitoring from agent task and review history |
+| [FIX-0038](#FIX-0038%20%E2%80%94%202026-10-19%20%E2%80%94%20Provide%20generic%20durable%20agent-to-user%20messages) | 2026-10-19 | Provide generic durable agent-to-user messages |
+| [FIX-0039](#FIX-0039%20%E2%80%94%202026-10-19%20%E2%80%94%20Request%20evidence-based%20sprint%20briefs%20and%20working-commit%20claims) | 2026-10-19 | Request evidence-based sprint briefs and working-commit claims |
+| [FIX-0040](#FIX-0040%20%E2%80%94%202026-10-19%20%E2%80%94%20Work%20and%20integrate%20in%20the%20user%27s%20actual%20repository%20by%20default) | 2026-10-19 | Work and integrate in the user's actual repository by default |
+| [FIX-0041](#FIX-0041%20%E2%80%94%202026-10-19%20%E2%80%94%20Record%20remaining%20run-quality%20and%20generalization%20findings%20without%20calling%20them%20fixed) | 2026-10-19 | Record remaining run-quality and generalization findings without calling them fixed |
+| [FIX-0042](#FIX-0042%20%E2%80%94%202026-10-19%20%E2%80%94%20Backfill%20the%20fix%20ledger%20from%20past%20repository%20chats) | 2026-10-19 | Backfill the fix ledger from past repository chats |
+| [FIX-0043](#FIX-0043%20%E2%80%94%202026-10-19%20%E2%80%94%20Diagnose%20a%20completed%20model%20response%20with%20no%20visible%20text) | 2026-10-19 | Diagnose a completed model response with no visible text |
+| [FIX-0044](#FIX-0044%20%E2%80%94%202026-10-20%20%E2%80%94%20Retain%20facts%20for%20unusable%20completed%20model%20responses) | 2026-10-20 | Retain facts for unusable completed model responses |
+| [FIX-0045](#FIX-0045%20%E2%80%94%202026-10-20%20%E2%80%94%20Filter%20safe%20one-off%20model%20failures%20with%20durable%20OS%20retries) | 2026-10-20 | Filter safe one-off model failures with durable OS retries |
+| [FIX-0046](#FIX-0046%20%E2%80%94%202026-10-20%20%E2%80%94%20Scope%20permanent-failure%20containment%20to%20the%20request%20being%20repaired) | 2026-10-20 | Scope permanent-failure containment to the request being repaired |
+| [FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances) | 2026-10-20 | Keep OS retries separate from application recovery allowances |
+| [FIX-0048](#FIX-0048%20%E2%80%94%202026-10-20%20%E2%80%94%20Document%20the%20Codex%20and%20serial%20Haiku%20tester%20setup) | 2026-10-20 | Document the Codex and serial Haiku tester setup |
+| [FIX-0049](#FIX-0049%20%E2%80%94%202026-10-20%20%E2%80%94%20Diagnose%20context-packing%20overflow%20after%20gameplay%20recovery) | 2026-10-20 | Diagnose context-packing overflow after gameplay recovery |
+| [FIX-0050](#FIX-0050%20%E2%80%94%202026-10-20%20%E2%80%94%20Audit%20input%20and%20output%20cap%20safeguards%20across%20inference%20adapters) | 2026-10-20 | Audit input and output cap safeguards across inference adapters |
+| [FIX-0051](#FIX-0051%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20bounded%20OS%20recovery%20for%20inference%20overflow) | 2026-10-20 | Propose bounded OS recovery for inference overflow |
+| [FIX-0052](#FIX-0052%20%E2%80%94%202026-10-20%20%E2%80%94%20Separate%20OS%20overflow%20guarantees%20from%20reusable%20agent%20recovery%20policy) | 2026-10-20 | Separate OS overflow guarantees from reusable agent recovery policy |
+| [FIX-0053](#FIX-0053%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20agent-controlled%20OS%20context%20handling%20and%20optional%20compaction) | 2026-10-20 | Propose agent-controlled OS context handling and optional compaction |
+| [FIX-0054](#FIX-0054%20%E2%80%94%202026-10-20%20%E2%80%94%20Defer%20the%20shared%20library%20and%20assign%20current%20fixes%20to%20OS%20or%20agent) | 2026-10-20 | Defer the shared library and assign current fixes to OS or agent |
+| [FIX-0055](#FIX-0055%20%E2%80%94%202026-10-20%20%E2%80%94%20Implement%20OS%20context%20and%20output%20recovery%3B%20final%20verification%20pending) | 2026-10-20 | Implement OS context and output recovery; final verification pending |
+| [FIX-0056](#FIX-0056%20%E2%80%94%202026-10-20%20%E2%80%94%20Consolidate%20exported%20OS%20settings%20and%20coding%20configuration) | 2026-10-20 | Consolidate exported OS settings and coding configuration |
+| [FIX-0057](#FIX-0057%20%E2%80%94%202026-10-20%20%E2%80%94%20Preserve%20interrupted%20coding%20edits%20and%20improve%20scope%2Fevidence%20handling) | 2026-10-20 | Preserve interrupted coding edits and improve scope/evidence handling |
+| [FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification) | 2026-10-20 | Complete OS I/O safety and compaction verification |
+| [FIX-0059](#FIX-0059%20%E2%80%94%202026-10-20%20%E2%80%94%20Finish%20the%20unified%20OS%20settings%20reference%20and%20grouped%20validation) | 2026-10-20 | Finish the unified OS settings reference and grouped validation |
+| [FIX-0060](#FIX-0060%20%E2%80%94%202026-10-20%20%E2%80%94%20Verify%20interrupted-source%20handoff%20and%20consecutive%20correction%20policy) | 2026-10-20 | Verify interrupted-source handoff and consecutive correction policy |
+| [FIX-0061](#FIX-0061%20%E2%80%94%202026-10-20%20%E2%80%94%20Research%20concurrent%20Claude%20requests%20for%20local%20inference%20simulation) | 2026-10-20 | Research concurrent Claude requests for local inference simulation |
+| [FIX-0062](#FIX-0062%20%E2%80%94%202026-10-20%20%E2%80%94%20Inspect%20UI%20memory%20visibility%20and%20propose%20an%20OS%20context%20drawer) | 2026-10-20 | Inspect UI memory visibility and propose an OS context drawer |
+| [FIX-0063](#FIX-0063%20%E2%80%94%202026-10-20%20%E2%80%94%20Design%20a%20launch-scoped%20UI%20batch%20simulation%20flag) | 2026-10-20 | Design a launch-scoped UI batch simulation flag |
+| [FIX-0064](#FIX-0064%20%E2%80%94%202026-10-20%20%E2%80%94%20Design%20OS%20memory%20and%20effective-context%20inspection%20for%20this%20version) | 2026-10-20 | Design OS memory and effective-context inspection for this version |
+| [FIX-0065](#FIX-0065%20%E2%80%94%202026-10-20%20%E2%80%94%20Clarify%20Codex%20proxy%20authentication%20and%20plan%20usage) | 2026-10-20 | Clarify Codex proxy authentication and plan usage |
+| [FIX-0066](#FIX-0066%20%E2%80%94%202026-10-20%20%E2%80%94%20Audit%20current%20memory%20implementation%20and%20management%20ownership) | 2026-10-20 | Audit current memory implementation and management ownership |
+| [FIX-0067](#FIX-0067%20%E2%80%94%202026-10-20%20%E2%80%94%20Trace%20coding-agent%20concurrency%20and%20OS%20admission%20ownership) | 2026-10-20 | Trace coding-agent concurrency and OS admission ownership |
+| [FIX-0068](#FIX-0068%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20an%20interrupted%20native%20inventory%20repair%20and%20retained%20progress) | 2026-10-20 | Analyze an interrupted native inventory repair and retained progress |
+| [FIX-0069](#FIX-0069%20%E2%80%94%202026-10-20%20%E2%80%94%20Assess%20single-thread%20compatibility%20and%20find%20inconsistent%20worker-cap%20routing) | 2026-10-20 | Assess single-thread compatibility and find inconsistent worker-cap routing |
+| [FIX-0070](#FIX-0070%20%E2%80%94%202026-10-20%20%E2%80%94%20Measure%20historical%20memory%20pressure%20and%20OS%20context%20interventions) | 2026-10-20 | Measure historical memory pressure and OS context interventions |
+| [FIX-0071](#FIX-0071%20%E2%80%94%202026-10-20%20%E2%80%94%20Record%20a%20current-version%20OS%20concurrency%20and%20deadlock%20audit) | 2026-10-20 | Record a current-version OS concurrency and deadlock audit |
+| [FIX-0072](#FIX-0072%20%E2%80%94%202026-10-20%20%E2%80%94%20Align%20current%20OS%20and%20agent%20documentation%20with%20justified%20revisions) | 2026-10-20 | Align current OS and agent documentation with justified revisions |
+| [FIX-0073](#FIX-0073%20%E2%80%94%202026-10-20%20%E2%80%94%20Record%20automatic%20and%20explicit%20memory%20management%20for%20this%20version) | 2026-10-20 | Record automatic and explicit memory management for this version |
+| [FIX-0074](#FIX-0074%20%E2%80%94%202026-10-20%20%E2%80%94%20Confirm%20the%20current%20UI%20setting%20for%20two%20Claude%20requests) | 2026-10-20 | Confirm the current UI setting for two Claude requests |
+| [FIX-0075](#FIX-0075%20%E2%80%94%202026-10-20%20%E2%80%94%20Raise%20Haiku%20generation%20and%20OS%20output%20limits%20to%2032k) | 2026-10-20 | Raise Haiku generation and OS output limits to 32k |
+| [FIX-0076](#FIX-0076%20%E2%80%94%202026-10-20%20%E2%80%94%20Triple%20the%20UI%20and%20mixed-example%20sprint%20allowance) | 2026-10-20 | Triple the UI and mixed-example sprint allowance |
+| [FIX-0077](#FIX-0077%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20the%20first%20two-slot%20run%20and%20record%20recovery%2Fconcurrency%20findings) | 2026-10-20 | Analyze the first two-slot run and record recovery/concurrency findings |
+| [FIX-0078](#FIX-0078%20%E2%80%94%202026-10-20%20%E2%80%94%20Locate%20and%20summarize%20the%20current-version%20implementation%20tracker) | 2026-10-20 | Locate and summarize the current-version implementation tracker |
+| [FIX-0079](#FIX-0079%20%E2%80%94%202026-10-20%20%E2%80%94%20Assess%20evidence%2C%20implementation%20readiness%20and%20ownership%20of%20seven%20backlog%20items) | 2026-10-20 | Assess evidence, implementation readiness and ownership of seven backlog items |
+| [FIX-0080](#FIX-0080%20%E2%80%94%202026-10-20%20%E2%80%94%20Add%20concise%20module%20docs%20and%20a%20complete%20human%2Fagent%20navigation%20tree) | 2026-10-20 | Add concise module docs and a complete human/agent navigation tree |
+| [FIX-0081](#FIX-0081%20%E2%80%94%202026-10-21%20%E2%80%94%20Reassess%20unfinished%20older%20backlog%20items%20against%20current%20implementation) | 2026-10-21 | Reassess unfinished older backlog items against current implementation |
+| [FIX-0082](#FIX-0082%20%E2%80%94%202026-10-21%20%E2%80%94%20Preserve%20a%20tested%20current-version%20checkpoint%20and%20schedule%20sequential%20fixes) | 2026-10-21 | Preserve a tested current-version checkpoint and schedule sequential fixes |
+| [FIX-0083](#FIX-0083%20%E2%80%94%202026-10-21%20%E2%80%94%20Wait%20at%20the%20effective%20coding-worker%20capacity) | 2026-10-21 | Wait at the effective coding-worker capacity |
+| [FIX-0084](#FIX-0084%20%E2%80%94%202026-10-21%20%E2%80%94%20Retain%20cancelled%20development%20starts%20in%20accounting%20and%20allocation) | 2026-10-21 | Retain cancelled development starts in accounting and allocation |
+| [FIX-0085](#FIX-0085%20%E2%80%94%202026-10-21%20%E2%80%94%20Preserve%20caller%20grammar%20in%20generic%20output%20recovery) | 2026-10-21 | Preserve caller grammar in generic output recovery |
+| [FIX-0086](#FIX-0086%20%E2%80%94%202026-10-21%20%E2%80%94%20Separate%20setup%20prerequisites%20from%20final%20product%20acceptance) | 2026-10-21 | Separate setup prerequisites from final product acceptance |
+| [FIX-0087](#FIX-0087%20%E2%80%94%202026-10-21%20%E2%80%94%20Record%20future%20learned%20routing%20and%20quota-aware%20task%20scheduling) | 2026-10-21 | Record future learned routing and quota-aware task scheduling (ID corrected from duplicate 0085) |
+| [FIX-0088](#FIX-0088%20%E2%80%94%202026-10-21%20%E2%80%94%20Declare%20shared-check%20preparation%20owners%20before%20parallel%20dispatch) | 2026-10-21 | Declare shared-check preparation owners before parallel dispatch |
+| [FIX-0089](#FIX-0089%20%E2%80%94%202026-10-21%20%E2%80%94%20Make%20explicit%20retained-source%20handoff%20actionable%20during%20planning) | 2026-10-21 | Make explicit retained-source handoff actionable during planning |
+| [FIX-0090](#FIX-0090%20%E2%80%94%202026-10-21%20%E2%80%94%20Separate%20inherited%20ancestry%20from%20accepted%20task%20contributions) | 2026-10-21 | Separate inherited ancestry from accepted task contributions |
+| [FIX-0091](#FIX-0091%20%E2%80%94%202026-10-21%20%E2%80%94%20Inspect%20retained%20original%20and%20effective%20OS%20context%20with%20provenance) | 2026-10-21 | Inspect retained original and effective OS context with provenance |
+| [FIX-0092](#FIX-0092%20%E2%80%94%202026-10-21%20%E2%80%94%20Add%20an%20invocation-only%20remote%20Haiku%20simulation%20preset) | 2026-10-21 | Add an invocation-only remote Haiku simulation preset |
+| [FIX-0093](#FIX-0093%20%E2%80%94%202026-10-21%20%E2%80%94%20Verify%20and%20close%20the%20nine-item%20current-version%20implementation%20queue) | 2026-10-21 | Verify and close the nine-item current-version implementation queue |
+| [FIX-0094](#FIX-0094%20%E2%80%94%202026-10-21%20%E2%80%94%20Recheck%20queue%20documentation%20and%20correct%20missed%20overview%2Fsettings%20references) | 2026-10-21 | Recheck queue documentation and correct missed overview/settings references |
+| [FIX-0095](#FIX-0095%20%E2%80%94%202026-10-21%20%E2%80%94%20Propose%20optional%20local-inference%20latency%20and%20fault%20simulation) | 2026-10-21 | Propose optional local-inference latency and fault simulation |
+| [FIX-0096](#FIX-0096%20%E2%80%94%202026-10-21%20%E2%80%94%20Add%20opt-in%20shared-TPS%20and%20fault%20simulation%20without%20changing%20normal%20launches) | 2026-10-21 | Add opt-in shared-TPS and fault simulation without changing normal launches |
+| [FIX-0097](#FIX-0097%20%E2%80%94%202026-10-21%20%E2%80%94%20Recover%20the%20exact%20saved%20Minecraft%20test%20prompt) | 2026-10-21 | Recover the exact saved Minecraft test prompt |
+| [FIX-0098](#FIX-0098%20%E2%80%94%202026-10-21%20%E2%80%94%20Confirm%20automatic%20project%20documentation%20instructions%20and%20their%20limits) | 2026-10-21 | Confirm automatic project documentation instructions and their limits |
+| [FIX-0099](#FIX-0099%20%E2%80%94%202026-10-21%20%E2%80%94%20Create%20a%20source-backed%20illustrated%20developer%20onboarding%20guide) | 2026-10-21 | Create a source-backed illustrated developer onboarding guide |
+| [FIX-0100](#FIX-0100%20%E2%80%94%202026-10-21%20%E2%80%94%20Diagnose%20a%20Haiku%20timeout%20boundary%20after%20a%20retained%20foundation%20handoff) | 2026-10-21 | Diagnose a Haiku timeout boundary after a retained foundation handoff |
+| [FIX-0101](#FIX-0101%20%E2%80%94%202026-10-21%20%E2%80%94%20Lead%20developer%20onboarding%20with%20the%20project%20vision%20and%20impact) | 2026-10-21 | Lead developer onboarding with the project vision and impact |
+| [FIX-0102](#FIX-0102%20%E2%80%94%202026-10-21%20%E2%80%94%20Resume%20a%20selected%20paused%20process%20with%20optional%20steering%20from%20the%20UI) | 2026-10-21 | Resume a selected paused process with optional steering from the UI |
+| [FIX-0103](#FIX-0103%20%E2%80%94%202026-10-21%20%E2%80%94%20Verify%20the%20implemented%20scope%20of%20endpoint%20retries%20and%20UI%20recovery) | 2026-10-21 | Verify the implemented scope of endpoint retries and UI recovery |
+| [FIX-0104](#FIX-0104%20%E2%80%94%202026-10-21%20%E2%80%94%20Explain%20the%20local-cloud%20Agent%20OS%20premise%20and%20shorten%20developer%20onboarding) | 2026-10-21 | Explain the local-cloud Agent OS premise and shorten developer onboarding |
+| [FIX-0105](#FIX-0105%20%E2%80%94%202026-10-21%20%E2%80%94%20Expose%20resume%20beside%20the%20selected%20paused%20run) | 2026-10-21 | Expose resume beside the selected paused run |
+| [FIX-0106](#FIX-0106%20%E2%80%94%202026-10-22%20%E2%80%94%20Preserve%20the%20agent-router%20distillation%20tutorial%20and%20link%20both%20version%20trackers) | 2026-10-22 | Preserve the agent-router distillation tutorial and link both version trackers |
+| [FIX-0107](#FIX-0107%20%E2%80%94%202026-10-22%20%E2%80%94%20Add%20a%20navigable%20HTML%20learning%20guide%20for%20router%20distillation%20and%20RLAIF) | 2026-10-22 | Add a navigable HTML learning guide for router distillation and RLAIF |
+| [FIX-0108](#FIX-0108%20%E2%80%94%202026-10-22%20%E2%80%94%20Compare%20Flash-Next%20Coder%20with%20the%20earlier%20coding%20shortlist) | 2026-10-22 | Compare Flash-Next Coder with the earlier coding shortlist |
+| [FIX-0109](#FIX-0109%20%E2%80%94%202026-10-22%20%E2%80%94%20Estimate%20Coder%20memory%2C%20speed%20and%20batching%20on%20the%20reported%20laptop) | 2026-10-22 | Estimate Coder memory, speed and batching on the reported laptop |
+| [FIX-0110](#FIX-0110%20%E2%80%94%202026-10-23%20%E2%80%94%20Design%20one-click%20run%20resume%20across%20frontend%2C%20agent%20and%20OS) | 2026-10-23 | Design one-click run resume across frontend, agent and OS |
+| [FIX-0111](#FIX-0111%20%E2%80%94%202026-10-23%20%E2%80%94%20Make%20Resume%20run%20directly%20through%20frontend%2C%20agent%20and%20OS) | 2026-10-23 | Make Resume run directly through frontend, agent and OS |
+| [FIX-0112](#FIX-0112%20%E2%80%94%202026-10-23%20%E2%80%94%20Count%20retries%20and%20assess%20the%20saved%20Haiku%20timeout%20pause) | 2026-10-23 | Count retries and assess the saved Haiku timeout pause |
+| [FIX-0113](#FIX-0113%20%E2%80%94%202026-10-23%20%E2%80%94%20Explain%20recurring%20Claude%20pauses%20against%20official%20transport%20guidance) | 2026-10-23 | Explain recurring Claude pauses against official transport guidance |
+| [FIX-0114](#FIX-0114%20%E2%80%94%202026-10-23%20%E2%80%94%20Propose%20portable%20endpoint%20resilience%20and%20faster%20failure%20testing) | 2026-10-23 | Propose portable endpoint resilience and faster failure testing |
+| [FIX-0115](#FIX-0115%20%E2%80%94%202026-10-23%20%E2%80%94%20Split%20endpoint%20resilience%20into%20agent%20policy%20and%20independent%20OS%20mechanisms) | 2026-10-23 | Split endpoint resilience into agent policy and independent OS mechanisms |
+| [FIX-0116](#FIX-0116%20%E2%80%94%202026-10-23%20%E2%80%94%20Establish%20shared%20human%20and%20agent%20onboarding%20with%20required%20project%20memory) | 2026-10-23 | Establish shared human and agent onboarding with required project memory |
+| [FIX-0117](#FIX-0117%20%E2%80%94%202026-10-23%20%E2%80%94%20Implement%20bounded%20streaming%20lifecycle%20and%20native%2Fcaller%20retry%20policy) | 2026-10-23 | Implement bounded streaming lifecycle and native/caller retry policy |
+| [FIX-0118](#FIX-0118%20%E2%80%94%202026-10-23%20%E2%80%94%20Add%20explicit%20endpoint%20profiles%2C%20generic%20warm-up%20and%20timing%20inspection) | 2026-10-23 | Add explicit endpoint profiles, generic warm-up and timing inspection |
+| [FIX-0119](#FIX-0119%20%E2%80%94%202026-10-23%20%E2%80%94%20Move%20workspace%20scope%20errors%20to%20the%20public%20agent%2FOS%20port) | 2026-10-23 | Move workspace scope errors to the public agent/OS port |
+| [FIX-0127](#FIX-0127%20%E2%80%94%202026-10-26%20%E2%80%94%20Integrate%20reliability%20fixes%20into%20the%20simple%20OS%20branch) | 2026-10-26 | Integrate reliability fixes into the simple OS branch |
+| [FIX-0128](#FIX-0128%20%E2%80%94%202026-10-26%20%E2%80%94%20Establish%20real%20local%20Strata%20setup%20and%20mixed-lane%20capacity%20evidence) | 2026-10-26 | Establish real local Strata setup and mixed-lane capacity evidence |
+| [FIX-0129](#FIX-0129%20%E2%80%94%202026-10-27%20%E2%80%94%20Correct%20documentation%20drift%20and%20assess%20retained%20workflow%20reliability) | 2026-10-27 | Correct documentation drift and assess retained workflow reliability |
+| [FIX-0130](#FIX-0130%20%E2%80%94%202026-10-27%20%E2%80%94%20Explain%20long-run%20stopping%20rules%20and%20management%20qualification%20gates) | 2026-10-27 | Explain long-run stopping rules and management qualification gates |
+| [FIX-0131](#FIX-0131%20%E2%80%94%202026-10-27%20%E2%80%94%20Verify%20preserved%20cloud-resolution%20fixes%20and%20distinguish%20review%20from%20repair) | 2026-10-27 | Verify preserved cloud-resolution fixes and distinguish review from repair |
+| [FIX-0132](#FIX-0132%20%E2%80%94%202026-10-27%20%E2%80%94%20Make%20local%20stalls%20transfer%20to%20bounded%20cloud%20coding%20and%20narrow%20planner%20assignments) | 2026-10-27 | Make local stalls transfer to bounded cloud coding and narrow planner assignments |
+| [FIX-0133](#FIX-0133%20%E2%80%94%202026-10-27%20%E2%80%94%20Plan%20remaining%20reliability%20fixes%20by%20ownership%20and%20map%20historical%20failure%20coverage) | 2026-10-27 | Plan remaining reliability fixes by ownership and map historical failure coverage |
+| [FIX-0134](#FIX-0134%20%E2%80%94%202026-10-27%20%E2%80%94%20Enforce%20static%20process%20data%2Fallocation%20policy%20and%20uniform%20limits) | 2026-10-27 | Enforce static process data/allocation policy and uniform limits |
+| [FIX-0135](#FIX-0135%20%E2%80%94%202026-10-27%20%E2%80%94%20Retain%20paused%20residency%20until%20explicit%20safe%20hibernation) | 2026-10-27 | Retain paused residency until explicit safe hibernation |
+| [FIX-0136](#FIX-0136%20%E2%80%94%202026-10-27%20%E2%80%94%20Preserve%20bounded%20worker%20state%20and%20condition%20response%20repair%20on%20real%20errors) | 2026-10-27 | Preserve bounded worker state and condition response repair on real errors |
+| [FIX-0137](#FIX-0137%20%E2%80%94%202026-10-27%20%E2%80%94%20Retarget%20unstarted%20recovery%20consumers%20without%20new%20resource%20accounts) | 2026-10-27 | Retarget unstarted recovery consumers without new resource accounts |
+| [FIX-0138](#FIX-0138%20%E2%80%94%202026-10-27%20%E2%80%94%20Add%20reproducible%20workflow%20qualification%20and%20physical-attempt%20metrics) | 2026-10-27 | Add reproducible workflow qualification and physical-attempt metrics |
+| [FIX-0139](#FIX-0139%20%E2%80%94%202026-10-27%20%E2%80%94%20Validate%20maintained%20HTML%2Fsettings%20and%20correct%20smoke%2Fbaseline%20fixtures) | 2026-10-27 | Validate maintained HTML/settings and correct smoke/baseline fixtures |
+| [FIX-0140](#FIX-0140%20%E2%80%94%202026-10-27%20%E2%80%94%20Remove%20conflicting%20native%20startup%20effort%20from%20the%20UI%20preset) | 2026-10-27 | Remove conflicting native startup effort from the UI preset |
+| [FIX-0141](#FIX-0141%20%E2%80%94%202026-10-27%20%E2%80%94%20Bound%20replacement%20host%20drivers%20by%20the%20original%20account%20deadline) | 2026-10-27 | Bound replacement host drivers by the original account deadline |
+| [FIX-0142](#FIX-0142%20%E2%80%94%202026-10-27%20%E2%80%94%20Preflight%20browser%20qualification%20in%20the%20actual%20check%20environment) | 2026-10-27 | Preflight browser qualification in the actual check environment |
+| [FIX-0143](#FIX-0143%20%E2%80%94%202026-10-27%20%E2%80%94%20Trigger%20qualification%20interruption%20after%20settled%20patch%20operations) | 2026-10-27 | Trigger qualification interruption after settled patch operations |
+| [FIX-0144](#FIX-0144%20%E2%80%94%202026-10-27%20%E2%80%94%20Include%20direct%20native%20worker%20effects%20in%20physical%20job%20reporting) | 2026-10-27 | Include direct native worker effects in physical job reporting |
+| [FIX-0145](#FIX-0145%20%E2%80%94%202026-10-27%20%E2%80%94%20Keep%20bounded%20worker-state%20eviction%20replay%20idempotent) | 2026-10-27 | Keep bounded worker-state eviction replay idempotent |
+| [FIX-0146](#FIX-0146%20%E2%80%94%202026-10-27%20%E2%80%94%20Keep%20endpoint%20probing%20compatible%20with%20mandatory%20placement%20policy) | 2026-10-27 | Keep endpoint probing compatible with mandatory placement policy |
+| [FIX-0147](#FIX-0147%20%E2%80%94%202026-10-27%20%E2%80%94%20Prepare%20the%20scheduled%20real-local%20Minecraft%20test%20without%20early%20inference) | 2026-10-27 | Prepare the scheduled real-local Minecraft test without early inference |
+| [FIX-0148](#FIX-0148%20%E2%80%94%202026-10-28%20%E2%80%94%20Record%20the%20scheduled%20live%20result%20and%20preserve%20checked%20partial%20delivery) | 2026-10-28 | Record the scheduled live result and preserve checked partial delivery |
+| [FIX-0149](#FIX-0149%20%E2%80%94%202026-10-28%20%E2%80%94%20Isolate%20Minecraft%20live%20failures%20against%20frozen%20source%20and%20canonical%20evidence) | 2026-10-28 | Isolate Minecraft live failures against frozen source and canonical evidence |
+| [FIX-0150](#FIX-0150%20%E2%80%94%202026-10-28%20%E2%80%94%20Verify%20no-edit%20task%20necessity%20and%20trace%20current%20context%20and%20worker-state%20behavior) | 2026-10-28 | Verify no-edit task necessity and trace current context and worker-state behavior |
 
-| [FIX-0151](#fix-0151) | 2026-10-28 | Repair existing browser keyboard isolation and actual regression coverage |
-| [FIX-0152](#fix-0152) | 2026-10-28 | Agent-selected provider fallback with durable OS routing |
-| [FIX-0153](#fix-0153) | 2026-10-28 | Focus local implementation and bound diagnostic source access |
-| [FIX-0154](#fix-0154) | 2026-10-28 | Separate context tokens, bytes and actual output reservation |
-| [FIX-0155](#fix-0155) | 2026-10-28 | Hand clean unusable output to existing semantic recovery |
-| [FIX-0156](#fix-0156) | 2026-10-28 | Retire resolved worker errors without replay resurrection |
-| [FIX-0157](#fix-0157) | 2026-10-28 | Audit simple-OS branch ancestry and unmerged profile work |
-| [FIX-0158](#fix-0158) | 2026-10-28 | Start the scheduled local Minecraft continuation with measured context |
-| [FIX-0159](#fix-0159) | 2026-10-28 | Measure recent local TPS without changing live inference |
-| [FIX-0160](#fix-0160) | 2026-10-29 | Finalize the single local continuation and retain its failed acceptance evidence |
-| [FIX-0161](#fix-0161) | 2026-10-29 | Centralize OS defaults and operational tuning |
-| [FIX-0162](#fix-0162) | 2026-10-29 | Require explicit single-file local coding contracts |
-| [FIX-0163](#fix-0163) | 2026-10-29 | Make tuning immutable and propagate operational settings |
-| [FIX-0164](#fix-0164) | 2026-10-29 | Preserve required cloud coding placement |
-| [FIX-0165](#fix-0165) | 2026-10-29 | Separate provider completion from local budget violations |
-| [FIX-0166](#fix-0166) | 2026-10-29 | Carry exact-source passing and failing check evidence |
-| [FIX-0169](#fix-0169) | 2026-11-02 | Automatically start the configured Strata engine with the UI |
-| [FIX-0170](#fix-0170) | 2026-11-02 | Investigate a native setup interruption at the cloud timeout |
-| [FIX-0171](#fix-0171) | 2026-11-02 | Make cloud agent endpoint timeouts warning-only by default |
-| [FIX-0172](#fix-0172) | 2026-11-02 | Keep coding presets warning-only with a 1800-second cloud timeout |
-| [FIX-0173](#fix-0173) | 2026-11-02 | Use a 112K input and 16K output coding preference within 128K |
-| [FIX-0174](#fix-0174) | 2026-11-02 | Clean up UI-owned Strata runtimes on exit and process death |
-| [FIX-0175](#fix-0175) | 2026-11-04 | Expose planner allowances and default senior source retrieval to 16 ranges |
-| [FIX-0176](#fix-0176) | 2026-11-04 | Record the revised agent prompting proposal and first current implementation issue |
-| [FIX-0177](#fix-0177) | 2026-11-04 | Audit the prompting proposal against prior fixes and correct unsafe workflow shortcuts |
-| [FIX-0178](#fix-0178) | 2026-11-04 | Support test-only assignments without implementation or result files |
-| [FIX-0168](#fix-0168) | 2026-11-02 | Persist machine-local Qwen/Strata UI defaults |
-| [FIX-0167](#fix-0167) | 2026-10-29 | Unify local token settings and remove cloud per-call caps |
+| [FIX-0151](#FIX-0151%20%E2%80%94%202026-10-28%20%E2%80%94%20Existing%20browser%20keyboard%20isolation%20and%20real%20regression%20coverage) | 2026-10-28 | Repair existing browser keyboard isolation and actual regression coverage |
+| [FIX-0152](#FIX-0152%20%E2%80%94%202026-10-28%20%E2%80%94%20Agent-selected%20provider%20fallback%20with%20durable%20OS%20routing) | 2026-10-28 | Agent-selected provider fallback with durable OS routing |
+| [FIX-0153](#FIX-0153%20%E2%80%94%202026-10-28%20%E2%80%94%20Focus%20local%20implementation%20and%20bound%20diagnostic%20source%20access) | 2026-10-28 | Focus local implementation and bound diagnostic source access |
+| [FIX-0154](#FIX-0154%20%E2%80%94%202026-10-28%20%E2%80%94%20Separate%20context%20tokens%2C%20bytes%20and%20actual%20output%20reservation) | 2026-10-28 | Separate context tokens, bytes and actual output reservation |
+| [FIX-0155](#FIX-0155%20%E2%80%94%202026-10-28%20%E2%80%94%20Hand%20clean%20unusable%20output%20to%20existing%20semantic%20recovery) | 2026-10-28 | Hand clean unusable output to existing semantic recovery |
+| [FIX-0156](#FIX-0156%20%E2%80%94%202026-10-28%20%E2%80%94%20Retire%20resolved%20worker%20errors%20without%20replay%20resurrection) | 2026-10-28 | Retire resolved worker errors without replay resurrection |
+| [FIX-0157](#FIX-0157%20%E2%80%94%202026-10-28%20%E2%80%94%20Audit%20simple-OS%20branch%20ancestry%20and%20unmerged%20profile%20work) | 2026-10-28 | Audit simple-OS branch ancestry and unmerged profile work |
+| [FIX-0158](#FIX-0158%20%E2%80%94%202026-10-28%20%E2%80%94%20Start%20the%20scheduled%20local%20Minecraft%20continuation%20with%20measured%20context) | 2026-10-28 | Start the scheduled local Minecraft continuation with measured context |
+| [FIX-0159](#FIX-0159%20%E2%80%94%202026-10-28%20%E2%80%94%20Measure%20recent%20local%20TPS%20without%20changing%20live%20inference) | 2026-10-28 | Measure recent local TPS without changing live inference |
+| [FIX-0160](#FIX-0160%20%E2%80%94%202026-10-29%20%E2%80%94%20Finalize%20the%20single%20local%20continuation%20and%20retain%20its%20failed%20acceptance%20evidence) | 2026-10-29 | Finalize the single local continuation and retain its failed acceptance evidence |
+| [FIX-0161](#FIX-0161%20%E2%80%94%20One%20source%20for%20OS%20constants%2Fdefaults%20and%20validated%20operational%20tuning) | 2026-10-29 | Centralize OS defaults and operational tuning |
+| [FIX-0162](#FIX-0162%20%E2%80%94%202026-10-29%20%E2%80%94%20Require%20explicit%20single-file%20local%20coding%20contracts) | 2026-10-29 | Require explicit single-file local coding contracts |
+| [FIX-0163](#FIX-0163%20%E2%80%94%202026-10-29%20%E2%80%94%20Make%20tuning%20immutable%20and%20propagate%20operational%20settings) | 2026-10-29 | Make tuning immutable and propagate operational settings |
+| [FIX-0164](#FIX-0164%20%E2%80%94%202026-10-29%20%E2%80%94%20Preserve%20required%20cloud%20coding%20placement) | 2026-10-29 | Preserve required cloud coding placement |
+| [FIX-0165](#FIX-0165%20%E2%80%94%202026-10-29%20%E2%80%94%20Separate%20provider%20completion%20from%20local%20budget%20violations) | 2026-10-29 | Separate provider completion from local budget violations |
+| [FIX-0166](#FIX-0166%20%E2%80%94%202026-10-29%20%E2%80%94%20Carry%20exact-source%20passing%20and%20failing%20check%20evidence) | 2026-10-29 | Carry exact-source passing and failing check evidence |
+| [FIX-0169](#FIX-0169%20%E2%80%94%202026-11-02%20%E2%80%94%20Automatically%20start%20the%20configured%20Strata%20engine%20with%20the%20UI) | 2026-11-02 | Automatically start the configured Strata engine with the UI |
+| [FIX-0170](#FIX-0170%20%E2%80%94%202026-11-02%20%E2%80%94%20Investigate%20a%20native%20setup%20interruption%20at%20the%20cloud%20timeout) | 2026-11-02 | Investigate a native setup interruption at the cloud timeout |
+| [FIX-0171](#FIX-0171%20%E2%80%94%202026-11-02%20%E2%80%94%20Make%20cloud%20agent%20endpoint%20timeouts%20warning-only%20by%20default) | 2026-11-02 | Make cloud agent endpoint timeouts warning-only by default |
+| [FIX-0172](#FIX-0172%20%E2%80%94%202026-11-02%20%E2%80%94%20Keep%20coding%20presets%20warning-only%20with%20a%201800-second%20cloud%20timeout) | 2026-11-02 | Keep coding presets warning-only with a 1800-second cloud timeout |
+| [FIX-0173](#FIX-0173%20%E2%80%94%202026-11-02%20%E2%80%94%20Use%20a%20112K%20input%20and%2016K%20output%20coding%20preference%20within%20128K) | 2026-11-02 | Use a 112K input and 16K output coding preference within 128K |
+| [FIX-0174](#FIX-0174%20%E2%80%94%202026-11-02%20%E2%80%94%20Clean%20up%20UI-owned%20Strata%20runtimes%20on%20exit%20and%20process%20death) | 2026-11-02 | Clean up UI-owned Strata runtimes on exit and process death |
+| [FIX-0175](#FIX-0175%20%E2%80%94%202026-11-04%20%E2%80%94%20Expose%20planner%20allowances%20and%20default%20senior%20source%20retrieval%20to%2016%20ranges) | 2026-11-04 | Expose planner allowances and default senior source retrieval to 16 ranges |
+| [FIX-0176](#FIX-0176%20%E2%80%94%202026-11-04%20%E2%80%94%20Record%20the%20revised%20agent%20prompting%20proposal%20and%20first%20current%20implementation%20issue) | 2026-11-04 | Record the revised agent prompting proposal and first current implementation issue |
+| [FIX-0177](#FIX-0177%20%E2%80%94%202026-11-04%20%E2%80%94%20Audit%20the%20prompting%20proposal%20against%20prior%20fixes%20and%20correct%20unsafe%20workflow%20shortcuts) | 2026-11-04 | Audit the prompting proposal against prior fixes and correct unsafe workflow shortcuts |
+| [FIX-0178](#FIX-0178%20%E2%80%94%202026-11-04%20%E2%80%94%20Support%20test-only%20assignments%20without%20implementation%20or%20result%20files) | 2026-11-04 | Support test-only assignments without implementation or result files |
+| [FIX-0179](#FIX-0179%20%E2%80%94%202026-11-06%20%E2%80%94%20Set%20the%20Haiku%20worker%20preset%20to%2096K%20input%2F32K%20output%20and%20trace%20input-failure%20escalation) | 2026-11-06 | Set Haiku worker allowances and trace input-failure escalation |
+| [FIX-0180](#FIX-0180%20%E2%80%94%202026-11-08%20%E2%80%94%20Design%20standalone%20scheduling%20and%20identify%20required%20shared%20OS%20mechanisms) | 2026-11-08 | Design standalone scheduling and identify required shared OS mechanisms |
+| [FIX-0181](#FIX-0181%20%E2%80%94%202026-11-08%20%E2%80%94%20Restore%20scheduler%20research%20and%20Haiku%20settings%20onto%20the%20simple%20OS%20branch) | 2026-11-08 | Restore scheduler research and Haiku settings onto the simple OS branch |
+| [FIX-0182](#FIX-0182%20%E2%80%94%202026-11-09%20%E2%80%94%20Audit%20scheduler%20OS%20support%20against%20current%20execution%20and%20prior%20fixes) | 2026-11-09 | Audit scheduler OS support against current execution and prior fixes |
+| [FIX-0183](#FIX-0183%20%E2%80%94%202026-11-09%20%E2%80%94%20Limit%20scheduler%20authority%20to%20individual-process%20admission%20and%20preemption) | 2026-11-09 | Limit scheduler authority to individual-process admission and preemption |
+| [FIX-0168](#FIX-0168%20%E2%80%94%202026-11-02%20%E2%80%94%20Persist%20machine-local%20Qwen%2FStrata%20UI%20defaults) | 2026-11-02 | Persist machine-local Qwen/Strata UI defaults |
+| [FIX-0167](#FIX-0167%20%E2%80%94%202026-10-29%20%E2%80%94%20Unify%20local%20token%20settings%20and%20remove%20cloud%20per-call%20caps) | 2026-10-29 | Unify local token settings and remove cloud per-call caps |
+| [FIX-0184](#FIX-0184%20%E2%80%94%202026-11-12%20%E2%80%94%20Make%20the%20documentation%20an%20Obsidian%20reading%20tree) | 2026-11-12 | Make the documentation an Obsidian reading tree |
+| [FIX-0185](#FIX-0185%20%E2%80%94%202026-11-12%20%E2%80%94%20Separate%20active%20tasks%20from%20historical%20notes%20and%20retire%20a%20one-off%20script) | 2026-11-12 | Separate active tasks from historical notes and retire a one-off script |
+| [FIX-0186](#FIX-0186%20%E2%80%94%202026-11-13%20%E2%80%94%20Assess%20OS%20V1%20compatibility%20with%20LangChain%20agents) | 2026-11-13 | Assess OS V1 compatibility with LangChain agents |
+| [FIX-0187](#FIX-0187%20%E2%80%94%202026-11-13%20%E2%80%94%20Open%20the%20WSL%20checkout%20in%20Linux%20Obsidian) | 2026-11-13 | Open the WSL checkout in Linux Obsidian |
+| [FIX-0188](#FIX-0188%20%E2%80%94%202026-11-13%20%E2%80%94%20Select%20native%20Wayland%20for%20Obsidian%20on%20WSLg) | 2026-11-13 | Select native Wayland for Obsidian on WSLg |
+| [FIX-0189](#fix-0189) | 2026-11-13 | Mark scheduler OS support against current code |
+| [FIX-0190](#fix-0190) | 2026-11-13 | Design MCP admission, execution and recovery boundaries |
+| [FIX-0191](#fix-0191) | 2026-11-13 | Organize the Obsidian graph by module and reading route |
 
 
 ## Entry template
@@ -258,12 +271,12 @@ results separately. For a recurrence, explain the added regression coverage.
 ## FIX-0001 — 2026-10-19 — Start a selected project inside an enclosing repository
 
 Status: implemented.
-Related history: [in-place repository implementation](current-iter-issues.md#in-place-coding-repositories--2026-10-19)
-and [runtime/agent boundary](../design-docs/simplified-os/RUNTIME_BOUNDARY.md#in-place-coding-repositories).
+Related history: in-place repository implementation (`docs/temporary/incidents/2026-10-19-repository-and-os-boundary.md#in-place-coding-repositories--2026-10-19`)
+and runtime/agent boundary (`design-docs/simplified-os/boundary/repository.md#in-place-coding-repositories`).
 
-Historical cross-reference added during backfill: [FIX-0017](#fix-0017) records
+Historical cross-reference added during backfill: [FIX-0017](#FIX-0017%20%E2%80%94%202026-10-18%20%E2%80%94%20Relax%20the%20existing-directory%20prerequisite%20for%20starting%20a%20project) records
 the earlier request and implementation to relax missing-folder startup.
-[FIX-0040](#fix-0040) later changed repository providers and exposed this distinct
+[FIX-0040](#FIX-0040%20%E2%80%94%202026-10-19%20%E2%80%94%20Work%20and%20integrate%20in%20the%20user%27s%20actual%20repository%20by%20default) later changed repository providers and exposed this distinct
 enclosing-root guard. Preserve the earlier setup invariant across provider changes;
 the nested-project regression here covers the gap that the earlier tests missed.
 
@@ -313,8 +326,8 @@ performed.
 ## FIX-0002 — 2026-10-19 — Let the coding agent correct recoverable Git setup errors
 
 Status: implemented.
-Related history: [FIX-0001](#fix-0001) and
-[earlier agent/OS separation](current-iter-issues.md#coding-policy-separated-from-the-existing-os-functions--2026-10-19).
+Related history: [FIX-0001](#FIX-0001%20%E2%80%94%202026-10-19%20%E2%80%94%20Start%20a%20selected%20project%20inside%20an%20enclosing%20repository) and
+earlier agent/OS separation (`docs/temporary/incidents/2026-10-19-repository-and-os-boundary.md#coding-policy-separated-from-the-existing-os-functions--2026-10-19`).
 
 ### Problem
 
@@ -362,8 +375,8 @@ a data-preservation/authority condition can still stop a run.
 ## FIX-0003 — 2026-10-19 — Let the coding agent repair failed dependency preparation
 
 Status: implemented.
-Related history: [FIX-0002](#fix-0002) and
-[dependency preparation ownership](../design-docs/simplified-os/RUNTIME_BOUNDARY.md#in-place-coding-repositories).
+Related history: [FIX-0002](#FIX-0002%20%E2%80%94%202026-10-19%20%E2%80%94%20Let%20the%20coding%20agent%20correct%20recoverable%20Git%20setup%20errors) and
+dependency preparation ownership (`design-docs/simplified-os/boundary/repository.md#in-place-coding-repositories`).
 
 ### Problem
 
@@ -430,8 +443,8 @@ not a claim that the complete repository test suite or live providers were run.
 ## FIX-0004 — 2026-10-19 — Require agents to read and maintain a durable fix history
 
 Status: implemented.
-Related history: [FIX-0001](#fix-0001), [FIX-0002](#fix-0002), and
-[FIX-0003](#fix-0003).
+Related history: [FIX-0001](#FIX-0001%20%E2%80%94%202026-10-19%20%E2%80%94%20Start%20a%20selected%20project%20inside%20an%20enclosing%20repository), [FIX-0002](#FIX-0002%20%E2%80%94%202026-10-19%20%E2%80%94%20Let%20the%20coding%20agent%20correct%20recoverable%20Git%20setup%20errors), and
+[FIX-0003](#FIX-0003%20%E2%80%94%202026-10-19%20%E2%80%94%20Let%20the%20coding%20agent%20repair%20failed%20dependency%20preparation).
 
 ### Problem
 
@@ -449,12 +462,12 @@ particular earlier regression.
 
 ### How it was fixed
 
-Added [AGENTS.md](../AGENTS.md) requiring agents to read this history before work,
+Added `AGENTS.md` requiring agents to read this history before work,
 review the boundary guide for agent/OS changes, pass these requirements to any
 delegated agents, and update the history before finishing. Established this file
 with stable IDs, an entry template, recurrence and verification rules, and records
-of the fixes from this chat. Linked it from [README.md](../README.md) and
-[current-iter-issues.md](current-iter-issues.md) so the existing reading routes
+of the fixes from this chat. Linked it from `README.md` and
+`development-docs/current-iter-issues.md` so the existing reading routes
 lead here.
 
 ### Design principle enforced or reconstructed
@@ -476,7 +489,7 @@ task. Earlier implementation results are recorded separately above.
 ## FIX-0005 — 2026-10-16 — Preserve the editable graph while clarifying views and labels
 
 Status: Implemented in design artifacts; not runtime behavior.
-Source: [Refine polyinference agent graph](CHAT_HISTORY.md#chat-01)
+Source: Refine polyinference agent graph (`development-docs/CHAT_HISTORY.md#chat-01`)
 
 ### Problem
 
@@ -503,7 +516,7 @@ Historical chat reports offline graph checks passed and all five tabs remained u
 ## FIX-0006 — 2026-10-17 — Recover graph information lost across design versions
 
 Status: Implemented in design artifacts.
-Source: [Merge agent graph designs](CHAT_HISTORY.md#chat-04)
+Source: Merge agent graph designs (`development-docs/CHAT_HISTORY.md#chat-04`)
 
 ### Problem
 
@@ -515,7 +528,7 @@ Neither revision alone preserved all required content. A wholesale replacement w
 
 ### How it was fixed
 
-Merged execution descriptions and connections while preserving the user's node names and positions and keeping the memory model byte-for-byte unchanged. Repository provenance is in [merged-agent-design-notes.md](../design-docs/polyinference-design/merged-agent-design-notes.md) and the adjacent merged HTML/JSON.
+Merged execution descriptions and connections while preserving the user's node names and positions and keeping the memory model byte-for-byte unchanged. Repository provenance is in `design-docs/polyinference-design/merged-agent-design-notes.md` and the adjacent merged HTML/JSON.
 
 ### Design principle enforced or reconstructed
 
@@ -530,7 +543,7 @@ Historical record reports 23 nodes, 57 arrows, preserved memory bytes, and layou
 ## FIX-0007 — 2026-10-17 — Define portable contracts and close agent/OS handoff gaps
 
 Status: Implemented in design documents and validators; runtime followed later.
-Source: [Design OS-independent LangGraph](CHAT_HISTORY.md#chat-03); [Audit OS and agent designs](CHAT_HISTORY.md#chat-05)
+Source: Design OS-independent LangGraph (`development-docs/CHAT_HISTORY.md#chat-03`); Audit OS and agent designs (`development-docs/CHAT_HISTORY.md#chat-05`)
 
 ### Problem
 
@@ -542,7 +555,7 @@ Missing cross-layer invariants permitted stale-plan publication, incorrectly att
 
 ### How it was fixed
 
-Updated the LangGraph and simplified-OS designs, typed contracts, examples, and semantic validators. Adopted the merged graph's contract-2.0 baseline, then added review/acceptance barriers, attributable resume, explicit publication receipts, separate worker/control capacity, scoped delta rules, subordinate callbacks, and feasible static role maps. See [INTEGRATION_AUDIT.md](../design-docs/INTEGRATION_AUDIT.md).
+Updated the LangGraph and simplified-OS designs, typed contracts, examples, and semantic validators. Adopted the merged graph's contract-2.0 baseline, then added review/acceptance barriers, attributable resume, explicit publication receipts, separate worker/control capacity, scoped delta rules, subordinate callbacks, and feasible static role maps. See `design-docs/INTEGRATION_AUDIT.md`.
 
 ### Design principle enforced or reconstructed
 
@@ -557,7 +570,7 @@ Historical design validation progressed from 35 example records/29 rejected comb
 ## FIX-0008 — 2026-10-17 — Make design review inspectable and keep translations as data
 
 Status: Implemented in design-reader artifacts.
-Source: [Audit OS and agent designs](CHAT_HISTORY.md#chat-05)
+Source: Audit OS and agent designs (`development-docs/CHAT_HISTORY.md#chat-05`)
 
 ### Problem
 
@@ -584,7 +597,7 @@ Historical initial readers were browser-checked at desktop/phone widths. Later t
 ## FIX-0009 — 2026-10-17 — Build the agent against replaceable runtime and provider interfaces
 
 Status: Implemented; original placeholder runtime later expanded.
-Source: [Build LangGraph agent](CHAT_HISTORY.md#chat-06); [Connect LangGraph to ChatGPT](CHAT_HISTORY.md#chat-02)
+Source: Build LangGraph agent (`development-docs/CHAT_HISTORY.md#chat-06`); Connect LangGraph to ChatGPT (`development-docs/CHAT_HISTORY.md#chat-02`)
 
 ### Problem
 
@@ -596,7 +609,7 @@ There was no implemented portable process/query/effect boundary or complete prov
 
 ### How it was fixed
 
-Implemented deterministic controller, senior-query, and reusable worker graphs over runtime ports, with OpenAI/Gemini/local-model adapters and brokered Codex jobs. Added Anthropic support afterward and documented setup in [PROVIDER_SETUP.md](../design-docs/implementation/PROVIDER_SETUP.md). The earlier proxy brief was research/documentation, not proof that a third-party proxy was installed.
+Implemented deterministic controller, senior-query, and reusable worker graphs over runtime ports, with OpenAI/Gemini/local-model adapters and brokered Codex jobs. Added Anthropic support afterward and documented setup in `design-docs/implementation/PROVIDER_SETUP.md`. The earlier proxy brief was research/documentation, not proof that a third-party proxy was installed.
 
 ### Design principle enforced or reconstructed
 
@@ -611,7 +624,7 @@ Historical initial implementation reported 47 tests plus design/source checks. P
 ## FIX-0010 — 2026-10-17 — Expose run processes, project selection, exports, costs, and steering
 
 Status: Implemented; monitor layout later superseded by FIX-0037.
-Source: [Build LangGraph agent](CHAT_HISTORY.md#chat-06)
+Source: Build LangGraph agent (`development-docs/CHAT_HISTORY.md#chat-06`)
 
 ### Problem
 
@@ -638,7 +651,7 @@ Historical UI foundation reported 68 passing tests and a live Codex UI run; proj
 ## FIX-0011 — 2026-10-17 — Correct worker bindings and short demonstration budgets
 
 Status: Implemented as coding-application defaults.
-Source: [Build LangGraph agent](CHAT_HISTORY.md#chat-06); [Configure OS models](CHAT_HISTORY.md#chat-07)
+Source: Build LangGraph agent (`development-docs/CHAT_HISTORY.md#chat-06`); Configure OS models (`development-docs/CHAT_HISTORY.md#chat-07`)
 
 ### Problem
 
@@ -665,7 +678,7 @@ Historical routing/budget change reported 78 tests, including completion beyond 
 ## FIX-0012 — 2026-10-17 — Give setup and senior coders the tools needed for prerequisite work
 
 Status: Implemented; Git location policy later superseded by FIX-0040.
-Source: [Build LangGraph agent](CHAT_HISTORY.md#chat-06)
+Source: Build LangGraph agent (`development-docs/CHAT_HISTORY.md#chat-06`)
 
 ### Problem
 
@@ -692,7 +705,7 @@ Historical record reports 86 tests and a live Codex branch-and-shell setup check
 ## FIX-0013 — 2026-10-17 — Load saved provider credentials without executing environment files
 
 Status: Implemented.
-Source: [Configure OS models](CHAT_HISTORY.md#chat-07)
+Source: Configure OS models (`development-docs/CHAT_HISTORY.md#chat-07`)
 
 ### Problem
 
@@ -719,7 +732,7 @@ Historical follow-up reports six credential-loading checks passed. This document
 ## FIX-0014 — 2026-10-17 — Capture OS inspection evidence in live and saved views
 
 Status: Implemented; visible layout later superseded by FIX-0037.
-Source: [Configure OS models](CHAT_HISTORY.md#chat-07); [Inspect frontend save data](CHAT_HISTORY.md#chat-09)
+Source: Configure OS models (`development-docs/CHAT_HISTORY.md#chat-07`); Inspect frontend save data (`development-docs/CHAT_HISTORY.md#chat-09`)
 
 ### Problem
 
@@ -746,7 +759,7 @@ Historical implementation reported 111 tests, lint/JavaScript checks, and browse
 ## FIX-0015 — 2026-10-18 — Keep generated projects and runtime history out of version control
 
 Status: Implemented.
-Source: [Build LangGraph agent](CHAT_HISTORY.md#chat-06); [Add rolling runtime history](CHAT_HISTORY.md#chat-08)
+Source: Build LangGraph agent (`development-docs/CHAT_HISTORY.md#chat-06`); Add rolling runtime history (`development-docs/CHAT_HISTORY.md#chat-08`)
 
 ### Problem
 
@@ -773,7 +786,7 @@ Historical chats report ignore-rule checks, no history files tracked, and a stag
 ## FIX-0016 — 2026-10-18 — Use one serializer for manual save and rolling run archives
 
 Status: Implemented.
-Source: [Add rolling runtime history](CHAT_HISTORY.md#chat-08)
+Source: Add rolling runtime history (`development-docs/CHAT_HISTORY.md#chat-08`)
 
 ### Problem
 
@@ -800,7 +813,7 @@ Historical record reports 118 passing tests plus lint and whitespace checks, wit
 ## FIX-0017 — 2026-10-18 — Relax the existing-directory prerequisite for starting a project
 
 Status: Implemented historically; related startup regression addressed by FIX-0001.
-Source: [Add rolling runtime history](CHAT_HISTORY.md#chat-08)
+Source: Add rolling runtime history (`development-docs/CHAT_HISTORY.md#chat-08`)
 
 ### Problem
 
@@ -827,7 +840,7 @@ Historical record reports 122 regression tests plus four targeted startup/UI che
 ## FIX-0018 — 2026-10-18 — Make successful and failed launches visible and exportable
 
 Status: Implemented.
-Source: [Add rolling runtime history](CHAT_HISTORY.md#chat-08)
+Source: Add rolling runtime history (`development-docs/CHAT_HISTORY.md#chat-08`)
 
 ### Problem
 
@@ -854,7 +867,7 @@ Historical record reports 126 tests passed, one skipped, and four JavaScript che
 ## FIX-0019 — 2026-10-18 — Let the coding agent discover an omitted check command
 
 Status: Implemented; policy ownership later clarified by FIX-0032.
-Source: [Improve testing context inference](CHAT_HISTORY.md#chat-11)
+Source: Improve testing context inference (`development-docs/CHAT_HISTORY.md#chat-11`)
 
 ### Problem
 
@@ -881,7 +894,7 @@ Historical source reports regression tests and lint passed without an exact coun
 ## FIX-0020 — 2026-10-18 — Report core run and task events in the UI server terminal
 
 Status: Implemented; reporting resilience later strengthened by FIX-0029.
-Source: [Show core UI task events](CHAT_HISTORY.md#chat-10)
+Source: Show core UI task events (`development-docs/CHAT_HISTORY.md#chat-10`)
 
 ### Problem
 
@@ -908,7 +921,7 @@ Historical source reports all 16 UI tests and lint passed. The later null-result
 ## FIX-0021 — 2026-10-18 — Deliver accepted artifacts instead of leaving results only in private state
 
 Status: Implemented; default coding delivery later superseded by FIX-0040.
-Source: [Diagnose 2D Minecraft run](CHAT_HISTORY.md#chat-12)
+Source: Diagnose 2D Minecraft run (`development-docs/CHAT_HISTORY.md#chat-12`)
 
 ### Problem
 
@@ -935,7 +948,7 @@ Historical implementation reported 157 tests passed/one skipped, with five front
 ## FIX-0022 — 2026-10-18 — Allow processes to finish without code, Git, or coding reports
 
 Status: Implemented in the runtime; further separation recorded in FIX-0032.
-Source: [Diagnose 2D Minecraft run](CHAT_HISTORY.md#chat-12)
+Source: Diagnose 2D Minecraft run (`development-docs/CHAT_HISTORY.md#chat-12`)
 
 ### Problem
 
@@ -962,7 +975,7 @@ Covered by the historically reported 157-pass suite and non-coding fixtures. Thi
 ## FIX-0023 — 2026-10-18 — Represent phase transitions as current host requests
 
 Status: Implemented.
-Source: [Diagnose 2D Minecraft run](CHAT_HISTORY.md#chat-12); [Explain why the process failed](CHAT_HISTORY.md#chat-13)
+Source: Diagnose 2D Minecraft run (`development-docs/CHAT_HISTORY.md#chat-12`); Explain why the process failed (`development-docs/CHAT_HISTORY.md#chat-13`)
 
 ### Problem
 
@@ -989,7 +1002,7 @@ Historical implementation's 157-pass suite included strict Anthropic and HTTP in
 ## FIX-0024 — 2026-10-18 — Retain structured provider failure facts
 
 Status: Implemented; further fault-scope generalization remains an audit follow-up.
-Source: [Diagnose 2D Minecraft run](CHAT_HISTORY.md#chat-12); [Explain why the process failed](CHAT_HISTORY.md#chat-13)
+Source: Diagnose 2D Minecraft run (`development-docs/CHAT_HISTORY.md#chat-12`); Explain why the process failed (`development-docs/CHAT_HISTORY.md#chat-13`)
 
 ### Problem
 
@@ -1016,7 +1029,7 @@ Historical provider/incident coverage was included in the 157-pass suite. Later 
 ## FIX-0025 — 2026-10-18 — Preserve effective authority and full requirements through task handoffs
 
 Status: Implemented; setup authority was further clarified in FIX-0032/FIX-0033.
-Source: [Diagnose 2D Minecraft run](CHAT_HISTORY.md#chat-12); [Explain why the process failed](CHAT_HISTORY.md#chat-13)
+Source: Diagnose 2D Minecraft run (`development-docs/CHAT_HISTORY.md#chat-12`); Explain why the process failed (`development-docs/CHAT_HISTORY.md#chat-13`)
 
 ### Problem
 
@@ -1043,7 +1056,7 @@ Historical 157-pass suite included application-file creation/delivery and requir
 ## FIX-0026 — 2026-10-18 — Stop non-actionable planning and repeated known failures
 
 Status: Implemented within the recorded basic runtime and agent.
-Source: [Diagnose 2D Minecraft run](CHAT_HISTORY.md#chat-12); [Explain why the process failed](CHAT_HISTORY.md#chat-13)
+Source: Diagnose 2D Minecraft run (`development-docs/CHAT_HISTORY.md#chat-12`); Explain why the process failed (`development-docs/CHAT_HISTORY.md#chat-13`)
 
 ### Problem
 
@@ -1070,7 +1083,7 @@ Historical 157-pass suite covered empty plans despite memory changes, stopped dr
 ## FIX-0027 — 2026-10-18 — Recover a known failed model operation with a new linked intent
 
 Status: Implemented.
-Source: [Diagnose 2D Minecraft run](CHAT_HISTORY.md#chat-12); [Explain why the process failed](CHAT_HISTORY.md#chat-13)
+Source: Diagnose 2D Minecraft run (`development-docs/CHAT_HISTORY.md#chat-12`); Explain why the process failed (`development-docs/CHAT_HISTORY.md#chat-13`)
 
 ### Problem
 
@@ -1097,7 +1110,7 @@ Historical 157-pass suite covered known versus uncertain failure, retained edits
 ## FIX-0028 — 2026-10-19 — Bound retained native telemetry without aborting healthy generation
 
 Status: Implemented; initial verification limit later superseded.
-Source: [Explain why the process failed](CHAT_HISTORY.md#chat-13)
+Source: Explain why the process failed (`development-docs/CHAT_HISTORY.md#chat-13`)
 
 ### Problem
 
@@ -1124,7 +1137,7 @@ Initial WSL tests were blocked by approval-service capacity; local/browser probe
 ## FIX-0029 — 2026-10-19 — Keep reporting failures from replacing execution outcomes
 
 Status: Implemented.
-Source: [Explain why the process failed](CHAT_HISTORY.md#chat-13)
+Source: Explain why the process failed (`development-docs/CHAT_HISTORY.md#chat-13`)
 
 ### Problem
 
@@ -1151,7 +1164,7 @@ Historical local logger/adapter probes and six browser checks passed initially. 
 ## FIX-0030 — 2026-10-19 — Recover bounded incomplete model output without executing partial JSON
 
 Status: Implemented for eligible raw model queries.
-Source: [Explain why the process failed](CHAT_HISTORY.md#chat-13)
+Source: Explain why the process failed (`development-docs/CHAT_HISTORY.md#chat-13`)
 
 ### Problem
 
@@ -1178,7 +1191,7 @@ Historical full suite: 178 passed, one skipped; all 11 output-limit cases rerun 
 ## FIX-0031 — 2026-10-19 — Keep tool home/cache housekeeping outside source authority
 
 Status: Implemented; persistent process-owned tool state remains a separate follow-up.
-Source: [Explain why the process failed](CHAT_HISTORY.md#chat-13)
+Source: Explain why the process failed (`development-docs/CHAT_HISTORY.md#chat-13`)
 
 ### Problem
 
@@ -1205,7 +1218,7 @@ Historical Linux suite: 188 passed, including a real npm-without-manifest regres
 ## FIX-0032 — 2026-10-19 — Move coding grammar and policy out of generic OS dispatch
 
 Status: Implemented for the current basic function set.
-Source: [Explain why the process failed](CHAT_HISTORY.md#chat-13)
+Source: Explain why the process failed (`development-docs/CHAT_HISTORY.md#chat-13`)
 
 ### Problem
 
@@ -1217,7 +1230,7 @@ Mechanisms and the bundled agent's application policy remained coupled at regist
 
 ### How it was fixed
 
-Added generic typed capability/protocol registration and explicit process/workspace grants. Moved check selection, reply grammar, verdict/publication rules, and management/cancellation policy into the calling agent. Persisted required publication-policy registration across restart, preserved non-workspace callback arguments, and enforced workspace preconditions before custom handlers. See [RUNTIME_BOUNDARY.md](../design-docs/simplified-os/RUNTIME_BOUNDARY.md).
+Added generic typed capability/protocol registration and explicit process/workspace grants. Moved check selection, reply grammar, verdict/publication rules, and management/cancellation policy into the calling agent. Persisted required publication-policy registration across restart, preserved non-workspace callback arguments, and enforced workspace preconditions before custom handlers. See `design-docs/simplified-os/RUNTIME_BOUNDARY.md`.
 
 ### Design principle enforced or reconstructed
 
@@ -1232,7 +1245,7 @@ Historical full suite: 201 passed; 14 focused boundary/transition/UI cases also 
 ## FIX-0033 — 2026-10-19 — Validate agent lifecycle updates and preserve long diagnostic notes
 
 Status: Implemented.
-Source: [Explain why the process failed](CHAT_HISTORY.md#chat-13)
+Source: Explain why the process failed (`development-docs/CHAT_HISTORY.md#chat-13`)
 
 ### Problem
 
@@ -1259,7 +1272,7 @@ Historical 201-pass suite and `tests/test_agent_transitions.py` cover long notes
 ## FIX-0034 — 2026-10-19 — Separate declared build outputs from protected source
 
 Status: Implemented.
-Source: [Diagnose early agent pause](CHAT_HISTORY.md#chat-14)
+Source: Diagnose early agent pause (`development-docs/CHAT_HISTORY.md#chat-14`)
 
 ### Problem
 
@@ -1286,7 +1299,7 @@ Historical full suite: 210 passed, two skipped; final affected tests: 58 passed 
 ## FIX-0035 — 2026-10-19 — Preserve dependencies across workspace generations
 
 Status: Implemented.
-Source: [Diagnose early agent pause](CHAT_HISTORY.md#chat-14)
+Source: Diagnose early agent pause (`development-docs/CHAT_HISTORY.md#chat-14`)
 
 ### Problem
 
@@ -1313,7 +1326,7 @@ Historical 210-pass/two-skipped suite and subsequent 58 affected tests cover env
 ## FIX-0036 — 2026-10-19 — Verify native harness permissions and detect unbrokered edits
 
 Status: Implemented.
-Source: [Diagnose early agent pause](CHAT_HISTORY.md#chat-14)
+Source: Diagnose early agent pause (`development-docs/CHAT_HISTORY.md#chat-14`)
 
 ### Problem
 
@@ -1340,7 +1353,7 @@ Historical local app-server permission handshake sent no inference turn and conf
 ## FIX-0037 — 2026-10-19 — Separate OS monitoring from agent task and review history
 
 Status: Implemented.
-Source: [Locate the UI task queue](CHAT_HISTORY.md#chat-15)
+Source: Locate the UI task queue (`development-docs/CHAT_HISTORY.md#chat-15`)
 
 ### Problem
 
@@ -1367,7 +1380,7 @@ Historical source reports 35 backend tests and 13 frontend checks passed, one sk
 ## FIX-0038 — 2026-10-19 — Provide generic durable agent-to-user messages
 
 Status: Implemented as an OS capability.
-Source: [Add sprint updates and agent output](CHAT_HISTORY.md#chat-17)
+Source: Add sprint updates and agent output (`development-docs/CHAT_HISTORY.md#chat-17`)
 
 ### Problem
 
@@ -1394,7 +1407,7 @@ Historical focused capability/user-brief/frontend checks and last-failed rerun p
 ## FIX-0039 — 2026-10-19 — Request evidence-based sprint briefs and working-commit claims
 
 Status: Implemented in the coding agent only.
-Source: [Add sprint updates and agent output](CHAT_HISTORY.md#chat-17)
+Source: Add sprint updates and agent output (`development-docs/CHAT_HISTORY.md#chat-17`)
 
 ### Problem
 
@@ -1421,7 +1434,7 @@ Historical focused user-brief/capability/frontend tests passed for both launch m
 ## FIX-0040 — 2026-10-19 — Work and integrate in the user's actual repository by default
 
 Status: Implemented; nested-project startup regression corrected by FIX-0001.
-Source: [Analyze latest run](CHAT_HISTORY.md#chat-16)
+Source: Analyze latest run (`development-docs/CHAT_HISTORY.md#chat-16`)
 
 ### Problem
 
@@ -1448,7 +1461,7 @@ Historical source reports 248 passing tests followed by 27 native/boundary tests
 ## FIX-0041 — 2026-10-19 — Record remaining run-quality and generalization findings without calling them fixed
 
 Status: Investigated; several findings remain open or only partly addressed.
-Source: [Diagnose 2D Minecraft run](CHAT_HISTORY.md#chat-12); [Explain why the process failed](CHAT_HISTORY.md#chat-13); [Analyze latest run](CHAT_HISTORY.md#chat-16); [Expose Codex usage stats](CHAT_HISTORY.md#chat-18)
+Source: Diagnose 2D Minecraft run (`development-docs/CHAT_HISTORY.md#chat-12`); Explain why the process failed (`development-docs/CHAT_HISTORY.md#chat-13`); Analyze latest run (`development-docs/CHAT_HISTORY.md#chat-16`); Expose Codex usage stats (`development-docs/CHAT_HISTORY.md#chat-18`)
 
 ### Problem
 
@@ -1502,9 +1515,9 @@ Checked entry/index consistency, required sections, relative links/anchors, sour
 ## FIX-0043 — 2026-10-19 — Diagnose a completed model response with no visible text
 
 Status: investigated; implementation remains unchanged.
-Related history: [FIX-0024](#fix-0024), [FIX-0026](#fix-0026),
-[FIX-0027](#fix-0027), [FIX-0030](#fix-0030), [FIX-0041](#fix-0041).
-Detailed evidence: [run d434799ad8e4 analysis](run-d434799ad8e4-analysis.md).
+Related history: [FIX-0024](#FIX-0024%20%E2%80%94%202026-10-18%20%E2%80%94%20Retain%20structured%20provider%20failure%20facts), [FIX-0026](#FIX-0026%20%E2%80%94%202026-10-18%20%E2%80%94%20Stop%20non-actionable%20planning%20and%20repeated%20known%20failures),
+[FIX-0027](#FIX-0027%20%E2%80%94%202026-10-18%20%E2%80%94%20Recover%20a%20known%20failed%20model%20operation%20with%20a%20new%20linked%20intent), [FIX-0030](#FIX-0030%20%E2%80%94%202026-10-19%20%E2%80%94%20Recover%20bounded%20incomplete%20model%20output%20without%20executing%20partial%20JSON), [FIX-0041](#FIX-0041%20%E2%80%94%202026-10-19%20%E2%80%94%20Record%20remaining%20run-quality%20and%20generalization%20findings%20without%20calling%20them%20fixed).
+Detailed evidence: run d434799ad8e4 analysis (`docs/temporary/investigations/2026-10-19-run-d434799ad8e4.md`).
 
 ### Problem
 
@@ -1556,9 +1569,9 @@ structure, links, and whitespace were checked for these two added records.
 ## FIX-0044 — 2026-10-20 — Retain facts for unusable completed model responses
 
 Status: implemented; focused verification passed; final full-suite review pending.
-Related history: [FIX-0024](#fix-0024), [FIX-0030](#fix-0030),
-[FIX-0043](#fix-0043). See the [pause audit](pause-retry-audit-2026-10-20.md)
-and [handoff](HANDOFF-2026-10-20.md).
+Related history: [FIX-0024](#FIX-0024%20%E2%80%94%202026-10-18%20%E2%80%94%20Retain%20structured%20provider%20failure%20facts), [FIX-0030](#FIX-0030%20%E2%80%94%202026-10-19%20%E2%80%94%20Recover%20bounded%20incomplete%20model%20output%20without%20executing%20partial%20JSON),
+[FIX-0043](#FIX-0043%20%E2%80%94%202026-10-19%20%E2%80%94%20Diagnose%20a%20completed%20model%20response%20with%20no%20visible%20text). See the pause audit (`docs/temporary/investigations/2026-10-20-pause-and-retry.md`)
+and handoff (`docs/temporary/handoffs/2026-10-20-retry-and-pause-handoff.md`).
 
 ### Problem
 
@@ -1601,11 +1614,11 @@ FIX-0045 for the incomplete full-suite result.
 
 Status: implemented; focused verification passed; work stopped at user request
 before final full-suite verification/review.
-Related history: [FIX-0026](#fix-0026), [FIX-0027](#fix-0027),
-[FIX-0028](#fix-0028), [FIX-0030](#fix-0030), [FIX-0032](#fix-0032),
-[FIX-0036](#fix-0036), [FIX-0043](#fix-0043), [FIX-0044](#fix-0044).
-Detailed inventory: [pause audit](pause-retry-audit-2026-10-20.md).
-Remaining work: [handoff](HANDOFF-2026-10-20.md).
+Related history: [FIX-0026](#FIX-0026%20%E2%80%94%202026-10-18%20%E2%80%94%20Stop%20non-actionable%20planning%20and%20repeated%20known%20failures), [FIX-0027](#FIX-0027%20%E2%80%94%202026-10-18%20%E2%80%94%20Recover%20a%20known%20failed%20model%20operation%20with%20a%20new%20linked%20intent),
+[FIX-0028](#FIX-0028%20%E2%80%94%202026-10-19%20%E2%80%94%20Bound%20retained%20native%20telemetry%20without%20aborting%20healthy%20generation), [FIX-0030](#FIX-0030%20%E2%80%94%202026-10-19%20%E2%80%94%20Recover%20bounded%20incomplete%20model%20output%20without%20executing%20partial%20JSON), [FIX-0032](#FIX-0032%20%E2%80%94%202026-10-19%20%E2%80%94%20Move%20coding%20grammar%20and%20policy%20out%20of%20generic%20OS%20dispatch),
+[FIX-0036](#FIX-0036%20%E2%80%94%202026-10-19%20%E2%80%94%20Verify%20native%20harness%20permissions%20and%20detect%20unbrokered%20edits), [FIX-0043](#FIX-0043%20%E2%80%94%202026-10-19%20%E2%80%94%20Diagnose%20a%20completed%20model%20response%20with%20no%20visible%20text), [FIX-0044](#FIX-0044%20%E2%80%94%202026-10-20%20%E2%80%94%20Retain%20facts%20for%20unusable%20completed%20model%20responses).
+Detailed inventory: pause audit (`docs/temporary/investigations/2026-10-20-pause-and-retry.md`).
+Remaining work: handoff (`docs/temporary/handoffs/2026-10-20-retry-and-pause-handoff.md`).
 
 ### Problem
 
@@ -1673,8 +1686,8 @@ live provider, game check, network installation, commit, push or run migration.
 ## FIX-0046 — 2026-10-20 — Scope permanent-failure containment to the request being repaired
 
 Status: implemented; focused verification passed; final full-suite review pending.
-Related history: [FIX-0024](#fix-0024), [FIX-0026](#fix-0026),
-[FIX-0027](#fix-0027), [FIX-0041](#fix-0041), [FIX-0045](#fix-0045).
+Related history: [FIX-0024](#FIX-0024%20%E2%80%94%202026-10-18%20%E2%80%94%20Retain%20structured%20provider%20failure%20facts), [FIX-0026](#FIX-0026%20%E2%80%94%202026-10-18%20%E2%80%94%20Stop%20non-actionable%20planning%20and%20repeated%20known%20failures),
+[FIX-0027](#FIX-0027%20%E2%80%94%202026-10-18%20%E2%80%94%20Recover%20a%20known%20failed%20model%20operation%20with%20a%20new%20linked%20intent), [FIX-0041](#FIX-0041%20%E2%80%94%202026-10-19%20%E2%80%94%20Record%20remaining%20run-quality%20and%20generalization%20findings%20without%20calling%20them%20fixed), [FIX-0045](#FIX-0045%20%E2%80%94%202026-10-20%20%E2%80%94%20Filter%20safe%20one-off%20model%20failures%20with%20durable%20OS%20retries).
 
 ### Problem
 
@@ -1713,10 +1726,10 @@ there and in the handoff; no global endpoint-health redesign is claimed.
 ## FIX-0047 — 2026-10-20 — Keep OS retries separate from application recovery allowances
 
 Status: implemented and verified with the full local suite and focused regressions.
-Related history: [FIX-0027](#fix-0027), [FIX-0030](#fix-0030),
-[FIX-0044](#fix-0044), [FIX-0045](#fix-0045), [FIX-0046](#fix-0046).
-Detailed inventory: [pause audit](pause-retry-audit-2026-10-20.md).
-Resumption record: [handoff](HANDOFF-2026-10-20.md#resumed-work--2026-10-20).
+Related history: [FIX-0027](#FIX-0027%20%E2%80%94%202026-10-18%20%E2%80%94%20Recover%20a%20known%20failed%20model%20operation%20with%20a%20new%20linked%20intent), [FIX-0030](#FIX-0030%20%E2%80%94%202026-10-19%20%E2%80%94%20Recover%20bounded%20incomplete%20model%20output%20without%20executing%20partial%20JSON),
+[FIX-0044](#FIX-0044%20%E2%80%94%202026-10-20%20%E2%80%94%20Retain%20facts%20for%20unusable%20completed%20model%20responses), [FIX-0045](#FIX-0045%20%E2%80%94%202026-10-20%20%E2%80%94%20Filter%20safe%20one-off%20model%20failures%20with%20durable%20OS%20retries), [FIX-0046](#FIX-0046%20%E2%80%94%202026-10-20%20%E2%80%94%20Scope%20permanent-failure%20containment%20to%20the%20request%20being%20repaired).
+Detailed inventory: pause audit (`docs/temporary/investigations/2026-10-20-pause-and-retry.md`).
+Resumption record: handoff (`docs/temporary/handoffs/2026-10-20-retry-and-pause-handoff.md#resumed-work--2026-10-20`).
 
 ### Problem
 
@@ -1785,8 +1798,8 @@ network installation, commit or deployment was performed.
 ## FIX-0048 — 2026-10-20 — Document the Codex and serial Haiku tester setup
 
 Status: implemented as documentation only.
-Related history: [FIX-0009](#fix-0009), [FIX-0011](#fix-0011),
-[FIX-0013](#fix-0013), [FIX-0036](#fix-0036), [FIX-0040](#fix-0040).
+Related history: [FIX-0009](#FIX-0009%20%E2%80%94%202026-10-17%20%E2%80%94%20Build%20the%20agent%20against%20replaceable%20runtime%20and%20provider%20interfaces), [FIX-0011](#FIX-0011%20%E2%80%94%202026-10-17%20%E2%80%94%20Correct%20worker%20bindings%20and%20short%20demonstration%20budgets),
+[FIX-0013](#FIX-0013%20%E2%80%94%202026-10-17%20%E2%80%94%20Load%20saved%20provider%20credentials%20without%20executing%20environment%20files), [FIX-0036](#FIX-0036%20%E2%80%94%202026-10-19%20%E2%80%94%20Verify%20native%20harness%20permissions%20and%20detect%20unbrokered%20edits), [FIX-0040](#FIX-0040%20%E2%80%94%202026-10-19%20%E2%80%94%20Work%20and%20integrate%20in%20the%20user%27s%20actual%20repository%20by%20default).
 
 ### Problem
 
@@ -1835,10 +1848,10 @@ unrelated working-tree changes are claimed.
 ## FIX-0049 — 2026-10-20 — Diagnose context-packing overflow after gameplay recovery
 
 Status: investigated; no implementation changed.
-Related history: [FIX-0030](#fix-0030), [FIX-0034](#fix-0034),
-[FIX-0040](#fix-0040), [FIX-0041](#fix-0041), [FIX-0044](#fix-0044),
-[FIX-0045](#fix-0045), [FIX-0047](#fix-0047).
-Detailed evidence: [run 2de3d5c5ab9b analysis](run-2de3d5c5ab9b-analysis.md).
+Related history: [FIX-0030](#FIX-0030%20%E2%80%94%202026-10-19%20%E2%80%94%20Recover%20bounded%20incomplete%20model%20output%20without%20executing%20partial%20JSON), [FIX-0034](#FIX-0034%20%E2%80%94%202026-10-19%20%E2%80%94%20Separate%20declared%20build%20outputs%20from%20protected%20source),
+[FIX-0040](#FIX-0040%20%E2%80%94%202026-10-19%20%E2%80%94%20Work%20and%20integrate%20in%20the%20user%27s%20actual%20repository%20by%20default), [FIX-0041](#FIX-0041%20%E2%80%94%202026-10-19%20%E2%80%94%20Record%20remaining%20run-quality%20and%20generalization%20findings%20without%20calling%20them%20fixed), [FIX-0044](#FIX-0044%20%E2%80%94%202026-10-20%20%E2%80%94%20Retain%20facts%20for%20unusable%20completed%20model%20responses),
+[FIX-0045](#FIX-0045%20%E2%80%94%202026-10-20%20%E2%80%94%20Filter%20safe%20one-off%20model%20failures%20with%20durable%20OS%20retries), [FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances).
+Detailed evidence: run 2de3d5c5ab9b analysis (`docs/temporary/investigations/2026-10-20-run-2de3d5c5ab9b.md`).
 
 ### Problem
 
@@ -1900,10 +1913,10 @@ is claimed; unrelated existing working-tree changes were left untouched.
 ## FIX-0050 — 2026-10-20 — Audit input and output cap safeguards across inference adapters
 
 Status: investigated; no implementation changed.
-Related history: [FIX-0028](#fix-0028), [FIX-0030](#fix-0030),
-[FIX-0044](#fix-0044), [FIX-0045](#fix-0045), [FIX-0047](#fix-0047),
-[FIX-0049](#fix-0049).
-Detailed evidence: [cap safeguards audit](inference-cap-safeguards-audit-2026-10-20.md).
+Related history: [FIX-0028](#FIX-0028%20%E2%80%94%202026-10-19%20%E2%80%94%20Bound%20retained%20native%20telemetry%20without%20aborting%20healthy%20generation), [FIX-0030](#FIX-0030%20%E2%80%94%202026-10-19%20%E2%80%94%20Recover%20bounded%20incomplete%20model%20output%20without%20executing%20partial%20JSON),
+[FIX-0044](#FIX-0044%20%E2%80%94%202026-10-20%20%E2%80%94%20Retain%20facts%20for%20unusable%20completed%20model%20responses), [FIX-0045](#FIX-0045%20%E2%80%94%202026-10-20%20%E2%80%94%20Filter%20safe%20one-off%20model%20failures%20with%20durable%20OS%20retries), [FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances),
+[FIX-0049](#FIX-0049%20%E2%80%94%202026-10-20%20%E2%80%94%20Diagnose%20context-packing%20overflow%20after%20gameplay%20recovery).
+Detailed evidence: cap safeguards audit (`docs/temporary/investigations/2026-10-20-inference-cap-safeguards.md`).
 
 ### Problem
 
@@ -1961,9 +1974,9 @@ or implementation repair was performed; no new regression coverage is claimed.
 ## FIX-0051 — 2026-10-20 — Propose bounded OS recovery for inference overflow
 
 Status: investigated; design proposal only, no implementation changed.
-Related history: [FIX-0030](#fix-0030), [FIX-0045](#fix-0045),
-[FIX-0047](#fix-0047), [FIX-0049](#fix-0049), [FIX-0050](#fix-0050).
-Proposal: [OS overflow safety](inference-overflow-safety-proposal-2026-10-20.md).
+Related history: [FIX-0030](#FIX-0030%20%E2%80%94%202026-10-19%20%E2%80%94%20Recover%20bounded%20incomplete%20model%20output%20without%20executing%20partial%20JSON), [FIX-0045](#FIX-0045%20%E2%80%94%202026-10-20%20%E2%80%94%20Filter%20safe%20one-off%20model%20failures%20with%20durable%20OS%20retries),
+[FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances), [FIX-0049](#FIX-0049%20%E2%80%94%202026-10-20%20%E2%80%94%20Diagnose%20context-packing%20overflow%20after%20gameplay%20recovery), [FIX-0050](#FIX-0050%20%E2%80%94%202026-10-20%20%E2%80%94%20Audit%20input%20and%20output%20cap%20safeguards%20across%20inference%20adapters).
+Proposal: OS overflow safety (`docs/temporary/proposals/2026-10-20-os-overflow-proposal.md`).
 
 ### Problem
 
@@ -2009,9 +2022,9 @@ runtime behavior; historical probe results are not claimed as new verification.
 ## FIX-0052 — 2026-10-20 — Separate OS overflow guarantees from reusable agent recovery policy
 
 Status: investigated; design proposal only, no implementation changed.
-Related history: [FIX-0032](#fix-0032), [FIX-0049](#fix-0049),
-[FIX-0050](#fix-0050), [FIX-0051](#fix-0051).
-Proposal: [agent/OS responsibility split](agent-os-overflow-responsibility-proposal-2026-10-20.md).
+Related history: [FIX-0032](#FIX-0032%20%E2%80%94%202026-10-19%20%E2%80%94%20Move%20coding%20grammar%20and%20policy%20out%20of%20generic%20OS%20dispatch), [FIX-0049](#FIX-0049%20%E2%80%94%202026-10-20%20%E2%80%94%20Diagnose%20context-packing%20overflow%20after%20gameplay%20recovery),
+[FIX-0050](#FIX-0050%20%E2%80%94%202026-10-20%20%E2%80%94%20Audit%20input%20and%20output%20cap%20safeguards%20across%20inference%20adapters), [FIX-0051](#FIX-0051%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20bounded%20OS%20recovery%20for%20inference%20overflow).
+Proposal: agent/OS responsibility split (`docs/temporary/proposals/2026-10-20-overflow-responsibility-proposal.md`).
 
 ### Problem
 
@@ -2058,9 +2071,9 @@ its conformance matrix remain unimplemented and unverified as runtime behavior.
 ## FIX-0053 — 2026-10-20 — Propose agent-controlled OS context handling and optional compaction
 
 Status: investigated; design proposal only, no implementation changed.
-Related history: [FIX-0049](#fix-0049), [FIX-0050](#fix-0050),
-[FIX-0051](#fix-0051), [FIX-0052](#fix-0052).
-Proposal: [optional OS context service](optional-os-context-management-proposal-2026-10-20.md).
+Related history: [FIX-0049](#FIX-0049%20%E2%80%94%202026-10-20%20%E2%80%94%20Diagnose%20context-packing%20overflow%20after%20gameplay%20recovery), [FIX-0050](#FIX-0050%20%E2%80%94%202026-10-20%20%E2%80%94%20Audit%20input%20and%20output%20cap%20safeguards%20across%20inference%20adapters),
+[FIX-0051](#FIX-0051%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20bounded%20OS%20recovery%20for%20inference%20overflow), [FIX-0052](#FIX-0052%20%E2%80%94%202026-10-20%20%E2%80%94%20Separate%20OS%20overflow%20guarantees%20from%20reusable%20agent%20recovery%20policy).
+Proposal: optional OS context service (`docs/temporary/proposals/2026-10-20-optional-os-context-proposal.md`).
 
 ### Problem
 
@@ -2110,8 +2123,8 @@ and conformance matrix are proposed only and remain unimplemented.
 ## FIX-0054 — 2026-10-20 — Defer the shared library and assign current fixes to OS or agent
 
 Status: implemented as planning documentation only; no runtime implementation changed.
-Related history: [FIX-0049](#fix-0049), [FIX-0052](#fix-0052),
-[FIX-0053](#fix-0053).
+Related history: [FIX-0049](#FIX-0049%20%E2%80%94%202026-10-20%20%E2%80%94%20Diagnose%20context-packing%20overflow%20after%20gameplay%20recovery), [FIX-0052](#FIX-0052%20%E2%80%94%202026-10-20%20%E2%80%94%20Separate%20OS%20overflow%20guarantees%20from%20reusable%20agent%20recovery%20policy),
+[FIX-0053](#FIX-0053%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20agent-controlled%20OS%20context%20handling%20and%20optional%20compaction).
 
 ### Problem
 
@@ -2129,9 +2142,9 @@ This was plan ambiguity, not an additional observed runtime failure.
 ### How it was fixed
 
 Recorded the optional shared library in the existing
-[next iteration backlog](next-iteration.md#shared-agent-support-library), which
+next iteration backlog (`development-docs/next-iteration.md#shared-agent-support-library`), which
 was previously empty. Marked the earlier responsibility proposal historical and
-deferred. Updated the [current plan](optional-os-context-management-proposal-2026-10-20.md)
+deferred. Updated the current plan (`docs/temporary/proposals/2026-10-20-optional-os-context-proposal.md`)
 with six OS and five agent items, preserving direct agent-facing automatic-context
 and optional-compaction settings. No code, configuration or tests changed.
 
@@ -2155,9 +2168,9 @@ implementation changes or run resume were performed.
 ## FIX-0055 — 2026-10-20 — Implement OS context and output recovery; final verification pending
 
 Status: implemented in working tree; incomplete, stopped at the user's request.
-Related history: [FIX-0030](#fix-0030), [FIX-0047](#fix-0047),
-[FIX-0049](#fix-0049), [FIX-0050](#fix-0050), [FIX-0053](#fix-0053).
-Handoff: [I/O implementation stop point](HANDOFF-2026-10-20-IO.md).
+Related history: [FIX-0030](#FIX-0030%20%E2%80%94%202026-10-19%20%E2%80%94%20Recover%20bounded%20incomplete%20model%20output%20without%20executing%20partial%20JSON), [FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances),
+[FIX-0049](#FIX-0049%20%E2%80%94%202026-10-20%20%E2%80%94%20Diagnose%20context-packing%20overflow%20after%20gameplay%20recovery), [FIX-0050](#FIX-0050%20%E2%80%94%202026-10-20%20%E2%80%94%20Audit%20input%20and%20output%20cap%20safeguards%20across%20inference%20adapters), [FIX-0053](#FIX-0053%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20agent-controlled%20OS%20context%20handling%20and%20optional%20compaction).
+Handoff: I/O implementation stop point (`docs/temporary/handoffs/2026-10-20-io-safety-handoff.md`).
 
 ### Problem
 
@@ -2204,8 +2217,8 @@ the full fix is claimed.
 ## FIX-0056 — 2026-10-20 — Consolidate exported OS settings and coding configuration
 
 Status: implemented in working tree; settings reference and final verification pending.
-Related history: [FIX-0032](#fix-0032), [FIX-0053](#fix-0053),
-[FIX-0054](#fix-0054), [FIX-0055](#fix-0055).
+Related history: [FIX-0032](#FIX-0032%20%E2%80%94%202026-10-19%20%E2%80%94%20Move%20coding%20grammar%20and%20policy%20out%20of%20generic%20OS%20dispatch), [FIX-0053](#FIX-0053%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20agent-controlled%20OS%20context%20handling%20and%20optional%20compaction),
+[FIX-0054](#FIX-0054%20%E2%80%94%202026-10-20%20%E2%80%94%20Defer%20the%20shared%20library%20and%20assign%20current%20fixes%20to%20OS%20or%20agent), [FIX-0055](#FIX-0055%20%E2%80%94%202026-10-20%20%E2%80%94%20Implement%20OS%20context%20and%20output%20recovery%3B%20final%20verification%20pending).
 
 ### Problem
 
@@ -2227,7 +2240,7 @@ All five agent example JSON files now use one `system` object; legacy flat input
 is accepted and duplicate locations are rejected. UI uses the grouped block.
 New context and inference safety fields live together. The final consolidated
 reference was not completed before the user requested stopping; its full field
-inventory and next steps are in the [handoff](HANDOFF-2026-10-20-IO.md).
+inventory and next steps are in the handoff (`docs/temporary/handoffs/2026-10-20-io-safety-handoff.md`).
 
 ### Design principle enforced or reconstructed
 
@@ -2246,8 +2259,8 @@ or final full-suite run is claimed. Stop-point limitations remain open.
 ## FIX-0057 — 2026-10-20 — Preserve interrupted coding edits and improve scope/evidence handling
 
 Status: implemented in working tree; final added regressions not yet run.
-Related history: [FIX-0033](#fix-0033), [FIX-0034](#fix-0034),
-[FIX-0040](#fix-0040), [FIX-0049](#fix-0049), [FIX-0054](#fix-0054).
+Related history: [FIX-0033](#FIX-0033%20%E2%80%94%202026-10-19%20%E2%80%94%20Validate%20agent%20lifecycle%20updates%20and%20preserve%20long%20diagnostic%20notes), [FIX-0034](#FIX-0034%20%E2%80%94%202026-10-19%20%E2%80%94%20Separate%20declared%20build%20outputs%20from%20protected%20source),
+[FIX-0040](#FIX-0040%20%E2%80%94%202026-10-19%20%E2%80%94%20Work%20and%20integrate%20in%20the%20user%27s%20actual%20repository%20by%20default), [FIX-0049](#FIX-0049%20%E2%80%94%202026-10-20%20%E2%80%94%20Diagnose%20context-packing%20overflow%20after%20gameplay%20recovery), [FIX-0054](#FIX-0054%20%E2%80%94%202026-10-20%20%E2%80%94%20Defer%20the%20shared%20library%20and%20assign%20current%20fixes%20to%20OS%20or%20agent).
 
 ### Problem
 
@@ -2284,15 +2297,15 @@ Existing affected repository/UI tests passed in the 103-case run. New explicit
 uncommitted-handoff and pipeline regressions were added afterward and have final
 lint verification only; they remain first checks for tomorrow. No live game,
 original-run resume, full suite, commit or push occurred. See the
-[handoff](HANDOFF-2026-10-20-IO.md) for the exact restart point and remaining risks.
+handoff (`docs/temporary/handoffs/2026-10-20-io-safety-handoff.md`) for the exact restart point and remaining risks.
 
 <a id="fix-0058"></a>
 ## FIX-0058 — 2026-10-20 — Complete OS I/O safety and compaction verification
 
 Status: implemented and verified in the working tree.
-Related history: [FIX-0055](#fix-0055), [FIX-0056](#fix-0056),
-[FIX-0057](#fix-0057); responsibility decisions [FIX-0053](#fix-0053),
-[FIX-0054](#fix-0054).
+Related history: [FIX-0055](#FIX-0055%20%E2%80%94%202026-10-20%20%E2%80%94%20Implement%20OS%20context%20and%20output%20recovery%3B%20final%20verification%20pending), [FIX-0056](#FIX-0056%20%E2%80%94%202026-10-20%20%E2%80%94%20Consolidate%20exported%20OS%20settings%20and%20coding%20configuration),
+[FIX-0057](#FIX-0057%20%E2%80%94%202026-10-20%20%E2%80%94%20Preserve%20interrupted%20coding%20edits%20and%20improve%20scope%2Fevidence%20handling); responsibility decisions [FIX-0053](#FIX-0053%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20agent-controlled%20OS%20context%20handling%20and%20optional%20compaction),
+[FIX-0054](#FIX-0054%20%E2%80%94%202026-10-20%20%E2%80%94%20Defer%20the%20shared%20library%20and%20assign%20current%20fixes%20to%20OS%20or%20agent).
 
 ### Problem
 
@@ -2318,7 +2331,7 @@ and child calls. Runtime/design ContextPart.compactable definitions and the
 generated schema now agree. Main paths: runtime/context.py, runtime/kernel.py,
 runtime/model_retries.py, runtime/inference.py, runtime/codex.py, contracts.py
 and design-docs/langgraph-agent contracts/schema. See the
-[completion report](io-safety-verification-2026-10-20.md).
+completion report (`development-docs/io-safety-verification-2026-10-20.md`).
 
 ### Design principle enforced or reconstructed
 
@@ -2333,7 +2346,7 @@ silently promised. Coding semantics remain agent-owned.
 Final full suite: **327 passed, 2 skipped**. The two last corrections were
 verified afterward by **73 passing context/recovery cases**. Frontend: **14/14**
 with Windows Node; final Ruff and whitespace checks passed. Canonical-LF design
-validation passed 35 records/41 invalid combinations. The [completion report](io-safety-verification-2026-10-20.md) records exact final
+validation passed 35 records/41 invalid combinations. The completion report (`development-docs/io-safety-verification-2026-10-20.md`) records exact final
 suite, lint and frontend results, prior failed checks and material limits.
 New coverage includes local/cloud manual/assisted input, whole groups, immutable
 memory/trust, overrides, unissued child rejection, failed/cancelled/uncertain/
@@ -2346,9 +2359,9 @@ verification status; it does not claim live provider or original-run validation.
 ## FIX-0059 — 2026-10-20 — Finish the unified OS settings reference and grouped validation
 
 Status: implemented and verified in the working tree.
-Related history: [FIX-0055](#fix-0055), [FIX-0056](#fix-0056),
-[FIX-0057](#fix-0057); responsibility decisions [FIX-0053](#fix-0053),
-[FIX-0054](#fix-0054).
+Related history: [FIX-0055](#FIX-0055%20%E2%80%94%202026-10-20%20%E2%80%94%20Implement%20OS%20context%20and%20output%20recovery%3B%20final%20verification%20pending), [FIX-0056](#FIX-0056%20%E2%80%94%202026-10-20%20%E2%80%94%20Consolidate%20exported%20OS%20settings%20and%20coding%20configuration),
+[FIX-0057](#FIX-0057%20%E2%80%94%202026-10-20%20%E2%80%94%20Preserve%20interrupted%20coding%20edits%20and%20improve%20scope%2Fevidence%20handling); responsibility decisions [FIX-0053](#FIX-0053%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20agent-controlled%20OS%20context%20handling%20and%20optional%20compaction),
+[FIX-0054](#FIX-0054%20%E2%80%94%202026-10-20%20%E2%80%94%20Defer%20the%20shared%20library%20and%20assign%20current%20fixes%20to%20OS%20or%20agent).
 
 ### Problem
 
@@ -2386,7 +2399,7 @@ architecture to OS and agent.
 Schema-to-reference field coverage and all five grouped examples pass.
 Both RuntimeConfig and AgentConfig reject non-object system values and preserve
 the local batch-size environment override. Duplicate placements remain rejected.
-See the [completion report](io-safety-verification-2026-10-20.md) for exact checks.
+See the completion report (`development-docs/io-safety-verification-2026-10-20.md`) for exact checks.
 This completes FIX-0056's unfinished reference and corrects the old boundary
 statement rather than silently changing its historical fix entry.
 
@@ -2394,9 +2407,9 @@ statement rather than silently changing its historical fix entry.
 ## FIX-0060 — 2026-10-20 — Verify interrupted-source handoff and consecutive correction policy
 
 Status: implemented and verified in the working tree.
-Related history: [FIX-0055](#fix-0055), [FIX-0056](#fix-0056),
-[FIX-0057](#fix-0057); responsibility decisions [FIX-0053](#fix-0053),
-[FIX-0054](#fix-0054).
+Related history: [FIX-0055](#FIX-0055%20%E2%80%94%202026-10-20%20%E2%80%94%20Implement%20OS%20context%20and%20output%20recovery%3B%20final%20verification%20pending), [FIX-0056](#FIX-0056%20%E2%80%94%202026-10-20%20%E2%80%94%20Consolidate%20exported%20OS%20settings%20and%20coding%20configuration),
+[FIX-0057](#FIX-0057%20%E2%80%94%202026-10-20%20%E2%80%94%20Preserve%20interrupted%20coding%20edits%20and%20improve%20scope%2Fevidence%20handling); responsibility decisions [FIX-0053](#FIX-0053%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20agent-controlled%20OS%20context%20handling%20and%20optional%20compaction),
+[FIX-0054](#FIX-0054%20%E2%80%94%202026-10-20%20%E2%80%94%20Defer%20the%20shared%20library%20and%20assign%20current%20fixes%20to%20OS%20or%20agent).
 
 ### Problem
 
@@ -2432,7 +2445,7 @@ truthful generic execution facts while repository workflow stays agent-owned.
 Pending source handoff, strict-cap and pipeline regressions passed in the resumed
 106-test run. Both new grant/base-conflict refusal cases passed, and the
 valid-action/error-reset regression passed. The
-[completion report](io-safety-verification-2026-10-20.md) records final suite
+completion report (`development-docs/io-safety-verification-2026-10-20.md`) records final suite
 coverage and limits. This completes FIX-0057's pending verification; no original
 Minecraft run, live gameplay, commit or push is claimed.
 
@@ -2440,8 +2453,8 @@ Minecraft run, live gameplay, commit or push is claimed.
 ## FIX-0061 — 2026-10-20 — Research concurrent Claude requests for local inference simulation
 
 Status: investigated; no implementation or configuration changed.
-Related history: [FIX-0009](#fix-0009), [FIX-0011](#fix-0011),
-[FIX-0048](#fix-0048), [FIX-0059](#fix-0059).
+Related history: [FIX-0009](#FIX-0009%20%E2%80%94%202026-10-17%20%E2%80%94%20Build%20the%20agent%20against%20replaceable%20runtime%20and%20provider%20interfaces), [FIX-0011](#FIX-0011%20%E2%80%94%202026-10-17%20%E2%80%94%20Correct%20worker%20bindings%20and%20short%20demonstration%20budgets),
+[FIX-0048](#FIX-0048%20%E2%80%94%202026-10-20%20%E2%80%94%20Document%20the%20Codex%20and%20serial%20Haiku%20tester%20setup), [FIX-0059](#FIX-0059%20%E2%80%94%202026-10-20%20%E2%80%94%20Finish%20the%20unified%20OS%20settings%20reference%20and%20grouped%20validation).
 
 ### Problem
 
@@ -2501,8 +2514,8 @@ Existing unrelated working-tree edits are not claimed.
 ## FIX-0062 — 2026-10-20 — Inspect UI memory visibility and propose an OS context drawer
 
 Status: investigated; proposal only, no implementation changed.
-Related history: [FIX-0014](#fix-0014), [FIX-0037](#fix-0037),
-[FIX-0053](#fix-0053), [FIX-0058](#fix-0058), [FIX-0059](#fix-0059).
+Related history: [FIX-0014](#FIX-0014%20%E2%80%94%202026-10-17%20%E2%80%94%20Capture%20OS%20inspection%20evidence%20in%20live%20and%20saved%20views), [FIX-0037](#FIX-0037%20%E2%80%94%202026-10-19%20%E2%80%94%20Separate%20OS%20monitoring%20from%20agent%20task%20and%20review%20history),
+[FIX-0053](#FIX-0053%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20agent-controlled%20OS%20context%20handling%20and%20optional%20compaction), [FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification), [FIX-0059](#FIX-0059%20%E2%80%94%202026-10-20%20%E2%80%94%20Finish%20the%20unified%20OS%20settings%20reference%20and%20grouped%20validation).
 
 ### Problem
 
@@ -2566,9 +2579,9 @@ and its index row were edited for this task.
 ## FIX-0063 — 2026-10-20 — Design a launch-scoped UI batch simulation flag
 
 Status: investigated; design recorded, implementation deferred by user request.
-Related history: [FIX-0061](#fix-0061), [FIX-0048](#fix-0048),
-[FIX-0059](#fix-0059).
-Design: [SIM-01 in current iteration issues](current-iter-issues.md#sim-batch-ui).
+Related history: [FIX-0061](#FIX-0061%20%E2%80%94%202026-10-20%20%E2%80%94%20Research%20concurrent%20Claude%20requests%20for%20local%20inference%20simulation), [FIX-0048](#FIX-0048%20%E2%80%94%202026-10-20%20%E2%80%94%20Document%20the%20Codex%20and%20serial%20Haiku%20tester%20setup),
+[FIX-0059](#FIX-0059%20%E2%80%94%202026-10-20%20%E2%80%94%20Finish%20the%20unified%20OS%20settings%20reference%20and%20grouped%20validation).
+Design: SIM-01 in current iteration issues (`docs/temporary/incidents/2026-10-21-inference-simulation.md#sim-batch-ui`).
 
 ### Problem
 
@@ -2616,9 +2629,9 @@ resume occurred. Planned test requirements are not claimed as completed checks.
 ## FIX-0064 — 2026-10-20 — Design OS memory and effective-context inspection for this version
 
 Status: investigated; design recorded for this version, implementation remains open.
-Related history: [FIX-0062](#fix-0062), [FIX-0037](#fix-0037),
-[FIX-0058](#fix-0058), [FIX-0059](#fix-0059).
-Design: [MEM-01 in current iteration issues](current-iter-issues.md#os-memory-context-inspector).
+Related history: [FIX-0062](#FIX-0062%20%E2%80%94%202026-10-20%20%E2%80%94%20Inspect%20UI%20memory%20visibility%20and%20propose%20an%20OS%20context%20drawer), [FIX-0037](#FIX-0037%20%E2%80%94%202026-10-19%20%E2%80%94%20Separate%20OS%20monitoring%20from%20agent%20task%20and%20review%20history),
+[FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification), [FIX-0059](#FIX-0059%20%E2%80%94%202026-10-20%20%E2%80%94%20Finish%20the%20unified%20OS%20settings%20reference%20and%20grouped%20validation).
+Design: MEM-01 in current iteration issues (`docs/temporary/incidents/2026-10-20-context-inspector-design.md#os-memory-context-inspector`).
 
 ### Problem
 
@@ -2670,7 +2683,7 @@ run resume occurred. Only MEM-01 and this required history/index update changed.
 ## FIX-0065 — 2026-10-20 — Clarify Codex proxy authentication and plan usage
 
 Status: investigated; no implementation changed.
-Related history: [FIX-0058](#fix-0058) (proxy prepared payload and output limits).
+Related history: [FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification) (proxy prepared payload and output limits).
 
 ### Problem
 
@@ -2717,10 +2730,10 @@ metering for a separately installed proxy remains unverified.
 ## FIX-0066 — 2026-10-20 — Audit current memory implementation and management ownership
 
 Status: investigated; no implementation changed.
-Related history: [FIX-0026](#fix-0026), [FIX-0053](#fix-0053),
-[FIX-0058](#fix-0058), [FIX-0059](#fix-0059), [FIX-0062](#fix-0062),
-[FIX-0064](#fix-0064).
-Report: [current memory implementation](memory-implementation-report-2026-10-20.md).
+Related history: [FIX-0026](#FIX-0026%20%E2%80%94%202026-10-18%20%E2%80%94%20Stop%20non-actionable%20planning%20and%20repeated%20known%20failures), [FIX-0053](#FIX-0053%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20agent-controlled%20OS%20context%20handling%20and%20optional%20compaction),
+[FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification), [FIX-0059](#FIX-0059%20%E2%80%94%202026-10-20%20%E2%80%94%20Finish%20the%20unified%20OS%20settings%20reference%20and%20grouped%20validation), [FIX-0062](#FIX-0062%20%E2%80%94%202026-10-20%20%E2%80%94%20Inspect%20UI%20memory%20visibility%20and%20propose%20an%20OS%20context%20drawer),
+[FIX-0064](#FIX-0064%20%E2%80%94%202026-10-20%20%E2%80%94%20Design%20OS%20memory%20and%20effective-context%20inspection%20for%20this%20version).
+Report: current memory implementation (`docs/temporary/investigations/2026-10-20-memory-implementation.md`).
 
 ### Problem
 
@@ -2774,9 +2787,9 @@ working-tree changes or historical test outcomes are claimed as this task's work
 ## FIX-0067 — 2026-10-20 — Trace coding-agent concurrency and OS admission ownership
 
 Status: investigated; no implementation changed.
-Related history: [FIX-0009](#fix-0009), [FIX-0032](#fix-0032),
-[FIX-0040](#fix-0040), [FIX-0048](#fix-0048), [FIX-0061](#fix-0061),
-[FIX-0063](#fix-0063).
+Related history: [FIX-0009](#FIX-0009%20%E2%80%94%202026-10-17%20%E2%80%94%20Build%20the%20agent%20against%20replaceable%20runtime%20and%20provider%20interfaces), [FIX-0032](#FIX-0032%20%E2%80%94%202026-10-19%20%E2%80%94%20Move%20coding%20grammar%20and%20policy%20out%20of%20generic%20OS%20dispatch),
+[FIX-0040](#FIX-0040%20%E2%80%94%202026-10-19%20%E2%80%94%20Work%20and%20integrate%20in%20the%20user%27s%20actual%20repository%20by%20default), [FIX-0048](#FIX-0048%20%E2%80%94%202026-10-20%20%E2%80%94%20Document%20the%20Codex%20and%20serial%20Haiku%20tester%20setup), [FIX-0061](#FIX-0061%20%E2%80%94%202026-10-20%20%E2%80%94%20Research%20concurrent%20Claude%20requests%20for%20local%20inference%20simulation),
+[FIX-0063](#FIX-0063%20%E2%80%94%202026-10-20%20%E2%80%94%20Design%20a%20launch-scoped%20UI%20batch%20simulation%20flag).
 
 ### Problem
 
@@ -2840,10 +2853,10 @@ were left untouched.
 ## FIX-0068 — 2026-10-20 — Analyze an interrupted native inventory repair and retained progress
 
 Status: investigated; no implementation changed.
-Related history: [FIX-0028](#fix-0028), [FIX-0037](#fix-0037),
-[FIX-0040](#fix-0040), [FIX-0041](#fix-0041), [FIX-0049](#fix-0049),
-[FIX-0058](#fix-0058), [FIX-0060](#fix-0060).
-Detailed evidence: [run eb66fc618354 analysis](run-eb66fc618354-analysis.md).
+Related history: [FIX-0028](#FIX-0028%20%E2%80%94%202026-10-19%20%E2%80%94%20Bound%20retained%20native%20telemetry%20without%20aborting%20healthy%20generation), [FIX-0037](#FIX-0037%20%E2%80%94%202026-10-19%20%E2%80%94%20Separate%20OS%20monitoring%20from%20agent%20task%20and%20review%20history),
+[FIX-0040](#FIX-0040%20%E2%80%94%202026-10-19%20%E2%80%94%20Work%20and%20integrate%20in%20the%20user%27s%20actual%20repository%20by%20default), [FIX-0041](#FIX-0041%20%E2%80%94%202026-10-19%20%E2%80%94%20Record%20remaining%20run-quality%20and%20generalization%20findings%20without%20calling%20them%20fixed), [FIX-0049](#FIX-0049%20%E2%80%94%202026-10-20%20%E2%80%94%20Diagnose%20context-packing%20overflow%20after%20gameplay%20recovery),
+[FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification), [FIX-0060](#FIX-0060%20%E2%80%94%202026-10-20%20%E2%80%94%20Verify%20interrupted-source%20handoff%20and%20consecutive%20correction%20policy).
+Detailed evidence: run eb66fc618354 analysis (`docs/temporary/investigations/2026-10-20-run-eb66fc618354.md`).
 
 ### Problem
 
@@ -2914,8 +2927,8 @@ is represented as an implemented repair.
 ## FIX-0069 — 2026-10-20 — Assess single-thread compatibility and find inconsistent worker-cap routing
 
 Status: investigated; no implementation changed; worker-cap routing issue remains open.
-Related history: [FIX-0040](#fix-0040), [FIX-0061](#fix-0061),
-[FIX-0067](#fix-0067).
+Related history: [FIX-0040](#FIX-0040%20%E2%80%94%202026-10-19%20%E2%80%94%20Work%20and%20integrate%20in%20the%20user%27s%20actual%20repository%20by%20default), [FIX-0061](#FIX-0061%20%E2%80%94%202026-10-20%20%E2%80%94%20Research%20concurrent%20Claude%20requests%20for%20local%20inference%20simulation),
+[FIX-0067](#FIX-0067%20%E2%80%94%202026-10-20%20%E2%80%94%20Trace%20coding-agent%20concurrency%20and%20OS%20admission%20ownership).
 
 ### Problem
 
@@ -2983,8 +2996,8 @@ Existing unrelated working-tree changes remain unclaimed.
 ## FIX-0071 — 2026-10-20 — Record a current-version OS concurrency and deadlock audit
 
 Status: investigated; follow-up documented, no implementation changed.
-Related history: [FIX-0067](#fix-0067), [FIX-0069](#fix-0069).
-Follow-up: [CONC-01](current-iter-issues.md#os-concurrency-audit).
+Related history: [FIX-0067](#FIX-0067%20%E2%80%94%202026-10-20%20%E2%80%94%20Trace%20coding-agent%20concurrency%20and%20OS%20admission%20ownership), [FIX-0069](#FIX-0069%20%E2%80%94%202026-10-20%20%E2%80%94%20Assess%20single-thread%20compatibility%20and%20find%20inconsistent%20worker-cap%20routing).
+Follow-up: CONC-01 (`docs/temporary/incidents/2026-10-20-concurrency-audit.md#os-concurrency-audit`).
 
 ### Problem
 
@@ -3027,9 +3040,9 @@ the FIX-0069 agent correction remain open; unrelated changes are unclaimed.
 ## FIX-0070 — 2026-10-20 — Measure historical memory pressure and OS context interventions
 
 Status: investigated; no product implementation changed.
-Related history: [FIX-0049](#fix-0049), [FIX-0053](#fix-0053),
-[FIX-0058](#fix-0058), [FIX-0066](#fix-0066), [FIX-0068](#fix-0068).
-Report: [historical memory audit](memory-records-audit-2026-10-20.md).
+Related history: [FIX-0049](#FIX-0049%20%E2%80%94%202026-10-20%20%E2%80%94%20Diagnose%20context-packing%20overflow%20after%20gameplay%20recovery), [FIX-0053](#FIX-0053%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20agent-controlled%20OS%20context%20handling%20and%20optional%20compaction),
+[FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification), [FIX-0066](#FIX-0066%20%E2%80%94%202026-10-20%20%E2%80%94%20Audit%20current%20memory%20implementation%20and%20management%20ownership), [FIX-0068](#FIX-0068%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20an%20interrupted%20native%20inventory%20repair%20and%20retained%20progress).
+Report: historical memory audit (`docs/temporary/investigations/2026-10-20-memory-records.md`).
 
 ### Problem
 
@@ -3084,11 +3097,11 @@ test results and unrelated working-tree edits are not claimed as this task's wor
 ## FIX-0072 — 2026-10-20 — Align current OS and agent documentation with justified revisions
 
 Status: implemented as documentation only; verification recorded below.
-Related history: [FIX-0032](#fix-0032), [FIX-0040](#fix-0040),
-[FIX-0047](#fix-0047), [FIX-0053](#fix-0053), [FIX-0054](#fix-0054),
-[FIX-0058](#fix-0058), [FIX-0059](#fix-0059), [FIX-0060](#fix-0060),
-[FIX-0061](#fix-0061), [FIX-0065](#fix-0065).
-Decision ledger: [current design revisions](../design-docs/simplified-os/DESIGN_REVISIONS.md).
+Related history: [FIX-0032](#FIX-0032%20%E2%80%94%202026-10-19%20%E2%80%94%20Move%20coding%20grammar%20and%20policy%20out%20of%20generic%20OS%20dispatch), [FIX-0040](#FIX-0040%20%E2%80%94%202026-10-19%20%E2%80%94%20Work%20and%20integrate%20in%20the%20user%27s%20actual%20repository%20by%20default),
+[FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances), [FIX-0053](#FIX-0053%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20agent-controlled%20OS%20context%20handling%20and%20optional%20compaction), [FIX-0054](#FIX-0054%20%E2%80%94%202026-10-20%20%E2%80%94%20Defer%20the%20shared%20library%20and%20assign%20current%20fixes%20to%20OS%20or%20agent),
+[FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification), [FIX-0059](#FIX-0059%20%E2%80%94%202026-10-20%20%E2%80%94%20Finish%20the%20unified%20OS%20settings%20reference%20and%20grouped%20validation), [FIX-0060](#FIX-0060%20%E2%80%94%202026-10-20%20%E2%80%94%20Verify%20interrupted-source%20handoff%20and%20consecutive%20correction%20policy),
+[FIX-0061](#FIX-0061%20%E2%80%94%202026-10-20%20%E2%80%94%20Research%20concurrent%20Claude%20requests%20for%20local%20inference%20simulation), [FIX-0065](#FIX-0065%20%E2%80%94%202026-10-20%20%E2%80%94%20Clarify%20Codex%20proxy%20authentication%20and%20plan%20usage).
+Decision ledger: current design revisions (`design-docs/simplified-os/DESIGN_REVISIONS.md`).
 
 ### Problem
 
@@ -3160,10 +3173,10 @@ limits.
 ## FIX-0073 — 2026-10-20 — Record automatic and explicit memory management for this version
 
 Status: investigated; current-version implementation work documented only.
-Related history: [FIX-0053](#fix-0053), [FIX-0054](#fix-0054),
-[FIX-0058](#fix-0058), [FIX-0059](#fix-0059), [FIX-0064](#fix-0064),
-[FIX-0066](#fix-0066), [FIX-0070](#fix-0070), [FIX-0072](#fix-0072).
-Issue: [MEM-02](current-iter-issues.md#memory-management-modes).
+Related history: [FIX-0053](#FIX-0053%20%E2%80%94%202026-10-20%20%E2%80%94%20Propose%20agent-controlled%20OS%20context%20handling%20and%20optional%20compaction), [FIX-0054](#FIX-0054%20%E2%80%94%202026-10-20%20%E2%80%94%20Defer%20the%20shared%20library%20and%20assign%20current%20fixes%20to%20OS%20or%20agent),
+[FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification), [FIX-0059](#FIX-0059%20%E2%80%94%202026-10-20%20%E2%80%94%20Finish%20the%20unified%20OS%20settings%20reference%20and%20grouped%20validation), [FIX-0064](#FIX-0064%20%E2%80%94%202026-10-20%20%E2%80%94%20Design%20OS%20memory%20and%20effective-context%20inspection%20for%20this%20version),
+[FIX-0066](#FIX-0066%20%E2%80%94%202026-10-20%20%E2%80%94%20Audit%20current%20memory%20implementation%20and%20management%20ownership), [FIX-0070](#FIX-0070%20%E2%80%94%202026-10-20%20%E2%80%94%20Measure%20historical%20memory%20pressure%20and%20OS%20context%20interventions), [FIX-0072](#FIX-0072%20%E2%80%94%202026-10-20%20%E2%80%94%20Align%20current%20OS%20and%20agent%20documentation%20with%20justified%20revisions).
+Issue: MEM-02 (`docs/temporary/incidents/2026-10-20-memory-management-modes.md#memory-management-modes`).
 
 ### Problem
 
@@ -3213,8 +3226,8 @@ runtime/provider execution, memory API or new regression coverage was added.
 ## FIX-0074 — 2026-10-20 — Confirm the current UI setting for two Claude requests
 
 Status: investigated; no implementation changed.
-Related history: [FIX-0061](#fix-0061), [FIX-0063](#fix-0063),
-[FIX-0067](#fix-0067).
+Related history: [FIX-0061](#FIX-0061%20%E2%80%94%202026-10-20%20%E2%80%94%20Research%20concurrent%20Claude%20requests%20for%20local%20inference%20simulation), [FIX-0063](#FIX-0063%20%E2%80%94%202026-10-20%20%E2%80%94%20Design%20a%20launch-scoped%20UI%20batch%20simulation%20flag),
+[FIX-0067](#FIX-0067%20%E2%80%94%202026-10-20%20%E2%80%94%20Trace%20coding-agent%20concurrency%20and%20OS%20admission%20ownership).
 
 ### Problem
 
@@ -3261,8 +3274,8 @@ whole-tree status or unrelated edits are claimed.
 ## FIX-0075 — 2026-10-20 — Raise Haiku generation and OS output limits to 32k
 
 Status: implemented; targeted checks passed.
-Related history: [FIX-0011](#fix-0011), [FIX-0030](#fix-0030),
-[FIX-0058](#fix-0058), [FIX-0059](#fix-0059).
+Related history: [FIX-0011](#FIX-0011%20%E2%80%94%202026-10-17%20%E2%80%94%20Correct%20worker%20bindings%20and%20short%20demonstration%20budgets), [FIX-0030](#FIX-0030%20%E2%80%94%202026-10-19%20%E2%80%94%20Recover%20bounded%20incomplete%20model%20output%20without%20executing%20partial%20JSON),
+[FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification), [FIX-0059](#FIX-0059%20%E2%80%94%202026-10-20%20%E2%80%94%20Finish%20the%20unified%20OS%20settings%20reference%20and%20grouped%20validation).
 
 ### Problem
 
@@ -3322,8 +3335,8 @@ resume, full-suite run, commit or push occurred.
 ## FIX-0076 — 2026-10-20 — Triple the UI and mixed-example sprint allowance
 
 Status: implemented; targeted verification passed.
-Related history: [FIX-0011](#fix-0011), [FIX-0075](#fix-0075).
-Evidence: [run a1859f8644a5 analysis](run-a1859f8644a5-analysis.md).
+Related history: [FIX-0011](#FIX-0011%20%E2%80%94%202026-10-17%20%E2%80%94%20Correct%20worker%20bindings%20and%20short%20demonstration%20budgets), [FIX-0075](#FIX-0075%20%E2%80%94%202026-10-20%20%E2%80%94%20Raise%20Haiku%20generation%20and%20OS%20output%20limits%20to%2032k).
+Evidence: run a1859f8644a5 analysis (`docs/temporary/investigations/2026-10-20-run-a1859f8644a5.md`).
 
 ### Problem
 
@@ -3373,12 +3386,12 @@ and are not claimed as this task's work.
 ## FIX-0077 — 2026-10-20 — Analyze the first two-slot run and record recovery/concurrency findings
 
 Status: investigated; findings remain open, no concurrency/recovery implementation changed.
-Related history: [FIX-0040](#fix-0040), [FIX-0058](#fix-0058),
-[FIX-0060](#fix-0060), [FIX-0067](#fix-0067), [FIX-0068](#fix-0068),
-[FIX-0069](#fix-0069), [FIX-0071](#fix-0071), [FIX-0075](#fix-0075).
-Report: [run analysis](run-a1859f8644a5-analysis.md).
-Measurements: [evidence JSON](run-a1859f8644a5-evidence.json).
-Follow-ups: [RUN13-01 through RUN13-06](current-iter-issues.md#run-a1859f8644a5-findings).
+Related history: [FIX-0040](#FIX-0040%20%E2%80%94%202026-10-19%20%E2%80%94%20Work%20and%20integrate%20in%20the%20user%27s%20actual%20repository%20by%20default), [FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification),
+[FIX-0060](#FIX-0060%20%E2%80%94%202026-10-20%20%E2%80%94%20Verify%20interrupted-source%20handoff%20and%20consecutive%20correction%20policy), [FIX-0067](#FIX-0067%20%E2%80%94%202026-10-20%20%E2%80%94%20Trace%20coding-agent%20concurrency%20and%20OS%20admission%20ownership), [FIX-0068](#FIX-0068%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20an%20interrupted%20native%20inventory%20repair%20and%20retained%20progress),
+[FIX-0069](#FIX-0069%20%E2%80%94%202026-10-20%20%E2%80%94%20Assess%20single-thread%20compatibility%20and%20find%20inconsistent%20worker-cap%20routing), [FIX-0071](#FIX-0071%20%E2%80%94%202026-10-20%20%E2%80%94%20Record%20a%20current-version%20OS%20concurrency%20and%20deadlock%20audit), [FIX-0075](#FIX-0075%20%E2%80%94%202026-10-20%20%E2%80%94%20Raise%20Haiku%20generation%20and%20OS%20output%20limits%20to%2032k).
+Report: run analysis (`docs/temporary/investigations/2026-10-20-run-a1859f8644a5.md`).
+Measurements: [evidence JSON](../docs/temporary/investigations/run-a1859f8644a5-evidence.json).
+Follow-ups: RUN13-01 through RUN13-06 (`docs/temporary/incidents/2026-10-20-two-slot-run-findings.md#run-a1859f8644a5-findings`).
 
 ### Problem
 
@@ -3450,9 +3463,9 @@ effort-only implementation scope were checked before handoff.
 ## FIX-0078 — 2026-10-20 — Locate and summarize the current-version implementation tracker
 
 Status: investigated; no implementation changed.
-Related history: [FIX-0041](#fix-0041), [FIX-0054](#fix-0054),
-[FIX-0063](#fix-0063), [FIX-0064](#fix-0064), [FIX-0069](#fix-0069),
-[FIX-0071](#fix-0071), [FIX-0073](#fix-0073), [FIX-0077](#fix-0077).
+Related history: [FIX-0041](#FIX-0041%20%E2%80%94%202026-10-19%20%E2%80%94%20Record%20remaining%20run-quality%20and%20generalization%20findings%20without%20calling%20them%20fixed), [FIX-0054](#FIX-0054%20%E2%80%94%202026-10-20%20%E2%80%94%20Defer%20the%20shared%20library%20and%20assign%20current%20fixes%20to%20OS%20or%20agent),
+[FIX-0063](#FIX-0063%20%E2%80%94%202026-10-20%20%E2%80%94%20Design%20a%20launch-scoped%20UI%20batch%20simulation%20flag), [FIX-0064](#FIX-0064%20%E2%80%94%202026-10-20%20%E2%80%94%20Design%20OS%20memory%20and%20effective-context%20inspection%20for%20this%20version), [FIX-0069](#FIX-0069%20%E2%80%94%202026-10-20%20%E2%80%94%20Assess%20single-thread%20compatibility%20and%20find%20inconsistent%20worker-cap%20routing),
+[FIX-0071](#FIX-0071%20%E2%80%94%202026-10-20%20%E2%80%94%20Record%20a%20current-version%20OS%20concurrency%20and%20deadlock%20audit), [FIX-0073](#FIX-0073%20%E2%80%94%202026-10-20%20%E2%80%94%20Record%20automatic%20and%20explicit%20memory%20management%20for%20this%20version), [FIX-0077](#FIX-0077%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20the%20first%20two-slot%20run%20and%20record%20recovery%2Fconcurrency%20findings).
 
 ### Problem
 
@@ -3469,7 +3482,7 @@ is a navigation/status review, not a newly reproduced runtime defect.
 ### How it was fixed
 
 No implementation, configuration or tracker content changed. Confirmed README's
-mapping to [current-iter-issues.md](current-iter-issues.md), distinct from
+mapping to `development-docs/current-iter-issues.md`, distinct from
 next-iteration.md. Reviewed its ten explicitly open IDs: CONC-01, RUN13-01 through
 RUN13-06, MEM-01, MEM-02 and SIM-01. MEM-02 has separate automatic and explicit
 memory-management deliverables. Identified older open acceptance/accounting work
@@ -3501,9 +3514,9 @@ push occurred. Only this required investigation entry/index was added.
 ## FIX-0079 — 2026-10-20 — Assess evidence, implementation readiness and ownership of seven backlog items
 
 Status: investigated; no implementation changed.
-Related history: [FIX-0060](#fix-0060), [FIX-0063](#fix-0063),
-[FIX-0064](#fix-0064), [FIX-0068](#fix-0068), [FIX-0070](#fix-0070),
-[FIX-0073](#fix-0073), [FIX-0077](#fix-0077), [FIX-0078](#fix-0078).
+Related history: [FIX-0060](#FIX-0060%20%E2%80%94%202026-10-20%20%E2%80%94%20Verify%20interrupted-source%20handoff%20and%20consecutive%20correction%20policy), [FIX-0063](#FIX-0063%20%E2%80%94%202026-10-20%20%E2%80%94%20Design%20a%20launch-scoped%20UI%20batch%20simulation%20flag),
+[FIX-0064](#FIX-0064%20%E2%80%94%202026-10-20%20%E2%80%94%20Design%20OS%20memory%20and%20effective-context%20inspection%20for%20this%20version), [FIX-0068](#FIX-0068%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20an%20interrupted%20native%20inventory%20repair%20and%20retained%20progress), [FIX-0070](#FIX-0070%20%E2%80%94%202026-10-20%20%E2%80%94%20Measure%20historical%20memory%20pressure%20and%20OS%20context%20interventions),
+[FIX-0073](#FIX-0073%20%E2%80%94%202026-10-20%20%E2%80%94%20Record%20automatic%20and%20explicit%20memory%20management%20for%20this%20version), [FIX-0077](#FIX-0077%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20the%20first%20two-slot%20run%20and%20record%20recovery%2Fconcurrency%20findings), [FIX-0078](#FIX-0078%20%E2%80%94%202026-10-20%20%E2%80%94%20Locate%20and%20summarize%20the%20current-version%20implementation%20tracker).
 
 ### Problem
 
@@ -3558,10 +3571,10 @@ configuration, run state, commit or push changed.
 ## FIX-0080 — 2026-10-20 — Add concise module docs and a complete human/agent navigation tree
 
 Status: implemented; documentation/navigation tooling verified.
-Related history: [FIX-0004](#fix-0004), [FIX-0048](#fix-0048),
-[FIX-0059](#fix-0059), [FIX-0072](#fix-0072), [FIX-0076](#fix-0076).
-Reading route: [developer onboarding](../dev-readme.md),
-[documentation index](../docs/README.md), [maintenance contract](../docs/maintenance.md).
+Related history: [FIX-0004](#FIX-0004%20%E2%80%94%202026-10-19%20%E2%80%94%20Require%20agents%20to%20read%20and%20maintain%20a%20durable%20fix%20history), [FIX-0048](#FIX-0048%20%E2%80%94%202026-10-20%20%E2%80%94%20Document%20the%20Codex%20and%20serial%20Haiku%20tester%20setup),
+[FIX-0059](#FIX-0059%20%E2%80%94%202026-10-20%20%E2%80%94%20Finish%20the%20unified%20OS%20settings%20reference%20and%20grouped%20validation), [FIX-0072](#FIX-0072%20%E2%80%94%202026-10-20%20%E2%80%94%20Align%20current%20OS%20and%20agent%20documentation%20with%20justified%20revisions), [FIX-0076](#FIX-0076%20%E2%80%94%202026-10-20%20%E2%80%94%20Triple%20the%20UI%20and%20mixed-example%20sprint%20allowance).
+Reading route: developer onboarding (`dev-readme.md`),
+documentation index (`docs/README.md`), maintenance contract (`docs/maintenance.md`).
 
 ### Problem
 
@@ -3640,10 +3653,10 @@ limit rather than silently repaired or claimed as newly executed.
 ## FIX-0081 — 2026-10-21 — Reassess unfinished older backlog items against current implementation
 
 Status: investigated; no implementation changed.
-Related history: [FIX-0029](#fix-0029), [FIX-0031](#fix-0031),
-[FIX-0032](#fix-0032), [FIX-0033](#fix-0033), [FIX-0041](#fix-0041),
-[FIX-0046](#fix-0046), [FIX-0058](#fix-0058), [FIX-0069](#fix-0069),
-[FIX-0072](#fix-0072), [FIX-0079](#fix-0079), [FIX-0080](#fix-0080).
+Related history: [FIX-0029](#FIX-0029%20%E2%80%94%202026-10-19%20%E2%80%94%20Keep%20reporting%20failures%20from%20replacing%20execution%20outcomes), [FIX-0031](#FIX-0031%20%E2%80%94%202026-10-19%20%E2%80%94%20Keep%20tool%20home%2Fcache%20housekeeping%20outside%20source%20authority),
+[FIX-0032](#FIX-0032%20%E2%80%94%202026-10-19%20%E2%80%94%20Move%20coding%20grammar%20and%20policy%20out%20of%20generic%20OS%20dispatch), [FIX-0033](#FIX-0033%20%E2%80%94%202026-10-19%20%E2%80%94%20Validate%20agent%20lifecycle%20updates%20and%20preserve%20long%20diagnostic%20notes), [FIX-0041](#FIX-0041%20%E2%80%94%202026-10-19%20%E2%80%94%20Record%20remaining%20run-quality%20and%20generalization%20findings%20without%20calling%20them%20fixed),
+[FIX-0046](#FIX-0046%20%E2%80%94%202026-10-20%20%E2%80%94%20Scope%20permanent-failure%20containment%20to%20the%20request%20being%20repaired), [FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification), [FIX-0069](#FIX-0069%20%E2%80%94%202026-10-20%20%E2%80%94%20Assess%20single-thread%20compatibility%20and%20find%20inconsistent%20worker-cap%20routing),
+[FIX-0072](#FIX-0072%20%E2%80%94%202026-10-20%20%E2%80%94%20Align%20current%20OS%20and%20agent%20documentation%20with%20justified%20revisions), [FIX-0079](#FIX-0079%20%E2%80%94%202026-10-20%20%E2%80%94%20Assess%20evidence%2C%20implementation%20readiness%20and%20ownership%20of%20seven%20backlog%20items), [FIX-0080](#FIX-0080%20%E2%80%94%202026-10-20%20%E2%80%94%20Add%20concise%20module%20docs%20and%20a%20complete%20human%2Fagent%20navigation%20tree).
 
 ### Problem
 
@@ -3711,9 +3724,9 @@ not claimed as new testing. Only this investigation entry/index was added.
 
 Status: implemented for baseline preservation and scheduling only; the nine
 authorized fixes remain queued, not implemented by this entry.
-Related history: [FIX-0058](#fix-0058), [FIX-0060](#fix-0060),
-[FIX-0079](#fix-0079), [FIX-0080](#fix-0080), [FIX-0081](#fix-0081).
-Queue: [authorized current-version work](current-iter-issues.md#authorized-implementation-queue).
+Related history: [FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification), [FIX-0060](#FIX-0060%20%E2%80%94%202026-10-20%20%E2%80%94%20Verify%20interrupted-source%20handoff%20and%20consecutive%20correction%20policy),
+[FIX-0079](#FIX-0079%20%E2%80%94%202026-10-20%20%E2%80%94%20Assess%20evidence%2C%20implementation%20readiness%20and%20ownership%20of%20seven%20backlog%20items), [FIX-0080](#FIX-0080%20%E2%80%94%202026-10-20%20%E2%80%94%20Add%20concise%20module%20docs%20and%20a%20complete%20human%2Fagent%20navigation%20tree), [FIX-0081](#FIX-0081%20%E2%80%94%202026-10-21%20%E2%80%94%20Reassess%20unfinished%20older%20backlog%20items%20against%20current%20implementation).
+Queue: authorized current-version work (`docs/temporary/incidents/2026-10-21-completed-implementation-queue.md#authorized-implementation-queue`).
 
 ### Problem
 
@@ -3791,7 +3804,7 @@ implementation occurred. Future work must verify its own changes and outcomes.
 ## FIX-0083 — 2026-10-21 — Wait at the effective coding-worker capacity
 
 Status: implemented; queue item 1.
-Related history: [FIX-0040](#fix-0040), [FIX-0069](#fix-0069), [FIX-0082](#fix-0082).
+Related history: [FIX-0040](#FIX-0040%20%E2%80%94%202026-10-19%20%E2%80%94%20Work%20and%20integrate%20in%20the%20user%27s%20actual%20repository%20by%20default), [FIX-0069](#FIX-0069%20%E2%80%94%202026-10-20%20%E2%80%94%20Assess%20single-thread%20compatibility%20and%20find%20inconsistent%20worker-cap%20routing), [FIX-0082](#FIX-0082%20%E2%80%94%202026-10-21%20%E2%80%94%20Preserve%20a%20tested%20current-version%20checkpoint%20and%20schedule%20sequential%20fixes).
 
 ### Problem
 
@@ -3834,7 +3847,7 @@ no live provider, historical run mutation, migration or push occurred.
 ## FIX-0084 — 2026-10-21 — Retain cancelled development starts in accounting and allocation
 
 Status: implemented; queue item 2 / OSAG-07.
-Related history: [FIX-0041](#fix-0041), [FIX-0081](#fix-0081), [FIX-0083](#fix-0083).
+Related history: [FIX-0041](#FIX-0041%20%E2%80%94%202026-10-19%20%E2%80%94%20Record%20remaining%20run-quality%20and%20generalization%20findings%20without%20calling%20them%20fixed), [FIX-0081](#FIX-0081%20%E2%80%94%202026-10-21%20%E2%80%94%20Reassess%20unfinished%20older%20backlog%20items%20against%20current%20implementation), [FIX-0083](#FIX-0083%20%E2%80%94%202026-10-21%20%E2%80%94%20Wait%20at%20the%20effective%20coding-worker%20capacity).
 
 ### Problem
 
@@ -3880,7 +3893,7 @@ No historical records were rewritten, live providers called or commits pushed.
 ## FIX-0085 — 2026-10-21 — Preserve caller grammar in generic output recovery
 
 Status: implemented; queue item 3 / U05.
-Related history: [FIX-0058](#fix-0058), [FIX-0072](#fix-0072), [FIX-0081](#fix-0081).
+Related history: [FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification), [FIX-0072](#FIX-0072%20%E2%80%94%202026-10-20%20%E2%80%94%20Align%20current%20OS%20and%20agent%20documentation%20with%20justified%20revisions), [FIX-0081](#FIX-0081%20%E2%80%94%202026-10-21%20%E2%80%94%20Reassess%20unfinished%20older%20backlog%20items%20against%20current%20implementation).
 
 ### Problem
 
@@ -3919,8 +3932,8 @@ next-iteration.md remains untouched and excluded from this commit.
 ## FIX-0086 — 2026-10-21 — Separate setup prerequisites from final product acceptance
 
 Status: implemented; focused and full-suite verification passed.
-Related history: [FIX-0019](#fix-0019), [FIX-0032](#fix-0032), [FIX-0041](#fix-0041),
-[FIX-0081](#fix-0081). Queue item 4 / older report item 3.
+Related history: [FIX-0019](#FIX-0019%20%E2%80%94%202026-10-18%20%E2%80%94%20Let%20the%20coding%20agent%20discover%20an%20omitted%20check%20command), [FIX-0032](#FIX-0032%20%E2%80%94%202026-10-19%20%E2%80%94%20Move%20coding%20grammar%20and%20policy%20out%20of%20generic%20OS%20dispatch), [FIX-0041](#FIX-0041%20%E2%80%94%202026-10-19%20%E2%80%94%20Record%20remaining%20run-quality%20and%20generalization%20findings%20without%20calling%20them%20fixed),
+[FIX-0081](#FIX-0081%20%E2%80%94%202026-10-21%20%E2%80%94%20Reassess%20unfinished%20older%20backlog%20items%20against%20current%20implementation). Queue item 4 / older report item 3.
 
 ### Problem
 
@@ -3981,10 +3994,10 @@ duplicate identifier/index was corrected to the next unused ID; its findings
 and future proposals are preserved. This investigation is separate concurrent work.
 
 Status: investigated; future proposals documented, no implementation changed.
-Related history: [FIX-0054](#fix-0054), [FIX-0061](#fix-0061),
-[FIX-0067](#fix-0067), [FIX-0083](#fix-0083).
-Proposals: [learned routing](next-iteration.md#learned-agent-routing) and
-[quota-aware scheduling](next-iteration.md#quota-aware-task-scheduler).
+Related history: [FIX-0054](#FIX-0054%20%E2%80%94%202026-10-20%20%E2%80%94%20Defer%20the%20shared%20library%20and%20assign%20current%20fixes%20to%20OS%20or%20agent), [FIX-0061](#FIX-0061%20%E2%80%94%202026-10-20%20%E2%80%94%20Research%20concurrent%20Claude%20requests%20for%20local%20inference%20simulation),
+[FIX-0067](#FIX-0067%20%E2%80%94%202026-10-20%20%E2%80%94%20Trace%20coding-agent%20concurrency%20and%20OS%20admission%20ownership), [FIX-0083](#FIX-0083%20%E2%80%94%202026-10-21%20%E2%80%94%20Wait%20at%20the%20effective%20coding-worker%20capacity).
+Proposals: learned routing (`development-docs/next-iteration.md#learned-agent-routing`) and
+quota-aware scheduling (`development-docs/next-iteration.md#quota-aware-task-scheduler`).
 
 ### Problem
 
@@ -4030,8 +4043,8 @@ Concurrent current-version fixes and their history entries are separate work.
 <a id="fix-0088"></a>
 ## FIX-0088 — 2026-10-21 — Declare shared-check preparation owners before parallel dispatch
 
-Status: implemented. Related: [FIX-0077](#fix-0077), [FIX-0086](#fix-0086)
-and [RUN13-01](current-iter-issues.md#run13-01).
+Status: implemented. Related: [FIX-0077](#FIX-0077%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20the%20first%20two-slot%20run%20and%20record%20recovery%2Fconcurrency%20findings), [FIX-0086](#FIX-0086%20%E2%80%94%202026-10-21%20%E2%80%94%20Separate%20setup%20prerequisites%20from%20final%20product%20acceptance)
+and `docs/temporary/incidents/2026-10-20-two-slot-run-findings.md#run13-01`.
 
 ### Problem
 
@@ -4084,9 +4097,9 @@ next-iteration edits remain outside this commit.
 <a id="fix-0089"></a>
 ## FIX-0089 — 2026-10-21 — Make explicit retained-source handoff actionable during planning
 
-Status: implemented. Related: [FIX-0040](#fix-0040), [FIX-0060](#fix-0060),
-[FIX-0068](#fix-0068), [FIX-0077](#fix-0077),
-[RUN13-02](current-iter-issues.md#run13-02).
+Status: implemented. Related: [FIX-0040](#FIX-0040%20%E2%80%94%202026-10-19%20%E2%80%94%20Work%20and%20integrate%20in%20the%20user%27s%20actual%20repository%20by%20default), [FIX-0060](#FIX-0060%20%E2%80%94%202026-10-20%20%E2%80%94%20Verify%20interrupted-source%20handoff%20and%20consecutive%20correction%20policy),
+[FIX-0068](#FIX-0068%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20an%20interrupted%20native%20inventory%20repair%20and%20retained%20progress), [FIX-0077](#FIX-0077%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20the%20first%20two-slot%20run%20and%20record%20recovery%2Fconcurrency%20findings),
+`docs/temporary/incidents/2026-10-20-two-slot-run-findings.md#run13-02`.
 
 ### Problem
 
@@ -4134,8 +4147,8 @@ migration or push; unrelated next-iteration edits are excluded.
 <a id="fix-0090"></a>
 ## FIX-0090 — 2026-10-21 — Separate inherited ancestry from accepted task contributions
 
-Status: implemented. Related: [FIX-0068](#fix-0068), [FIX-0077](#fix-0077),
-[RUN13-06](current-iter-issues.md#run13-06).
+Status: implemented. Related: [FIX-0068](#FIX-0068%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20an%20interrupted%20native%20inventory%20repair%20and%20retained%20progress), [FIX-0077](#FIX-0077%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20the%20first%20two-slot%20run%20and%20record%20recovery%2Fconcurrency%20findings),
+`docs/temporary/incidents/2026-10-20-two-slot-run-findings.md#run13-06`.
 
 ### Problem
 
@@ -4179,9 +4192,9 @@ historical-state rewrite or push; concurrent next-iteration edits are excluded.
 <a id="fix-0091"></a>
 ## FIX-0091 — 2026-10-21 — Inspect retained original and effective OS context with provenance
 
-Status: implemented. Related: [FIX-0037](#fix-0037), [FIX-0058](#fix-0058),
-[FIX-0062](#fix-0062), [FIX-0070](#fix-0070),
-[MEM-01](current-iter-issues.md#os-memory-context-inspector).
+Status: implemented. Related: [FIX-0037](#FIX-0037%20%E2%80%94%202026-10-19%20%E2%80%94%20Separate%20OS%20monitoring%20from%20agent%20task%20and%20review%20history), [FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification),
+[FIX-0062](#FIX-0062%20%E2%80%94%202026-10-20%20%E2%80%94%20Inspect%20UI%20memory%20visibility%20and%20propose%20an%20OS%20context%20drawer), [FIX-0070](#FIX-0070%20%E2%80%94%202026-10-20%20%E2%80%94%20Measure%20historical%20memory%20pressure%20and%20OS%20context%20interventions),
+MEM-01 (`docs/temporary/incidents/2026-10-20-context-inspector-design.md#os-memory-context-inspector`).
 
 ### Problem
 
@@ -4245,9 +4258,9 @@ visible. The disposable loopback server/tab were closed; no provider was contact
 <a id="fix-0092"></a>
 ## FIX-0092 — 2026-10-21 — Add an invocation-only remote Haiku simulation preset
 
-Status: implemented. Related: [FIX-0061](#fix-0061), [FIX-0074](#fix-0074),
-[FIX-0075](#fix-0075), [FIX-0083](#fix-0083),
-[SIM-01](current-iter-issues.md#sim-batch-ui).
+Status: implemented. Related: [FIX-0061](#FIX-0061%20%E2%80%94%202026-10-20%20%E2%80%94%20Research%20concurrent%20Claude%20requests%20for%20local%20inference%20simulation), [FIX-0074](#FIX-0074%20%E2%80%94%202026-10-20%20%E2%80%94%20Confirm%20the%20current%20UI%20setting%20for%20two%20Claude%20requests),
+[FIX-0075](#FIX-0075%20%E2%80%94%202026-10-20%20%E2%80%94%20Raise%20Haiku%20generation%20and%20OS%20output%20limits%20to%2032k), [FIX-0083](#FIX-0083%20%E2%80%94%202026-10-21%20%E2%80%94%20Wait%20at%20the%20effective%20coding-worker%20capacity),
+SIM-01 (`docs/temporary/incidents/2026-10-21-inference-simulation.md#sim-batch-ui`).
 
 ### Problem
 
@@ -4321,7 +4334,7 @@ Tests now use disposable state throughout. No historical run was modified.
 ## FIX-0093 — 2026-10-21 — Verify and close the nine-item current-version implementation queue
 
 Status: verified and complete; this closing pass changes documentation only.
-Related: [FIX-0082](#fix-0082), [authorized queue](current-iter-issues.md#authorized-implementation-queue)
+Related: [FIX-0082](#FIX-0082%20%E2%80%94%202026-10-21%20%E2%80%94%20Preserve%20a%20tested%20current-version%20checkpoint%20and%20schedule%20sequential%20fixes), authorized queue (`docs/temporary/incidents/2026-10-21-completed-implementation-queue.md#authorized-implementation-queue`)
 and the implementation entries below.
 
 ### Problem
@@ -4343,15 +4356,15 @@ received its own regression, related documentation, history entry and local comm
 
 | Queue item | Commit | Owning layer / implementation record |
 | --- | --- | --- |
-| Effective worker limit | d2d48aa | Agent control flow, [FIX-0083](#fix-0083) |
-| OSAG-07 historical starts | 0ea4750 | Agent allocation/accounting, [FIX-0084](#fix-0084) |
-| U05 output feedback | ac08fb2 | Generic OS recovery, [FIX-0085](#fix-0085) |
-| Separate check purposes | 82c4e8c | Agent check/acceptance policy, [FIX-0086](#fix-0086) |
-| RUN13-01 prerequisites | 06a21b6 | Agent planning/dependencies, [FIX-0088](#fix-0088) |
-| RUN13-02 source handoff | 9a21e17 | Agent source/grant planning, [FIX-0089](#fix-0089) |
-| RUN13-06 contribution facts | cd9ccd8 | Agent repository/UI projection, [FIX-0090](#fix-0090) |
-| MEM-01 inspector | 1810e5d | Read-only OS inspection, [FIX-0091](#fix-0091) |
-| SIM-01 launch preset | aa7140b | Agent CLI/UI policy; generic resolved validation, [FIX-0092](#fix-0092) |
+| Effective worker limit | d2d48aa | Agent control flow, [FIX-0083](#FIX-0083%20%E2%80%94%202026-10-21%20%E2%80%94%20Wait%20at%20the%20effective%20coding-worker%20capacity) |
+| OSAG-07 historical starts | 0ea4750 | Agent allocation/accounting, [FIX-0084](#FIX-0084%20%E2%80%94%202026-10-21%20%E2%80%94%20Retain%20cancelled%20development%20starts%20in%20accounting%20and%20allocation) |
+| U05 output feedback | ac08fb2 | Generic OS recovery, [FIX-0085](#FIX-0085%20%E2%80%94%202026-10-21%20%E2%80%94%20Preserve%20caller%20grammar%20in%20generic%20output%20recovery) |
+| Separate check purposes | 82c4e8c | Agent check/acceptance policy, [FIX-0086](#FIX-0086%20%E2%80%94%202026-10-21%20%E2%80%94%20Separate%20setup%20prerequisites%20from%20final%20product%20acceptance) |
+| RUN13-01 prerequisites | 06a21b6 | Agent planning/dependencies, [FIX-0088](#FIX-0088%20%E2%80%94%202026-10-21%20%E2%80%94%20Declare%20shared-check%20preparation%20owners%20before%20parallel%20dispatch) |
+| RUN13-02 source handoff | 9a21e17 | Agent source/grant planning, [FIX-0089](#FIX-0089%20%E2%80%94%202026-10-21%20%E2%80%94%20Make%20explicit%20retained-source%20handoff%20actionable%20during%20planning) |
+| RUN13-06 contribution facts | cd9ccd8 | Agent repository/UI projection, [FIX-0090](#FIX-0090%20%E2%80%94%202026-10-21%20%E2%80%94%20Separate%20inherited%20ancestry%20from%20accepted%20task%20contributions) |
+| MEM-01 inspector | 1810e5d | Read-only OS inspection, [FIX-0091](#FIX-0091%20%E2%80%94%202026-10-21%20%E2%80%94%20Inspect%20retained%20original%20and%20effective%20OS%20context%20with%20provenance) |
+| SIM-01 launch preset | aa7140b | Agent CLI/UI policy; generic resolved validation, [FIX-0092](#FIX-0092%20%E2%80%94%202026-10-21%20%E2%80%94%20Add%20an%20invocation-only%20remote%20Haiku%20simulation%20preset) |
 
 Actual wakeup/start clock was 09:14:29 EDT (13:14:29 UTC), after the requested
 01:55:00 EDT. No exact-time start is claimed. After verification, the native
@@ -4395,7 +4408,7 @@ RUN13-04 optimization or wider CONC-01 audit was performed.
 ## FIX-0094 — 2026-10-21 — Recheck queue documentation and correct missed overview/settings references
 
 Status: documentation corrected; no implementation changed.
-Related: [FIX-0085](#fix-0085), [FIX-0086](#fix-0086), [FIX-0093](#fix-0093).
+Related: [FIX-0085](#FIX-0085%20%E2%80%94%202026-10-21%20%E2%80%94%20Preserve%20caller%20grammar%20in%20generic%20output%20recovery), [FIX-0086](#FIX-0086%20%E2%80%94%202026-10-21%20%E2%80%94%20Separate%20setup%20prerequisites%20from%20final%20product%20acceptance), [FIX-0093](#FIX-0093%20%E2%80%94%202026-10-21%20%E2%80%94%20Verify%20and%20close%20the%20nine-item%20current-version%20implementation%20queue).
 
 ### Problem
 
@@ -4452,8 +4465,8 @@ next-iteration.md edit remains outside this commit.
 ## FIX-0095 — 2026-10-21 — Propose optional local-inference latency and fault simulation
 
 Status: investigated; proposal only, no implementation or configuration changed.
-Related history: [FIX-0061](#fix-0061), [FIX-0063](#fix-0063),
-[FIX-0092](#fix-0092), [FIX-0045](#fix-0045), [FIX-0047](#fix-0047).
+Related history: [FIX-0061](#FIX-0061%20%E2%80%94%202026-10-20%20%E2%80%94%20Research%20concurrent%20Claude%20requests%20for%20local%20inference%20simulation), [FIX-0063](#FIX-0063%20%E2%80%94%202026-10-20%20%E2%80%94%20Design%20a%20launch-scoped%20UI%20batch%20simulation%20flag),
+[FIX-0092](#FIX-0092%20%E2%80%94%202026-10-21%20%E2%80%94%20Add%20an%20invocation-only%20remote%20Haiku%20simulation%20preset), [FIX-0045](#FIX-0045%20%E2%80%94%202026-10-20%20%E2%80%94%20Filter%20safe%20one-off%20model%20failures%20with%20durable%20OS%20retries), [FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances).
 
 ### Problem
 
@@ -4550,9 +4563,9 @@ required entry sections; added-entry whitespace verification passed.
 ## FIX-0096 — 2026-10-21 — Add opt-in shared-TPS and fault simulation without changing normal launches
 
 Status: implemented; final verification results follow below.
-Related: [FIX-0095](#fix-0095), [FIX-0092](#fix-0092), [FIX-0061](#fix-0061),
-[FIX-0045](#fix-0045), [FIX-0047](#fix-0047),
-[SIM-02](current-iter-issues.md#sim-inference-ui).
+Related: [FIX-0095](#FIX-0095%20%E2%80%94%202026-10-21%20%E2%80%94%20Propose%20optional%20local-inference%20latency%20and%20fault%20simulation), [FIX-0092](#FIX-0092%20%E2%80%94%202026-10-21%20%E2%80%94%20Add%20an%20invocation-only%20remote%20Haiku%20simulation%20preset), [FIX-0061](#FIX-0061%20%E2%80%94%202026-10-20%20%E2%80%94%20Research%20concurrent%20Claude%20requests%20for%20local%20inference%20simulation),
+[FIX-0045](#FIX-0045%20%E2%80%94%202026-10-20%20%E2%80%94%20Filter%20safe%20one-off%20model%20failures%20with%20durable%20OS%20retries), [FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances),
+SIM-02 (`docs/temporary/incidents/2026-10-21-inference-simulation.md#sim-inference-ui`).
 
 ### Problem
 
@@ -4659,7 +4672,7 @@ No live provider request or hardware benchmark is part of this task.
 ## FIX-0097 — 2026-10-21 — Recover the exact saved Minecraft test prompt
 
 Status: investigated; no implementation changed.
-Related history: [FIX-0077](#fix-0077).
+Related history: [FIX-0077](#FIX-0077%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20the%20first%20two-slot%20run%20and%20record%20recovery%2Fconcurrency%20findings).
 
 ### Problem
 
@@ -4712,8 +4725,8 @@ are not this lookup's work.
 ## FIX-0098 — 2026-10-21 — Confirm automatic project documentation instructions and their limits
 
 Status: investigated; no implementation changed.
-Related history: [FIX-0004](#fix-0004), [FIX-0080](#fix-0080),
-[FIX-0094](#fix-0094), [FIX-0097](#fix-0097).
+Related history: [FIX-0004](#FIX-0004%20%E2%80%94%202026-10-19%20%E2%80%94%20Require%20agents%20to%20read%20and%20maintain%20a%20durable%20fix%20history), [FIX-0080](#FIX-0080%20%E2%80%94%202026-10-20%20%E2%80%94%20Add%20concise%20module%20docs%20and%20a%20complete%20human%2Fagent%20navigation%20tree),
+[FIX-0094](#FIX-0094%20%E2%80%94%202026-10-21%20%E2%80%94%20Recheck%20queue%20documentation%20and%20correct%20missed%20overview%2Fsettings%20references), [FIX-0097](#FIX-0097%20%E2%80%94%202026-10-21%20%E2%80%94%20Recover%20the%20exact%20saved%20Minecraft%20test%20prompt).
 
 ### Problem
 
@@ -4728,13 +4741,13 @@ and structural checks proving documentation is complete and accurate.
 
 ### How it was fixed
 
-Confirmed root [AGENTS.md](../AGENTS.md) was supplied to this Codex chat as
+Confirmed root `AGENTS.md` was supplied to this Codex chat as
 project instructions. It requires affected module/setup/usage/configuration/
 design/issue documentation, navigation and this history to be maintained in
 the same task, adjacent-doc review with reasons for no edits, and actual checks
 in the handoff. Delegation must carry the reading/reporting requirements.
-[Maintenance](../docs/maintenance.md) and
-[onboarding](../dev-readme.md) provide the detailed completion rules.
+Maintenance (`docs/maintenance.md`) and
+onboarding (`dev-readme.md`) provide the detailed completion rules.
 
 The [official instruction-loading guide](https://learn.chatgpt.com/docs/agent-configuration/agents-md)
 confirms Codex discovers AGENTS.md guidance at run startup. This is persistent
@@ -4773,9 +4786,9 @@ were run; other working-tree changes are not this investigation's work.
 ## FIX-0099 — 2026-10-21 — Create a source-backed illustrated developer onboarding guide
 
 Status: implemented as documentation only.
-Related history: [FIX-0004](#fix-0004), [FIX-0048](#fix-0048),
-[FIX-0072](#fix-0072), [FIX-0080](#fix-0080), [FIX-0094](#fix-0094),
-[FIX-0096](#fix-0096), [FIX-0098](#fix-0098).
+Related history: [FIX-0004](#FIX-0004%20%E2%80%94%202026-10-19%20%E2%80%94%20Require%20agents%20to%20read%20and%20maintain%20a%20durable%20fix%20history), [FIX-0048](#FIX-0048%20%E2%80%94%202026-10-20%20%E2%80%94%20Document%20the%20Codex%20and%20serial%20Haiku%20tester%20setup),
+[FIX-0072](#FIX-0072%20%E2%80%94%202026-10-20%20%E2%80%94%20Align%20current%20OS%20and%20agent%20documentation%20with%20justified%20revisions), [FIX-0080](#FIX-0080%20%E2%80%94%202026-10-20%20%E2%80%94%20Add%20concise%20module%20docs%20and%20a%20complete%20human%2Fagent%20navigation%20tree), [FIX-0094](#FIX-0094%20%E2%80%94%202026-10-21%20%E2%80%94%20Recheck%20queue%20documentation%20and%20correct%20missed%20overview%2Fsettings%20references),
+[FIX-0096](#FIX-0096%20%E2%80%94%202026-10-21%20%E2%80%94%20Add%20opt-in%20shared-TPS%20and%20fault%20simulation%20without%20changing%20normal%20launches), [FIX-0098](#FIX-0098%20%E2%80%94%202026-10-21%20%E2%80%94%20Confirm%20automatic%20project%20documentation%20instructions%20and%20their%20limits).
 
 ### Problem
 
@@ -4879,9 +4892,9 @@ are not this onboarding work.
 ## FIX-0100 — 2026-10-21 — Diagnose a Haiku timeout boundary after a retained foundation handoff
 
 Status: investigated; no implementation changed.
-Related: [FIX-0045](#fix-0045), [FIX-0068](#fix-0068), [FIX-0086](#fix-0086),
-[FIX-0088](#fix-0088), [FIX-0089](#fix-0089), [FIX-0096](#fix-0096).
-Report: [run 7086c575ef94](run-7086c575ef94-analysis.md).
+Related: [FIX-0045](#FIX-0045%20%E2%80%94%202026-10-20%20%E2%80%94%20Filter%20safe%20one-off%20model%20failures%20with%20durable%20OS%20retries), [FIX-0068](#FIX-0068%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20an%20interrupted%20native%20inventory%20repair%20and%20retained%20progress), [FIX-0086](#FIX-0086%20%E2%80%94%202026-10-21%20%E2%80%94%20Separate%20setup%20prerequisites%20from%20final%20product%20acceptance),
+[FIX-0088](#FIX-0088%20%E2%80%94%202026-10-21%20%E2%80%94%20Declare%20shared-check%20preparation%20owners%20before%20parallel%20dispatch), [FIX-0089](#FIX-0089%20%E2%80%94%202026-10-21%20%E2%80%94%20Make%20explicit%20retained-source%20handoff%20actionable%20during%20planning), [FIX-0096](#FIX-0096%20%E2%80%94%202026-10-21%20%E2%80%94%20Add%20opt-in%20shared-TPS%20and%20fault%20simulation%20without%20changing%20normal%20launches).
+Report: run 7086c575ef94 (`docs/temporary/investigations/2026-10-21-run-7086c575ef94.md`).
 
 ### Problem
 
@@ -4950,7 +4963,7 @@ added-text whitespace checks passed. Historical test results are not new tests.
 ## FIX-0101 — 2026-10-21 — Lead developer onboarding with the project vision and impact
 
 Status: implemented as documentation only.
-Related history: [FIX-0099](#fix-0099), [FIX-0080](#fix-0080).
+Related history: [FIX-0099](#FIX-0099%20%E2%80%94%202026-10-21%20%E2%80%94%20Create%20a%20source-backed%20illustrated%20developer%20onboarding%20guide), [FIX-0080](#FIX-0080%20%E2%80%94%202026-10-20%20%E2%80%94%20Add%20concise%20module%20docs%20and%20a%20complete%20human%2Fagent%20navigation%20tree).
 
 ### Problem
 
@@ -5017,9 +5030,9 @@ bytes; unrelated working-tree changes are not this task's work.
 ## FIX-0102 — 2026-10-21 — Resume a selected paused process with optional steering from the UI
 
 Status: implemented; verification recorded below.
-Related: [FIX-0027](#fix-0027), [FIX-0032](#fix-0032), [FIX-0045](#fix-0045),
-[FIX-0047](#fix-0047), [FIX-0092](#fix-0092), [FIX-0100](#fix-0100).
-Feature: [UI-RESUME-01](current-iter-issues.md#ui-process-resume).
+Related: [FIX-0027](#FIX-0027%20%E2%80%94%202026-10-18%20%E2%80%94%20Recover%20a%20known%20failed%20model%20operation%20with%20a%20new%20linked%20intent), [FIX-0032](#FIX-0032%20%E2%80%94%202026-10-19%20%E2%80%94%20Move%20coding%20grammar%20and%20policy%20out%20of%20generic%20OS%20dispatch), [FIX-0045](#FIX-0045%20%E2%80%94%202026-10-20%20%E2%80%94%20Filter%20safe%20one-off%20model%20failures%20with%20durable%20OS%20retries),
+[FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances), [FIX-0092](#FIX-0092%20%E2%80%94%202026-10-21%20%E2%80%94%20Add%20an%20invocation-only%20remote%20Haiku%20simulation%20preset), [FIX-0100](#FIX-0100%20%E2%80%94%202026-10-21%20%E2%80%94%20Diagnose%20a%20Haiku%20timeout%20boundary%20after%20a%20retained%20foundation%20handoff).
+Feature: UI-RESUME-01 (`docs/temporary/incidents/2026-10-23-ui-resume-design.md#ui-process-resume`).
 
 ### Problem
 
@@ -5106,8 +5119,8 @@ claim. No generated game, real run or provider operation was resumed by these te
 ## FIX-0103 — 2026-10-21 — Verify the implemented scope of endpoint retries and UI recovery
 
 Status: investigated; no implementation changed.
-Related: [FIX-0045](#fix-0045), [FIX-0047](#fix-0047), [FIX-0058](#fix-0058),
-[FIX-0085](#fix-0085), [FIX-0100](#fix-0100), [FIX-0102](#fix-0102).
+Related: [FIX-0045](#FIX-0045%20%E2%80%94%202026-10-20%20%E2%80%94%20Filter%20safe%20one-off%20model%20failures%20with%20durable%20OS%20retries), [FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances), [FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification),
+[FIX-0085](#FIX-0085%20%E2%80%94%202026-10-21%20%E2%80%94%20Preserve%20caller%20grammar%20in%20generic%20output%20recovery), [FIX-0100](#FIX-0100%20%E2%80%94%202026-10-21%20%E2%80%94%20Diagnose%20a%20Haiku%20timeout%20boundary%20after%20a%20retained%20foundation%20handoff), [FIX-0102](#FIX-0102%20%E2%80%94%202026-10-21%20%E2%80%94%20Resume%20a%20selected%20paused%20process%20with%20optional%20steering%20from%20the%20UI).
 
 ### Problem
 
@@ -5174,8 +5187,8 @@ added-text whitespace and byte preservation of all prior history were verified.
 ## FIX-0104 — 2026-10-21 — Explain the local-cloud Agent OS premise and shorten developer onboarding
 
 Status: implemented as documentation only.
-Related: [FIX-0099](#fix-0099), [FIX-0101](#fix-0101),
-[FIX-0102](#fix-0102).
+Related: [FIX-0099](#FIX-0099%20%E2%80%94%202026-10-21%20%E2%80%94%20Create%20a%20source-backed%20illustrated%20developer%20onboarding%20guide), [FIX-0101](#FIX-0101%20%E2%80%94%202026-10-21%20%E2%80%94%20Lead%20developer%20onboarding%20with%20the%20project%20vision%20and%20impact),
+[FIX-0102](#FIX-0102%20%E2%80%94%202026-10-21%20%E2%80%94%20Resume%20a%20selected%20paused%20process%20with%20optional%20steering%20from%20the%20UI).
 
 ### Problem
 
@@ -5245,9 +5258,9 @@ are historical. Appending this entry/index row preserves all prior history bytes
 ## FIX-0105 — 2026-10-21 — Expose resume beside the selected paused run
 
 Status: implemented.
-Related: [FIX-0100](#fix-0100), [FIX-0102](#fix-0102),
-[FIX-0103](#fix-0103).
-Feature: [UI-RESUME-01](current-iter-issues.md#ui-process-resume).
+Related: [FIX-0100](#FIX-0100%20%E2%80%94%202026-10-21%20%E2%80%94%20Diagnose%20a%20Haiku%20timeout%20boundary%20after%20a%20retained%20foundation%20handoff), [FIX-0102](#FIX-0102%20%E2%80%94%202026-10-21%20%E2%80%94%20Resume%20a%20selected%20paused%20process%20with%20optional%20steering%20from%20the%20UI),
+[FIX-0103](#FIX-0103%20%E2%80%94%202026-10-21%20%E2%80%94%20Verify%20the%20implemented%20scope%20of%20endpoint%20retries%20and%20UI%20recovery).
+Feature: UI-RESUME-01 (`docs/temporary/incidents/2026-10-23-ui-resume-design.md#ui-process-resume`).
 
 ### Problem
 
@@ -5312,8 +5325,8 @@ browser visual verification is claimed.
 ## FIX-0106 — 2026-10-22 — Preserve the agent-router distillation tutorial and link both version trackers
 
 Status: implemented as documentation only.
-Related history: [FIX-0080](#fix-0080), [FIX-0087](#fix-0087), [FIX-0098](#fix-0098).
-Tutorial: [agent-router distillation](router-distillation-tutorial.md).
+Related history: [FIX-0080](#FIX-0080%20%E2%80%94%202026-10-20%20%E2%80%94%20Add%20concise%20module%20docs%20and%20a%20complete%20human%2Fagent%20navigation%20tree), [FIX-0087](#FIX-0087%20%E2%80%94%202026-10-21%20%E2%80%94%20Record%20future%20learned%20routing%20and%20quota-aware%20task%20scheduling), [FIX-0098](#FIX-0098%20%E2%80%94%202026-10-21%20%E2%80%94%20Confirm%20automatic%20project%20documentation%20instructions%20and%20their%20limits).
+Tutorial: agent-router distillation (`development-docs/router-distillation-tutorial.md`).
 
 ### Problem
 
@@ -5378,10 +5391,10 @@ live agent execution or runtime-suite result is claimed for this documentation t
 ## FIX-0107 — 2026-10-22 — Add a navigable HTML learning guide for router distillation and RLAIF
 
 Status: implemented as documentation only; verification recorded below.
-Related history: [FIX-0080](#fix-0080), [FIX-0087](#fix-0087),
-[FIX-0099](#fix-0099), [FIX-0106](#fix-0106).
+Related history: [FIX-0080](#FIX-0080%20%E2%80%94%202026-10-20%20%E2%80%94%20Add%20concise%20module%20docs%20and%20a%20complete%20human%2Fagent%20navigation%20tree), [FIX-0087](#FIX-0087%20%E2%80%94%202026-10-21%20%E2%80%94%20Record%20future%20learned%20routing%20and%20quota-aware%20task%20scheduling),
+[FIX-0099](#FIX-0099%20%E2%80%94%202026-10-21%20%E2%80%94%20Create%20a%20source-backed%20illustrated%20developer%20onboarding%20guide), [FIX-0106](#FIX-0106%20%E2%80%94%202026-10-22%20%E2%80%94%20Preserve%20the%20agent-router%20distillation%20tutorial%20and%20link%20both%20version%20trackers).
 Guide: [HTML learning guide](router-training-guide.html), owned by the
-[Markdown tutorial](router-distillation-tutorial.md).
+Markdown tutorial (`development-docs/router-distillation-tutorial.md`).
 
 ### Problem
 
@@ -5465,7 +5478,7 @@ experiment or production deployment was performed for this documentation change.
 ## FIX-0108 — 2026-10-22 — Compare Flash-Next Coder with the earlier coding shortlist
 
 Status: investigated; published evidence only, no implementation changed.
-Related: [chat provenance](CHAT_HISTORY.md), [FIX-0041](#fix-0041).
+Related: chat provenance (`development-docs/CHAT_HISTORY.md`), [FIX-0041](#FIX-0041%20%E2%80%94%202026-10-19%20%E2%80%94%20Record%20remaining%20run-quality%20and%20generalization%20findings%20without%20calling%20them%20fixed).
 
 ### Problem
 
@@ -5537,7 +5550,7 @@ verified in the task handoff.
 ## FIX-0109 — 2026-10-22 — Estimate Coder memory, speed and batching on the reported laptop
 
 Status: research and theoretical sizing only; no implementation changed.
-Related: [FIX-0108](#fix-0108), [FIX-0061](#fix-0061).
+Related: [FIX-0108](#FIX-0108%20%E2%80%94%202026-10-22%20%E2%80%94%20Compare%20Flash-Next%20Coder%20with%20the%20earlier%20coding%20shortlist), [FIX-0061](#FIX-0061%20%E2%80%94%202026-10-20%20%E2%80%94%20Research%20concurrent%20Claude%20requests%20for%20local%20inference%20simulation).
 
 ### Problem
 
@@ -5620,9 +5633,9 @@ Documentation generation/check and prior-history preservation checked in handoff
 ## FIX-0110 — 2026-10-23 — Design one-click run resume across frontend, agent and OS
 
 Status: design/investigation only; no implementation changed.
-Related: [FIX-0100](#fix-0100), [FIX-0102](#fix-0102),
-[FIX-0103](#fix-0103), [FIX-0105](#fix-0105).
-Proposal: [run-level Resume redesign](current-iter-issues.md#ui-run-resume-design).
+Related: [FIX-0100](#FIX-0100%20%E2%80%94%202026-10-21%20%E2%80%94%20Diagnose%20a%20Haiku%20timeout%20boundary%20after%20a%20retained%20foundation%20handoff), [FIX-0102](#FIX-0102%20%E2%80%94%202026-10-21%20%E2%80%94%20Resume%20a%20selected%20paused%20process%20with%20optional%20steering%20from%20the%20UI),
+[FIX-0103](#FIX-0103%20%E2%80%94%202026-10-21%20%E2%80%94%20Verify%20the%20implemented%20scope%20of%20endpoint%20retries%20and%20UI%20recovery), [FIX-0105](#FIX-0105%20%E2%80%94%202026-10-21%20%E2%80%94%20Expose%20resume%20beside%20the%20selected%20paused%20run).
+Proposal: run-level Resume redesign (`docs/temporary/incidents/2026-10-23-ui-resume-design.md#ui-run-resume-design`).
 
 ### Problem
 
@@ -5682,9 +5695,9 @@ pre-edit issue/history content exactly. Fix IDs and the new anchors are unique.
 ## FIX-0111 — 2026-10-23 — Make Resume run directly through frontend, agent and OS
 
 Status: implemented; verification below.
-Related: [FIX-0027](#fix-0027), [FIX-0100](#fix-0100), [FIX-0102](#fix-0102),
-[FIX-0103](#fix-0103), [FIX-0105](#fix-0105), [FIX-0110](#fix-0110).
-Feature: [UI-RESUME-01](current-iter-issues.md#ui-process-resume).
+Related: [FIX-0027](#FIX-0027%20%E2%80%94%202026-10-18%20%E2%80%94%20Recover%20a%20known%20failed%20model%20operation%20with%20a%20new%20linked%20intent), [FIX-0100](#FIX-0100%20%E2%80%94%202026-10-21%20%E2%80%94%20Diagnose%20a%20Haiku%20timeout%20boundary%20after%20a%20retained%20foundation%20handoff), [FIX-0102](#FIX-0102%20%E2%80%94%202026-10-21%20%E2%80%94%20Resume%20a%20selected%20paused%20process%20with%20optional%20steering%20from%20the%20UI),
+[FIX-0103](#FIX-0103%20%E2%80%94%202026-10-21%20%E2%80%94%20Verify%20the%20implemented%20scope%20of%20endpoint%20retries%20and%20UI%20recovery), [FIX-0105](#FIX-0105%20%E2%80%94%202026-10-21%20%E2%80%94%20Expose%20resume%20beside%20the%20selected%20paused%20run), [FIX-0110](#FIX-0110%20%E2%80%94%202026-10-23%20%E2%80%94%20Design%20one-click%20run%20resume%20across%20frontend%2C%20agent%20and%20OS).
+Feature: UI-RESUME-01 (`docs/temporary/incidents/2026-10-23-ui-resume-design.md#ui-process-resume`).
 
 ### Problem
 
@@ -5782,9 +5795,9 @@ No live provider, user saved-run execution/reconciliation, commit or push occurr
 ## FIX-0112 — 2026-10-23 — Count retries and assess the saved Haiku timeout pause
 
 Status: investigated; no implementation changed.
-Related: [FIX-0045](#fix-0045), [FIX-0047](#fix-0047), [FIX-0100](#fix-0100),
-[FIX-0103](#fix-0103), [FIX-0111](#fix-0111).
-Evidence: [run 7086c575ef94 retry audit](run-7086c575ef94-analysis.md#retry-count-audit--2026-10-23).
+Related: [FIX-0045](#FIX-0045%20%E2%80%94%202026-10-20%20%E2%80%94%20Filter%20safe%20one-off%20model%20failures%20with%20durable%20OS%20retries), [FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances), [FIX-0100](#FIX-0100%20%E2%80%94%202026-10-21%20%E2%80%94%20Diagnose%20a%20Haiku%20timeout%20boundary%20after%20a%20retained%20foundation%20handoff),
+[FIX-0103](#FIX-0103%20%E2%80%94%202026-10-21%20%E2%80%94%20Verify%20the%20implemented%20scope%20of%20endpoint%20retries%20and%20UI%20recovery), [FIX-0111](#FIX-0111%20%E2%80%94%202026-10-23%20%E2%80%94%20Make%20Resume%20run%20directly%20through%20frontend%2C%20agent%20and%20OS).
+Evidence: run 7086c575ef94 retry audit (`docs/temporary/investigations/2026-10-21-run-7086c575ef94.md#retry-count-audit--2026-10-23`).
 
 ### Problem
 
@@ -5849,9 +5862,9 @@ above remains unchanged.
 ## FIX-0113 — 2026-10-23 — Explain recurring Claude pauses against official transport guidance
 
 Status: investigated; no implementation changed.
-Related: [FIX-0068](#fix-0068), [FIX-0100](#fix-0100), [FIX-0103](#fix-0103),
-[FIX-0111](#fix-0111), [FIX-0112](#fix-0112).
-Evidence and sources: [Anthropic follow-up](run-7086c575ef94-analysis.md#anthropic-documentation-follow-up--2026-10-23).
+Related: [FIX-0068](#FIX-0068%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20an%20interrupted%20native%20inventory%20repair%20and%20retained%20progress), [FIX-0100](#FIX-0100%20%E2%80%94%202026-10-21%20%E2%80%94%20Diagnose%20a%20Haiku%20timeout%20boundary%20after%20a%20retained%20foundation%20handoff), [FIX-0103](#FIX-0103%20%E2%80%94%202026-10-21%20%E2%80%94%20Verify%20the%20implemented%20scope%20of%20endpoint%20retries%20and%20UI%20recovery),
+[FIX-0111](#FIX-0111%20%E2%80%94%202026-10-23%20%E2%80%94%20Make%20Resume%20run%20directly%20through%20frontend%2C%20agent%20and%20OS), [FIX-0112](#FIX-0112%20%E2%80%94%202026-10-23%20%E2%80%94%20Count%20retries%20and%20assess%20the%20saved%20Haiku%20timeout%20pause).
+Evidence and sources: Anthropic follow-up (`docs/temporary/investigations/2026-10-21-run-7086c575ef94.md#anthropic-documentation-follow-up--2026-10-23`).
 
 ### Problem
 
@@ -5923,9 +5936,9 @@ working-tree changes and historical test results are not claimed as this work.
 ## FIX-0114 — 2026-10-23 — Propose portable endpoint resilience and faster failure testing
 
 Status: design/proposal only; no implementation changed.
-Related: [FIX-0045](#fix-0045), [FIX-0047](#fix-0047), [FIX-0054](#fix-0054),
-[FIX-0096](#fix-0096), [FIX-0111](#fix-0111), [FIX-0113](#fix-0113).
-Proposal: [portable endpoint lifecycle and testing](current-iter-issues.md#portable-endpoint-testing).
+Related: [FIX-0045](#FIX-0045%20%E2%80%94%202026-10-20%20%E2%80%94%20Filter%20safe%20one-off%20model%20failures%20with%20durable%20OS%20retries), [FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances), [FIX-0054](#FIX-0054%20%E2%80%94%202026-10-20%20%E2%80%94%20Defer%20the%20shared%20library%20and%20assign%20current%20fixes%20to%20OS%20or%20agent),
+[FIX-0096](#FIX-0096%20%E2%80%94%202026-10-21%20%E2%80%94%20Add%20opt-in%20shared-TPS%20and%20fault%20simulation%20without%20changing%20normal%20launches), [FIX-0111](#FIX-0111%20%E2%80%94%202026-10-23%20%E2%80%94%20Make%20Resume%20run%20directly%20through%20frontend%2C%20agent%20and%20OS), [FIX-0113](#FIX-0113%20%E2%80%94%202026-10-23%20%E2%80%94%20Explain%20recurring%20Claude%20pauses%20against%20official%20transport%20guidance).
+Proposal: portable endpoint lifecycle and testing (`docs/temporary/incidents/2026-10-23-portable-endpoint-design.md#portable-endpoint-testing`).
 
 ### Problem
 
@@ -5995,10 +6008,10 @@ not benchmarked. No proposed interface or behavior is claimed as implemented.
 ## FIX-0115 — 2026-10-23 — Split endpoint resilience into agent policy and independent OS mechanisms
 
 Status: design review/investigation only; no implementation changed.
-Related: [FIX-0022](#fix-0022), [FIX-0032](#fix-0032), [FIX-0045](#fix-0045),
-[FIX-0047](#fix-0047), [FIX-0054](#fix-0054), [FIX-0058](#fix-0058),
-[FIX-0085](#fix-0085), [FIX-0114](#fix-0114).
-Clarification: [agent/OS separation review](current-iter-issues.md#endpoint-agent-os-split).
+Related: [FIX-0022](#FIX-0022%20%E2%80%94%202026-10-18%20%E2%80%94%20Allow%20processes%20to%20finish%20without%20code%2C%20Git%2C%20or%20coding%20reports), [FIX-0032](#FIX-0032%20%E2%80%94%202026-10-19%20%E2%80%94%20Move%20coding%20grammar%20and%20policy%20out%20of%20generic%20OS%20dispatch), [FIX-0045](#FIX-0045%20%E2%80%94%202026-10-20%20%E2%80%94%20Filter%20safe%20one-off%20model%20failures%20with%20durable%20OS%20retries),
+[FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances), [FIX-0054](#FIX-0054%20%E2%80%94%202026-10-20%20%E2%80%94%20Defer%20the%20shared%20library%20and%20assign%20current%20fixes%20to%20OS%20or%20agent), [FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification),
+[FIX-0085](#FIX-0085%20%E2%80%94%202026-10-21%20%E2%80%94%20Preserve%20caller%20grammar%20in%20generic%20output%20recovery), [FIX-0114](#FIX-0114%20%E2%80%94%202026-10-23%20%E2%80%94%20Propose%20portable%20endpoint%20resilience%20and%20faster%20failure%20testing).
+Clarification: agent/OS separation review (`docs/temporary/incidents/2026-10-23-portable-endpoint-design.md#endpoint-agent-os-split`).
 
 ### Problem
 
@@ -6070,10 +6083,10 @@ their pre-task hashes. This does not claim runtime isolation or implementation.
 ## FIX-0116 — 2026-10-23 — Establish shared human and agent onboarding with required project memory
 
 Status: implemented as documentation only; no application/OS implementation changed.
-Related: [FIX-0004](#fix-0004), [FIX-0072](#fix-0072), [FIX-0080](#fix-0080),
-[FIX-0098](#fix-0098), [FIX-0099](#fix-0099), [FIX-0104](#fix-0104).
-Entry point: [contributor onboarding](../docs/contributor-onboarding.md);
-retained knowledge: [project memory checklist](../docs/project-memory.md).
+Related: [FIX-0004](#FIX-0004%20%E2%80%94%202026-10-19%20%E2%80%94%20Require%20agents%20to%20read%20and%20maintain%20a%20durable%20fix%20history), [FIX-0072](#FIX-0072%20%E2%80%94%202026-10-20%20%E2%80%94%20Align%20current%20OS%20and%20agent%20documentation%20with%20justified%20revisions), [FIX-0080](#FIX-0080%20%E2%80%94%202026-10-20%20%E2%80%94%20Add%20concise%20module%20docs%20and%20a%20complete%20human%2Fagent%20navigation%20tree),
+[FIX-0098](#FIX-0098%20%E2%80%94%202026-10-21%20%E2%80%94%20Confirm%20automatic%20project%20documentation%20instructions%20and%20their%20limits), [FIX-0099](#FIX-0099%20%E2%80%94%202026-10-21%20%E2%80%94%20Create%20a%20source-backed%20illustrated%20developer%20onboarding%20guide), [FIX-0104](#FIX-0104%20%E2%80%94%202026-10-21%20%E2%80%94%20Explain%20the%20local-cloud%20Agent%20OS%20premise%20and%20shorten%20developer%20onboarding).
+Entry point: contributor onboarding (`docs/contributor-onboarding.md`);
+retained knowledge: project memory checklist (`docs/project-memory.md`).
 
 ### Problem
 
@@ -6147,10 +6160,10 @@ repository guidance/navigation, not another assistant's future compliance.
 ## FIX-0117 — 2026-10-23 — Implement bounded streaming lifecycle and native/caller retry policy
 
 Status: implemented v1; offline checks only, no live provider/local inference validation.
-Related: [FIX-0047](#fix-0047), [FIX-0085](#fix-0085), [FIX-0111](#fix-0111),
-[FIX-0114](#fix-0114), [FIX-0115](#fix-0115).
-Details: [implementation status](current-iter-issues.md#endpoint-testing-v1) and
-[current behavior/configuration](../docs/guides/endpoint-testing.md).
+Related: [FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances), [FIX-0085](#FIX-0085%20%E2%80%94%202026-10-21%20%E2%80%94%20Preserve%20caller%20grammar%20in%20generic%20output%20recovery), [FIX-0111](#FIX-0111%20%E2%80%94%202026-10-23%20%E2%80%94%20Make%20Resume%20run%20directly%20through%20frontend%2C%20agent%20and%20OS),
+[FIX-0114](#FIX-0114%20%E2%80%94%202026-10-23%20%E2%80%94%20Propose%20portable%20endpoint%20resilience%20and%20faster%20failure%20testing), [FIX-0115](#FIX-0115%20%E2%80%94%202026-10-23%20%E2%80%94%20Split%20endpoint%20resilience%20into%20agent%20policy%20and%20independent%20OS%20mechanisms).
+Details: implementation status (`docs/temporary/incidents/2026-10-29-implementation-milestones.md#endpoint-testing-v1`) and
+current behavior/configuration (`docs/guides/endpoint-testing.md`).
 
 ### Problem
 
@@ -6233,7 +6246,7 @@ The commit is labelled v1 untested as requested; fixture results are not readine
 ## FIX-0118 — 2026-10-23 — Add explicit endpoint profiles, generic warm-up and timing inspection
 
 Status: implemented v1; bring-up tooling with offline fixture coverage.
-Related: [FIX-0115](#fix-0115), [FIX-0117](#fix-0117).
+Related: [FIX-0115](#FIX-0115%20%E2%80%94%202026-10-23%20%E2%80%94%20Split%20endpoint%20resilience%20into%20agent%20policy%20and%20independent%20OS%20mechanisms), [FIX-0117](#FIX-0117%20%E2%80%94%202026-10-23%20%E2%80%94%20Implement%20bounded%20streaming%20lifecycle%20and%20native%2Fcaller%20retry%20policy).
 
 ### Problem
 
@@ -6288,7 +6301,7 @@ selection passed 113. Documentation generation/check passed (274 files, 123 leav
 ## FIX-0119 — 2026-10-23 — Move workspace scope errors to the public agent/OS port
 
 Status: implemented; backward-compatible exception identity.
-Related: [FIX-0054](#fix-0054), [FIX-0115](#fix-0115).
+Related: [FIX-0054](#FIX-0054%20%E2%80%94%202026-10-20%20%E2%80%94%20Defer%20the%20shared%20library%20and%20assign%20current%20fixes%20to%20OS%20or%20agent), [FIX-0115](#FIX-0115%20%E2%80%94%202026-10-23%20%E2%80%94%20Split%20endpoint%20resilience%20into%20agent%20policy%20and%20independent%20OS%20mechanisms).
 
 ### Problem
 
@@ -6331,7 +6344,7 @@ This changes exception ownership, not scope grants or source mutation semantics.
 
 Status: implemented and verified offline; five unchanged baseline test failures remain.
 Related: FIX-0083–0086, FIX-0088–0090, FIX-0115–0119 and the retained
-[reliability fix log](../design-docs/implementation/FIXES.md).
+reliability fix log (`design-docs/implementation/FIXES.md`).
 
 ### Problem
 
@@ -6368,7 +6381,7 @@ and accepted replacement instead of copying the logical wait state over it.
 Retain operator recovery across the new progress checkpoint, explicit cancellation,
 paged reads and isolated tool homes/caches. Do not hide cache-named source paths
 from scope checks; the incoming cache fixture now uses the actual tool environment.
-The [integration audit](branch-integration-audit-2026-10-26.md) records the full
+The integration audit (`docs/temporary/investigations/2026-10-26-branch-integration-audit.md`) records the full
 conflict matrix and verification limits.
 
 ### Design principle enforced or reconstructed
@@ -6394,7 +6407,7 @@ This is not a single all-green full-suite run. All five remaining failures also
 reproduced on untouched `26da7f7`: the short-deadline lifecycle fixture, fixed-time
 pacing observation, expired-deadline resume diagnostic and two simulated-worker
 output-limit fixtures. Their tests and production defaults remain unchanged; the
-[audit](branch-integration-audit-2026-10-26.md#verification-record) lists them.
+audit (`docs/temporary/investigations/2026-10-26-branch-integration-audit.md#verification-record`) lists them.
 
 Ruff, Python source compilation, Node syntax and all **30 frontend tests** passed.
 An offline wheel built with cached build tools; its new modules/UI asset, current
@@ -6415,8 +6428,8 @@ fix entries and the separate execution-profile worktree remain unchanged.
 ## FIX-0128 — 2026-10-26 — Establish real local Strata setup and mixed-lane capacity evidence
 
 Status: configuration/investigation complete; product test failed; no framework implementation changed.
-Related: [FIX-0127](#fix-0127), [FIX-0117](#fix-0117), [FIX-0118](#fix-0118),
-and [the live investigation](local-strata-live-test-2026-10-26.md).
+Related: [FIX-0127](#FIX-0127%20%E2%80%94%202026-10-26%20%E2%80%94%20Integrate%20reliability%20fixes%20into%20the%20simple%20OS%20branch), [FIX-0117](#FIX-0117%20%E2%80%94%202026-10-23%20%E2%80%94%20Implement%20bounded%20streaming%20lifecycle%20and%20native%2Fcaller%20retry%20policy), [FIX-0118](#FIX-0118%20%E2%80%94%202026-10-23%20%E2%80%94%20Add%20explicit%20endpoint%20profiles%2C%20generic%20warm-up%20and%20timing%20inspection),
+and the live investigation (`docs/temporary/investigations/2026-10-26-local-strata-live-test.md`).
 
 ### Problem
 
@@ -6479,9 +6492,9 @@ framework-suite results are historical, not rerun for these documentation change
 ## FIX-0129 — 2026-10-27 — Correct documentation drift and assess retained workflow reliability
 
 Status: documentation corrected and history investigated; no application/OS implementation changed.
-Related: [FIX-0080](#fix-0080), [FIX-0094](#fix-0094), [FIX-0098](#fix-0098),
-[FIX-0117](#fix-0117), [FIX-0127](#fix-0127), [FIX-0128](#fix-0128).
-Report: [documentation and cross-run reliability audit](documentation-and-reliability-audit-2026-10-27.md).
+Related: [FIX-0080](#FIX-0080%20%E2%80%94%202026-10-20%20%E2%80%94%20Add%20concise%20module%20docs%20and%20a%20complete%20human%2Fagent%20navigation%20tree), [FIX-0094](#FIX-0094%20%E2%80%94%202026-10-21%20%E2%80%94%20Recheck%20queue%20documentation%20and%20correct%20missed%20overview%2Fsettings%20references), [FIX-0098](#FIX-0098%20%E2%80%94%202026-10-21%20%E2%80%94%20Confirm%20automatic%20project%20documentation%20instructions%20and%20their%20limits),
+[FIX-0117](#FIX-0117%20%E2%80%94%202026-10-23%20%E2%80%94%20Implement%20bounded%20streaming%20lifecycle%20and%20native%2Fcaller%20retry%20policy), [FIX-0127](#FIX-0127%20%E2%80%94%202026-10-26%20%E2%80%94%20Integrate%20reliability%20fixes%20into%20the%20simple%20OS%20branch), [FIX-0128](#FIX-0128%20%E2%80%94%202026-10-26%20%E2%80%94%20Establish%20real%20local%20Strata%20setup%20and%20mixed-lane%20capacity%20evidence).
+Report: documentation and cross-run reliability audit (`docs/temporary/investigations/2026-10-27-documentation-and-reliability-audit.md`).
 
 ### Problem
 
@@ -6544,9 +6557,9 @@ commit or push occurred.
 ## FIX-0130 — 2026-10-27 — Explain long-run stopping rules and management qualification gates
 
 Status: investigation/report complete; recommendations proposed; no implementation changed.
-Related: [FIX-0127](#fix-0127), [FIX-0128](#fix-0128), [FIX-0129](#fix-0129).
-Report: [meeting brief](workflow-readiness-brief-2026-10-27.md) and
-[engineering analysis](workflow-readiness-analysis-2026-10-27.md).
+Related: [FIX-0127](#FIX-0127%20%E2%80%94%202026-10-26%20%E2%80%94%20Integrate%20reliability%20fixes%20into%20the%20simple%20OS%20branch), [FIX-0128](#FIX-0128%20%E2%80%94%202026-10-26%20%E2%80%94%20Establish%20real%20local%20Strata%20setup%20and%20mixed-lane%20capacity%20evidence), [FIX-0129](#FIX-0129%20%E2%80%94%202026-10-27%20%E2%80%94%20Correct%20documentation%20drift%20and%20assess%20retained%20workflow%20reliability).
+Report: meeting brief (`docs/temporary/investigations/2026-10-27-workflow-readiness-brief.md`) and
+engineering analysis (`docs/temporary/investigations/2026-10-27-workflow-readiness-analysis.md`).
 
 ### Problem
 
@@ -6600,8 +6613,8 @@ remain applicable; this report does not change their contracts or claim OS gaps 
 ## FIX-0131 — 2026-10-27 — Verify preserved cloud-resolution fixes and distinguish review from repair
 
 Status: history/source/data investigation; no implementation changed.
-Related: [FIX-0127](#fix-0127), [FIX-0130](#fix-0130), FIX-0125/0126 in the
-[implementation log](../design-docs/implementation/FIXES.md).
+Related: [FIX-0127](#FIX-0127%20%E2%80%94%202026-10-26%20%E2%80%94%20Integrate%20reliability%20fixes%20into%20the%20simple%20OS%20branch), [FIX-0130](#FIX-0130%20%E2%80%94%202026-10-27%20%E2%80%94%20Explain%20long-run%20stopping%20rules%20and%20management%20qualification%20gates), FIX-0125/0126 in the
+implementation log (`design-docs/implementation/FIXES.md`).
 
 ### Problem
 
@@ -6652,8 +6665,8 @@ provider and recovery contracts remain unchanged.
 ## FIX-0132 — 2026-10-27 — Make local stalls transfer to bounded cloud coding and narrow planner assignments
 
 Status: implemented in the uncommitted working tree; fixture verification complete;
-fresh live qualification remains pending. Related: [FIX-0127](#fix-0127),
-[FIX-0130](#fix-0130), [FIX-0131](#fix-0131), implementation FIX-0125/0126.
+fresh live qualification remains pending. Related: [FIX-0127](#FIX-0127%20%E2%80%94%202026-10-26%20%E2%80%94%20Integrate%20reliability%20fixes%20into%20the%20simple%20OS%20branch),
+[FIX-0130](#FIX-0130%20%E2%80%94%202026-10-27%20%E2%80%94%20Explain%20long-run%20stopping%20rules%20and%20management%20qualification%20gates), [FIX-0131](#FIX-0131%20%E2%80%94%202026-10-27%20%E2%80%94%20Verify%20preserved%20cloud-resolution%20fixes%20and%20distinguish%20review%20from%20repair), implementation FIX-0125/0126.
 
 ### Problem
 
@@ -6662,7 +6675,7 @@ implementation takeover, excessive stalls and planner assumptions about unsuppor
 OS tools. The latest Minecraft attempt paused with no runnable tasks despite
 43/256 and 87/256 calls used by the failing lineages. Cloud review alone did not
 produce cloud coding. The top current-version issue links the combined
-[requirements and implementation record](local-task-granularity-and-cloud-recovery-2026-10-27.md).
+requirements and implementation record (`docs/temporary/proposals/2026-10-27-local-task-and-cloud-recovery.md`).
 
 ### What was wrong
 
@@ -6732,9 +6745,9 @@ Project knowledge was saved/read back in AGENTS.md and docs/project-memory.md.
 ## FIX-0133 — 2026-10-27 — Plan remaining reliability fixes by ownership and map historical failure coverage
 
 Status: investigation and proposed implementation report; no fixes implemented.
-Related: [FIX-0127](#fix-0127), [FIX-0128](#fix-0128), [FIX-0129](#fix-0129),
-[FIX-0130](#fix-0130), [FIX-0131](#fix-0131), [FIX-0132](#fix-0132).
-Report: [run reliability implementation plan](run-reliability-implementation-plan-2026-10-27.md).
+Related: [FIX-0127](#FIX-0127%20%E2%80%94%202026-10-26%20%E2%80%94%20Integrate%20reliability%20fixes%20into%20the%20simple%20OS%20branch), [FIX-0128](#FIX-0128%20%E2%80%94%202026-10-26%20%E2%80%94%20Establish%20real%20local%20Strata%20setup%20and%20mixed-lane%20capacity%20evidence), [FIX-0129](#FIX-0129%20%E2%80%94%202026-10-27%20%E2%80%94%20Correct%20documentation%20drift%20and%20assess%20retained%20workflow%20reliability),
+[FIX-0130](#FIX-0130%20%E2%80%94%202026-10-27%20%E2%80%94%20Explain%20long-run%20stopping%20rules%20and%20management%20qualification%20gates), [FIX-0131](#FIX-0131%20%E2%80%94%202026-10-27%20%E2%80%94%20Verify%20preserved%20cloud-resolution%20fixes%20and%20distinguish%20review%20from%20repair), [FIX-0132](#FIX-0132%20%E2%80%94%202026-10-27%20%E2%80%94%20Make%20local%20stalls%20transfer%20to%20bounded%20cloud%20coding%20and%20narrow%20planner%20assignments).
+Report: run reliability implementation plan (`docs/temporary/proposals/2026-10-27-run-reliability-plan.md`).
 
 ### Problem
 
@@ -6791,8 +6804,8 @@ fixes or a statistical counterfactual completion estimate.
 <a id="fix-0134"></a>
 ## FIX-0134 — 2026-10-27 — Enforce static process data/allocation policy and uniform limits
 
-Status: implemented; final combined verification recorded in the [stage record](reliability-implementation-2026-10-27.md).
-Related: FIX-0072 U01–U03, [FIX-0127](#fix-0127), [FIX-0133](#fix-0133).
+Status: implemented; final combined verification recorded in the stage record (`development-docs/reliability-implementation-2026-10-27.md`).
+Related: FIX-0072 U01–U03, [FIX-0127](#FIX-0127%20%E2%80%94%202026-10-26%20%E2%80%94%20Integrate%20reliability%20fixes%20into%20the%20simple%20OS%20branch), [FIX-0133](#FIX-0133%20%E2%80%94%202026-10-27%20%E2%80%94%20Plan%20remaining%20reliability%20fixes%20by%20ownership%20and%20map%20historical%20failure%20coverage).
 
 ### Problem
 Registered mandatory data/distribution/limit declarations could differ from actual execution authority.
@@ -6808,8 +6821,8 @@ Five new registration-denial regressions pass; intermediate generic fixtures exp
 <a id="fix-0135"></a>
 ## FIX-0135 — 2026-10-27 — Retain paused residency until explicit safe hibernation
 
-Status: implemented; final combined verification in the [stage record](reliability-implementation-2026-10-27.md).
-Related: U04 in FIX-0072, [FIX-0127](#fix-0127).
+Status: implemented; final combined verification in the stage record (`development-docs/reliability-implementation-2026-10-27.md`).
+Related: U04 in FIX-0072, [FIX-0127](#FIX-0127%20%E2%80%94%202026-10-26%20%E2%80%94%20Integrate%20reliability%20fixes%20into%20the%20simple%20OS%20branch).
 
 ### Problem
 A completed paused driver silently stopped counting against max_workers.
@@ -6825,8 +6838,8 @@ New paused-resident/hibernation/replay regression passes. Generic deadline fixtu
 <a id="fix-0136"></a>
 ## FIX-0136 — 2026-10-27 — Preserve bounded worker state and condition response repair on real errors
 
-Status: implemented; final combined verification in the [stage record](reliability-implementation-2026-10-27.md).
-Related: [FIX-0047](#fix-0047), [FIX-0058](#fix-0058), [FIX-0130](#fix-0130).
+Status: implemented; final combined verification in the stage record (`development-docs/reliability-implementation-2026-10-27.md`).
+Related: [FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances), [FIX-0058](#FIX-0058%20%E2%80%94%202026-10-20%20%E2%80%94%20Complete%20OS%20I%2FO%20safety%20and%20compaction%20verification), [FIX-0130](#FIX-0130%20%E2%80%94%202026-10-27%20%E2%80%94%20Explain%20long-run%20stopping%20rules%20and%20management%20qualification%20gates).
 
 ### Problem
 Optional history omission could remove current digests/errors; immediate schema retries reused input without the new error.
@@ -6842,8 +6855,8 @@ New ledger invalidation/idempotence and real error-conditioned two-attempt tests
 <a id="fix-0137"></a>
 ## FIX-0137 — 2026-10-27 — Retarget unstarted recovery consumers without new resource accounts
 
-Status: implemented; final combined verification in the [stage record](reliability-implementation-2026-10-27.md).
-Related: [FIX-0088](#fix-0088), [FIX-0089](#fix-0089), [FIX-0132](#fix-0132).
+Status: implemented; final combined verification in the stage record (`development-docs/reliability-implementation-2026-10-27.md`).
+Related: [FIX-0088](#FIX-0088%20%E2%80%94%202026-10-21%20%E2%80%94%20Declare%20shared-check%20preparation%20owners%20before%20parallel%20dispatch), [FIX-0089](#FIX-0089%20%E2%80%94%202026-10-21%20%E2%80%94%20Make%20explicit%20retained-source%20handoff%20actionable%20during%20planning), [FIX-0132](#FIX-0132%20%E2%80%94%202026-10-27%20%E2%80%94%20Make%20local%20stalls%20transfer%20to%20bounded%20cloud%20coding%20and%20narrow%20planner%20assignments).
 
 ### Problem
 Replacing a failed provider could not rewire an already-linked pending recovery consumer safely.
@@ -6859,8 +6872,8 @@ The previous unsafe-clone negative fixture remains applicable. Positive transiti
 <a id="fix-0138"></a>
 ## FIX-0138 — 2026-10-27 — Add reproducible workflow qualification and physical-attempt metrics
 
-Status: implemented; narrow offline/live gates passed; exact framework results/limits in the [stage record](reliability-implementation-2026-10-27.md).
-Related: [FIX-0086](#fix-0086), [FIX-0130](#fix-0130), [FIX-0133](#fix-0133).
+Status: implemented; narrow offline/live gates passed; exact framework results/limits in the stage record (`development-docs/reliability-implementation-2026-10-27.md`).
+Related: [FIX-0086](#FIX-0086%20%E2%80%94%202026-10-21%20%E2%80%94%20Separate%20setup%20prerequisites%20from%20final%20product%20acceptance), [FIX-0130](#FIX-0130%20%E2%80%94%202026-10-27%20%E2%80%94%20Explain%20long-run%20stopping%20rules%20and%20management%20qualification%20gates), [FIX-0133](#FIX-0133%20%E2%80%94%202026-10-27%20%E2%80%94%20Plan%20remaining%20reliability%20fixes%20by%20ownership%20and%20map%20historical%20failure%20coverage).
 
 ### Problem
 Unit/build success and generation activity did not demonstrate integrated product completion.
@@ -6876,8 +6889,8 @@ Initial fixture execution exposed a missing disposable Git baseline and retained
 <a id="fix-0139"></a>
 ## FIX-0139 — 2026-10-27 — Validate maintained HTML/settings and correct smoke/baseline fixtures
 
-Status: implemented; final results in the [stage record](reliability-implementation-2026-10-27.md).
-Related: [FIX-0080](#fix-0080), [FIX-0129](#fix-0129).
+Status: implemented; final results in the stage record (`development-docs/reliability-implementation-2026-10-27.md`).
+Related: [FIX-0080](#FIX-0080%20%E2%80%94%202026-10-20%20%E2%80%94%20Add%20concise%20module%20docs%20and%20a%20complete%20human%2Fagent%20navigation%20tree), [FIX-0129](#FIX-0129%20%E2%80%94%202026-10-27%20%E2%80%94%20Correct%20documentation%20drift%20and%20assess%20retained%20workflow%20reliability).
 
 ### Problem
 Green Markdown/tree checks missed maintained HTML anchors; schema/default drift and legacy fixture assumptions obscured real verification status.
@@ -6893,8 +6906,8 @@ Documentation generation passes at the current inventory. New HTML/default regre
 <a id="fix-0140"></a>
 ## FIX-0140 — 2026-10-27 — Remove conflicting native startup effort from the UI preset
 
-Status: implemented; verification in the [stage record](reliability-implementation-2026-10-27.md).
-Related: [FIX-0129](#fix-0129), [FIX-0133](#fix-0133).
+Status: implemented; verification in the stage record (`development-docs/reliability-implementation-2026-10-27.md`).
+Related: [FIX-0129](#FIX-0129%20%E2%80%94%202026-10-27%20%E2%80%94%20Correct%20documentation%20drift%20and%20assess%20retained%20workflow%20reliability), [FIX-0133](#FIX-0133%20%E2%80%94%202026-10-27%20%E2%80%94%20Plan%20remaining%20reliability%20fixes%20by%20ownership%20and%20map%20historical%20failure%20coverage).
 
 ### Problem
 UI launcher selected low reasoning effort while the actual native turn used Endpoint.reasoning_effort, default medium.
@@ -6910,8 +6923,8 @@ Source/fixture native turn checks and UI configuration regressions are part of t
 <a id="fix-0141"></a>
 ## FIX-0141 — 2026-10-27 — Bound replacement host drivers by the original account deadline
 
-Status: implemented; final combined verification in the [stage record](reliability-implementation-2026-10-27.md).
-Related: [FIX-0089](#fix-0089), [FIX-0127](#fix-0127), [FIX-0137](#fix-0137).
+Status: implemented; final combined verification in the stage record (`development-docs/reliability-implementation-2026-10-27.md`).
+Related: [FIX-0089](#FIX-0089%20%E2%80%94%202026-10-21%20%E2%80%94%20Make%20explicit%20retained-source%20handoff%20actionable%20during%20planning), [FIX-0127](#FIX-0127%20%E2%80%94%202026-10-26%20%E2%80%94%20Integrate%20reliability%20fixes%20into%20the%20simple%20OS%20branch), [FIX-0137](#FIX-0137%20%E2%80%94%202026-10-27%20%E2%80%94%20Retarget%20unstarted%20recovery%20consumers%20without%20new%20resource%20accounts).
 
 ### Problem
 A linked replacement with a newer process start could keep its host driver running after its inherited root deadline, even though new effects were already prohibited.
@@ -6927,8 +6940,8 @@ The new regression failed before the change and passed afterward; the selected d
 <a id="fix-0142"></a>
 ## FIX-0142 — 2026-10-27 — Preflight browser qualification in the actual check environment
 
-Status: implemented; qualification results in the [stage record](reliability-implementation-2026-10-27.md).
-Related: [FIX-0086](#fix-0086), [FIX-0138](#fix-0138).
+Status: implemented; qualification results in the stage record (`development-docs/reliability-implementation-2026-10-27.md`).
+Related: [FIX-0086](#FIX-0086%20%E2%80%94%202026-10-21%20%E2%80%94%20Separate%20setup%20prerequisites%20from%20final%20product%20acceptance), [FIX-0138](#FIX-0138%20%E2%80%94%202026-10-27%20%E2%80%94%20Add%20reproducible%20workflow%20qualification%20and%20physical-attempt%20metrics).
 
 ### Problem
 The first live qualification preflight launched Chromium, but its configured worker check could not locate Playwright.
@@ -6944,8 +6957,8 @@ Through actual OS configured checks, the valid fixture passed and bad-save/missi
 <a id="fix-0143"></a>
 ## FIX-0143 — 2026-10-27 — Trigger qualification interruption after settled patch operations
 
-Status: implemented; live continuation verification in the [stage record](reliability-implementation-2026-10-27.md).
-Related: [FIX-0138](#fix-0138), [FIX-0142](#fix-0142).
+Status: implemented; live continuation verification in the stage record (`development-docs/reliability-implementation-2026-10-27.md`).
+Related: [FIX-0138](#FIX-0138%20%E2%80%94%202026-10-27%20%E2%80%94%20Add%20reproducible%20workflow%20qualification%20and%20physical-attempt%20metrics), [FIX-0142](#FIX-0142%20%E2%80%94%202026-10-27%20%E2%80%94%20Preflight%20browser%20qualification%20in%20the%20actual%20check%20environment).
 
 ### Problem
 Four live small workflows completed and passed independent Chromium checks, but the intended fourth interruption did not happen.
@@ -6961,8 +6974,8 @@ The retained initial results show four passing product outcomes and a failed qua
 <a id="fix-0144"></a>
 ## FIX-0144 — 2026-10-27 — Include direct native worker effects in physical job reporting
 
-Status: implemented; final reporting verification in the [stage record](reliability-implementation-2026-10-27.md).
-Related: [FIX-0138](#fix-0138), [FIX-0143](#fix-0143).
+Status: implemented; final reporting verification in the stage record (`development-docs/reliability-implementation-2026-10-27.md`).
+Related: [FIX-0138](#FIX-0138%20%E2%80%94%202026-10-27%20%E2%80%94%20Add%20reproducible%20workflow%20qualification%20and%20physical-attempt%20metrics), [FIX-0143](#FIX-0143%20%E2%80%94%202026-10-27%20%E2%80%94%20Trigger%20qualification%20interruption%20after%20settled%20patch%20operations).
 
 ### Problem
 The live resumed cloud task succeeded, but its task summary showed zero native jobs.
@@ -6978,8 +6991,8 @@ The regression proves direct native jobs are included and adding their retry row
 <a id="fix-0145"></a>
 ## FIX-0145 — 2026-10-27 — Keep bounded worker-state eviction replay idempotent
 
-Status: implemented; final combined verification in the [stage record](reliability-implementation-2026-10-27.md).
-Related: [FIX-0136](#fix-0136).
+Status: implemented; final combined verification in the stage record (`development-docs/reliability-implementation-2026-10-27.md`).
+Related: [FIX-0136](#FIX-0136%20%E2%80%94%202026-10-27%20%E2%80%94%20Preserve%20bounded%20worker%20state%20and%20condition%20response%20repair%20on%20real%20errors).
 
 ### Problem
 Replaying the same bounded worker projection after byte-limit eviction published an unnecessary new revision.
@@ -6995,8 +7008,8 @@ The regression failed with eviction counts 9→0 before the fix. Focused replay 
 <a id="fix-0146"></a>
 ## FIX-0146 — 2026-10-27 — Keep endpoint probing compatible with mandatory placement policy
 
-Status: implemented; final affected-suite verification in the [stage record](reliability-implementation-2026-10-27.md).
-Related: [FIX-0134](#fix-0134), [FIX-0139](#fix-0139).
+Status: implemented; final affected-suite verification in the stage record (`development-docs/reliability-implementation-2026-10-27.md`).
+Related: [FIX-0134](#FIX-0134%20%E2%80%94%202026-10-27%20%E2%80%94%20Enforce%20static%20process%20data%2Fallocation%20policy%20and%20uniform%20limits), [FIX-0139](#FIX-0139%20%E2%80%94%202026-10-27%20%E2%80%94%20Validate%20maintained%20HTML%2Fsettings%20and%20correct%20smoke%2Fbaseline%20fixtures).
 
 ### Problem
 The explicit artifact-only endpoint probe was rejected when the endpoint had unspecified placement metadata.
@@ -7013,7 +7026,7 @@ The full 651-case run returned 646 passes and five integration/compatibility fai
 ## FIX-0147 — 2026-10-27 — Prepare the scheduled real-local Minecraft test without early inference
 
 Status: preparation/configuration only; the scheduled live outcome is pending.
-Related: [FIX-0128](#fix-0128), [FIX-0138](#fix-0138), [FIX-0146](#fix-0146).
+Related: [FIX-0128](#FIX-0128%20%E2%80%94%202026-10-26%20%E2%80%94%20Establish%20real%20local%20Strata%20setup%20and%20mixed-lane%20capacity%20evidence), [FIX-0138](#FIX-0138%20%E2%80%94%202026-10-27%20%E2%80%94%20Add%20reproducible%20workflow%20qualification%20and%20physical-attempt%20metrics), [FIX-0146](#FIX-0146%20%E2%80%94%202026-10-27%20%E2%80%94%20Keep%20endpoint%20probing%20compatible%20with%20mandatory%20placement%20policy).
 
 ### Problem
 
@@ -7086,8 +7099,8 @@ and bounded continuation, not a framework fix or accepted gameplay claim.
 ## FIX-0148 — 2026-10-28 — Record the scheduled live result and preserve checked partial delivery
 
 Status: investigation/test completed; partial delivery, original product objective unmet.
-Related: [FIX-0147](#fix-0147), [FIX-0128](#fix-0128), [FIX-0132](#fix-0132), [FIX-0138](#fix-0138), [FIX-0144](#fix-0144).
-Evidence and exact review paths: [scheduled live investigation](minecraft-live-test-2026-10-28.md).
+Related: [FIX-0147](#FIX-0147%20%E2%80%94%202026-10-27%20%E2%80%94%20Prepare%20the%20scheduled%20real-local%20Minecraft%20test%20without%20early%20inference), [FIX-0128](#FIX-0128%20%E2%80%94%202026-10-26%20%E2%80%94%20Establish%20real%20local%20Strata%20setup%20and%20mixed-lane%20capacity%20evidence), [FIX-0132](#FIX-0132%20%E2%80%94%202026-10-27%20%E2%80%94%20Make%20local%20stalls%20transfer%20to%20bounded%20cloud%20coding%20and%20narrow%20planner%20assignments), [FIX-0138](#FIX-0138%20%E2%80%94%202026-10-27%20%E2%80%94%20Add%20reproducible%20workflow%20qualification%20and%20physical-attempt%20metrics), [FIX-0144](#FIX-0144%20%E2%80%94%202026-10-27%20%E2%80%94%20Include%20direct%20native%20worker%20effects%20in%20physical%20job%20reporting).
+Evidence and exact review paths: scheduled live investigation (`docs/temporary/investigations/2026-10-28-minecraft-live-test.md`).
 
 ### Problem
 
@@ -7156,8 +7169,8 @@ this investigation/documentation-only work. The one-time heartbeat was deleted.
 ## FIX-0149 — 2026-10-28 — Isolate Minecraft live failures against frozen source and canonical evidence
 
 Status: investigation complete; repairs proposed, no framework/game implementation changed.
-Related: [FIX-0148](#fix-0148), [FIX-0132](#fix-0132), [FIX-0136](#fix-0136), [FIX-0137](#fix-0137), [FIX-0144](#fix-0144).
-Detailed findings and proposed repair order: [failure isolation](minecraft-failure-isolation-2026-10-28.md).
+Related: [FIX-0148](#FIX-0148%20%E2%80%94%202026-10-28%20%E2%80%94%20Record%20the%20scheduled%20live%20result%20and%20preserve%20checked%20partial%20delivery), [FIX-0132](#FIX-0132%20%E2%80%94%202026-10-27%20%E2%80%94%20Make%20local%20stalls%20transfer%20to%20bounded%20cloud%20coding%20and%20narrow%20planner%20assignments), [FIX-0136](#FIX-0136%20%E2%80%94%202026-10-27%20%E2%80%94%20Preserve%20bounded%20worker%20state%20and%20condition%20response%20repair%20on%20real%20errors), [FIX-0137](#FIX-0137%20%E2%80%94%202026-10-27%20%E2%80%94%20Retarget%20unstarted%20recovery%20consumers%20without%20new%20resource%20accounts), [FIX-0144](#FIX-0144%20%E2%80%94%202026-10-27%20%E2%80%94%20Include%20direct%20native%20worker%20effects%20in%20physical%20job%20reporting).
+Detailed findings and proposed repair order: failure isolation (`docs/temporary/investigations/2026-10-28-minecraft-failure-isolation.md`).
 
 ### Problem
 
@@ -7235,8 +7248,8 @@ knowledge in AGENTS.md was read back; original source/run preservation was check
 ## FIX-0150 — 2026-10-28 — Verify no-edit task necessity and trace current context and worker-state behavior
 
 Status: investigation complete; current defects reproduced, no fixes implemented by explicit user instruction.
-Related: [FIX-0149](#fix-0149), [FIX-0136](#fix-0136), [FIX-0145](#fix-0145).
-Evidence and corrections: [focused follow-up](minecraft-failure-isolation-2026-10-28.md#convergence-context-memory-followup).
+Related: [FIX-0149](#FIX-0149%20%E2%80%94%202026-10-28%20%E2%80%94%20Isolate%20Minecraft%20live%20failures%20against%20frozen%20source%20and%20canonical%20evidence), [FIX-0136](#FIX-0136%20%E2%80%94%202026-10-27%20%E2%80%94%20Preserve%20bounded%20worker%20state%20and%20condition%20response%20repair%20on%20real%20errors), [FIX-0145](#FIX-0145%20%E2%80%94%202026-10-27%20%E2%80%94%20Keep%20bounded%20worker-state%20eviction%20replay%20idempotent).
+Evidence and corrections: focused follow-up (`docs/temporary/investigations/2026-10-28-minecraft-failure-isolation.md#convergence-context-memory-followup`).
 
 ### Problem
 
@@ -7348,7 +7361,7 @@ Chromium checks pass with no page errors; the screenshot was inspected. Native O
 focus switching, loading/resumed play and full 2018 gameplay remain unverified or
 missing. Runner root-path mistakes were harness errors corrected before those
 checks. Source/evidence and documentation are retained in the
-[implementation record](model-fallback-browser-repair-2026-10-28.md). No commits.
+implementation record (`development-docs/model-fallback-browser-repair-2026-10-28.md`). No commits.
 
 <a id="fix-0152"></a>
 ## FIX-0152 — 2026-10-28 — Agent-selected provider fallback with durable OS routing
@@ -7390,7 +7403,7 @@ The app-server adapter retains terminal thread identity, resumes it on alternate
 with persisted tools/results and disables opaque provider fallback. Old callback
 IDs replay receipts; changed arguments reject. Current authorized workspace state
 is recaptured without grant expansion. Convergence/context/worker-state defects
-remain planned and unchanged. Read the [policy](../docs/guides/model-fallback.md).
+remain planned and unchanged. Read the policy (`docs/guides/model-fallback.md`).
 
 ### Design principle enforced or reconstructed
 
@@ -7410,7 +7423,7 @@ passed with installed Node 24/npm. The final 27-case fallback run includes the l
 physical response-repair payload refinement; no single fresh 682-case gate is claimed.
 Finite browser checks are separate from inference fixtures. Generated settings,
 docs/navigation, examples, Ruff and broader suite evidence are finalized in the
-[implementation record](model-fallback-browser-repair-2026-10-28.md). No live
+implementation record (`development-docs/model-fallback-browser-repair-2026-10-28.md`). No live
 provider outage was induced, real model called, historical run resumed or source
 committed. Setup/authentication remain existing configuration, without new login.
 
@@ -7418,7 +7431,7 @@ committed. Setup/authentication remain existing configuration, without new login
 ## FIX-0153 — 2026-10-28 — Focus local implementation and bound diagnostic source access
 
 **Status:** implemented in the authorized scheduled batch; fresh agent-8/state 2.7.
-Related: FIX-0127/0132/0149/0150; [implementation record](four-repairs-implementation-2026-10-28.md).
+Related: FIX-0127/0132/0149/0150; implementation record (`development-docs/four-repairs-implementation-2026-10-28.md`).
 
 ### Problem
 
@@ -7463,7 +7476,7 @@ convergence or new Minecraft generation is claimed.
 ## FIX-0154 — 2026-10-28 — Separate context tokens, bytes and actual output reservation
 
 **Status:** implemented for fresh simple-os/5; old configurations remain frozen.
-Related: FIX-0128/0149/0150; [context contract](../docs/guides/context-measurement.md).
+Related: FIX-0128/0149/0150; context contract (`docs/guides/context-measurement.md`).
 
 ### Problem
 
@@ -7501,14 +7514,14 @@ Independent byte/token/output bounds preserve original accounts and canonical in
 Fixture raw requests exceed the old byte ceiling while fitting measured 64K
 capacity with smaller actual output reserve. Malformed/negative/boolean counters,
 independent byte caps and whole-group priorities are covered. Final generic OS,
-schema/docs checks are in the [record](four-repairs-implementation-2026-10-28.md).
+schema/docs checks are in the record (`development-docs/four-repairs-implementation-2026-10-28.md`).
 Older Strata counting-route support and live utilization remain unqualified.
 
 <a id="fix-0155"></a>
 ## FIX-0155 — 2026-10-28 — Hand clean unusable output to existing semantic recovery
 
 **Status:** implemented as agent policy; provider fallback remains intact.
-Related: FIX-0027/0030/0132/0149 and [worker recovery](../design-docs/implementation/WORKER_RECOVERY.md).
+Related: FIX-0027/0030/0132/0149 and worker recovery (`design-docs/implementation/WORKER_RECOVERY.md`).
 
 ### Problem
 
@@ -7551,14 +7564,14 @@ wire compatibility and existing fallback/diagnosis. A mistaken generate stub mad
 two actual Codex requests, rejected as unsupported fixture model with no completion
 or subordinate tools; it now overrides generate_job with a non-executable command.
 Earlier failed expectations, those journals and the real CAS failure remain in the
-[record](four-repairs-implementation-2026-10-28.md). Fixture takeover is not live
+record (`development-docs/four-repairs-implementation-2026-10-28.md`). Fixture takeover is not live
 model convergence or product acceptance.
 
 <a id="fix-0156"></a>
 ## FIX-0156 — 2026-10-28 — Retire resolved worker errors without replay resurrection
 
 **Status:** implemented in bounded agent worker_state; no memory redesign.
-Related: FIX-0136/0145/0150 and [worker protocol](../docs/modules/agent-workers.md).
+Related: FIX-0136/0145/0150 and worker protocol (`docs/modules/agent-workers.md`).
 
 ### Problem
 
@@ -7591,7 +7604,7 @@ RAM replay of exact committed worker_memory fails five resolution/replay cases
 and passes one generation control; no working file was reverted. Regressions cover
 corrected search, three non-action kinds, repeated/older/new-generation histories,
 divergence and active-error priority. All 38 four-repair cases pass. Final broad
-checks/pins/limits are in the [record](four-repairs-implementation-2026-10-28.md).
+checks/pins/limits are in the record (`development-docs/four-repairs-implementation-2026-10-28.md`).
 
 
 Final shared verification for FIX-0153–0156: all **720 tests passed in 1970.19s**
@@ -7610,7 +7623,7 @@ Minecraft run is claimed; the one-time automation and owned fixture processes en
 ## FIX-0157 — 2026-10-28 — Audit simple-OS branch ancestry and unmerged profile work
 
 **Status:** investigated only; no implementation or branch merge changed.
-Related: FIX-0127 and [the integration audit](branch-integration-audit-2026-10-26.md).
+Related: FIX-0127 and the integration audit (`docs/temporary/investigations/2026-10-26-branch-integration-audit.md`).
 
 ### Problem
 
@@ -7659,8 +7672,8 @@ history update; no runtime tests or live workload were needed for an ancestry au
 ## FIX-0158 — 2026-10-28 — Start the scheduled local Minecraft continuation with measured context
 
 Status: setup/readiness verified; fresh live run launched, final outcome pending.
-Related: [FIX-0147](#fix-0147), [FIX-0148](#fix-0148), [FIX-0152](#fix-0152), [FIX-0153](#fix-0153), [FIX-0154](#fix-0154).
-Record: [19:30 continuation](minecraft-live-test-2026-10-28-1930.md).
+Related: [FIX-0147](#FIX-0147%20%E2%80%94%202026-10-27%20%E2%80%94%20Prepare%20the%20scheduled%20real-local%20Minecraft%20test%20without%20early%20inference), [FIX-0148](#FIX-0148%20%E2%80%94%202026-10-28%20%E2%80%94%20Record%20the%20scheduled%20live%20result%20and%20preserve%20checked%20partial%20delivery), [FIX-0152](#FIX-0152%20%E2%80%94%202026-10-28%20%E2%80%94%20Agent-selected%20provider%20fallback%20with%20durable%20OS%20routing), [FIX-0153](#FIX-0153%20%E2%80%94%202026-10-28%20%E2%80%94%20Focus%20local%20implementation%20and%20bound%20diagnostic%20source%20access), [FIX-0154](#FIX-0154%20%E2%80%94%202026-10-28%20%E2%80%94%20Separate%20context%20tokens%2C%20bytes%20and%20actual%20output%20reservation).
+Record: 19:30 continuation (`docs/temporary/investigations/2026-10-28-minecraft-live-test-1930.md`).
 
 ### Problem
 
@@ -7723,7 +7736,7 @@ continues only the already launched run; final evidence must replace pending sta
 ## FIX-0159 — 2026-10-28 — Measure recent local TPS without changing live inference
 
 Status: measurement/investigation only; no framework/game implementation changed.
-Related: [FIX-0158](#fix-0158) and the [active run record](minecraft-live-test-2026-10-28-1930.md).
+Related: [FIX-0158](#FIX-0158%20%E2%80%94%202026-10-28%20%E2%80%94%20Start%20the%20scheduled%20local%20Minecraft%20continuation%20with%20measured%20context) and the active run record (`docs/temporary/investigations/2026-10-28-minecraft-live-test-1930.md`).
 
 ### Problem
 The user requested average local-model TPS over recent minute windows, with special
@@ -7764,7 +7777,7 @@ ownership is unchanged because no maintained framework file was added or moved.
 ## FIX-0160 — 2026-10-29 — Finalize the single local continuation and retain its failed acceptance evidence
 
 Status: investigation/delivery only; no supervisor framework or game implementation fix.
-Related: [FIX-0158](#fix-0158), [FIX-0159](#fix-0159), [result/delivery pointers](minecraft-live-test-2026-10-28-1930.md).
+Related: [FIX-0158](#FIX-0158%20%E2%80%94%202026-10-28%20%E2%80%94%20Start%20the%20scheduled%20local%20Minecraft%20continuation%20with%20measured%20context), [FIX-0159](#FIX-0159%20%E2%80%94%202026-10-28%20%E2%80%94%20Measure%20recent%20local%20TPS%20without%20changing%20live%20inference), result/delivery pointers (`docs/temporary/investigations/2026-10-28-minecraft-live-test-1930.md`).
 This terminal receipt supersedes FIX-0158's historical pending-outcome statements.
 
 ### Problem
@@ -7824,9 +7837,9 @@ remain fixed. Prior default values were compared against the captured starting
 source and match; no old run configuration/account/deadline was changed.
 
 The audit read all runtime files and adjacent shared/entry-point consumers. The
-[per-file inventory](../docs/os-config-inventory.md) classifies configurable values,
+per-file inventory (`docs/os-config-inventory.md`) classifies configurable values,
 protocol/safety invariants and application-owned defaults. The
-[usage guide](../docs/guides/os-tuning.md) explains precedence, validation, retained
+usage guide (`docs/guides/os-tuning.md`) explains precedence, validation, retained
 state, resource implications and fresh-state requirements.
 
 ### Scope and principle
@@ -7854,7 +7867,7 @@ fixtures do not constitute a new live-model or broad game qualification run.
 ## FIX-0162 — 2026-10-29 — Require explicit single-file local coding contracts
 
 Status: implemented on codex/simple-os-v1; see the final verification record below.
-Related: FIX-0161 and [P0 implementation/verification](p0-repairs-2026-10-29.md).
+Related: FIX-0161 and P0 implementation/verification (`development-docs/p0-repairs-2026-10-29.md`).
 
 ### Problem and root owner
 
@@ -7870,17 +7883,17 @@ Coding task meaning and decomposition belong to the agent. A structural file bou
 
 ### Verification
 
-The [P0 record](p0-repairs-2026-10-29.md) records focused and broad offline checks,
+The P0 record (`development-docs/p0-repairs-2026-10-29.md`) records focused and broad offline checks,
 source preservation, docs/schema/frontend results and actual limits. Tests exercise
 real disposable HTTP/stdio paths where needed; no live-model convergence or old-run
-Resume is claimed. Remaining P1/P2 work is in the [current-version list](current-iter-issues.md#p0-repairs-2026-10-29).
+Resume is claimed. Remaining P1/P2 work is in the current-version list (`docs/temporary/incidents/2026-10-29-p0-scope-and-status.md#p0-repairs-2026-10-29`).
 
 
 <a id="fix-0163"></a>
 ## FIX-0163 — 2026-10-29 — Make tuning immutable and propagate operational settings
 
 Status: implemented on codex/simple-os-v1; see the final verification record below.
-Related: FIX-0161 and [P0 implementation/verification](p0-repairs-2026-10-29.md).
+Related: FIX-0161 and P0 implementation/verification (`development-docs/p0-repairs-2026-10-29.md`).
 
 ### Problem and root owner
 
@@ -7896,17 +7909,17 @@ Resolved configuration must remain stable and operational preferences must reach
 
 ### Verification
 
-The [P0 record](p0-repairs-2026-10-29.md) records focused and broad offline checks,
+The P0 record (`development-docs/p0-repairs-2026-10-29.md`) records focused and broad offline checks,
 source preservation, docs/schema/frontend results and actual limits. Tests exercise
 real disposable HTTP/stdio paths where needed; no live-model convergence or old-run
-Resume is claimed. Remaining P1/P2 work is in the [current-version list](current-iter-issues.md#p0-repairs-2026-10-29).
+Resume is claimed. Remaining P1/P2 work is in the current-version list (`docs/temporary/incidents/2026-10-29-p0-scope-and-status.md#p0-repairs-2026-10-29`).
 
 
 <a id="fix-0164"></a>
 ## FIX-0164 — 2026-10-29 — Preserve required cloud coding placement
 
 Status: implemented on codex/simple-os-v1; see the final verification record below.
-Related: FIX-0161 and [P0 implementation/verification](p0-repairs-2026-10-29.md).
+Related: FIX-0161 and P0 implementation/verification (`development-docs/p0-repairs-2026-10-29.md`).
 
 ### Problem and root owner
 
@@ -7922,17 +7935,17 @@ Agent suitability constraints outrank soft distribution targets. Extra local mic
 
 ### Verification
 
-The [P0 record](p0-repairs-2026-10-29.md) records focused and broad offline checks,
+The P0 record (`development-docs/p0-repairs-2026-10-29.md`) records focused and broad offline checks,
 source preservation, docs/schema/frontend results and actual limits. Tests exercise
 real disposable HTTP/stdio paths where needed; no live-model convergence or old-run
-Resume is claimed. Remaining P1/P2 work is in the [current-version list](current-iter-issues.md#p0-repairs-2026-10-29).
+Resume is claimed. Remaining P1/P2 work is in the current-version list (`docs/temporary/incidents/2026-10-29-p0-scope-and-status.md#p0-repairs-2026-10-29`).
 
 
 <a id="fix-0165"></a>
 ## FIX-0165 — 2026-10-29 — Separate provider completion from local budget violations
 
 Status: implemented on codex/simple-os-v1; see the final verification record below.
-Related: FIX-0161 and [P0 implementation/verification](p0-repairs-2026-10-29.md).
+Related: FIX-0161 and P0 implementation/verification (`development-docs/p0-repairs-2026-10-29.md`).
 
 ### Problem and root owner
 
@@ -7948,17 +7961,17 @@ Provider completion, budget compliance, response validity, retained source and a
 
 ### Verification
 
-The [P0 record](p0-repairs-2026-10-29.md) records focused and broad offline checks,
+The P0 record (`development-docs/p0-repairs-2026-10-29.md`) records focused and broad offline checks,
 source preservation, docs/schema/frontend results and actual limits. Tests exercise
 real disposable HTTP/stdio paths where needed; no live-model convergence or old-run
-Resume is claimed. Remaining P1/P2 work is in the [current-version list](current-iter-issues.md#p0-repairs-2026-10-29).
+Resume is claimed. Remaining P1/P2 work is in the current-version list (`docs/temporary/incidents/2026-10-29-p0-scope-and-status.md#p0-repairs-2026-10-29`).
 
 
 <a id="fix-0166"></a>
 ## FIX-0166 — 2026-10-29 — Carry exact-source passing and failing check evidence
 
 Status: implemented on codex/simple-os-v1; see the final verification record below.
-Related: FIX-0161 and [P0 implementation/verification](p0-repairs-2026-10-29.md).
+Related: FIX-0161 and P0 implementation/verification (`development-docs/p0-repairs-2026-10-29.md`).
 
 ### Problem and root owner
 
@@ -7974,17 +7987,17 @@ Route retained evidence to its owner without conflating the failure trigger with
 
 ### Verification
 
-The [P0 record](p0-repairs-2026-10-29.md) records focused and broad offline checks,
+The P0 record (`development-docs/p0-repairs-2026-10-29.md`) records focused and broad offline checks,
 source preservation, docs/schema/frontend results and actual limits. Tests exercise
 real disposable HTTP/stdio paths where needed; no live-model convergence or old-run
-Resume is claimed. Remaining P1/P2 work is in the [current-version list](current-iter-issues.md#p0-repairs-2026-10-29).
+Resume is claimed. Remaining P1/P2 work is in the current-version list (`docs/temporary/incidents/2026-10-29-p0-scope-and-status.md#p0-repairs-2026-10-29`).
 
 
 <a id="fix-0167"></a>
 ## FIX-0167 — 2026-10-29 — Unify local token settings and remove cloud per-call caps
 
 Status: implemented on codex/simple-os-v1; see the final verification record below.
-Related: FIX-0161 and [P0 implementation/verification](p0-repairs-2026-10-29.md).
+Related: FIX-0161 and P0 implementation/verification (`development-docs/p0-repairs-2026-10-29.md`).
 
 ### Problem and root owner
 
@@ -8000,17 +8013,17 @@ Provider-owned cloud generation limits must not be inferred from local worker co
 
 ### Verification
 
-The [P0 record](p0-repairs-2026-10-29.md) records focused and broad offline checks,
+The P0 record (`development-docs/p0-repairs-2026-10-29.md`) records focused and broad offline checks,
 source preservation, docs/schema/frontend results and actual limits. Tests exercise
 real disposable HTTP/stdio paths where needed; no live-model convergence or old-run
-Resume is claimed. Remaining P1/P2 work is in the [current-version list](current-iter-issues.md#p0-repairs-2026-10-29).
+Resume is claimed. Remaining P1/P2 work is in the current-version list (`docs/temporary/incidents/2026-10-29-p0-scope-and-status.md#p0-repairs-2026-10-29`).
 
 
 <a id="fix-0168"></a>
 ## FIX-0168 — 2026-11-02 — Persist machine-local Qwen/Strata UI defaults
 
 Status: implemented; verification recorded below.
-Related history: [FIX-0128](#fix-0128), [FIX-0092](#fix-0092), [FIX-0167](#fix-0167).
+Related history: [FIX-0128](#FIX-0128%20%E2%80%94%202026-10-26%20%E2%80%94%20Establish%20real%20local%20Strata%20setup%20and%20mixed-lane%20capacity%20evidence), [FIX-0092](#FIX-0092%20%E2%80%94%202026-10-21%20%E2%80%94%20Add%20an%20invocation-only%20remote%20Haiku%20simulation%20preset), [FIX-0167](#FIX-0167%20%E2%80%94%202026-10-29%20%E2%80%94%20Unify%20local%20token%20settings%20and%20remove%20cloud%20per-call%20caps).
 
 ### Problem
 
@@ -8079,7 +8092,7 @@ Project knowledge was appended to AGENTS.md and read back; no automation was add
 ## FIX-0169 — 2026-11-02 — Automatically start the configured Strata engine with the UI
 
 Status: implemented; final verification recorded below.
-Related history: [FIX-0168](#fix-0168), [FIX-0167](#fix-0167).
+Related history: [FIX-0168](#FIX-0168%20%E2%80%94%202026-11-02%20%E2%80%94%20Persist%20machine-local%20Qwen%2FStrata%20UI%20defaults), [FIX-0167](#FIX-0167%20%E2%80%94%202026-10-29%20%E2%80%94%20Unify%20local%20token%20settings%20and%20remove%20cloud%20per-call%20caps).
 This supersedes FIX-0168's requirement to start the machine's engine separately.
 
 ### Problem
@@ -8143,8 +8156,8 @@ Retained AGENTS.md knowledge was appended and read back.
 ## FIX-0170 — 2026-11-02 — Investigate a native setup interruption at the cloud timeout
 
 Status: investigated; no implementation changed.
-Related: [FIX-0068](#fix-0068), [FIX-0168](#fix-0168), [FIX-0169](#fix-0169).
-Evidence and follow-up: [run 20739a315d3f](current-iter-issues.md#run-20739a315d3f).
+Related: [FIX-0068](#FIX-0068%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20an%20interrupted%20native%20inventory%20repair%20and%20retained%20progress), [FIX-0168](#FIX-0168%20%E2%80%94%202026-11-02%20%E2%80%94%20Persist%20machine-local%20Qwen%2FStrata%20UI%20defaults), [FIX-0169](#FIX-0169%20%E2%80%94%202026-11-02%20%E2%80%94%20Automatically%20start%20the%20configured%20Strata%20engine%20with%20the%20UI).
+Evidence and follow-up: run 20739a315d3f (`docs/temporary/incidents/2026-11-02-native-setup-interruption.md#run-20739a315d3f`).
 
 ### Problem
 
@@ -8192,7 +8205,7 @@ and read back; no automation or runtime hook was installed.
 ## FIX-0171 — 2026-11-02 — Make cloud agent endpoint timeouts warning-only by default
 
 Status: implemented; verification below.
-Related: [FIX-0068](#fix-0068), [FIX-0170](#fix-0170).
+Related: [FIX-0068](#FIX-0068%20%E2%80%94%202026-10-20%20%E2%80%94%20Analyze%20an%20interrupted%20native%20inventory%20repair%20and%20retained%20progress), [FIX-0170](#FIX-0170%20%E2%80%94%202026-11-02%20%E2%80%94%20Investigate%20a%20native%20setup%20interruption%20at%20the%20cloud%20timeout).
 
 ### Problem
 
@@ -8257,7 +8270,7 @@ model-routing or resume authority changed. Retained knowledge is in AGENTS.md.
 <a id="fix-0172"></a>
 ## FIX-0172 — 2026-11-02 — Keep coding presets warning-only with a 1800-second cloud timeout
 
-Status: implemented; verification below. Related: [FIX-0171](#fix-0171).
+Status: implemented; verification below. Related: [FIX-0171](#FIX-0171%20%E2%80%94%202026-11-02%20%E2%80%94%20Make%20cloud%20agent%20endpoint%20timeouts%20warning-only%20by%20default).
 
 ### Problem and owning cause
 
@@ -8294,7 +8307,7 @@ schema default did not change. Retained project knowledge was appended to AGENTS
 ## FIX-0173 — 2026-11-02 — Use a 112K input and 16K output coding preference within 128K
 
 Status: implemented; verification recorded below.
-Related: [FIX-0167](#fix-0167), [FIX-0168](#fix-0168), [FIX-0169](#fix-0169).
+Related: [FIX-0167](#FIX-0167%20%E2%80%94%202026-10-29%20%E2%80%94%20Unify%20local%20token%20settings%20and%20remove%20cloud%20per-call%20caps), [FIX-0168](#FIX-0168%20%E2%80%94%202026-11-02%20%E2%80%94%20Persist%20machine-local%20Qwen%2FStrata%20UI%20defaults), [FIX-0169](#FIX-0169%20%E2%80%94%202026-11-02%20%E2%80%94%20Automatically%20start%20the%20configured%20Strata%20engine%20with%20the%20UI).
 Supersedes FIX-0168's 64K machine token preference for fresh UI launches.
 
 ### Problem
@@ -8350,7 +8363,7 @@ are backed up; existing serving processes were not restarted.
 ## FIX-0174 — 2026-11-02 — Clean up UI-owned Strata runtimes on exit and process death
 
 Status: implemented; verification recorded below.
-Related: [FIX-0169](#fix-0169), [FIX-0173](#fix-0173).
+Related: [FIX-0169](#FIX-0169%20%E2%80%94%202026-11-02%20%E2%80%94%20Automatically%20start%20the%20configured%20Strata%20engine%20with%20the%20UI), [FIX-0173](#FIX-0173%20%E2%80%94%202026-11-02%20%E2%80%94%20Use%20a%20112K%20input%20and%2016K%20output%20coding%20preference%20within%20128K).
 Supersedes FIX-0169's intentional leave-running policy for UI-started instances.
 
 ### Problem
@@ -8423,8 +8436,8 @@ source file or feature leaf. Earlier FIX history bytes were verified unchanged.
 ## FIX-0175 — 2026-11-04 — Expose planner allowances and default senior source retrieval to 16 ranges
 
 Status: implemented; affected regressions and documentation verification passed.
-Related: [FIX-0088](#fix-0088), [FIX-0136](#fix-0136) and
-[the saved-run investigation](current-iter-issues.md#run-917e45c4b40a).
+Related: [FIX-0088](#FIX-0088%20%E2%80%94%202026-10-21%20%E2%80%94%20Declare%20shared-check%20preparation%20owners%20before%20parallel%20dispatch), [FIX-0136](#FIX-0136%20%E2%80%94%202026-10-27%20%E2%80%94%20Preserve%20bounded%20worker%20state%20and%20condition%20response%20repair%20on%20real%20errors) and
+the saved-run investigation (`docs/temporary/incidents/2026-11-04-review-allowance.md#run-917e45c4b40a`).
 
 ### Problem
 
@@ -8493,9 +8506,9 @@ check. Historical export bytes remained unchanged. The full framework suite was 
 ## FIX-0176 — 2026-11-04 — Record the revised agent prompting proposal and first current implementation issue
 
 Status: investigation and proposal documentation only; no implementation changed.
-Issue: [PROMPT-01](current-iter-issues.md#prompt-01).
-Proposal: [simpler agent prompts and milestone-driven sprint planning](agent-prompting-proposal-2026-11-04.md).
-Related: [FIX-0175](#fix-0175), [FIX-0088](#fix-0088) and [FIX-0136](#fix-0136).
+Issue: `docs/temporary/incidents/2026-11-04-prompting.md#prompt-01`.
+Proposal: simpler agent prompts and milestone-driven sprint planning (`docs/temporary/proposals/2026-11-04-agent-prompting-proposal.md`).
+Related: [FIX-0175](#FIX-0175%20%E2%80%94%202026-11-04%20%E2%80%94%20Expose%20planner%20allowances%20and%20default%20senior%20source%20retrieval%20to%2016%20ranges), [FIX-0088](#FIX-0088%20%E2%80%94%202026-10-21%20%E2%80%94%20Declare%20shared-check%20preparation%20owners%20before%20parallel%20dispatch) and [FIX-0136](#FIX-0136%20%E2%80%94%202026-10-27%20%E2%80%94%20Preserve%20bounded%20worker%20state%20and%20condition%20response%20repair%20on%20real%20errors).
 
 ### Problem
 
@@ -8560,13 +8573,13 @@ document has a primary navigation leaf; retained AGENTS.md knowledge was read ba
 ## FIX-0177 — 2026-11-04 — Audit the prompting proposal against prior fixes and correct unsafe workflow shortcuts
 
 Status: analysis and corrected implementation plan only; no source implementation changed.
-Audit: [prompting proposal audit and corrected plan](agent-prompting-audit-2026-11-04.md).
-Issue: [PROMPT-01](current-iter-issues.md#prompt-01).
-Corrects: [FIX-0176](#fix-0176), retaining the original proposal/history.
-Related: [FIX-0023](#fix-0023), [FIX-0025](#fix-0025), [FIX-0086](#fix-0086),
-[FIX-0088](#fix-0088), [FIX-0089](#fix-0089), [FIX-0136](#fix-0136),
-[FIX-0137](#fix-0137), [FIX-0162](#fix-0162), [FIX-0164](#fix-0164),
-[FIX-0166](#fix-0166).
+Audit: prompting proposal audit and corrected plan (`docs/temporary/proposals/2026-11-04-agent-prompting-audit.md`).
+Issue: `docs/temporary/incidents/2026-11-04-prompting.md#prompt-01`.
+Corrects: [FIX-0176](#FIX-0176%20%E2%80%94%202026-11-04%20%E2%80%94%20Record%20the%20revised%20agent%20prompting%20proposal%20and%20first%20current%20implementation%20issue), retaining the original proposal/history.
+Related: [FIX-0023](#FIX-0023%20%E2%80%94%202026-10-18%20%E2%80%94%20Represent%20phase%20transitions%20as%20current%20host%20requests), [FIX-0025](#FIX-0025%20%E2%80%94%202026-10-18%20%E2%80%94%20Preserve%20effective%20authority%20and%20full%20requirements%20through%20task%20handoffs), [FIX-0086](#FIX-0086%20%E2%80%94%202026-10-21%20%E2%80%94%20Separate%20setup%20prerequisites%20from%20final%20product%20acceptance),
+[FIX-0088](#FIX-0088%20%E2%80%94%202026-10-21%20%E2%80%94%20Declare%20shared-check%20preparation%20owners%20before%20parallel%20dispatch), [FIX-0089](#FIX-0089%20%E2%80%94%202026-10-21%20%E2%80%94%20Make%20explicit%20retained-source%20handoff%20actionable%20during%20planning), [FIX-0136](#FIX-0136%20%E2%80%94%202026-10-27%20%E2%80%94%20Preserve%20bounded%20worker%20state%20and%20condition%20response%20repair%20on%20real%20errors),
+[FIX-0137](#FIX-0137%20%E2%80%94%202026-10-27%20%E2%80%94%20Retarget%20unstarted%20recovery%20consumers%20without%20new%20resource%20accounts), [FIX-0162](#FIX-0162%20%E2%80%94%202026-10-29%20%E2%80%94%20Require%20explicit%20single-file%20local%20coding%20contracts), [FIX-0164](#FIX-0164%20%E2%80%94%202026-10-29%20%E2%80%94%20Preserve%20required%20cloud%20coding%20placement),
+[FIX-0166](#FIX-0166%20%E2%80%94%202026-10-29%20%E2%80%94%20Carry%20exact-source%20passing%20and%20failing%20check%20evidence).
 
 ### Problem
 
@@ -8645,11 +8658,11 @@ with an explicit correction notice, and the refreshed project note was read back
 ## FIX-0178 — 2026-11-04 — Support test-only assignments without implementation or result files
 
 Status: implemented; basic offline verification, live testing left to the user.
-Issue: [PROMPT-01](current-iter-issues.md#prompt-01).
-Supersedes the testing deferral in [FIX-0177](#fix-0177) following explicit user
+Issue: `docs/temporary/incidents/2026-11-04-prompting.md#prompt-01`.
+Supersedes the testing deferral in [FIX-0177](#FIX-0177%20%E2%80%94%202026-11-04%20%E2%80%94%20Audit%20the%20prompting%20proposal%20against%20prior%20fixes%20and%20correct%20unsafe%20workflow%20shortcuts) following explicit user
 implementation authorization; the broader prompting redesign remains open.
-Related: [FIX-0162](#fix-0162), [FIX-0164](#fix-0164),
-[FIX-0166](#fix-0166), [FIX-0136](#fix-0136), [FIX-0137](#fix-0137).
+Related: [FIX-0162](#FIX-0162%20%E2%80%94%202026-10-29%20%E2%80%94%20Require%20explicit%20single-file%20local%20coding%20contracts), [FIX-0164](#FIX-0164%20%E2%80%94%202026-10-29%20%E2%80%94%20Preserve%20required%20cloud%20coding%20placement),
+[FIX-0166](#FIX-0166%20%E2%80%94%202026-10-29%20%E2%80%94%20Carry%20exact-source%20passing%20and%20failing%20check%20evidence), [FIX-0136](#FIX-0136%20%E2%80%94%202026-10-27%20%E2%80%94%20Preserve%20bounded%20worker%20state%20and%20condition%20response%20repair%20on%20real%20errors), [FIX-0137](#FIX-0137%20%E2%80%94%202026-10-27%20%E2%80%94%20Retarget%20unstarted%20recovery%20consumers%20without%20new%20resource%20accounts).
 
 ### Problem
 
@@ -8730,3 +8743,823 @@ no setup/configuration, check ABI/purpose or OS execution changes needed edits.
 Documentation generation and `--check` passed for 339 files and 150 feature/doc
 leaves, including links and navigation; guide-length advisories are nonblocking.
 The retained project-rule note in AGENTS.md was saved and read back.
+
+<a id="fix-0179"></a>
+## FIX-0179 — 2026-11-06 — Set the Haiku worker preset to 96K input/32K output and trace input-failure escalation
+
+Status: application setting implemented; escalation investigation only, no recovery behavior changed.
+Related: [FIX-0150](#FIX-0150%20%E2%80%94%202026-10-28%20%E2%80%94%20Verify%20no-edit%20task%20necessity%20and%20trace%20current%20context%20and%20worker-state%20behavior), [FIX-0154](#FIX-0154%20%E2%80%94%202026-10-28%20%E2%80%94%20Separate%20context%20tokens%2C%20bytes%20and%20actual%20output%20reservation), [FIX-0155](#FIX-0155%20%E2%80%94%202026-10-28%20%E2%80%94%20Hand%20clean%20unusable%20output%20to%20existing%20semantic%20recovery),
+[FIX-0167](#FIX-0167%20%E2%80%94%202026-10-29%20%E2%80%94%20Unify%20local%20token%20settings%20and%20remove%20cloud%20per-call%20caps), [FIX-0168](#FIX-0168%20%E2%80%94%202026-11-02%20%E2%80%94%20Persist%20machine-local%20Qwen%2FStrata%20UI%20defaults).
+Investigation: run dd20b7d98b80 (`docs/temporary/incidents/2026-11-06-haiku-input-overflow.md#run-dd20b7d98b80`).
+
+### Problem
+
+The supplied run paused before its first database implementation generation. Required
+prepared input remained 29240 bytes after optional packing, against a saved 24000
+input allowance using conservative byte-based token bounds. The user requested a
+Haiku 96000-input/32000-output setting and analysis of absent Codex escalation,
+explicitly excluding any other implementation repair.
+
+### What was wrong
+
+The ordinary application Haiku UI inherited generic 24000/4000 defaults; Haiku
+examples used 96000/4096. Required prompts could already exceed the smaller setting.
+The provider was never called for either overflow. InputOverflow is not transient
+retryable output: ModelRetries._blocked rejects its nonretryable result, and agent
+park_model_failure excludes that code. Thus no semantic exception reached the cloud
+takeover policy despite max_cloud_recoveries=1. FIX-0154's optional provider counter
+was not enabled; FIX-0155 deliberately covers selected unusable outputs, not input
+construction failures. This is existing main behavior, unrelated to the status patch.
+
+### How it was fixed or established
+
+agent/system_settings.py now supplies one application Haiku pair, 96000/32000,
+for the fresh UI preset and complete remote-Haiku endpoint replacement. Existing
+remote Anthropic custom pairs remain authoritative. Updated mixed/Anthropic examples
+and existing UI preference assertions. No generic OS default, retry/classification,
+cloud policy, measurement, native Codex setting or provider lifecycle changed.
+Updated owning settings/token/configuration/launch/tester references, current issue,
+consolidated settings prose and retained project knowledge. Existing navigation owns
+all edited paths; no new maintained file was added. Saved runs remain untouched.
+
+### Design principle enforced or reconstructed
+
+Application/provider presets own deployment allowances; the generic OS retains
+provider-neutral defaults and enforces the resolved pair. Retry, semantic coding
+handoff and provider availability fallback are distinct mechanisms. Preserve required
+constraints, immutable failed evidence, original grants/accounts/deadlines and explicit
+configuration. This investigation does not broaden escalation or authorize resuming
+old pinned runs; changed agent source requires fresh program/configuration state.
+
+### Verification
+
+The earlier analysis verified all 216 exported artifact hashes and reproduced both
+saved InputOverflow receipts exactly in memory, with matching agent/prompt pins and
+six relevant files byte-identical to main. No inference or saved-state writes occurred.
+The final focused run passed 74 cases in 29.55 seconds: the existing UI preference
+regression plus complete sim-batch and inference-simulation suites. They cover the
+requested pair, 128000 context/256000 two-slot reservation, real-local preference
+precedence, explicit remote configs and provider payloads. All five examples validate;
+Haiku examples send max_tokens=32000. Generic 24000/4000 defaults and the exported
+historical configuration remain unchanged. An offline replay of the saved prompts
+under a fresh 96000/32000 context fits both requests (26795 diagnostic and 37791
+worker prepared bytes); this does not Resume or change the saved run. Direct calls
+to the unchanged retry/parking filters confirm both overflows remain ineligible.
+The first positive replay lacked put_once on its disposable record stub; adding that
+stub method completed the probe without a production repair.
+
+Ruff, settings-schema agreement and Git whitespace checks pass. Ordinary documentation
+generation and --check both remain blocked by the pre-existing unregistered PR file
+tests/test_cli_status.py, already found during the requested review. It is deliberately
+not repaired in this settings-only task. Supplemental read-only validation excluding
+exactly that file passes for 339 files/150 leaves with generated navigation unchanged;
+existing guide-length advisories remain. All 329 other starting tracked-file hashes,
+including retry/recovery/kernel/CLI sources and the existing PR test, remain unchanged.
+Retained AGENTS knowledge was saved/read back. Adjacent context/recovery/runtime-boundary,
+onboarding, simulator and provider guides retain their contracts and need no behavior
+edits; the affected preset references and investigation are updated. No full suite,
+provider request, service restart, saved-state write, Resume, commit or push occurred.
+No live convergence or provider maximum-output qualification is claimed.
+
+<a id="fix-0180"></a>
+## FIX-0180 — 2026-11-08 — Design standalone scheduling and identify required shared OS mechanisms
+
+Status: investigated and proposed; documentation only, no implementation changed.
+Related: [FIX-0067](#FIX-0067%20%E2%80%94%202026-10-20%20%E2%80%94%20Trace%20coding-agent%20concurrency%20and%20OS%20admission%20ownership), [FIX-0087](#FIX-0087%20%E2%80%94%202026-10-21%20%E2%80%94%20Record%20future%20learned%20routing%20and%20quota-aware%20task%20scheduling), [FIX-0117](#FIX-0117%20%E2%80%94%202026-10-23%20%E2%80%94%20Implement%20bounded%20streaming%20lifecycle%20and%20native%2Fcaller%20retry%20policy),
+[FIX-0134](#FIX-0134%20%E2%80%94%202026-10-27%20%E2%80%94%20Enforce%20static%20process%20data%2Fallocation%20policy%20and%20uniform%20limits), [FIX-0135](#FIX-0135%20%E2%80%94%202026-10-27%20%E2%80%94%20Retain%20paused%20residency%20until%20explicit%20safe%20hibernation), [FIX-0154](#FIX-0154%20%E2%80%94%202026-10-28%20%E2%80%94%20Separate%20context%20tokens%2C%20bytes%20and%20actual%20output%20reservation),
+[FIX-0164](#FIX-0164%20%E2%80%94%202026-10-29%20%E2%80%94%20Preserve%20required%20cloud%20coding%20placement), [FIX-0167](#FIX-0167%20%E2%80%94%202026-10-29%20%E2%80%94%20Unify%20local%20token%20settings%20and%20remove%20cloud%20per-call%20caps), [FIX-0170](#FIX-0170%20%E2%80%94%202026-11-02%20%E2%80%94%20Investigate%20a%20native%20setup%20interruption%20at%20the%20cloud%20timeout),
+[FIX-0174](#FIX-0174%20%E2%80%94%202026-11-02%20%E2%80%94%20Clean%20up%20UI-owned%20Strata%20runtimes%20on%20exit%20and%20process%20death).
+Report: standalone scheduler design (`docs/temporary/proposals/2026-11-08-standalone-scheduler-design.md`).
+
+### Problem
+
+The user requested further research on scheduling several agentic objectives by
+importance and time sensitivity, with account quota/rate limits and preemption,
+and a two-part report separating required OS support from standalone policy.
+Fidelity must be labeled a future feature. Earlier FIX-0087 retained the idea,
+but did not define the public mechanisms or integrate current runtime constraints.
+
+### What was wrong
+
+No new runtime regression is claimed. Current admission is FIFO with alternating
+ordinary/finishing lanes and is constructed independently per runtime. Static
+local/cloud role bindings and single-active-run UI do not provide a globally shared
+multi-objective scheduler. Priority metadata is not an implemented priority policy.
+Settled hibernation does not establish live provider preemption. Native thread
+usage does not reveal subscription allowance or complete consumption bounds.
+The OS owns missing shared admission, observations and safe execution mechanisms;
+scheduler policy belongs above it, while agents retain semantic readiness/acceptance.
+
+### How it was fixed or established
+
+Added the linked report against checkout ae58af5 on fix/status-missing-db,
+including the existing uncommitted Haiku work. Part 1 specifies a shared resource
+broker across separate run executors, typed public ports, fenced dispatch and
+cross-journal settlement, endpoint/account identities, quota observations, explicit
+pause/release capabilities, managed provider ownership and fresh-state integration.
+Part 2 develops root-level fairness, importance/time/aging, compatible completion-
+time placement, hard quota gates/soft pacing, conservative opaque-meter accounting,
+protected progress, bounded backfill, preemption and a staged validation matrix.
+All new interfaces, scheduler/simulator behavior and fidelity optimization remain
+unimplemented. No runtime, agent, provider, test, configuration or saved run changed.
+
+Linked the proposal from next-iteration, development/proposal indexes and a new
+primary JSON navigation leaf. Refreshed project-memory pointers and retained
+AGENTS knowledge, saving and reading back the project-rule note. Preserved the
+current-version queue and earlier proposal/history rather than turning future
+research into an accepted OS requirement.
+
+### Design principle enforced or reconstructed
+
+The agent owns tasks, Git, canonical memory, local contracts and acceptance; the
+standalone scheduler owns service policy; the OS owns generic grants, admission,
+accounting, durability and execution certainty; providers own actual token/GPU
+scheduling. More UI drivers cannot multiply physical capacity or shared allowance.
+Fidelity means distribution adherence here; deferring its optimization never relaxes
+hard constraints. Snapshot percentages without coverage cannot support exact
+reconciliation. A pause request, lease expiry or lost driver never proves remote
+termination. Preserve original accounts/deadlines, failed evidence and source pins.
+
+### Verification
+
+Read the complete fix history in bounded chunks, onboarding/memory/navigation,
+current primary designs/boundary/revisions and affected module/usage guides, then
+traced actual admission, process policy/lifecycle, kernel, Codex, settings, progress,
+exclusive, agent and UI paths. Consulted official OpenAI, Kubernetes, Ray and vLLM
+documentation and the published ORCA abstract. USENIX direct page/PDF fetches
+returned 403; no full-paper review or performance reproduction is claimed. No
+account-specific quota lookup, model inference or installed preemption probe ran.
+
+Existing offline checks passed **25 tests in 3.60 seconds**: all 21 documentation
+regressions, two-request admission overlap, raw/native non-coding artifact-only
+completion/deadline/hibernation, and unknown-execution retention without replay.
+The fixtures replace providers and use disposable state. They verify existing
+mechanisms, not the proposed scheduler, quota policy or checkpoint implementation.
+No full framework suite, live qualification, historical Resume, commit or push ran.
+
+Reviewed adjacent current process/kernel/inference/storage/SDK/settings/agent/UI
+guides, setup/launch/context/budget/fallback references, architecture, current issues,
+runtime boundary/revision ledger and contributor onboarding. Their current contracts
+remain valid: this task changes no implemented interface, setting, ownership rule,
+setup procedure or automation, so no behavior edits were needed there. Future
+implementation documentation is identified by the report's affected areas. All
+pre-existing implementation/configuration/test edits remain separate work.
+
+Ordinary documentation generation and `--check` both exit 1 on the pre-existing
+unregistered `tests/test_cli_status.py`, already disclosed by FIX-0179. The checker
+and that test were not changed. Supplemental canonical generation/check excluding
+exactly that one file pass for **340 files / 151 feature/doc leaves**, including
+the new report, links, reachability and regenerated HTML. Existing guide-length
+advisories remain. Six exact score/pacing arithmetic assertions pass; the initial
+calculator used exact binary-float equality and was corrected to Decimal without
+changing the report's values. Scoped Git whitespace and new-report whitespace pass.
+
+All **335 starting files outside the eight task-edited documentation files** retain
+their baseline hashes. The original FIX bodies/index text and AGENTS prefix are
+preserved; the new report is the only added maintained file. HEAD and branch are
+unchanged, and the index remains empty. Baseline/preservation receipts are retained
+under `/tmp/pi-scheduler-research-20261108-4rrlat5w/`. Project knowledge was saved
+and read back in AGENTS.md and docs/project-memory.md. No runtime hook or automation
+was installed. Structural checks do not validate the proposed policy's performance.
+
+<a id="fix-0181"></a>
+## FIX-0181 — 2026-11-08 — Restore scheduler research and Haiku settings onto the simple OS branch
+
+Status: restored at the user's request; no new implementation beyond the saved changes.
+Related: [FIX-0179](#FIX-0179%20%E2%80%94%202026-11-06%20%E2%80%94%20Set%20the%20Haiku%20worker%20preset%20to%2096K%20input%2F32K%20output%20and%20trace%20input-failure%20escalation), [FIX-0180](#FIX-0180%20%E2%80%94%202026-11-08%20%E2%80%94%20Design%20standalone%20scheduling%20and%20identify%20required%20shared%20OS%20mechanisms).
+
+### Problem
+
+The user stashed the scheduler research and Haiku token-limit changes on the fix
+branch, switched to codex/simple-os-v1 and requested restoration there.
+
+### What was wrong
+
+The destination checkout was clean and lacked the uncommitted batch. This was a
+Git working-state transfer, not a new runtime or scheduler defect. The destination
+HEAD da94312 and the stash's base ae58af5 have identical file trees, so no content
+conflict or implementation adaptation was necessary.
+
+### How it was fixed
+
+Applied stash 922777f920f011a0cfea2d90639963185918bc09 with its saved index to
+codex/simple-os-v1, restoring all 20 files, including the scheduler report and
+96000-input/32000-output Haiku preferences, examples, tests and documentation.
+Retained the stash and other stash entries. Added only this restoration receipt
+and a retained AGENTS note after verifying the exact restored working/index state;
+these new maintenance additions remain unstaged. No commit or push was made.
+
+### Design principle enforced or reconstructed
+
+Preserve saved content, staged state and the backup when moving work between
+branches. Restore the requested delta without importing unrelated branch changes
+or treating historical source pins and test results as new implementation. Agent,
+OS and provider ownership and saved-run resources remain unchanged.
+
+### Verification
+
+All 20 restored working files matched their stash blobs byte-for-byte, and the
+index matched the stash's saved index. All 324 other starting tracked files,
+destination HEAD/branch and the retained stash identity were unchanged; no
+conflicts were present. The focused machine-preference/Haiku regression passed
+one test in 0.46 seconds, and settings-schema/default agreement passed.
+Ordinary documentation generation and --check remain blocked by the same
+pre-existing unregistered tests/test_cli_status.py recorded in FIX-0179/0180.
+No full suite, live inference, provider restart, saved-run Resume or migration ran.
+Current settings/token/launch guides and scheduler navigation were restored with
+the batch and need no further behavior edits; onboarding/boundary rules are
+unchanged. Retained project knowledge was saved/read back in AGENTS.md.
+Supplemental documentation checking excluding exactly that pre-existing test
+passes for 340 files/151 leaves. Both staged and unstaged whitespace checks pass;
+the final verification preserves the stash's exact index and all restored content
+outside the two explicitly added maintenance records.
+
+<a id="fix-0182"></a>
+## FIX-0182 — 2026-11-09 — Audit scheduler OS support against current execution and prior fixes
+
+Status: source/fixture investigation and implementation preparation only; no runtime or scheduler implementation changed.
+Related: [FIX-0180](#FIX-0180%20%E2%80%94%202026-11-08%20%E2%80%94%20Design%20standalone%20scheduling%20and%20identify%20required%20shared%20OS%20mechanisms), [FIX-0181](#FIX-0181%20%E2%80%94%202026-11-08%20%E2%80%94%20Restore%20scheduler%20research%20and%20Haiku%20settings%20onto%20the%20simple%20OS%20branch), [FIX-0032](#FIX-0032%20%E2%80%94%202026-10-19%20%E2%80%94%20Move%20coding%20grammar%20and%20policy%20out%20of%20generic%20OS%20dispatch),
+[FIX-0047](#FIX-0047%20%E2%80%94%202026-10-20%20%E2%80%94%20Keep%20OS%20retries%20separate%20from%20application%20recovery%20allowances), [FIX-0117](#FIX-0117%20%E2%80%94%202026-10-23%20%E2%80%94%20Implement%20bounded%20streaming%20lifecycle%20and%20native%2Fcaller%20retry%20policy), [FIX-0127](#FIX-0127%20%E2%80%94%202026-10-26%20%E2%80%94%20Integrate%20reliability%20fixes%20into%20the%20simple%20OS%20branch),
+[FIX-0134](#FIX-0134%20%E2%80%94%202026-10-27%20%E2%80%94%20Enforce%20static%20process%20data%2Fallocation%20policy%20and%20uniform%20limits), [FIX-0135](#FIX-0135%20%E2%80%94%202026-10-27%20%E2%80%94%20Retain%20paused%20residency%20until%20explicit%20safe%20hibernation), [FIX-0141](#FIX-0141%20%E2%80%94%202026-10-27%20%E2%80%94%20Bound%20replacement%20host%20drivers%20by%20the%20original%20account%20deadline),
+[FIX-0152](#FIX-0152%20%E2%80%94%202026-10-28%20%E2%80%94%20Agent-selected%20provider%20fallback%20with%20durable%20OS%20routing), [FIX-0154](#FIX-0154%20%E2%80%94%202026-10-28%20%E2%80%94%20Separate%20context%20tokens%2C%20bytes%20and%20actual%20output%20reservation), [FIX-0164](#FIX-0164%20%E2%80%94%202026-10-29%20%E2%80%94%20Preserve%20required%20cloud%20coding%20placement),
+[FIX-0167](#FIX-0167%20%E2%80%94%202026-10-29%20%E2%80%94%20Unify%20local%20token%20settings%20and%20remove%20cloud%20per-call%20caps), [FIX-0171](#FIX-0171%20%E2%80%94%202026-11-02%20%E2%80%94%20Make%20cloud%20agent%20endpoint%20timeouts%20warning-only%20by%20default), [FIX-0174](#FIX-0174%20%E2%80%94%202026-11-02%20%E2%80%94%20Clean%20up%20UI-owned%20Strata%20runtimes%20on%20exit%20and%20process%20death).
+Report: scheduler OS impact audit (`docs/temporary/investigations/2026-11-09-scheduler-os-impact.md`).
+
+### Problem
+
+The user wants to implement OS support for the proposed standalone scheduler and
+requested code/fix-history analysis of side effects and compatibility, explicitly
+separating that work from the scheduler itself. The screenshot identifies the
+existing two-part report; its implementation suggestions are reference material,
+not an instruction to execute the proposal in this analysis task.
+
+### What was wrong
+
+The proposal has the correct ownership direction but is not yet a complete
+implementation contract. Per-runtime admission cannot enforce a shared pool;
+response repairs bypass a hook placed only at logical execute, and CLI readiness
+probes call adapters directly. Binding generation is serialized without a dynamic
+dispatch comparison. Recovery-account roots are not objective roots. Hibernation
+releases settled residency but start still rejects the paused process. New managed
+provider ownership also cannot retain one UI's shutdown lifetime.
+
+These are current integration gaps for a proposed feature, not evidence that
+static routing or hibernation regressed. A naive implementation could reopen the
+unknown-hold, retry-multiplication, hard-placement, original-deadline, protected
+finish and owned-provider problems addressed by the linked fixes. Native thread
+usage is cumulative evidence, not an exact subscription meter or new per-call cap.
+
+### How it was fixed or established
+
+Added the linked source-backed audit at da94312 on codex/simple-os-v1, preserving
+the restored staged batch and historical runs. It maps required OS mechanisms to
+actual call paths, explains failure/side-effect scenarios and prior-fix protections,
+and specifies an OS-only sequence: fixed-route shared broker and observations,
+physical dispatch/settlement, typed deferral/cooperative yield, managed observations/
+lifetime and separately negotiated routing. Mid-generation checkpointing remains
+adapter-specific later work. No scoring, pacing policy, runtime/provider setting,
+application behavior, production test, saved state or model execution changed.
+
+Linked the audit from the original proposal, development/proposal/future-work
+indexes and a new primary JSON navigation leaf. Refreshed project-memory.md and
+AGENTS.md retained guidance and read back the save. Reviewed adjacent owning
+kernel/inference/process/lineage/progress/storage/SDK/retry/context, CLI/UI/settings,
+repository/inspection and launch/configuration/recovery/design/onboarding guides.
+Their current implementation contracts remain unchanged and need no behavior edit;
+the audit records the future implementation obligations instead.
+
+### Design principle enforced or reconstructed
+
+Keep scheduler service policy above generic OS admission, grants, observations,
+durability and effect certainty. Agents retain readiness, task/source/Git/memory,
+local/cloud suitability and acceptance; providers retain actual token/GPU scheduling.
+Qualify scheduling roots separately from existing recovery accounts. Lost delivery,
+lease expiry, a pause request or a stopped driver never establishes physical release.
+Deferral is neither model failure nor permission to reset an account/deadline.
+Preserve all original attempts, hard constraints, standalone behavior and user work;
+changed authority/pins require fresh managed state rather than historical migration.
+
+### Verification
+
+The selected existing offline suites returned **89 passed, 2 failed, 1 deselected
+in 25.81 seconds**. The unchanged P0 test still expects the UI pair to equal generic
+OS defaults, conflicting with restored FIX-0179's deliberate Haiku preset. The
+unchanged deadline test expects built-in TimeoutError on Python 3.10, where the
+observed exception is asyncio.exceptions.TimeoutError; its future did finish within
+the asserted cutoff. A separate direct probe caught the asyncio type and verified
+the original inherited deadline in 0.0551 seconds. Neither failure was repaired.
+
+Additional existing admission-lane, provider-ownership, timeout-setting and
+documentation regressions passed **42 tests in 1.10 seconds**. Temporary current-
+source probes established two one-slot runtimes admitting two concurrent holds
+against identical endpoint settings, generation 999 succeeding against recorded
+generation 1 through one mock response, paused-start rejection after hibernation,
+and the default account identity for unlinked process IDs. This establishes missing
+future mechanisms, not a live exploit or new scheduler qualification. Baseline,
+probe source/results and focused JUnit evidence are retained under
+`/tmp/pi-scheduler-os-audit-20261109-bq_i6wvi/`.
+
+No full framework suite, external provider request, provider start/stop, historical
+Resume/reconciliation, saved-state migration, commit or push occurred. Tests use
+mock/local fixture providers and disposable state. Account-specific quota coverage,
+real checkpoint release and broad product/scheduler performance remain unverified.
+
+The two baseline failures reproduced in an isolated two-case rerun (0.38 seconds),
+with retained JUnit output. Ordinary documentation generation and --check both exit
+1 on the same pre-existing unregistered tests/test_cli_status.py recorded by
+FIX-0179–0181. Supplemental generation/check excluding exactly that file in memory
+pass for **341 files / 152 leaves**, including new-audit ownership, links, README
+reachability and regenerated HTML. The checker/test are unchanged; existing length
+advisories remain. All 21 documentation regressions pass within the 42-case run.
+
+All **335 starting files outside the nine task-edited documentation files** retain
+their baseline hashes. The eight original Markdown/JSON files retain all earlier
+text through insertion-only additions, including the full original FIX history;
+tree HTML is regenerated. HEAD/branch and the complete staged blob/mode inventory
+are unchanged. Working/staged Git whitespace and new-report whitespace checks pass.
+Project knowledge was saved/read back in AGENTS.md; baseline/preservation receipts
+remain beside the probes. No automation or runtime hook was installed.
+
+<a id="fix-0183"></a>
+## FIX-0183 — 2026-11-09 — Limit scheduler authority to individual-process admission and preemption
+
+Status: design/documentation correction only; no scheduler or runtime implementation changed.
+Supersedes the broader scheduler-authority interpretation in [FIX-0180](#FIX-0180%20%E2%80%94%202026-11-08%20%E2%80%94%20Design%20standalone%20scheduling%20and%20identify%20required%20shared%20OS%20mechanisms)
+and [FIX-0182](#FIX-0182%20%E2%80%94%202026-11-09%20%E2%80%94%20Audit%20scheduler%20OS%20support%20against%20current%20execution%20and%20prior%20fixes); their source findings and actual verification remain historical.
+Related: [FIX-0087](#FIX-0087%20%E2%80%94%202026-10-21%20%E2%80%94%20Record%20future%20learned%20routing%20and%20quota-aware%20task%20scheduling), [FIX-0032](#FIX-0032%20%E2%80%94%202026-10-19%20%E2%80%94%20Move%20coding%20grammar%20and%20policy%20out%20of%20generic%20OS%20dispatch), [FIX-0067](#FIX-0067%20%E2%80%94%202026-10-20%20%E2%80%94%20Trace%20coding-agent%20concurrency%20and%20OS%20admission%20ownership),
+[FIX-0134](#FIX-0134%20%E2%80%94%202026-10-27%20%E2%80%94%20Enforce%20static%20process%20data%2Fallocation%20policy%20and%20uniform%20limits), [FIX-0135](#FIX-0135%20%E2%80%94%202026-10-27%20%E2%80%94%20Retain%20paused%20residency%20until%20explicit%20safe%20hibernation), [FIX-0141](#FIX-0141%20%E2%80%94%202026-10-27%20%E2%80%94%20Bound%20replacement%20host%20drivers%20by%20the%20original%20account%20deadline),
+[FIX-0167](#FIX-0167%20%E2%80%94%202026-10-29%20%E2%80%94%20Unify%20local%20token%20settings%20and%20remove%20cloud%20per-call%20caps), [FIX-0171](#FIX-0171%20%E2%80%94%202026-11-02%20%E2%80%94%20Make%20cloud%20agent%20endpoint%20timeouts%20warning-only%20by%20default), [FIX-0174](#FIX-0174%20%E2%80%94%202026-11-02%20%E2%80%94%20Clean%20up%20UI-owned%20Strata%20runtimes%20on%20exit%20and%20process%20death).
+Design: corrected two-part scheduler report (`docs/temporary/proposals/2026-11-08-standalone-scheduler-design.md`).
+
+### Problem
+
+The user found Part 1 ambiguous about the current proposed scheduler's authority.
+They explicitly clarified that it may only admit, defer or request preemption of
+individual processes. The OS distributes resources. The user requested consistent
+edits to the design and all other scheduler-related documentation, not implementation.
+
+### What was wrong
+
+The earlier report gave the standalone scheduler resource-claim, endpoint-placement
+and per-model-operation dispatch responsibilities. Its Part 2 policy and the first
+OS audit reinforced that broader interpretation, including placing resource estimates
+and quota pacing outside the OS. Backlog/index/onboarding descriptions also implied
+task creation or model choice. The root cause was a design-document boundary error:
+process eligibility policy was conflated with OS resource distribution. Generic
+mechanisms in the current code and the observed safeguards were not changed or
+shown to have regressed. Earlier fixture checks validated existing runtime behavior
+and document structure, not this now-clarified authority split.
+
+### How it was fixed
+
+Revised both parts of the main report with an explicit V1 rule and a three-command
+process port: run, wait and preempt, each naming one existing authenticated process.
+Separated read-only observations from OS/executor interfaces for preparing requests,
+choosing authorized destinations, claiming resources, dispatching and settling.
+Rewrote scheduler ranking, event handling, examples and validation around process
+decisions. Retained placement/quota/pacing research under an explicitly optional
+OS-owned section rather than leaving it as scheduler authority. Current fixed
+routes suffice; dynamic allocation is separate OS work, not a scheduler prerequisite.
+
+Corrected the OS audit and its implementation sequence, future backlog, development/
+proposal indexes, design reading route, architecture, OS boundary/overview/revision
+ledger, agent process/distribution explanation and onboarding HTML. Onboarding now
+states the limited contribution scope and distinguishes the historical lecture's
+broader vision. The original transcript and prior FIX entries remain preserved.
+Updated contributor onboarding, project memory and retained AGENTS guidance, then
+read back the save. Updated existing JSON navigation titles and regenerated HTML;
+no maintained file or feature path was added or moved.
+
+### Design principle enforced or reconstructed
+
+The standalone V1 scheduler's entire mutating authority is individual-process
+admission, waiting and preemption requests. The OS distributes resources and owns
+authorized placement, capacity/quota enforcement, physical dispatch, safe suspension/
+readmission, accounting and confirmed release. Reading resource facts does not confer
+control. An admitted process can remain resource-waiting; a preemption request can
+remain draining. Parent admission does not admit all children. The agent retains
+task readiness, continuation semantics, Git/memory and acceptance, and providers
+retain token/GPU scheduling. Original grants, accounts, deadlines, unknown holds
+and protected progress remain authoritative. The rule remains a proposed scheduler
+interface; no current FIFO/static behavior, state pin or historical run is changed.
+
+### Verification
+
+All **21 documentation regressions passed in 0.28 seconds**. Content checks confirm
+only individual-process run/wait/preempt commands in the proposed scheduler port,
+no resource-claim/endpoint/operation commands, resource-allocation research in the
+OS section, and matching authority language in the audit/backlog/onboarding routes.
+They validate document consistency, not an implemented capability boundary.
+
+Ordinary documentation generation and --check both exit 1 on the pre-existing
+unregistered tests/test_cli_status.py already recorded in FIX-0179–0182. Supplemental
+generation/check excluding exactly that file in memory pass for **341 files / 152
+leaves**, including links, ownership, README reachability and regenerated navigation.
+The checker and status test are unchanged; existing guide-length advisories remain.
+No file/feature paths were added or moved; only two existing navigation titles changed.
+
+All **327 starting files outside the 18 edited documentation files** retain their
+baseline hashes, including all source/tests/scripts/examples. HEAD/branch and the
+complete staged blob/mode inventory are unchanged. Previous FIX history and the
+starting AGENTS prefix are preserved exactly apart from the new FIX index row and
+appended records. All 187 original transcript segments, onboarding scripts/styles
+and SVG geometry are unchanged; only current explanatory text/labels were edited.
+Working/staged whitespace checks pass. Baseline, original documents, documentation
+JUnit and preservation/content receipts are retained under
+`/tmp/pi-scheduler-authority-docs-20261109-c60brrs2/`. Retained knowledge was saved
+and read back in AGENTS.md and refreshed in project-memory.md.
+
+Reviewed adjacent kernel/inference/process/storage/SDK/settings/UI/repository/CLI
+module guides, configuration/launch/recovery usage and current-iteration work.
+They describe unchanged implemented interfaces and need no behavior/default edits.
+Historical integration/source/research records and original lecture are preserved;
+the corrected authority is linked through current design/onboarding routes.
+Earlier FIX-0180/0182 runtime/provider fixture counts were not rerun or claimed for
+this text correction. No implementation/schema, provider request, saved-state
+write/Resume, service lifecycle, commit, push, automation or runtime hook was added.
+
+<a id="fix-0184"></a>
+
+## FIX-0184 — 2026-11-12 — Make the documentation an Obsidian reading tree
+
+Status: implemented in documentation and developer tooling.
+Related: FIX-0004, FIX-0080, FIX-0098, FIX-0116, FIX-0129 and FIX-0139.
+
+### Problem
+
+The project had several overlapping reading routes. Obsidian followed their
+cross-links and breadcrumbs into cycles and second parents. The inventory check
+also failed on the existing `tests/test_cli_status.py` regression module.
+
+### What was wrong
+
+The JSON tree organized files for the HTML index. Reachability through that
+index could hide missing links between Markdown notes, and the checker did not
+compare note edges with the authored hierarchy. CLI status tests lacked an
+inventory owner. These gaps belong to developer documentation tooling.
+
+### How it was fixed
+
+Rooted the note tree at `README.md`. Every other first-party note gets one
+relative Markdown link from its parent; cross-branch citations keep searchable
+paths. Kept one primary guide per module and stable FIX IDs and anchors. The
+version 2 `docs/file-tree.json` records each note, children and owned files.
+`scripts/project_docs.py` validates the Markdown edges and regenerates the
+offline file map. Registered CLI status tests under `tests/README.md`.
+Refreshed the contributor procedure, maintenance rules and retained `AGENTS.md`.
+
+### Design principle enforced or reconstructed
+
+The note links and machine map describe the same hierarchy. The doc for a
+module owns its source responsibilities, and supporting evidence can cite
+other notes without giving them more parents. Checking structure is developer
+tooling; it does not change the agent or OS or establish prose accuracy.
+
+### Verification
+
+Both documentation commands passed for 389 maintained files and 200 notes,
+with 199 direct note edges and no unreachable maintained files. The focused
+suite passed 62 tests across documentation navigation, CLI status and
+context/settings reference checks. After adding the upstream boundary case,
+all 26 documentation regressions passed. Exported settings schemas and Ruff passed.
+Historical FIX IDs and anchor IDs were compared with the task-start copy; prior
+entries retain their text apart from link migration and corresponding formatting.
+The checker does not run the Obsidian client.
+
+The full offline suite passed 813, failed five and skipped two. All five
+failures reproduced from the task-start snapshot in a separate directory:
+the historical wire-schema comparison in `test_contracts.py`, the Haiku
+default assertions in `test_p0_repairs.py` and `test_ui.py`, Python 3.10's
+timeout exception in `test_reliability_plan.py`, and the setup fixture's
+missing assignment in `test_setup_tools.py`. These tests and their runtime
+sources were preserved. The added upstream-link case passed separately.
+
+<a id="fix-0185"></a>
+
+## FIX-0185 — 2026-11-12 — Separate active tasks from historical notes and retire a one-off script
+
+Status: implemented as documentation and maintenance cleanup.
+Related: FIX-0004, FIX-0080, FIX-0129 and FIX-0183.
+
+### Problem
+
+The current-iteration tracker mixed active tasks with thousands of lines of
+older research, proposals and incidents. Several how-to and contributor guides
+repeated those details. An empty triage note, a copied protocol and a one-off
+merge script still appeared in maintained reading routes.
+
+### What was wrong
+
+Documentation had no distinct place for temporary investigations and handoffs,
+so active work, past scope and implementation evidence shared the same routes.
+The historical merge tool was tied to specific exports, node IDs and positions;
+it was not a reliable build of the preserved graph from the retained copies.
+
+### How it was fixed
+
+Grouped open tasks under `development-docs/tasks/` with owner and completion
+checks; consolidated triage into the current work index. Moved dated evidence,
+proposals, handoffs and the old tracker sections into `docs/temporary/` and
+updated paths. Split the runtime boundary, scheduler proposal and mixed-purpose
+usage guides by function. Preserved coherent long references and the FIX ledger.
+Removed the empty triage note, byte-identical protocol copy and the historical
+`merge-agent-graphs.py`; kept the original graph artifacts and offline verifier.
+
+### Design principle enforced or reconstructed
+
+Separate current behavior, open tasks and historical evidence. Keep decisions,
+source pins and original outcomes; retire disposable code only after checking
+callers, CI, test membership and reproducibility. The agent/OS/provider boundary
+and proposed process-only scheduler authority are unchanged.
+
+### Verification
+
+The retired script had only its original graph-merge commit and documentation
+references, with no callers in CI, package entry points or reusable tests. In a
+disposable copy the retained inputs reproduced the architecture nodes and edges
+but not the saved memory graph. The retained verifier passed 159 routes under
+Node 20 and 22; WSL's default Node 12 did not support its node:fs import. The two
+protocol copies matched byte for byte before deletion. The moved evidence JSON,
+original graph files, runtime source, examples, reusable test sources and Git
+index match their task-start copies. All 33 existing frontend cases passed
+with Node 22. No provider calls or saved-run changes.
+
+Reviewed adjacent installation, launch, settings, runtime, delivery and
+recovery guides. Updated their navigation and split out procedures where
+needed; their commands, defaults and runtime contracts required no change.
+The staged and working whitespace checks passed. Retained project rules were
+read back from `AGENTS.md`, with the current checklist in `docs/project-memory.md`.
+
+<a id="fix-0186"></a>
+
+## FIX-0186 — 2026-11-13 — Assess OS V1 compatibility with LangChain agents
+
+Status: investigated. No implementation changed.
+Related: [FIX-0022](#fix-0022), [FIX-0032](#fix-0032),
+[FIX-0111](#fix-0111), [FIX-0117](#fix-0117), and [FIX-0183](#fix-0183).
+
+### Problem and owning cause
+
+The bundled LangGraph coding application and general-agent primitives establish
+that the kernel can host trusted async graph continuations. A standard
+LangChain tool loop expects a typed chat interface. The raw model path renders
+text turns, rejects native tool-call completions and exposes terminal output
+only. The public process driver also allows a single active top-level effect,
+while the stock tool executor can dispatch several calls concurrently. Launch
+and application-level Resume are wired to the bundled coding program.
+
+### Findings
+
+The generic process, artifact, checkpointer and capability interfaces support
+a custom non-coding graph with a text action protocol today. Supporting native
+LangChain tool turns with modest application edits would require a typed raw
+chat contract and an endpoint adapter, plus application-side model/tool wrappers,
+serial dispatch and a program runner. Generic restart needs an explicit
+checkpoint-to-intent and activation mapping. These are scoped proposals, with
+arbitrary Python package isolation a separate requirement. See
+`docs/temporary/investigations/2026-11-13-langchain-v1-gap.md`.
+
+### Design principle
+
+LangChain owns the graph, messages and tool selection. PolyInference owns
+grants, effect validation, admission, settlement and replay. Stable intent
+identity and uncertain-effect holds must survive graph retry and restart.
+
+### Verification
+
+The WSL runtime, capability, inference lifecycle and OS suites passed 67 tests.
+An offline custom `StateGraph` completed two mock HTTP model turns and a typed
+capability call with the real adapter and SQLite checkpointer, then replayed all
+three receipts without a duplicate effect. Separate probes confirmed rejection
+of a buffered tool-only completion, loss of tool ID in chat SSE assembly, and
+concurrent execution of two tool calls in the installed `ToolNode`. A static
+graph breakpoint retained a pending checkpoint node while the OS driver marked
+the process completed and rejected Resume. Dynamic interrupt probes failed
+inside the pinned Python 3.10 framework stack before reaching that boundary. No full
+`create_agent` run, live provider call or generic cross-restart crash probe was
+performed. Reviewed adjacent setup, SDK, runtime, workflow, settings, CLI/UI,
+design and active task docs. Their current instructions describe shipped
+behavior and do not need new configuration or rollout steps for this analysis.
+Both `python3 scripts/project_docs.py` and `python3 scripts/project_docs.py --check`
+passed from WSL, verifying file ownership and the 202-note navigation tree.
+All 26 `tests/test_project_docs.py` regressions passed.
+
+<a id="fix-0187"></a>
+
+## FIX-0187 — 2026-11-13 — Open the WSL checkout in Linux Obsidian
+
+Status: developer launcher and setup guidance added. Related: [FIX-0184](#fix-0184).
+
+### Problem
+
+Windows Obsidian aborted with `EISDIR` while opening the repository as a vault
+through `\\wsl.localhost`.
+
+### What was wrong
+
+The vault instructions missed the filesystem boundary. The Windows file
+watcher could read directory metadata but could not subscribe to changes on
+this WSL path. The notes reside in the Linux filesystem.
+
+### How it was fixed
+
+[scripts/open_obsidian.sh](../scripts/open_obsidian.sh) can install the official
+amd64 Debian package and open the Linux vault picker. After the user registers
+the repository folder, the launcher opens its README using the Linux path.
+The README, maintenance instructions, module guide and file map describe it.
+
+### Design principle
+
+Keep the vault and its watcher on the same filesystem side. Use the original
+checkout as the source of the notes.
+
+### Verification
+
+Confirmed WSLg display variables in Ubuntu. Checked Bash syntax and used a stub
+Obsidian binary to verify the vault picker and encoded README path. The Linux
+package installation and GUI were left to the person running the script.
+The product setup and runtime guides describe separate processes and need no
+edits for this documentation launcher.
+
+<a id="fix-0188"></a>
+
+## FIX-0188 — 2026-11-13 — Select native Wayland for Obsidian on WSLg
+
+Status: launcher updated. Related: [FIX-0187](#fix-0187).
+
+### Problem and cause
+
+The Linux Obsidian window looked low resolution under WSLg. The launcher left
+display selection to Electron. WSLg exposed a working Wayland socket, while
+`XDG_SESSION_TYPE` was unset. Scaling an XWayland window is a possible cause.
+The display backend of the blurry window could not be confirmed.
+
+### Change and design principle
+
+`scripts/open_obsidian.sh` selects native Wayland when it finds the display socket.
+`--x11` explicitly selects X11 if needed. Display selection belongs to the local
+launcher. The documentation still opens from the existing vault path. The
+maintenance and module guides describe the option. Product setup and runtime
+guides do not cover Obsidian display settings.
+
+### Verification
+
+Bash syntax passed. Stub launches verified both display flags, the vault picker,
+the encoded README path and behavior with a missing Wayland socket. Both
+documentation commands passed. Visual sharpness needs a GUI relaunch to verify.
+
+<a id="fix-0189"></a>
+
+## FIX-0189 — 2026-11-13 — Mark scheduler OS support against current code
+
+Status: source audit and documentation correction. No implementation changed.
+Related: [FIX-0134](#fix-0134), [FIX-0135](#fix-0135), [FIX-0141](#fix-0141),
+[FIX-0171](#fix-0171), [FIX-0174](#fix-0174), [FIX-0182](#fix-0182) and
+[FIX-0183](#fix-0183).
+
+### Problem and owning cause
+
+The scheduler OS proposal combined shipping runtime mechanisms, extensions and
+allocation research. Its readers could not tell which work still required code.
+The process module guide also said `start` readmits a hibernated process, but
+`Processes.start` rejects the paused state. The gap was in documentation of the
+current OS and proposed extension.
+
+### Findings and correction
+
+Audited `docs/temporary/proposals/2026-11-08-scheduler-os-support.md` against
+the current call paths at `da94312`. Annotated all sections with 65 status rows
+and source references. Local capacity, prepared dispatch, bounded retries, replay,
+unknown-effect holds and settled hibernation have execution paths. Shared quotas
+and admission, scheduler `run`/`wait`/`preempt`, scheduler suspension/readmission
+and managed provider ownership remain proposed. The UI probe uses a local runtime
+gate and the CLI readiness probe directly invokes the adapter. Native thread
+usage is retained with its scope, and settlement still takes the reported total.
+The proposed provider-window ledger and native usage-delta logic are missing.
+
+Corrected the process guide and runtime boundary on hibernation and pointed the
+proposal overview at the audit. Existing SDK, kernel, inference, settings,
+launch, recovery and current task guides needed no change because this audit
+adds no interface, default, operating step or accepted implementation task.
+The earlier proposal, audit and historical receipts retain their source pins.
+
+### Design principle
+
+Mark support only at the scope enforced by the active code. Distinguish OS
+resource handling from scheduler eligibility and provider execution. A field, a
+local gate or a released resident slot alone does not establish a shared quota,
+a scheduler control or a resumable provider checkpoint.
+
+### Verification
+
+Checked every status row for a source link and verified the 65 rows across the
+proposal. Also verified 33 named code references and checked scoped whitespace.
+The regular generator and `--check` could not run from Windows because
+Git could not read the WSL working directory. An initial structural check passed
+with an in-memory Windows path adapter for Git inventory and the existing
+`Zone.Identifier` exclusions. The final pass encountered a non-UTF-8 character
+in the concurrently edited `docs/temporary/proposals/2026-11-13-mcp-support-design.md`.
+With a read-only decoding fallback for that file, the repository check passed
+for 392 files, 202 notes and 201 note links. The checker and the MCP file were
+left untouched.
+No runtime tests, live provider calls or saved-run changes were part of this audit.
+
+<a id="fix-0190"></a>
+
+## FIX-0190 — 2026-11-13 — Design MCP admission, execution and recovery boundaries
+
+Status: source investigation and design proposal. No implementation changed.
+Related: [FIX-0032](#fix-0032), [FIX-0067](#fix-0067),
+[FIX-0117](#fix-0117), [FIX-0135](#fix-0135), [FIX-0141](#fix-0141),
+[FIX-0171](#fix-0171), [FIX-0183](#fix-0183) and [FIX-0189](#fix-0189).
+
+### Problem
+
+MCP support must let workers wait without occupying inference capacity and must
+respect serial or concurrent endpoints. A simple async capability wrapper does
+not establish those properties for every existing execution path.
+
+### Owning root cause and findings
+
+Direct CapabilityCall bypasses model admission, but AgentJob keeps its reservation
+across broker callbacks and the native reader awaits callbacks inline. Capability
+dispatch is marked before the handler starts, so an internal endpoint queue blurs
+known-unsent work with possible execution. Runtime-local model gates and generic
+Exclusive keys do not establish shared counted endpoint admission. Existing
+Resume lacks generic MCP reconciliation, and model data policy is not sufficient
+tool-egress enforcement. These are source findings; physical provider suspension
+and concrete endpoint behavior were not tested.
+
+### Concrete design work
+
+Recorded twelve decision rationales, source/symbol evidence, staged effect and
+resource lifetimes, seven worked scenarios, 38 review questions and future
+acceptance criteria in
+`docs/temporary/proposals/2026-11-13-mcp-support-design.md`. Recommend an OS-owned
+capability broker and completed-turn support first; require certified suspension
+or turn termination before claiming native inference release. Separate request,
+remote execution, rate and conflict resources; retain unknown-effect holds.
+Pin modern versus legacy MCP protocol adapters and optional task/input support.
+Major product/deployment choices remain explicitly open for owner review.
+
+### Design principle
+
+An asynchronous wait, released local counter or returned task ID does not prove
+that a physical resource is free. Keep application meaning with the agent,
+authority/admission/settlement with the OS and actual model execution with the
+provider. Preserve original grants, accounts, deadlines and immutable outcomes.
+
+### Verification and limits
+
+Inspected core execution, admission, capability, process, native callback,
+storage, retry, recovery and application integration paths; consulted official
+MCP protocol sources. Source/test reference paths exist. The first documentation
+generation found a Windows encoding issue in the new note; UTF-8 correction made
+the generator pass. Both required documentation commands then passed in WSL:
+`python3 scripts/project_docs.py` and its `--check` mode verified 392 files,
+202 notes and 201 tree links with README reachability.
+No runtime tests or live MCP/provider calls were performed, and no source/test
+implementation changes were made by this task. Temporary preservation receipts
+were unavailable after interruption, so no final byte-identical baseline claim
+is made. Concurrent changes were preserved.
+
+Updated proposal navigation and the runtime/provider design-review task. Adjacent
+module, runtime-boundary, setup, usage and configuration guides describe shipped
+behavior and need no new MCP instructions yet. Project memory was retained and
+read back in AGENTS.md; onboarding rules were unchanged.
+
+<a id="fix-0191"></a>
+
+## FIX-0191 — 2026-11-13 — Organize the Obsidian graph by module and reading route
+
+Status: implemented and applied to the local vault. Related: [FIX-0184](#fix-0184).
+
+### Problem and cause
+
+The project graph used the vault defaults. Unresolved links and unrelated notes
+crowded the view, module nodes shared one color, and there was no fixed map.
+The root README reached the agent instructions indirectly.
+
+### Change and design principle
+
+Added a shared preset with nine exclusive color groups, a project note filter,
+and shorter links with stronger repulsion. Put related inference guides under
+the inference hub and linked AGENTS.md directly from README. Added a fixed
+Canvas reading map and a guide with the legend, spare colors and search queries.
+Documented graph upkeep in agent rules, onboarding, retained memory and the
+maintenance guide. CI checks color coverage and reading map references.
+
+Keep one Markdown parent per note. The graph shows the full tree and the
+reading map shows selected routes in fixed groups. Use the shared preset as
+the source and apply it to local settings with an original graph backup.
+
+### Verification
+
+Validated the shared files for 203 notes and nine groups. Applied the preset
+after quitting Linux Obsidian and reopened the existing vault. Visually checked
+the colored graph, reduced clutter, README route and Canvas group layout.
+Both documentation commands passed for 396 maintained files and 202 note links.
+All 26 focused navigation regressions and the whitespace check passed. Read
+back the graph upkeep rule in AGENTS.md and verified the original settings backup.
+Reviewed product setup and runtime guides. Their procedures and contracts do not
+cover Obsidian presentation and required no edits.

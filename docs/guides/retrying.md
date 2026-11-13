@@ -1,13 +1,11 @@
 # Explicit model and delivery recovery
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
-Confirmed provider availability errors use optional [model fallback](model-fallback.md)
+Confirmed provider availability errors use optional model fallback (`docs/guides/model-fallback.md`)
 before continuing ordinary recovery. Other eligible failures use bounded native retries, then attempts declared
 by the caller's InferencePolicy. Shared root deadlines, accounting and finishing
-reserves apply; see [endpoint lifecycle policy](endpoint-testing.md).
+reserves apply; see endpoint lifecycle policy (`docs/guides/endpoint-testing.md`).
 Registered malformed responses also have a bounded
-[response-validation path](agent-reliability.md). Clean semantic worker exceptions
+response-validation path (`docs/guides/agent-reliability.md`). Clean semantic worker exceptions
 can reach senior review for linked recovery; unresolved model failures can still
 pause with retained diagnostics.
 After correcting the reported problem, explicitly recover a task without repeating
@@ -28,7 +26,7 @@ and click Resume, or use `polyinference resume CONFIG --text "instructions"`.
 The agent selects checkpoint/retry/review/delivery recovery internally. The OS first
 uses retained evidence or a supported provider result lookup; unsupported unknown
 execution produces a plain failure, with original effects preserved. Existing
-allowances still apply. See [UI controls](ui.md).
+allowances still apply. See UI controls (`docs/guides/ui.md`).
 
 If accepted-file delivery stops because the destination changed, restore or resolve
 that destination and explicitly retry delivery:
@@ -42,4 +40,4 @@ does not rerun the models. An original failed operation remains immutable.
 
 
 
-Also read [limits and uncertainty](recovery.md) and the [OS runbook](../../design-docs/simplified-os/RUNBOOK.md).
+Also read limits and uncertainty (`docs/guides/recovery.md`) and the OS runbook (`design-docs/simplified-os/RUNBOOK.md`).

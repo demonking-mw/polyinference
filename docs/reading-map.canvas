@@ -1,0 +1,39 @@
+{
+	"nodes":[
+		{"id":"navigation","type":"group","x":0,"y":0,"width":1420,"height":360,"color":"#C59122","label":"Start here"},
+		{"id":"os","type":"group","x":0,"y":470,"width":340,"height":275,"color":"#478BD0","label":"OS runtime"},
+		{"id":"agent","type":"group","x":360,"y":470,"width":340,"height":275,"color":"#4EAD54","label":"Coding agent"},
+		{"id":"inference","type":"group","x":720,"y":470,"width":340,"height":275,"color":"#269C89","label":"Inference"},
+		{"id":"scheduler","type":"group","x":1080,"y":470,"width":340,"height":275,"color":"#9865CB","label":"Scheduler · proposal"},
+		{"id":"operations","type":"group","x":0,"y":805,"width":340,"height":275,"color":"#CB7040","label":"Use and operations"},
+		{"id":"verification","type":"group","x":360,"y":805,"width":340,"height":275,"color":"#BA5990","label":"Checks and tooling"},
+		{"id":"records","type":"group","x":720,"y":805,"width":340,"height":275,"color":"#7A8798","label":"Work and evidence"},
+		{"id":"readme","type":"text","x":535,"y":32,"width":350,"height":143,"color":"#E05752","text":"## [[README.md|PolyInference README]]\n\nStart here for the project and its documentation."},
+		{"id":"rules","type":"text","x":24,"y":212,"width":320,"height":120,"color":"#C59122","text":"## [[AGENTS.md|Agent instructions]]\n\nRequired reading and handoff rules"},
+		{"id":"develop","type":"text","x":364,"y":212,"width":320,"height":120,"color":"#C59122","text":"## [[dev-readme.md|Developer guide]]\n\nOnboarding and contributor checks"},
+		{"id":"architecture","type":"text","x":704,"y":212,"width":320,"height":120,"color":"#C59122","text":"## [[docs/architecture.md|Architecture]]\n\nFind the layer and module that own a change"},
+		{"id":"guide","type":"text","x":1044,"y":212,"width":320,"height":120,"color":"#C59122","text":"## [[docs/obsidian-graph.md|Graph guide]]\n\nColor legend, searches and upkeep"},
+		{"id":"os-0","type":"text","x":18,"y":505,"width":304,"height":58,"color":"#478BD0","text":"## [[docs/modules/runtime.md|Runtime modules]]"},
+		{"id":"os-1","type":"text","x":18,"y":574,"width":304,"height":58,"color":"#478BD0","text":"## [[design-docs/simplified-os/RUNTIME_BOUNDARY.md|Agent / OS boundary]]"},
+		{"id":"agent-0","type":"text","x":378,"y":505,"width":304,"height":58,"color":"#4EAD54","text":"## [[docs/modules/agent.md|Agent modules]]"},
+		{"id":"agent-1","type":"text","x":378,"y":574,"width":304,"height":58,"color":"#4EAD54","text":"## [[docs/modules/agent-workers.md|Worker and senior graphs]]"},
+		{"id":"inference-0","type":"text","x":738,"y":505,"width":304,"height":58,"color":"#269C89","text":"## [[docs/modules/inference.md|Inference module]]"},
+		{"id":"inference-1","type":"text","x":738,"y":574,"width":304,"height":58,"color":"#269C89","text":"## [[docs/guides/inference-controls.md|Inference controls]]"},
+		{"id":"scheduler-0","type":"text","x":1098,"y":505,"width":304,"height":58,"color":"#9865CB","text":"## [[docs/temporary/proposals/2026-11-08-standalone-scheduler-design.md|Scheduler design]]"},
+		{"id":"scheduler-1","type":"text","x":1098,"y":574,"width":304,"height":58,"color":"#9865CB","text":"## [[docs/temporary/investigations/2026-11-09-scheduler-os-impact.md|OS support audit]]"},
+		{"id":"operations-0","type":"text","x":18,"y":840,"width":304,"height":58,"color":"#CB7040","text":"## [[setup.md|Set up]]"},
+		{"id":"operations-1","type":"text","x":18,"y":909,"width":304,"height":58,"color":"#CB7040","text":"## [[docs/guides/first-run.md|Start a first run]]"},
+		{"id":"operations-2","type":"text","x":18,"y":978,"width":304,"height":58,"color":"#CB7040","text":"## [[docs/guides/run-results.md|Find results or recover]]"},
+		{"id":"verification-0","type":"text","x":378,"y":840,"width":304,"height":58,"color":"#BA5990","text":"## [[docs/testing.md|Checks and verification]]"},
+		{"id":"verification-1","type":"text","x":378,"y":909,"width":304,"height":58,"color":"#BA5990","text":"## [[docs/guides/qualification.md|Qualification]]"},
+		{"id":"records-0","type":"text","x":738,"y":840,"width":304,"height":58,"color":"#7A8798","text":"## [[development-docs/current-iter-issues.md|Current work]]"},
+		{"id":"records-1","type":"text","x":738,"y":909,"width":304,"height":58,"color":"#7A8798","text":"## [[development-docs/FIXES.md|Fix history]]"},
+		{"id":"records-2","type":"text","x":738,"y":978,"width":304,"height":58,"color":"#7A8798","text":"## [[docs/temporary/README.md|Temporary notes]]"}
+	],
+	"edges":[
+		{"id":"readme-rules","fromNode":"readme","fromSide":"bottom","toNode":"rules","toSide":"top","toEnd":"arrow"},
+		{"id":"readme-develop","fromNode":"readme","fromSide":"bottom","toNode":"develop","toSide":"top","toEnd":"arrow"},
+		{"id":"readme-architecture","fromNode":"readme","fromSide":"bottom","toNode":"architecture","toSide":"top","toEnd":"arrow"},
+		{"id":"readme-guide","fromNode":"readme","fromSide":"bottom","toNode":"guide","toSide":"top","toEnd":"arrow"}
+	]
+}

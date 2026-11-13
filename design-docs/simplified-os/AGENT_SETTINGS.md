@@ -4,8 +4,8 @@ This is the consolidated reference for OS settings exported to agents.
 The schema lives in [system_settings.py](../../src/polyinference/system_settings.py);
 all generic values and operational ceilings come from
 [os_config.py](../../src/polyinference/os_config.py).
-See [central tuning](../../docs/guides/os-tuning.md) and the
-[file-by-file inventory](../../docs/os-config-inventory.md).
+See central tuning (`docs/guides/os-tuning.md`) and the
+file-by-file inventory (`docs/os-config-inventory.md`).
 Wire resource types remain in [contracts.py](../../src/polyinference/contracts.py)
 and command definitions in [execution_contracts.py](../../src/polyinference/execution_contracts.py);
 the central schema uses those types, rather than separate configuration stores.
@@ -13,14 +13,14 @@ the central schema uses those types, rather than separate configuration stores.
 The bundled coding agent selects its OS defaults and UI preferences together in
 [agent/system_settings.py](../../src/polyinference/agent/system_settings.py).
 Workflow settings remain in [AgentConfig](../../src/polyinference/config.py).
-There is no shared agent library. See the [runtime boundary](RUNTIME_BOUNDARY.md)
-and [FIX-0058](../../development-docs/FIXES.md#fix-0058) for ownership and verification.
+There is no shared agent library. See the runtime boundary (`design-docs/simplified-os/RUNTIME_BOUNDARY.md`)
+and `development-docs/FIXES.md#fix-0058` for ownership and verification.
 
 ## Configure one system block
 
 > **Edited 2026-10-20 because** accepted changes need one current authoring
 > contract, while unresolved code behavior must remain visible. The
-> [revision ledger](DESIGN_REVISIONS.md) explains optional services, static
+> revision ledger (`design-docs/simplified-os/DESIGN_REVISIONS.md`) explains optional services, static
 > routing, capability limits and the deferred shared library. In particular,
 > the original U01–U04 gaps were repaired in the 27 October static/uniform profile:
 > mandatory data constraints and supported static rules are enforced, unsupported
@@ -70,7 +70,7 @@ per-call bounds, budgets and finishing reserves remain configured. The flag is
 not serialized or written to environment/defaults; per-run config saves effective
 values, while imported history is unchanged. RuntimeConfig.system is a validated
 view of resolved values and never rereads ambient capacity. See
-[tester scope and recovery](../../codex-haiku-setup.md).
+tester scope and recovery (`codex-haiku-setup.md`).
 
 ### Optional application inference simulation
 
@@ -101,8 +101,8 @@ preset; custom roles already bound local share its simulation. Explicit saved
 simulation configs reinstate the adapter/resolved capacities on resume; old/plain
 configs keep their original pins. No defaults, environment or historical state is
 rewritten. The simulator version/settings are pinned in an immutable application
-record. See [usage, fault mix, timing and limitations](../../docs/guides/sim-inference.md)
-and [module ownership](../../docs/modules/inference-simulation.md).
+record. See usage, fault mix, timing and limitations (`docs/guides/sim-inference.md`)
+and module ownership (`docs/modules/inference-simulation.md`).
 
 Nested settings objects are validated with their own defaults: an explicit object replaces the
 application's default object rather than recursively merging its preferences.
@@ -116,7 +116,7 @@ their working directory.
 Configuration, programs and prompts are pinned for a run. Use fresh state for
 incompatible changes; configuration schemas are not migrated. Updated 2026-10-23:
 Resume permits one exact predecessor graph with identical other pins, recorded
-by the agent as described in the [runtime boundary](RUNTIME_BOUNDARY.md#explicit-operator-resume-signals).
+by the agent as described in the runtime boundary (`design-docs/simplified-os/boundary/continuation.md#explicit-operator-resume-signals`).
 
 ## RuntimeConfig: complete OS field inventory
 
@@ -126,7 +126,7 @@ Counts and capacities are positive unless stated otherwise.
 | Field | Default | Meaning / units |
 | --- | --- | --- |
 | repository | required | Workspace root; an artifact agent need not invoke repository operations. |
-| tuning | Canonical OSTuning defaults | Journal/paging/buffers/timing/tool/workspace controls; resolved and pinned. See [central tuning](../../docs/guides/os-tuning.md). |
+| tuning | Canonical OSTuning defaults | Journal/paging/buffers/timing/tool/workspace controls; resolved and pinned. See central tuning (`docs/guides/os-tuning.md`). |
 | state_directory | .polyinference | Durable records, artifacts, checkpoints and workspaces. |
 | allowed_write_paths | [] | Exact repository-relative source grants, using POSIX paths. |
 | closure_paths | [] | Additional relative inputs for workspace views. |
@@ -292,7 +292,7 @@ response length. Completed local overages retain complete output as CompletedBud
 smaller-response replay; actual cutoff remains IncompleteGeneration and never executes partial actions.
 Provider counters measure the exact raw body; unsupported counters retain labeled conservative bounds.
 Independent max_model_request_bytes bounds serialized bytes, defaulting to 4194304 independently of response bytes.
-Campaign accounting and original authority/deadlines still apply. See [one local pair and startup](../../docs/guides/local-token-limits.md).
+Campaign accounting and original authority/deadlines still apply. See one local pair and startup (`docs/guides/local-token-limits.md`).
 
 Preparation records context-receipt/<operation_id>. Dispatched results expose
 extensions["runtime/context-receipt"]:
@@ -362,10 +362,11 @@ above with max_repairs=2 and the finishing reserve above.
 UI preferences in the same module select endpoints, grants, checks, one worker,
 96000 input / 32000 output allowances and trusted shell/check backends. The Haiku
 examples use the same allowances with 128000-token endpoint context envelopes.
-The Anthropic adapter sends the effective output target as `max_tokens`, bounded
-by the OS hard ceiling. Fresh UI/mixed/Anthropic examples request 4096 tokens
-inside the 32000 ceiling; custom configs without a smaller target use their
-ceiling. Native jobs have no enforced hard generation-token parameter.
+The Anthropic adapter sends the local pair's 32000 output cap as `max_tokens`;
+there is no separate smaller target. Explicit configuration and machine preferences
+retain their own pairs. Selecting a complete remote Haiku simulation preset replaces
+the local pair with 96000/32000; existing remote Anthropic configurations retain their
+explicit pair. Native cloud jobs have no enforced hard generation-token parameter.
 
 Coding-only fields remain outside system: objective, repository_mode, git_policy,
 dependency_prepare, prerequisite_checks, acceptance_checks,
@@ -373,7 +374,7 @@ senior_development_fraction, max_sprints, max_senior_corrections and
 max_protocol_corrections, inference_policy, local_strata_config, local_strata_profile,
 inference_retry, check_diagnosis, acceptance_criteria, max_review_reads,
 max_worker_recoveries, max_cloud_recoveries, default_retry_model and progress_monitor. The
-[agent reliability reference](../../docs/guides/agent-reliability.md) gives all
+agent reliability reference (`docs/guides/agent-reliability.md`) gives all
 nested defaults, bounds, semantic criteria and recovery interactions.
 `max_review_reads` defaults to 16 (0–16), with eight source ranges per proposal.
 Application planner messages expose total/used/remaining read and correction allowances,
@@ -381,17 +382,18 @@ schema read bounds, planning limits and process resources. The generic OS does n
 Agent default_retry_model selects Terra/high/seven for native cloud when the
 endpoint has no explicit retry_model; null disables the default. The OS has no
 model default. Agent input overrides OS defaults; explicit endpoint configuration
-overrides the agent's default preference. See [model fallback](../../docs/guides/model-fallback.md).
+overrides the agent's default preference. See model fallback (`docs/guides/model-fallback.md`).
 Absent inference_policy is omitted. Its additional_retries (0–3, default 0) and
 replace_undelivered (default false) travel through runtime/inference-policy. The former
 model_output_target_tokens input migrates to local_token_limits.output_tokens and is not serialized.
 Local Strata startup settings can be synchronized with configure-local; cloud native jobs receive no
 output-token allowance. local_strata_profile opts the UI into named-runtime startup;
 new instances are bound to its process and cleaned up at exit, while reused ones
-remain separately owned. See [launch lifecycle](../../docs/guides/launching.md).
-Fresh UI chooses one caller retry and the canonical 24000/4000 local pair unless
+remain separately owned. See launch lifecycle (`docs/guides/launching.md`).
+Fresh UI chooses one caller retry and the application Haiku 96000/32000 pair unless
 machine preferences replace it; this machine selects 114688/16384 (128K total).
-See [endpoint lifecycle/testing](../../docs/guides/endpoint-testing.md).
+Generic OS defaults remain 24000/4000.
+See endpoint lifecycle/testing (`docs/guides/endpoint-testing.md`).
 max_protocol_corrections defaults to 3
 consecutive malformed-reply corrections (0–16); valid replies reset the count.
 The agent owns full evidence inspection, canonical memory and repository-aware
@@ -414,4 +416,4 @@ silently acquire final authority. Workers may use task/product checks, not
 prerequisite-only criteria. All purposes use the generic Check fields above;
 shared names must retain identical definitions. Explicit criteria cannot be
 replaced and discovery closes after setup/planning. See the
-[configuration guide](../../docs/guides/configuration.md) for selection and fresh-state rules.
+configuration guide (`docs/guides/configuration.md`) for selection and fresh-state rules.

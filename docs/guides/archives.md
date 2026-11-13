@@ -1,7 +1,5 @@
 # Rolling diagnostic archives
 
-[Documentation](../README.md) · [Setup](../../setup.md) · [Developer guide](../../dev-readme.md)
-
 Every UI run and CLI `run`/`resume` invocation also automatically saves a diagnostic
 JSON snapshot in `.polyinference/history/` under the working directory. Failed
 executions are included; each resume gets its own snapshot. UI **Save run · JSON**
@@ -15,4 +13,4 @@ cleanup job runs. Existing run state, private Git stores and manually downloaded
 snapshots are retained independently. Archive failures are logged without
 changing the agent's result.
 
-Related: [Result locations and exports](results.md) · [Snapshot module](../modules/inspection.md).
+Related: Result locations and exports (`docs/guides/results.md`) · Snapshot module (`docs/modules/inspection.md`).

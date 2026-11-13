@@ -2,7 +2,7 @@
 
 ## Current agent concurrency contract
 
-Updated using the full agent HTML and the user's later clarifications. The HTML is the agent design, including OS-handled parts; the LLM OS is an application operating endpoints, not a computer-kernel subsystem. [Concurrent coding protocol](concurrent_coding_protocol.md) defines the current operational contract. It supersedes any earlier screenshot-based alternatives below where their scope differs.
+Updated using the full agent HTML and the user's later clarifications. The HTML is the agent design, including OS-handled parts; the LLM OS is an application operating endpoints, not a computer-kernel subsystem. Concurrent coding protocol (`design-docs/polyinference-design/concurrent_coding_protocol.md`) defines the current operational contract. It supersedes any earlier screenshot-based alternatives below where their scope differs.
 
 Every in-progress coding process owns a codebase copy. Private development overlaps. Every shell/script command, including test/Git commands, acquires a global `shell_mutex`. A separate `verification_gate` serializes latest-head merge, at least one specially prompted development/reconciliation loop, the final one/few local-model testing/examination/assessment iterations, commit and provisional shared-head/report publication. Release verification only after that boundary; release shell after each confirmed command. When both are needed the order is **verification then shell**; an outside shell owner releases before requesting verification. The application coordinator keeps running throughout.
 
@@ -16,7 +16,7 @@ Assessment produces `fail / uncertain / successful`; every normal local completi
 | L4-C04 | Publication stays provisional/unresolved; unknown active effects retain applicable exclusion and senior rollback checks dependents. |
 
 
-**Lecture basis:** CS350-4.pdf, Concurrency, 50 PDF pages / 44 numbered slides. Uses lectures 1–4 and builds on [the kernel](01-CS350-1-foundations.md), [process/request schemas](02-CS350-2-processes.md) and [graph execution](03-CS350-3-threads.md). **Project context:** cloud strategy feeding local work, multiple future coding workers and a tight local memory budget. **Revision/research date:** 2026-10-16.
+**Lecture basis:** CS350-4.pdf, Concurrency, 50 PDF pages / 44 numbered slides. Uses lectures 1–4 and builds on the kernel (`design-docs/polyinference-design/os-research/01-CS350-1-foundations.md`), process/request schemas (`design-docs/polyinference-design/os-research/02-CS350-2-processes.md`) and graph execution (`design-docs/polyinference-design/os-research/03-CS350-3-threads.md`). **Project context:** cloud strategy feeding local work, multiple future coding workers and a tight local memory budget. **Revision/research date:** 2026-10-16.
 
 ## 1. Selected synchronization architecture
 
@@ -134,7 +134,7 @@ Waiters check authoritative state, register through an atomic condition protocol
 
 ## 8. Serialized reconciliation, assessment and provisional publication
 
-Each process develops on a private copy. The current [two-mutex protocol](concurrent_coding_protocol.md) requires shell serialization independently of verification admission. Acquire verification_gate only after releasing outside shell ownership; inside it acquire shell_mutex individually for commands. Merge latest head, run a specially prompted development loop, then final local assessment. No other process enters verification or changes the shared head until commit/publication completes.
+Each process develops on a private copy. The current two-mutex protocol (`design-docs/polyinference-design/concurrent_coding_protocol.md`) requires shell serialization independently of verification admission. Acquire verification_gate only after releasing outside shell ownership; inside it acquire shell_mutex individually for commands. Merge latest head, run a specially prompted development loop, then final local assessment. No other process enters verification or changes the shared head until commit/publication completes.
 
 The authoritative `provisional_head` points to immutable Git content; review dispositions are separate. Publish each normal completion, including fail/uncertain, with its verdict/hazards and resolution=unresolved. This lets the next process reconcile with the predecessor's actual published code without confusing publication with senior approval.
 
@@ -176,4 +176,4 @@ Exercise simultaneous claim of one task; two requests for the last memory/budget
 
 Check the invariants after each transition, including retained uncertain work and the memory still consumed by a stopping server. G0 needs these single-coordinator protocols. G1 adds load and shared-worker interleavings. Distributed ownership instrumentation is required only when that feature is enabled. These are design acceptance scenarios; no project implementation/tests were run during this research.
 
-**Next:** [Lecture 5 — scaling the two-tier pipeline and preventing resource cycles](05-CS350-5-scalability-and-deadlocks.md).
+**Next:** Lecture 5 — scaling the two-tier pipeline and preventing resource cycles (`design-docs/polyinference-design/os-research/05-CS350-5-scalability-and-deadlocks.md`).

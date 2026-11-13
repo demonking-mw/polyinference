@@ -1,6 +1,6 @@
 # One local input/output token pair
 
-[Configuration](configuration.md) · [Context measurement](context-measurement.md) · [OS settings](../modules/settings.md)
+Configuration (`docs/guides/configuration.md`) · Context measurement (`docs/guides/context-measurement.md`) · OS settings (`docs/modules/settings.md`)
 
 Configure the local worker lane once, including when a Claude API endpoint stands
 in for a local model:
@@ -18,9 +18,13 @@ one worker/slot. The 112K/16K split favors code/tool/history with output room fo
 reasoning and edits. It is a practical starting choice, not a benchmarked optimum.
 Change preferences before a fresh run; old runs retain their saved pair.
 
-The OS and UI share the canonical defaults: 24000 input and 4000 output tokens;
-the UI has no competing token preset. Changing this pair before a
-fresh run changes OS input enforcement/packing, provider request output tokens,
+Generic OS defaults remain 24000 input and 4000 output tokens. The bundled Haiku
+UI preset and mixed/Anthropic examples select 96000 input + 32000 output = 128000.
+Explicit simulation that replaces a different/local endpoint with the complete
+Haiku preset selects that same pair; an already configured remote Anthropic
+endpoint retains its explicit pair. Machine preferences and explicit configurations
+remain authoritative, and saved runs keep their original limits.
+Changing this pair before a fresh run changes OS input enforcement/packing, provider request output tokens,
 worker budget instructions, saved capacity profiles and endpoint admission.
 Local context is input + output (65536 in the example); aggregate reservation is
 that sum times local max_inflight. Thinking counts toward output.
@@ -36,28 +40,7 @@ Compaction and readiness probes use the same pair; legacy compaction_output_toke
 A contradictory alias plus explicit output_tokens rejects. New configuration and
 simple-os/6 require fresh state; historical runs retain their original code/pins.
 
-## Strata startup configuration
-
-The coding application can synchronize an existing Strata launch JSON. Configure
-top-level local_strata_config with that file's path, relative to the agent config,
-or supply --strata-config to this no-inference preparation command:
-
-```bash
-polyinference configure-local agent.json --strata-config strata.json
-```
-
-It derives Strata's --max-context from the same pair, preserves unrelated serving
-settings, and retains the original file as strata.json.before-polyinference.
-Both --max-context VALUE and --max-context=VALUE are supported; duplicate or
-invalid context arguments reject without changing the launch file.
-Restart Strata using that launch file, then start the fresh PolyInference run.
-When local_strata_config is configured, run startup repeats synchronization and
-stops before model calls if the launch configuration changed and needs a restart.
-configure-local and run synchronization do not signal, reload or launch the server.
-For automatic startup when opening the UI, separately set agent local_strata_profile
-to a saved profile name; see [UI launch lifecycle](launching.md). Tokenizer/model
-capacity and GPU scheduling remain provider-owned. Raw requests carry the pair's
-output cap directly, including Claude stand-ins.
+For a local server, [synchronize Strata startup configuration](strata-startup-config.md).
 
 ## Cloud agents
 

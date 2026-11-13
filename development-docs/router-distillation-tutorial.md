@@ -1,6 +1,6 @@
 # Distill an agent-selection model from Opus
 
-[Development records](README.md) · [Next-version routing proposal](next-iteration.md#learned-agent-routing) · [Current-version record](current-iter-issues.md#router-distillation-tutorial)
+Development records (`development-docs/README.md`) · Next-version routing proposal (`development-docs/next-iteration.md#learned-agent-routing`) · Current-version record (`docs/temporary/incidents/2026-10-22-router-tutorial-record.md#router-distillation-tutorial`)
 
 For readers new to training, start with the
 [HTML learning guide](router-training-guide.html): fundamentals, distillation,
@@ -44,11 +44,11 @@ GPU only if the local experiment establishes a need for more capacity.
 
 The agent registry and settings below are teaching examples, not PolyInference
 configuration fields. Current role/lane binding is described in the
-[provider guide](../docs/guides/providers.md); current allocation policy is in the
-[workflow guide](../docs/modules/agent-workflow.md). This tutorial does not replace
+provider guide (`docs/guides/providers.md`); current allocation policy is in the
+workflow guide (`docs/modules/agent-workflow.md`). This tutorial does not replace
 either. A future router belongs above the OS: it recommends a supported selection;
 the OS continues to enforce grants, resource admission, budgets and effect safety.
-See the [runtime boundary](../design-docs/simplified-os/RUNTIME_BOUNDARY.md).
+See the runtime boundary (`design-docs/simplified-os/RUNTIME_BOUNDARY.md`).
 
 ## 1. Prepare an isolated experiment
 
@@ -524,4 +524,4 @@ bandit. Mid-run agent reassignment or settings changes would require a separate
 sequential policy and evaluation design. Neither this tutorial nor the research
 permission implements deployment, expands OS authority or changes current
 PolyInference process settings. Track that future work in the
-[learned-routing proposal](next-iteration.md#learned-agent-routing).
+learned-routing proposal (`development-docs/next-iteration.md#learned-agent-routing`).

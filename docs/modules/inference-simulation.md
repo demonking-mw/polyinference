@@ -1,7 +1,5 @@
 # Optional application inference simulator
 
-[Modules](README.md) · [Usage](../guides/sim-inference.md) · [Runtime boundary](../../design-docs/simplified-os/RUNTIME_BOUNDARY.md)
-
 | File | Responsibility |
 | --- | --- |
 | [agent/inference_simulation.py](../../src/polyinference/agent/inference_simulation.py) | Opt-in settings/config subclass, Haiku capacity overlay, shared virtual decoder, seeded fault decisions/cooldowns, provider installation and inspection projection. |
@@ -63,4 +61,4 @@ Verification: [simulator regressions](../../tests/test_inference_simulation.py),
 [legacy batch](../../tests/test_sim_batch.py), [browser checks](../../tests/ui_start.test.cjs)
 and provider/retry/output/UI suites. PC performance/model quality need separate
 evidence. Maintain usage, owning guides, navigation and
-[FIXES.md](../../development-docs/FIXES.md); see [maintenance](../maintenance.md).
+`development-docs/FIXES.md`; see maintenance (`docs/maintenance.md`).

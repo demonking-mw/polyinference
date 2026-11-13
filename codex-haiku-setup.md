@@ -1,9 +1,9 @@
 # Tester checklist: Codex + Haiku
 
-[Setup](setup.md) · [Documentation](docs/README.md) · [Developer onboarding](dev-readme.md)
+Setup (`setup.md`) · Documentation (`docs/README.md`) · Developer onboarding (`dev-readme.md`)
 
 Record the requested testing branch and HEAD with `git branch --show-current`
-and `git rev-parse HEAD`. Follow [installation](docs/guides/install.md), including
+and `git rev-parse HEAD`. Follow installation (`docs/guides/install.md`), including
 the lockfile recipe when reproducing a recorded Linux/macOS environment.
 
 | Lane / role | Pinned UI preset |
@@ -11,7 +11,7 @@ the lockfile recipe when reproducing a recorded Linux/macOS environment.
 | `local` / `worker` | Anthropic `claude-haiku-5-5`, one in-flight request |
 | `cloud` / `senior`, `specialist` | `codex_app_server`, `gpt-6.1-sol`, medium turn effort, brokered tools, one request |
 
-This checklist describes the bundled preset without [machine preferences](docs/guides/configuration.md).
+This checklist describes the bundled preset without machine preferences (`docs/guides/configuration.md`).
 Use explicit --sim-batch 1 to select remote Haiku when machine preferences declare a local Strata endpoint.
 The lane names do not describe physical hosting. Haiku is a paid cloud stand-in
 for serial local admission; this is neither Anthropic's Batch API nor a hardware
@@ -19,10 +19,10 @@ performance model. One worker and one inference slot are separate limits. Model
 IDs require account access; record rejections and agree on replacements before
 comparing results.
 
-1. Install and authenticate [Codex on the backend host](docs/guides/codex-login.md).
+1. Install and authenticate Codex on the backend host (`docs/guides/codex-login.md`).
    WSL needs its own Linux Codex installation/login. The backend launches stdio
    app-server automatically; no HTTP proxy or `OPENAI_API_KEY` is needed here.
-2. Supply [Anthropic credentials](docs/guides/anthropic-key.md) in that host's
+2. Supply Anthropic credentials (`docs/guides/anthropic-key.md`) in that host's
    environment or private saved file. Existing exported values override the file;
    use `unset ANTHROPIC_API_KEY` to let a later launch read the saved value.
 3. Launch **without `--config`** from the activated checkout:
@@ -32,15 +32,15 @@ comparing results.
    ```
 
    The variable applies only to this launch. The default UI has one worker,
-   trusted shell/check execution and 27 sprints. The local input/output defaults come from the canonical pair (24000/4000);
+   trusted shell/check execution and 27 sprints. The bundled Haiku pair is 96000 input/32000 output tokens;
    native Codex cloud agents have no OS per-call token cap. The mixed JSON example has different concurrency.
-4. Follow the [greeting smoke test](docs/guides/first-run.md). Inspect worker
+4. Follow the greeting smoke test (`docs/guides/first-run.md`). Inspect worker
    calls on `local` and senior/specialist calls on `cloud`; the saved config must
    show `max_workers:1` and both `max_inflight:1`. Require final acceptance/check
    evidence, then **Save run · JSON**.
-5. Follow the [project run guide](docs/guides/projects.md) for a disposable task
+5. Follow the project run guide (`docs/guides/projects.md`) for a disposable task
    under ignored `testing/`. Record its integration branch, commit and worktree
-   paths. Keep state/evidence if a run pauses; see [troubleshooting](docs/guides/troubleshooting.md).
+   paths. Keep state/evidence if a run pauses; see troubleshooting (`docs/guides/troubleshooting.md`).
 
 For later launches, reactivate the checkout environment and repeat step 3.
 For concurrent remote simulation, use:
@@ -55,7 +55,7 @@ environment or later launches. Custom Anthropic settings survive; another local
 protocol selects the full Haiku preset. Senior/cloud settings remain explicit.
 Opening the UI makes no billed request. New runs save effective configuration;
 Resume uses saved settings and suppresses ambient capacity overlays. See
-[configuration](docs/guides/configuration.md) and [recovery](docs/guides/recovery.md).
+configuration (`docs/guides/configuration.md`) and recovery (`docs/guides/recovery.md`).
 
 Slots are maximums, not guaranteed occupancy. Use independent tasks to exercise
 overlap; the greeting asks for one. No-task-branch Git policy still permits only
@@ -67,19 +67,19 @@ account access requires its own readiness evidence.
 
 For pacing/fault controls, use `polyinference ui --sim-inference`. Its active
 mode's batch takes precedence over --sim-batch; normal mode retains it. The
-[simulation guide](docs/guides/sim-inference.md) covers defaults, fault decisions,
+simulation guide (`docs/guides/sim-inference.md`) covers defaults, fault decisions,
 timing and recovery. Actual Haiku usage remains recorded.
 
-[Launch controls](docs/guides/launching.md) cover ports and stopping the idle server.
+Launch controls (`docs/guides/launching.md`) cover ports and stopping the idle server.
 Snapshots are diagnostic evidence, not complete Git backups or resumable state.
-See [provider distinctions](docs/guides/providers.md) before selecting `codex_proxy`.
+See provider distinctions (`docs/guides/providers.md`) before selecting `codex_proxy`.
 
-Report each finding in [current iteration](development-docs/current-iter-issues.md),
-[next iteration](development-docs/next-iteration.md), or [general issues](development-docs/general-issues.md)
+Report each finding in current iteration (`development-docs/current-iter-issues.md`),
+next iteration (`development-docs/next-iteration.md`), or general issues (`development-docs/current-iter-issues.md`)
 for triage. Include branch/commit, OS/Python/Codex versions, objective/check, run ID,
 models/batch, reproduction, expected/actual behavior, errors and snapshot location.
 Separate observations from suspected causes; include setup/UX friction and review
 sensitive content before sharing evidence.
 
 When implementing a fix/feature, update all related docs and navigation plus
-[FIXES.md](development-docs/FIXES.md) in the same task. Follow [maintenance](docs/maintenance.md).
+`development-docs/FIXES.md` in the same task. Follow maintenance (`docs/maintenance.md`).

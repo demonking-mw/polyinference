@@ -1,7 +1,5 @@
 # Coding controller, setup and task allocation
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 The application chooses ready work, starts independent workers, drains before review and decides final acceptance.
 
 | File | Responsibility |
@@ -47,7 +45,7 @@ abandon that route. Model proposals and effective adjustments are retained;
 pending consumers are rewired and started contracts remain pinned. An unstarted
 linked recovery is retargeted through its original exception/predecessor, retaining
 its root/depth/grants; an admitted consumer cannot be cloned into a fresh account.
-Cloud retries share the original physical envelope; see [reliability](../guides/agent-reliability.md).
+Cloud retries share the original physical envelope; see reliability (`docs/guides/agent-reliability.md`).
 Setup checks prerequisites when present. Assignments use task/product checks;
 final completion requires its separate acceptance selection. Explicit legacy
 checks remain combined task/final criteria when no acceptance override is supplied.
@@ -66,21 +64,11 @@ checks remain combined task/final criteria when no acceptance override is suppli
 [setup](../../tests/test_setup_tools.py), [cloud recovery](../../tests/test_cloud_recovery.py)
 and [user briefs](../../tests/test_user_briefs.py).
 
-[Agent design](../../design-docs/langgraph-agent/README.md) · [Current issues](../../development-docs/current-iter-issues.md).
+Agent design (`design-docs/langgraph-agent/README.md`) · Current issues (`development-docs/current-iter-issues.md`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.
 
-## Integrated reliability branch (2026-10-26)
-
-Review includes independent current-tree checks, bounded source retrieval, versioned
-module contracts and explicit semantic completion criteria. Clean fenced worker
-exceptions become review obligations; linked replacements share original resource
-accounts/deadlines. Existing steering, check-preparation dependencies, historical
-started-task allocation and retained private-source offers remain authoritative.
-These combined graph/schema changes use fresh program/state pins; old live runs
-must use their original pinned source.
-Operator-prepared model recovery may resume at the progress node inserted before
-the model node, retaining its linked recovery identity and original allowance.
-Explicit cancellation remains cancelled rather than becoming a semantic exception.
+Recovery and progress contracts are in `design-docs/implementation/WORKER_RECOVERY.md`
+and `design-docs/implementation/PROGRESS_MONITORING.md`.

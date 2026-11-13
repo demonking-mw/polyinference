@@ -1,6 +1,6 @@
 # Central OS configuration
 
-[Configuration](configuration.md) · [Settings module](../modules/settings.md) · [Audit inventory](../os-config-inventory.md)
+Configuration (`docs/guides/configuration.md`) · Settings module (`docs/modules/settings.md`) · [Audit inventory](../os-config-inventory.md)
 
 [src/polyinference/os_config.py](../../src/polyinference/os_config.py) is the single
 source of generic OS defaults and operational validation ceilings. `DEFAULTS`
@@ -30,20 +30,8 @@ Set preferences together in the run JSON before starting:
 This is a fragment to merge with the required endpoint/project settings, not a
 complete launch file. Omitted tuning fields keep their canonical defaults.
 
-`system.cloud_agent_timeout_interrupt` is a strict boolean, default **false**,
-defined in `os_config.py` alongside other RuntimeConfig defaults and exposed to
-AgentConfig through the same `system` block. The coding UI uses 1800 seconds
-and inherits false without an application override. For cloud AgentJob calls, false makes
-`endpoint.timeout_seconds` a one-time warning threshold: the same job, connection,
-callbacks, admission slot and accounting continue. It logs a Python WARNING and a
-durable `runtime/warning/cloud-agent-timeout/<operation_id>` record without
-pausing, retrying or interrupting the run. Set it to **true** to enforce the endpoint
-timeout and retain the existing uncertain-execution handling. Direct Codex stdio
-read timeouts and proxy HTTP timeouts follow this policy. Physical endpoint
-location, rather than lane name, selects cloud jobs. Raw ModelQuery and local-agent
-timeouts are unchanged. Original process/root deadlines and explicit cancellation
-still apply. Use fresh state for this changed configuration; historical runs are
-not silently opted in.
+For native cloud jobs, see [cloud agent endpoint timeouts](cloud-agent-timeouts.md).
+
 Resolved nested paths/collections and the environment mapping are immutable, including aliases from the
 system view. HTTP environment trust also controls proxy routing. Inspection readers inherit saved SQLite
 timeouts; a standalone database needs a default-timeout metadata lookup before its policy is known.
@@ -62,7 +50,7 @@ wait cap keeps the process wall-time bound; standalone helpers retain their prio
 buffers and excerpts consume more disk/memory/context.
 
 The constants refactor preserved previous defaults; simple-os/6 additionally introduces
-[one local token pair and provider-owned cloud limits](local-token-limits.md). One corrected duplicate is the kernel
+one local token pair and provider-owned cloud limits (`docs/guides/local-token-limits.md`). One corrected duplicate is the kernel
 version display: diagnostics and the durable kernel pin now read the same constant.
 Changing source defaults or run configuration requires fresh state; use the frozen
 original source/configuration for historical runs. No budget/deadline/grant is

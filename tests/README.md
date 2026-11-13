@@ -1,6 +1,6 @@
 # Test suite
 
-[Developer onboarding](../dev-readme.md) · [Check commands](../docs/testing.md) · [Modules](../docs/modules/README.md)
+Developer onboarding (`dev-readme.md`) · Check commands (`docs/testing.md`) · Modules (`docs/modules/README.md`)
 
 Offline fixtures use disposable repositories and transports. Tests are evidence
 for specific guarantees; live providers, physical scheduling and sandbox behavior
@@ -51,10 +51,10 @@ need separately stated checks. Update affected docs and FIXES.md with every fix.
 
 Documentation-tool regressions have their own feature guide:
 [test_project_docs.py](test_project_docs.py), described in
-[documentation tooling](../docs/modules/documentation.md).
+documentation tooling (`docs/modules/documentation.md`).
 
 Run only appropriate checks, record actual results/limits, and keep historical
-results separate. Follow [documentation maintenance](../docs/maintenance.md)
+results separate. Follow documentation maintenance (`docs/maintenance.md`)
 before finishing, including affected guide/settings/navigation updates.
 
 ## Integrated reliability coverage
@@ -69,6 +69,8 @@ before finishing, including affected guide/settings/navigation updates.
 - [test_validation_feedback.py](test_validation_feedback.py) checks application-origin validation feedback without invented tools.
 
 - [test_cli.py](test_cli.py) checks private runtime status and delivery commands.
+- [test_cli_status.py](test_cli_status.py) checks a missing state directory,
+  a missing database and successful status from existing records.
 
 - [test_branch_integration.py](test_branch_integration.py) verifies attached-source preservation, context compaction with response validation, shared response-repair bounds across transport retries, and physical-attempt certainty/admission through recovery and restart.
 

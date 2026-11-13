@@ -1,6 +1,6 @@
 # Four scheduled repairs — 2026-10-28
 
-[Current issues](current-iter-issues.md) · [Original analysis](minecraft-failure-isolation-2026-10-28.md) · [Context contract](../docs/guides/context-measurement.md)
+Current issues (`development-docs/current-iter-issues.md`) · Original analysis (`docs/temporary/investigations/2026-10-28-minecraft-failure-isolation.md`) · Context contract (`docs/guides/context-measurement.md`)
 
 The user authorized this batch for 15:04 Toronto. The one-time heartbeat fired
 and was deleted before implementation to prevent duplicates. Starting framework

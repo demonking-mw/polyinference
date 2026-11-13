@@ -1,7 +1,5 @@
 # Command line and saved credentials
 
-[Module index](README.md) · [Architecture](../architecture.md) · [File tree](../file-tree.html)
-
 The CLI loads configuration/environment and invokes application/runtime services for runs and inspection.
 
 | File | Responsibility |
@@ -26,7 +24,7 @@ UI-only --sim-inference reveals opt-in controls. execute installs an application
 adapter only for SimulationAgentConfig; load_config recognizes that explicit saved
 block for exact recovery without reapplying ambient batch overrides. Plain configs
 retain AgentConfig and their original pins. Probes contact the actual provider.
-See [simulation ownership](inference-simulation.md) and [usage](../guides/sim-inference.md).
+See simulation ownership (`docs/modules/inference-simulation.md`) and usage (`docs/guides/sim-inference.md`).
 
 ## Principles to preserve
 
@@ -40,8 +38,8 @@ See [simulation ownership](inference-simulation.md) and [usage](../guides/sim-in
 [Saved credentials](../../tests/test_saved_credentials.py), [history](../../tests/test_history.py)
 and [recovery](../../tests/test_recovery.py).
 
-[CLI guide](../guides/cli.md) · [Credentials](../guides/anthropic-key.md) · [Recovery](../guides/recovery.md).
+CLI guide (`docs/guides/cli.md`) · Credentials (`docs/guides/anthropic-key.md`) · Recovery (`docs/guides/recovery.md`).
 
 After a fix/feature, update this guide and all affected docs/settings/navigation,
-then record actual verification in [FIXES.md](../../development-docs/FIXES.md).
-Follow [documentation maintenance](../maintenance.md) in the same task.
+then record actual verification in `development-docs/FIXES.md`.
+Follow documentation maintenance (`docs/maintenance.md`) in the same task.

@@ -1,8 +1,8 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "entrypoint": "README.md",
-  "description": "Feature/document tree. Each leaf has one primary doc and explicit related files; paths are repository-relative.",
-  "maintenance": "Update all affected docs after each fix/feature; edit this JSON then run python scripts/project_docs.py and --check.",
+  "description": "README-rooted Obsidian note tree. Every node owns one primary doc and its listed files.",
+  "maintenance": "Keep each parent note link in sync with children here. Run python scripts/project_docs.py and --check.",
   "external_sources": [
     "references/claude-code",
     "references/deepagents",
@@ -12,111 +12,23 @@
     ":Zone.Identifier"
   ],
   "root": {
-    "id": "polyinference",
+    "id": "doc-readme",
     "title": "PolyInference",
+    "doc": "README.md",
+    "files": [],
     "children": [
       {
-        "id": "start",
-        "title": "Start here",
-        "children": [
-          {
-            "id": "doc-readme",
-            "title": "PolyInference",
-            "doc": "README.md",
-            "files": []
-          },
-          {
-            "id": "doc-dev-readme",
-            "title": "Developer onboarding",
-            "doc": "dev-readme.md",
-            "files": [
-              "docs/onboarding.html"
-            ]
-          },
-          {
-            "id": "doc-contributor-onboarding",
-            "title": "Onboard a human or development agent",
-            "doc": "docs/contributor-onboarding.md",
-            "files": []
-          },
-          {
-            "id": "doc-project-memory",
-            "title": "Project knowledge to retain",
-            "doc": "docs/project-memory.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-readme",
-            "title": "Documentation",
-            "doc": "docs/README.md",
-            "files": []
-          },
-          {
-            "id": "doc-setup",
-            "title": "Setup",
-            "doc": "setup.md",
-            "files": []
-          },
-          {
-            "id": "doc-codex-haiku-setup",
-            "title": "Tester checklist: Codex + serial Haiku",
-            "doc": "codex-haiku-setup.md",
-            "files": []
-          }
-        ]
+        "id": "doc-agents",
+        "title": "Repository instructions for agents",
+        "doc": "AGENTS.md",
+        "files": []
       },
       {
-        "id": "use",
-        "title": "Setup and operating guides",
+        "id": "doc-setup",
+        "title": "Setup",
+        "doc": "setup.md",
+        "files": [],
         "children": [
-          {
-            "id": "doc-docs-guides-anthropic-key",
-            "title": "Anthropic credentials",
-            "doc": "docs/guides/anthropic-key.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-guides-budgets",
-            "title": "Budgets and command execution",
-            "doc": "docs/guides/budgets.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-guides-codex-login",
-            "title": "Codex installation and login",
-            "doc": "docs/guides/codex-login.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-guides-cli",
-            "title": "Command line",
-            "doc": "docs/guides/cli.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-guides-configuration",
-            "title": "Configure a repeatable run",
-            "doc": "docs/guides/configuration.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-guides-retrying",
-            "title": "Explicit model and delivery recovery",
-            "doc": "docs/guides/retrying.md",
-            "files": []
-          },
-          {
-            "id": "guide-exports",
-            "title": "Export code and diagnostic evidence",
-            "doc": "docs/guides/exports.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-guides-first-run",
-            "title": "First run",
-            "doc": "docs/guides/first-run.md",
-            "files": []
-          },
           {
             "id": "doc-docs-guides-install",
             "title": "Install PolyInference",
@@ -124,51 +36,63 @@
             "files": []
           },
           {
+            "id": "doc-docs-guides-setup-providers",
+            "title": "Provider setup",
+            "doc": "docs/guides/setup-providers.md",
+            "files": [],
+            "children": [
+              {
+                "id": "doc-codex-haiku-setup",
+                "title": "Tester checklist: Codex and Haiku",
+                "doc": "codex-haiku-setup.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-guides-providers",
+                "title": "Providers and model routing",
+                "doc": "docs/guides/providers.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-guides-codex-login",
+                "title": "Codex installation and login",
+                "doc": "docs/guides/codex-login.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-guides-anthropic-key",
+                "title": "Anthropic credentials",
+                "doc": "docs/guides/anthropic-key.md",
+                "files": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "doc-docs-readme",
+        "title": "Use PolyInference",
+        "doc": "docs/README.md",
+        "files": [],
+        "children": [
+          {
+            "id": "doc-docs-guides-first-run",
+            "title": "First run",
+            "doc": "docs/guides/first-run.md",
+            "files": [],
+            "children": [
+              {
+                "id": "doc-docs-guides-projects",
+                "title": "Run on your project",
+                "doc": "docs/guides/projects.md",
+                "files": []
+              }
+            ]
+          },
+          {
             "id": "doc-docs-guides-launching",
             "title": "Launch the local UI",
             "doc": "docs/guides/launching.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-guides-recovery",
-            "title": "Limits, steering and recovery",
-            "doc": "docs/guides/recovery.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-guides-results",
-            "title": "Locate code and export evidence",
-            "doc": "docs/guides/results.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-guides-providers",
-            "title": "Providers and model routing",
-            "doc": "docs/guides/providers.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-guides-archives",
-            "title": "Rolling diagnostic archives",
-            "doc": "docs/guides/archives.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-guides-projects",
-            "title": "Run on your project",
-            "doc": "docs/guides/projects.md",
-            "files": []
-          },
-          {
-            "id": "guide-state-layout",
-            "title": "Runtime state layout",
-            "doc": "docs/guides/state-layout.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-guides-troubleshooting",
-            "title": "Troubleshooting",
-            "doc": "docs/guides/troubleshooting.md",
             "files": []
           },
           {
@@ -178,860 +102,859 @@
             "files": []
           },
           {
-            "id": "doc-docs-guides-sim-inference",
-            "title": "Simulate slower, less reliable inference",
-            "doc": "docs/guides/sim-inference.md",
+            "id": "doc-docs-guides-cli",
+            "title": "Command line",
+            "doc": "docs/guides/cli.md",
             "files": []
           },
           {
-            "id": "endpoint-testing",
-            "title": "Endpoint lifecycle and testing",
-            "doc": "docs/guides/endpoint-testing.md",
-            "files": []
+            "id": "doc-docs-guides-run-configuration",
+            "title": "Configure a run",
+            "doc": "docs/guides/run-configuration.md",
+            "files": [],
+            "children": [
+              {
+                "id": "doc-docs-guides-configuration",
+                "title": "Configure a repeatable run",
+                "doc": "docs/guides/configuration.md",
+                "files": []
+              },
+              {
+                "id": "guide-checks",
+                "title": "Select setup, task and final checks",
+                "doc": "docs/guides/checks.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-guides-budgets",
+                "title": "Budgets and command execution",
+                "doc": "docs/guides/budgets.md",
+                "files": []
+              },
+              {
+                "id": "local-token-limits",
+                "title": "One local token pair and provider startup",
+                "doc": "docs/guides/local-token-limits.md",
+                "files": [],
+                "children": [
+                  {
+                    "id": "doc-docs-guides-strata-startup-config",
+                    "title": "Synchronize Strata startup configuration",
+                    "doc": "docs/guides/strata-startup-config.md",
+                    "files": []
+                  }
+                ]
+              },
+              {
+                "id": "doc-docs-guides-os-tuning",
+                "title": "Central OS configuration",
+                "doc": "docs/guides/os-tuning.md",
+                "files": [],
+                "children": [
+                  {
+                    "id": "doc-docs-os-config-inventory",
+                    "title": "OS constants audit inventory",
+                    "doc": "docs/os-config-inventory.md",
+                    "files": []
+                  },
+                  {
+                    "id": "doc-docs-guides-cloud-agent-timeouts",
+                    "title": "Cloud agent endpoint timeouts",
+                    "doc": "docs/guides/cloud-agent-timeouts.md",
+                    "files": []
+                  }
+                ]
+              },
+              {
+                "id": "doc-docs-guides-inference-controls",
+                "title": "Inference and reliability",
+                "doc": "docs/guides/inference-controls.md",
+                "files": [],
+                "children": [
+                  {
+                    "id": "guide-agent-reliability",
+                    "title": "Coding-agent reliability settings",
+                    "doc": "docs/guides/agent-reliability.md",
+                    "files": [],
+                    "children": [
+                      {
+                        "id": "doc-docs-guides-worker-recovery",
+                        "title": "Worker recovery and progress",
+                        "doc": "docs/guides/worker-recovery.md",
+                        "files": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "doc-docs-guides-context-measurement",
+                    "title": "Input token measurement, byte ceilings and caller priorities",
+                    "doc": "docs/guides/context-measurement.md",
+                    "files": []
+                  },
+                  {
+                    "id": "endpoint-testing",
+                    "title": "Endpoint lifecycle and testing",
+                    "doc": "docs/guides/endpoint-testing.md",
+                    "files": [],
+                    "children": [
+                      {
+                        "id": "doc-docs-guides-endpoint-probes",
+                        "title": "Test or warm up an endpoint",
+                        "doc": "docs/guides/endpoint-probes.md",
+                        "files": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "model-fallback-guide",
+                    "title": "Model availability fallback configuration and guarantees",
+                    "doc": "docs/guides/model-fallback.md",
+                    "files": []
+                  },
+                  {
+                    "id": "doc-docs-guides-sim-inference",
+                    "title": "Simulate slower, less reliable inference",
+                    "doc": "docs/guides/sim-inference.md",
+                    "files": []
+                  }
+                ]
+              }
+            ]
           },
           {
-            "id": "guide-checks",
-            "title": "Select setup, task and final checks",
-            "doc": "docs/guides/checks.md",
-            "files": []
+            "id": "doc-docs-guides-run-results",
+            "title": "Results, recovery and state",
+            "doc": "docs/guides/run-results.md",
+            "files": [],
+            "children": [
+              {
+                "id": "doc-docs-guides-results",
+                "title": "Locate code and export evidence",
+                "doc": "docs/guides/results.md",
+                "files": []
+              },
+              {
+                "id": "guide-exports",
+                "title": "Export code and diagnostic evidence",
+                "doc": "docs/guides/exports.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-guides-recovery",
+                "title": "Limits, steering and recovery",
+                "doc": "docs/guides/recovery.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-guides-retrying",
+                "title": "Explicit model and delivery recovery",
+                "doc": "docs/guides/retrying.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-guides-archives",
+                "title": "Rolling diagnostic archives",
+                "doc": "docs/guides/archives.md",
+                "files": []
+              },
+              {
+                "id": "guide-state-layout",
+                "title": "Runtime state layout",
+                "doc": "docs/guides/state-layout.md",
+                "files": []
+              }
+            ]
           },
           {
-            "id": "guide-agent-reliability",
-            "title": "Coding-agent reliability settings",
-            "doc": "docs/guides/agent-reliability.md",
-            "files": []
-          },
-          {
-            "id": "model-fallback-guide",
-            "title": "Model availability fallback configuration and guarantees",
-            "doc": "docs/guides/model-fallback.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-guides-context-measurement",
-            "title": "Input token measurement, byte ceilings and caller priorities",
-            "doc": "docs/guides/context-measurement.md",
-            "files": []
-          },
-          {
-            "id": "local-token-limits",
-            "title": "One local token pair and provider startup",
-            "doc": "docs/guides/local-token-limits.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-guides-os-tuning",
-            "title": "Central OS configuration",
-            "doc": "docs/guides/os-tuning.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-os-config-inventory",
-            "title": "OS constants audit inventory",
-            "doc": "docs/os-config-inventory.md",
+            "id": "doc-docs-guides-troubleshooting",
+            "title": "Troubleshooting",
+            "doc": "docs/guides/troubleshooting.md",
             "files": []
           }
         ]
       },
       {
-        "id": "code",
-        "title": "Application and OS modules",
+        "id": "doc-dev-readme",
+        "title": "Developer guide",
+        "doc": "dev-readme.md",
+        "files": [
+          "docs/onboarding.html"
+        ],
         "children": [
           {
-            "id": "agent-services",
-            "title": "Application services and runtime policy installation",
-            "doc": "docs/modules/agent-services.md",
-            "files": [
-              "src/polyinference/agent/__init__.py",
-              "src/polyinference/agent/services.py",
-              "src/polyinference/agent/runtime_policy.py",
-              "src/polyinference/agent/design_basis.py"
+            "id": "doc-contributor-onboarding",
+            "title": "Onboard a human or development agent",
+            "doc": "docs/contributor-onboarding.md",
+            "files": [],
+            "children": [
+              {
+                "id": "doc-project-memory",
+                "title": "Project knowledge to retain",
+                "doc": "docs/project-memory.md",
+                "files": []
+              }
             ]
           },
-          {
-            "id": "delivery",
-            "title": "Artifact delivery and user messages",
-            "doc": "docs/modules/delivery.md",
-            "files": [
-              "src/polyinference/runtime/outputs.py",
-              "src/polyinference/runtime/messages.py"
-            ]
-          },
-          {
-            "id": "retries",
-            "title": "Bounded OS model retries",
-            "doc": "docs/modules/retries.md",
-            "files": [
-              "src/polyinference/runtime/model_retries.py",
-              "src/polyinference/runtime/retry.py",
-              "src/polyinference/runtime/model_fallback.py"
-            ]
-          },
-          {
-            "id": "capabilities",
-            "title": "Capability registration and tool ABI",
-            "doc": "docs/modules/capabilities.md",
-            "files": [
-              "src/polyinference/runtime/capabilities.py",
-              "src/polyinference/runtime/tool_contracts.py"
-            ]
-          },
-          {
-            "id": "agent-workflow",
-            "title": "Coding controller, setup and task allocation",
-            "doc": "docs/modules/agent-workflow.md",
-            "files": [
-              "src/polyinference/agent/controller.py",
-              "src/polyinference/agent/resume.py",
-              "src/polyinference/agent/setup.py",
-              "src/polyinference/agent/tasks.py",
-              "src/polyinference/agent/routing.py",
-              "src/polyinference/agent/cloud_recovery.py"
-            ]
-          },
-          {
-            "id": "repository",
-            "title": "Coding repository policy and retained source",
-            "doc": "docs/modules/repository.md",
-            "files": [
-              "src/polyinference/agent/repository.py",
-              "src/polyinference/agent/reports.py",
-              "src/polyinference/os_contracts.py"
-            ]
-          },
-          {
-            "id": "cli",
-            "title": "Command line and saved credentials",
-            "doc": "docs/modules/cli.md",
-            "files": [
-              "src/polyinference/cli.py"
-            ]
-          },
-          {
-            "id": "sdk",
-            "title": "Contracts and runtime ports",
-            "doc": "docs/modules/sdk.md",
-            "files": [
-              "src/polyinference/__init__.py",
-              "src/polyinference/contracts.py",
-              "src/polyinference/workspace_contracts.py",
-              "src/polyinference/execution_contracts.py",
-              "src/polyinference/ports.py",
-              "src/polyinference/primitives.py"
-            ]
-          },
-          {
-            "id": "inference",
-            "title": "Endpoint admission and provider adapters",
-            "doc": "docs/modules/inference.md",
-            "files": [
-              "src/polyinference/runtime/inference.py",
-              "src/polyinference/runtime/codex.py",
-              "src/polyinference/runtime/inference_stream.py"
-            ]
-          },
-          {
-            "id": "inference-simulation",
-            "title": "Optional application inference simulator",
-            "doc": "docs/modules/inference-simulation.md",
-            "files": [
-              "src/polyinference/agent/inference_simulation.py"
-            ]
-          },
-          {
-            "id": "commands",
-            "title": "File tools, checks and foreground commands",
-            "doc": "docs/modules/commands.md",
-            "files": [
-              "src/polyinference/runtime/tools.py",
-              "src/polyinference/runtime/shell.py",
-              "src/polyinference/runtime/commands.py",
-              "src/polyinference/runtime/tool_environment.py"
-            ]
-          },
-          {
-            "id": "inspection",
-            "title": "Inspection, snapshots, history and costs",
-            "doc": "docs/modules/inspection.md",
-            "files": [
-              "src/polyinference/snapshots.py",
-              "src/polyinference/history.py",
-              "src/polyinference/ui_os.py",
-              "src/polyinference/ui_agents.py",
-              "src/polyinference/ui-monitor.js",
-              "src/polyinference/costs.py"
-            ]
-          },
-          {
-            "id": "kernel",
-            "title": "Kernel and durable effect execution",
-            "doc": "docs/modules/kernel.md",
-            "files": [
-              "src/polyinference/runtime/kernel.py",
-              "src/polyinference/runtime/resume.py",
-              "src/polyinference/runtime/adapter.py",
-              "src/polyinference/runtime/__init__.py",
-              "src/polyinference/runtime/process_policy.py"
-            ]
-          },
-          {
-            "id": "ui",
-            "title": "Loopback UI and project selection",
-            "doc": "docs/modules/ui.md",
-            "files": [
-              "src/polyinference/ui.py",
-              "src/polyinference/ui.html",
-              "src/polyinference/ui_repository.py",
-              "src/polyinference/agent/endpoint_probe.py"
-            ]
-          },
-          {
-            "id": "context",
-            "title": "Optional context preparation",
-            "doc": "docs/modules/context.md",
-            "files": [
-              "src/polyinference/runtime/context.py"
-            ]
-          },
-          {
-            "id": "workspaces",
-            "title": "Optional workspaces and source classification",
-            "doc": "docs/modules/workspaces.md",
-            "files": [
-              "src/polyinference/runtime/workspace.py",
-              "src/polyinference/runtime/workspace_state.py"
-            ]
-          },
-          {
-            "id": "storage",
-            "title": "Persistence, exclusive resources and blocking I/O",
-            "doc": "docs/modules/storage.md",
-            "files": [
-              "src/polyinference/runtime/storage.py",
-              "src/polyinference/runtime/exclusive.py",
-              "src/polyinference/runtime/blocking.py"
-            ]
-          },
-          {
-            "id": "processes",
-            "title": "Process lifecycle",
-            "doc": "docs/modules/processes.md",
-            "files": [
-              "src/polyinference/runtime/processes.py"
-            ]
-          },
-          {
-            "id": "settings",
-            "title": "Settings and example configurations",
-            "doc": "docs/modules/settings.md",
-            "files": [
-              "src/polyinference/os_config.py",
-              "src/polyinference/system_settings.py",
-              "src/polyinference/config.py",
-              "src/polyinference/agent/system_settings.py",
-              "examples/agent.mixed.json",
-              "examples/agent.anthropic.json",
-              "examples/agent.codex.json",
-              "examples/agent.openai.json",
-              "examples/agent.gemini.json",
-              "scripts/settings_docs.py",
-              "docs/settings-schema.json",
-              "src/polyinference/agent/local_provider.py"
-            ]
-          },
-          {
-            "id": "agent-workers",
-            "title": "Worker/senior graphs and reply grammar",
-            "doc": "docs/modules/agent-workers.md",
-            "files": [
-              "src/polyinference/agent/worker.py",
-              "src/polyinference/agent/senior.py",
-              "src/polyinference/agent/prompts.py",
-              "src/polyinference/domain.py",
-              "src/polyinference/agent/architecture.py",
-              "src/polyinference/agent/review.py",
-              "src/polyinference/agent/diagnostics.py",
-              "src/polyinference/agent/schema.py",
-              "src/polyinference/agent/worker_memory.py",
-              "src/polyinference/agent/check_evidence.py"
-            ]
-          },
-          {
-            "id": "worker-recovery",
-            "title": "Bounded worker exception recovery",
-            "doc": "design-docs/implementation/WORKER_RECOVERY.md",
-            "files": [
-              "src/polyinference/agent/exceptions.py",
-              "src/polyinference/runtime/lifecycle.py"
-            ]
-          },
-          {
-            "id": "execution-progress",
-            "title": "Execution observations and agent progress policy",
-            "doc": "design-docs/implementation/PROGRESS_MONITORING.md",
-            "files": [
-              "src/polyinference/agent/progress.py",
-              "src/polyinference/runtime/progress.py"
-            ]
-          },
-          {
-            "id": "reliability-fix-log",
-            "title": "Reliability branch implementation fixes",
-            "doc": "design-docs/implementation/FIXES.md",
-            "files": []
-          }
-        ]
-      },
-      {
-        "id": "design",
-        "title": "Design and provenance",
-        "children": [
-          {
-            "id": "doc-implementation-plan",
-            "title": "Agent implementation plan",
-            "doc": "IMPLEMENTATION_PLAN.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-polyinference-design-agent-suggestion",
-            "title": "Agent suggestions",
-            "doc": "design-docs/polyinference-design/agent_suggestion.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-polyinference-design-concurrent-coding-protocol",
-            "title": "Concurrent coding protocol",
-            "doc": "design-docs/polyinference-design/concurrent_coding_protocol.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-polyinference-design-os-research-concurrent-coding-protocol",
-            "title": "Concurrent coding protocol",
-            "doc": "design-docs/polyinference-design/os-research/concurrent_coding_protocol.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-simplified-os-design-revisions",
-            "title": "Current design revisions \u00e2\u20ac\u201d 2026-10-20",
-            "doc": "design-docs/simplified-os/DESIGN_REVISIONS.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-simplified-os-runtime-boundary",
-            "title": "Current runtime and agent wiring",
-            "doc": "design-docs/simplified-os/RUNTIME_BOUNDARY.md",
-            "files": []
-          },
-          {
-            "id": "feature-design-docs-polyinference-design-readme",
-            "title": "Design provenance",
-            "doc": "design-docs/polyinference-design/README.md",
-            "files": [
-              "design-docs/polyinference-design/ai-modified_agent_graph.html",
-              "design-docs/polyinference-design/modified_agent_graph.json",
-              "design-docs/polyinference-design/polyinference-agent-design-merged.html",
-              "design-docs/polyinference-design/polyinference-agent-design-merged.json",
-              "design-docs/polyinference-design/polyinference-agent-graph.html"
-            ]
-          },
-          {
-            "id": "feature-design-docs-visuals-readme",
-            "title": "Historical visual design readers",
-            "doc": "design-docs/visuals/README.md",
-            "files": [
-              "design-docs/visuals/agent-design.html",
-              "design-docs/visuals/os-design.html"
-            ]
-          },
-          {
-            "id": "feature-design-docs-implementation-readme",
-            "title": "Implementation notes",
-            "doc": "design-docs/implementation/README.md",
-            "files": [
-              "design-docs/implementation/user-agent-review.json"
-            ]
-          },
-          {
-            "id": "doc-design-docs-integration-audit",
-            "title": "Joint OS and agent design audit",
-            "doc": "design-docs/INTEGRATION_AUDIT.md",
-            "files": []
-          },
-          {
-            "id": "feature-design-docs-langgraph-agent-readme",
-            "title": "LangGraph agent design",
-            "doc": "design-docs/langgraph-agent/README.md",
-            "files": [
-              "design-docs/langgraph-agent/contract.schema.json",
-              "design-docs/langgraph-agent/examples.json"
-            ]
-          },
-          {
-            "id": "doc-design-docs-polyinference-design-merged-agent-design-notes",
-            "title": "Merged agent design",
-            "doc": "design-docs/polyinference-design/merged-agent-design-notes.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-simplified-os-agent-settings",
-            "title": "OS settings for agent developers",
-            "doc": "design-docs/simplified-os/AGENT_SETTINGS.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-os-v1-prompt",
-            "title": "os-v1-prompt",
-            "doc": "design-docs/os-v1-prompt.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-readme",
-            "title": "PolyInference design reading route",
-            "doc": "design-docs/README.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-polyinference-design-os-research-01-cs350-1-foundations",
-            "title": "Polyinference OS design \u00e2\u20ac\u201d 1. Kernel boundary and the two-tier agent",
-            "doc": "design-docs/polyinference-design/os-research/01-CS350-1-foundations.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-polyinference-design-os-research-02-cs350-2-processes",
-            "title": "Polyinference OS design \u00e2\u20ac\u201d 2. Processes, requests and tier handoffs",
-            "doc": "design-docs/polyinference-design/os-research/02-CS350-2-processes.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-polyinference-design-os-research-03-cs350-3-threads",
-            "title": "Polyinference OS design \u00e2\u20ac\u201d 3. LangGraph execution and bounded host tasks",
-            "doc": "design-docs/polyinference-design/os-research/03-CS350-3-threads.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-polyinference-design-os-research-04-cs350-4-concurrency",
-            "title": "Polyinference OS design \u00e2\u20ac\u201d 4. Synchronizing plans, work, memory and results",
-            "doc": "design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-polyinference-design-os-research-05-cs350-5-scalability-and-deadlocks",
-            "title": "Polyinference OS design \u00e2\u20ac\u201d 5. Scaling the two-tier pipeline and preventing deadlocks",
-            "doc": "design-docs/polyinference-design/os-research/05-CS350-5-scalability-and-deadlocks.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-polyinference-design-os-research-readme",
-            "title": "Polyinference OS research notes",
-            "doc": "design-docs/polyinference-design/os-research/README.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-polyinference-design-project-design",
-            "title": "Polyinference OS: project design",
-            "doc": "design-docs/polyinference-design/project_design.md",
-            "files": []
-          },
-          {
-            "id": "doc-project-brief",
-            "title": "Polyinference \u00e2\u20ac\u201d project brief",
-            "doc": "PROJECT_BRIEF.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-polyinference-design-project-brief",
-            "title": "Polyinference \u00e2\u20ac\u201d project brief",
-            "doc": "design-docs/polyinference-design/PROJECT_BRIEF.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-implementation-provider-setup",
-            "title": "Provider setup on this machine",
-            "doc": "design-docs/implementation/PROVIDER_SETUP.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-simplified-os-implementation",
-            "title": "Simple OS v1 implementation",
-            "doc": "design-docs/simplified-os/IMPLEMENTATION.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-simplified-os-validation",
-            "title": "Simple OS v1 validation \u00e2\u20ac\u201d 17 October 2026",
-            "doc": "design-docs/simplified-os/VALIDATION.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-simplified-os-runbook",
-            "title": "Simple OS v1: deployment and recovery",
-            "doc": "design-docs/simplified-os/RUNBOOK.md",
-            "files": []
-          },
-          {
-            "id": "feature-design-docs-simplified-os-readme",
-            "title": "Simplified OS design",
-            "doc": "design-docs/simplified-os/README.md",
-            "files": [
-              "design-docs/simplified-os/core.schema.json",
-              "design-docs/simplified-os/core-examples.json",
-              "design-docs/simplified-os/polyinference-os-review.json"
-            ]
-          },
-          {
-            "id": "doc-design-docs-simplified-os-sources",
-            "title": "Source consolidation and decisions",
-            "doc": "design-docs/simplified-os/SOURCES.md",
-            "files": []
-          },
-          {
-            "id": "doc-design-docs-implementation-validation",
-            "title": "Validation record \u00e2\u20ac\u201d 17 October 2026",
-            "doc": "design-docs/implementation/VALIDATION.md",
-            "files": []
-          }
-        ]
-      },
-      {
-        "id": "records",
-        "title": "Development records and investigations",
-        "children": [
-          {
-            "id": "agent-prompting-audit-20261104",
-            "title": "Prompting proposal audit and corrected implementation plan",
-            "doc": "development-docs/agent-prompting-audit-2026-11-04.md",
-            "files": []
-          },
-          {
-            "id": "agent-prompting-proposal-20261104",
-            "title": "Simpler agent prompts and milestone-driven sprint planning proposal",
-            "doc": "development-docs/agent-prompting-proposal-2026-11-04.md",
-            "files": []
-          },
-          {
-            "id": "run-reliability-implementation-plan-20261027",
-            "title": "Run reliability implementation plan and historical failure coverage (2026-10-27)",
-            "doc": "development-docs/run-reliability-implementation-plan-2026-10-27.md",
-            "files": []
-          },
-          {
-            "id": "local-task-cloud-recovery-20261027",
-            "title": "Local task granularity and cloud worker recovery (2026-10-27)",
-            "doc": "development-docs/local-task-granularity-and-cloud-recovery-2026-10-27.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-workspace-output-and-native-boundary",
-            "title": "Build outputs and native harness boundary \u00e2\u20ac\u201d 19 October 2026",
-            "doc": "development-docs/workspace-output-and-native-boundary.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-current-iter-issues",
-            "title": "Current iteration issues",
-            "doc": "development-docs/current-iter-issues.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-memory-implementation-report-2026-10-20",
-            "title": "Current memory implementation \u00e2\u20ac\u201d 2026-10-20",
-            "doc": "development-docs/memory-implementation-report-2026-10-20.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-readme",
-            "title": "Development records",
-            "doc": "development-docs/README.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-run-7086c575ef94-analysis",
-            "title": "Haiku timeout boundary and foundation test grants",
-            "doc": "development-docs/run-7086c575ef94-analysis.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-run-d434799ad8e4-analysis",
-            "title": "Empty model response in run d434799ad8e4",
-            "doc": "development-docs/run-d434799ad8e4-analysis.md",
-            "files": []
-          },
-          {
-            "id": "feature-development-docs-run-a1859f8644a5-analysis",
-            "title": "First two-slot run analysis",
-            "doc": "development-docs/run-a1859f8644a5-analysis.md",
-            "files": [
-              "development-docs/run-a1859f8644a5-evidence.json"
-            ]
-          },
-          {
-            "id": "doc-development-docs-fixes",
-            "title": "Fix history and design principles",
-            "doc": "development-docs/FIXES.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-general-issues",
-            "title": "general-issues",
-            "doc": "development-docs/general-issues.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-handoff-2026-10-20",
-            "title": "Handoff \u00e2\u20ac\u201d 2026-10-20 \u00e2\u20ac\u201d OS retries and pause audit",
-            "doc": "development-docs/HANDOFF-2026-10-20.md",
-            "files": []
-          },
-          {
-            "id": "feature-development-docs-memory-records-audit-2026-10-20",
-            "title": "Historical memory audit",
-            "doc": "development-docs/memory-records-audit-2026-10-20.md",
-            "files": [
-              "development-docs/memory-records-audit-2026-10-20.json"
-            ]
-          },
-          {
-            "id": "doc-development-docs-handoff-2026-10-20-io",
-            "title": "I/O safety implementation handoff \u00e2\u20ac\u201d 2026-10-20",
-            "doc": "development-docs/HANDOFF-2026-10-20-IO.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-io-safety-verification-2026-10-20",
-            "title": "I/O safety implementation verification \u00e2\u20ac\u201d 2026-10-20",
-            "doc": "development-docs/io-safety-verification-2026-10-20.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-inference-cap-safeguards-audit-2026-10-20",
-            "title": "Input and output cap safeguards: current behavior",
-            "doc": "development-docs/inference-cap-safeguards-audit-2026-10-20.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-investigations",
-            "title": "Investigations and verification evidence",
-            "doc": "development-docs/investigations.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-next-iteration",
-            "title": "Next iteration backlog",
-            "doc": "development-docs/next-iteration.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-router-distillation-tutorial",
-            "title": "Distill an agent-selection model from Opus",
-            "doc": "development-docs/router-distillation-tutorial.md",
-            "files": [
-              "development-docs/router-training-guide.html"
-            ]
-          },
-          {
-            "id": "doc-development-docs-optional-os-context-management-proposal-2026-10-20",
-            "title": "Optional OS context handling and memory compaction",
-            "doc": "development-docs/optional-os-context-management-proposal-2026-10-20.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-chat-history",
-            "title": "Past chat audit and fix-history sources",
-            "doc": "development-docs/CHAT_HISTORY.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-pause-retry-audit-2026-10-20",
-            "title": "Pause and retry audit \u00e2\u20ac\u201d 2026-10-20",
-            "doc": "development-docs/pause-retry-audit-2026-10-20.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-in-place-repository-plan",
-            "title": "Plan: develop in the user's actual repository",
-            "doc": "development-docs/in-place-repository-plan.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-proposals",
-            "title": "Proposals and handoff archive",
-            "doc": "development-docs/proposals.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-inference-overflow-safety-proposal-2026-10-20",
-            "title": "Proposed OS input/output overflow safety",
-            "doc": "development-docs/inference-overflow-safety-proposal-2026-10-20.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-agent-os-overflow-responsibility-proposal-2026-10-20",
-            "title": "Proposed split between the OS, shared agent support and applications",
-            "doc": "development-docs/agent-os-overflow-responsibility-proposal-2026-10-20.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-run-2de3d5c5ab9b-analysis",
-            "title": "Run 2de3d5c5ab9b: context accounting failure",
-            "doc": "development-docs/run-2de3d5c5ab9b-analysis.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-run-analysis-8e83ed155ae2",
-            "title": "Run analysis: 8e83ed155ae2",
-            "doc": "development-docs/run-analysis-8e83ed155ae2.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-run-eb66fc618354-analysis",
-            "title": "Run eb66fc618354: interrupted inventory repair",
-            "doc": "development-docs/run-eb66fc618354-analysis.md",
-            "files": []
-          },
-          {
-            "id": "branch-integration-audit",
-            "title": "Reliability/simple OS integration audit",
-            "doc": "development-docs/branch-integration-audit-2026-10-26.md",
-            "files": []
-          },
-          {
-            "id": "local-strata-live-test-20261026",
-            "title": "Real local Qwen/Strata Minecraft investigation",
-            "doc": "development-docs/local-strata-live-test-2026-10-26.md",
-            "files": []
-          },
-          {
-            "id": "minecraft-live-test-20261028",
-            "title": "Scheduled real-local Minecraft result and limits (2026-10-28)",
-            "doc": "development-docs/minecraft-live-test-2026-10-28.md",
-            "files": []
-          },
-          {
-            "id": "minecraft-live-test-20261028-1930",
-            "title": "Local Minecraft continuation result (28 October, 19:30)",
-            "doc": "development-docs/minecraft-live-test-2026-10-28-1930.md",
-            "files": []
-          },
-          {
-            "id": "minecraft-failure-isolation-20261028",
-            "title": "Minecraft failure isolation and proposed repair order (2026-10-28)",
-            "doc": "development-docs/minecraft-failure-isolation-2026-10-28.md",
-            "files": []
-          },
-          {
-            "id": "documentation-reliability-audit-20261027",
-            "title": "Documentation compliance and workflow reliability review (2026-10-27)",
-            "doc": "development-docs/documentation-and-reliability-audit-2026-10-27.md",
-            "files": []
-          },
-          {
-            "id": "workflow-readiness-brief-20261027",
-            "title": "Workflow readiness management brief (2026-10-27)",
-            "doc": "development-docs/workflow-readiness-brief-2026-10-27.md",
-            "files": []
-          },
-          {
-            "id": "workflow-readiness-analysis-20261027",
-            "title": "Workflow readiness engineering analysis (2026-10-27)",
-            "doc": "development-docs/workflow-readiness-analysis-2026-10-27.md",
-            "files": []
-          },
-          {
-            "id": "reliability-implementation-20261027",
-            "title": "Reliability implementation and verification",
-            "doc": "development-docs/reliability-implementation-2026-10-27.md",
-            "files": []
-          },
-          {
-            "id": "model-fallback-browser-repair-20261028",
-            "title": "Agent-selected model fallback and existing browser repair",
-            "doc": "development-docs/model-fallback-browser-repair-2026-10-28.md",
-            "files": []
-          },
-          {
-            "id": "doc-development-docs-four-repairs-2026-10-28",
-            "title": "Four scheduled repairs: implementation and verification",
-            "doc": "development-docs/four-repairs-implementation-2026-10-28.md",
-            "files": []
-          },
-          {
-            "id": "p0-repairs-2026-10-29",
-            "title": "Current P0 repairs and token configuration",
-            "doc": "development-docs/p0-repairs-2026-10-29.md",
-            "files": []
-          }
-        ]
-      },
-      {
-        "id": "references",
-        "title": "Upstream research and original exports",
-        "children": [
-          {
-            "id": "doc-references-docs-claude-code-agent-handbook",
-            "title": "Claude Code agent architecture: a source-grounded handbook",
-            "doc": "references/docs/claude-code-agent-handbook.md",
-            "files": []
-          },
-          {
-            "id": "doc-references-codex-agent-proxy-brief",
-            "title": "Codex agent proxies: build brief",
-            "doc": "references/codex-agent-proxy-brief.md",
-            "files": []
-          },
-          {
-            "id": "doc-references-docs-deepagents-agent-handbook",
-            "title": "Deep Agents: architecture and builder's handbook",
-            "doc": "references/docs/deepagents-agent-handbook.md",
-            "files": []
-          },
-          {
-            "id": "doc-references-docs-mini-swe-agent-handbook",
-            "title": "mini-swe-agent: architecture and builder's handbook",
-            "doc": "references/docs/mini-swe-agent-handbook.md",
-            "files": []
-          },
-          {
-            "id": "feature-references-docs-readme",
-            "title": "Original exports and agent research",
-            "doc": "references/docs/README.md",
-            "files": [
-              "references/docs/agent-design/editor.html",
-              "references/docs/agent-structures.html",
-              "references/docs/polyinference-agent-structure-v0.json",
-              "references/docs/polyinference-agent-structure-v1.json",
-              "references/docs/polyinference-agent-v1-1.html",
-              "references/docs/polyinference-agent-v1.html"
-            ]
-          },
-          {
-            "id": "doc-references-docs-agent-design-readme",
-            "title": "Polyinference sprint architecture v1",
-            "doc": "references/docs/agent-design/README.md",
-            "files": []
-          },
-          {
-            "id": "doc-references-readme",
-            "title": "Reference materials",
-            "doc": "references/README.md",
-            "files": []
-          },
-          {
-            "id": "doc-references-docs-repo-mapping-guide",
-            "title": "Repository mapping for AI coding agents",
-            "doc": "references/docs/repo-mapping-guide.md",
-            "files": []
-          }
-        ]
-      },
-      {
-        "id": "maintenance",
-        "title": "Developer tools and documentation",
-        "children": [
           {
             "id": "doc-docs-architecture",
             "title": "Architecture at a glance",
             "doc": "docs/architecture.md",
-            "files": []
+            "files": [],
+            "children": [
+              {
+                "id": "doc-docs-modules-readme",
+                "title": "Module guides",
+                "doc": "docs/modules/README.md",
+                "files": [],
+                "children": [
+                  {
+                    "id": "doc-docs-modules-agent",
+                    "title": "Coding agent modules",
+                    "doc": "docs/modules/agent.md",
+                    "files": [],
+                    "children": [
+                      {
+                        "id": "agent-workflow",
+                        "title": "Coding controller, setup and task allocation",
+                        "doc": "docs/modules/agent-workflow.md",
+                        "files": [
+                          "src/polyinference/agent/controller.py",
+                          "src/polyinference/agent/resume.py",
+                          "src/polyinference/agent/setup.py",
+                          "src/polyinference/agent/tasks.py",
+                          "src/polyinference/agent/routing.py",
+                          "src/polyinference/agent/cloud_recovery.py"
+                        ]
+                      },
+                      {
+                        "id": "agent-workers",
+                        "title": "Worker/senior graphs and reply grammar",
+                        "doc": "docs/modules/agent-workers.md",
+                        "files": [
+                          "src/polyinference/agent/worker.py",
+                          "src/polyinference/agent/senior.py",
+                          "src/polyinference/agent/prompts.py",
+                          "src/polyinference/domain.py",
+                          "src/polyinference/agent/architecture.py",
+                          "src/polyinference/agent/review.py",
+                          "src/polyinference/agent/diagnostics.py",
+                          "src/polyinference/agent/schema.py",
+                          "src/polyinference/agent/worker_memory.py",
+                          "src/polyinference/agent/check_evidence.py"
+                        ],
+                        "children": [
+                          {
+                            "id": "doc-docs-modules-assignment-contracts",
+                            "title": "Edit and test assignment contracts",
+                            "doc": "docs/modules/assignment-contracts.md",
+                            "files": []
+                          }
+                        ]
+                      },
+                      {
+                        "id": "agent-services",
+                        "title": "Application services and runtime policy installation",
+                        "doc": "docs/modules/agent-services.md",
+                        "files": [
+                          "src/polyinference/agent/__init__.py",
+                          "src/polyinference/agent/services.py",
+                          "src/polyinference/agent/runtime_policy.py",
+                          "src/polyinference/agent/design_basis.py"
+                        ]
+                      },
+                      {
+                        "id": "repository",
+                        "title": "Coding repository policy and retained source",
+                        "doc": "docs/modules/repository.md",
+                        "files": [
+                          "src/polyinference/agent/repository.py",
+                          "src/polyinference/agent/reports.py",
+                          "src/polyinference/os_contracts.py"
+                        ]
+                      },
+                      {
+                        "id": "worker-recovery",
+                        "title": "Bounded worker exception recovery",
+                        "doc": "design-docs/implementation/WORKER_RECOVERY.md",
+                        "files": [
+                          "src/polyinference/agent/exceptions.py",
+                          "src/polyinference/runtime/lifecycle.py"
+                        ]
+                      },
+                      {
+                        "id": "execution-progress",
+                        "title": "Execution observations and agent progress policy",
+                        "doc": "design-docs/implementation/PROGRESS_MONITORING.md",
+                        "files": [
+                          "src/polyinference/agent/progress.py",
+                          "src/polyinference/runtime/progress.py"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "doc-docs-modules-runtime",
+                    "title": "Runtime modules",
+                    "doc": "docs/modules/runtime.md",
+                    "files": [],
+                    "children": [
+                      {
+                        "id": "sdk",
+                        "title": "Contracts and runtime ports",
+                        "doc": "docs/modules/sdk.md",
+                        "files": [
+                          "src/polyinference/__init__.py",
+                          "src/polyinference/contracts.py",
+                          "src/polyinference/workspace_contracts.py",
+                          "src/polyinference/execution_contracts.py",
+                          "src/polyinference/ports.py",
+                          "src/polyinference/primitives.py"
+                        ]
+                      },
+                      {
+                        "id": "kernel",
+                        "title": "Kernel and durable effect execution",
+                        "doc": "docs/modules/kernel.md",
+                        "files": [
+                          "src/polyinference/runtime/kernel.py",
+                          "src/polyinference/runtime/resume.py",
+                          "src/polyinference/runtime/adapter.py",
+                          "src/polyinference/runtime/__init__.py",
+                          "src/polyinference/runtime/process_policy.py"
+                        ]
+                      },
+                      {
+                        "id": "processes",
+                        "title": "Process lifecycle",
+                        "doc": "docs/modules/processes.md",
+                        "files": [
+                          "src/polyinference/runtime/processes.py"
+                        ]
+                      },
+                      {
+                        "id": "capabilities",
+                        "title": "Capability registration and tool ABI",
+                        "doc": "docs/modules/capabilities.md",
+                        "files": [
+                          "src/polyinference/runtime/capabilities.py",
+                          "src/polyinference/runtime/tool_contracts.py"
+                        ]
+                      },
+                      {
+                        "id": "storage",
+                        "title": "Persistence, exclusive resources and blocking I/O",
+                        "doc": "docs/modules/storage.md",
+                        "files": [
+                          "src/polyinference/runtime/storage.py",
+                          "src/polyinference/runtime/exclusive.py",
+                          "src/polyinference/runtime/blocking.py"
+                        ]
+                      },
+                      {
+                        "id": "inference",
+                        "title": "Endpoint admission and provider adapters",
+                        "doc": "docs/modules/inference.md",
+                        "files": [
+                          "src/polyinference/runtime/inference.py",
+                          "src/polyinference/runtime/codex.py",
+                          "src/polyinference/runtime/inference_stream.py"
+                        ],
+                        "children": [
+                          {
+                            "id": "context",
+                            "title": "Optional context preparation",
+                            "doc": "docs/modules/context.md",
+                            "files": [
+                              "src/polyinference/runtime/context.py"
+                            ]
+                          },
+                          {
+                            "id": "retries",
+                            "title": "Bounded OS model retries",
+                            "doc": "docs/modules/retries.md",
+                            "files": [
+                              "src/polyinference/runtime/model_retries.py",
+                              "src/polyinference/runtime/retry.py",
+                              "src/polyinference/runtime/model_fallback.py"
+                            ]
+                          },
+                          {
+                            "id": "inference-simulation",
+                            "title": "Optional application inference simulator",
+                            "doc": "docs/modules/inference-simulation.md",
+                            "files": [
+                              "src/polyinference/agent/inference_simulation.py"
+                            ]
+                          }
+                        ]
+                      },
+                      {
+                        "id": "workspaces",
+                        "title": "Optional workspaces and source classification",
+                        "doc": "docs/modules/workspaces.md",
+                        "files": [
+                          "src/polyinference/runtime/workspace.py",
+                          "src/polyinference/runtime/workspace_state.py"
+                        ]
+                      },
+                      {
+                        "id": "commands",
+                        "title": "File tools, checks and foreground commands",
+                        "doc": "docs/modules/commands.md",
+                        "files": [
+                          "src/polyinference/runtime/tools.py",
+                          "src/polyinference/runtime/shell.py",
+                          "src/polyinference/runtime/commands.py",
+                          "src/polyinference/runtime/tool_environment.py"
+                        ]
+                      },
+                      {
+                        "id": "settings",
+                        "title": "Settings and example configurations",
+                        "doc": "docs/modules/settings.md",
+                        "files": [
+                          "src/polyinference/os_config.py",
+                          "src/polyinference/system_settings.py",
+                          "src/polyinference/config.py",
+                          "src/polyinference/agent/system_settings.py",
+                          "examples/agent.mixed.json",
+                          "examples/agent.anthropic.json",
+                          "examples/agent.codex.json",
+                          "examples/agent.openai.json",
+                          "examples/agent.gemini.json",
+                          "scripts/settings_docs.py",
+                          "docs/settings-schema.json",
+                          "src/polyinference/agent/local_provider.py"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "doc-docs-modules-interfaces",
+                    "title": "Application interfaces",
+                    "doc": "docs/modules/interfaces.md",
+                    "files": [],
+                    "children": [
+                      {
+                        "id": "cli",
+                        "title": "Command line and saved credentials",
+                        "doc": "docs/modules/cli.md",
+                        "files": [
+                          "src/polyinference/cli.py"
+                        ]
+                      },
+                      {
+                        "id": "ui",
+                        "title": "Loopback UI and project selection",
+                        "doc": "docs/modules/ui.md",
+                        "files": [
+                          "src/polyinference/ui.py",
+                          "src/polyinference/ui.html",
+                          "src/polyinference/ui_repository.py",
+                          "src/polyinference/agent/endpoint_probe.py"
+                        ]
+                      },
+                      {
+                        "id": "inspection",
+                        "title": "Inspection, snapshots, history and costs",
+                        "doc": "docs/modules/inspection.md",
+                        "files": [
+                          "src/polyinference/snapshots.py",
+                          "src/polyinference/history.py",
+                          "src/polyinference/ui_os.py",
+                          "src/polyinference/ui_agents.py",
+                          "src/polyinference/ui-monitor.js",
+                          "src/polyinference/costs.py"
+                        ]
+                      },
+                      {
+                        "id": "delivery",
+                        "title": "Artifact delivery and user messages",
+                        "doc": "docs/modules/delivery.md",
+                        "files": [
+                          "src/polyinference/runtime/outputs.py",
+                          "src/polyinference/runtime/messages.py"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "doc-docs-modules-tooling",
+                    "title": "Developer tooling",
+                    "doc": "docs/modules/tooling.md",
+                    "files": [],
+                    "children": [
+                      {
+                        "id": "feature-docs-modules-documentation",
+                        "title": "Documentation and tree tooling",
+                        "doc": "docs/modules/documentation.md",
+                        "files": [
+                          "scripts/project_docs.py",
+                          "scripts/open_obsidian.sh",
+                          "docs/file-tree.json",
+                          "docs/file-tree.html",
+                          "docs/tree-template.html",
+                          "docs/tree.css",
+                          "docs/tree.js",
+                          "tests/test_project_docs.py",
+                          ".github/workflows/docs.yml",
+                          "scripts/obsidian_graph.py"
+                        ]
+                      },
+                      {
+                        "id": "feature-docs-modules-design-tools",
+                        "title": "Design contracts, graph checks and reader tools",
+                        "doc": "docs/modules/design-tools.md",
+                        "files": [
+                          "design-docs/langgraph-agent/contracts.py",
+                          "design-docs/langgraph-agent/validate_contracts.py",
+                          "design-docs/simplified-os/contracts.py",
+                          "design-docs/simplified-os/validate_contracts.py",
+                          "design-docs/polyinference-design/check-merged-graph.cjs",
+                          "design-docs/visuals/build.py",
+                          "design-docs/visuals/content.py",
+                          "design-docs/visuals/template.html",
+                          "design-docs/visuals/atlas.js",
+                          "design-docs/visuals/atlas.css",
+                          "design-docs/visuals/zh-CN.json",
+                          "references/docs/agent-design/build.cjs",
+                          "references/docs/agent-design/verify.cjs"
+                        ]
+                      },
+                      {
+                        "id": "feature-docs-modules-packaging",
+                        "title": "Packaging and repository hygiene",
+                        "doc": "docs/modules/packaging.md",
+                        "files": [
+                          ".gitignore",
+                          "pyproject.toml",
+                          "requirements.lock"
+                        ]
+                      },
+                      {
+                        "id": "feature-docs-modules-live-smoke",
+                        "title": "Opt-in live smoke runner",
+                        "doc": "docs/modules/live-smoke.md",
+                        "files": [
+                          "scripts/smoke_os_codex.py"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "doc-design-docs-readme",
+                "title": "Design",
+                "doc": "design-docs/README.md",
+                "files": [],
+                "children": [
+                  {
+                    "id": "doc-design-docs-simplified-os-runtime-boundary",
+                    "title": "Runtime and agent boundary",
+                    "doc": "design-docs/simplified-os/RUNTIME_BOUNDARY.md",
+                    "files": [],
+                    "children": [
+                      {
+                        "id": "doc-design-docs-simplified-os-boundary-repository",
+                        "title": "Repository integration and retained source",
+                        "doc": "design-docs/simplified-os/boundary/repository.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-simplified-os-boundary-capabilities",
+                        "title": "Capability registration and model calls",
+                        "doc": "design-docs/simplified-os/boundary/capabilities.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-simplified-os-boundary-workspaces",
+                        "title": "Workspace authority and publication",
+                        "doc": "design-docs/simplified-os/boundary/workspaces.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-simplified-os-boundary-continuation",
+                        "title": "Operator Resume, replay and compatibility",
+                        "doc": "design-docs/simplified-os/boundary/continuation.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-simplified-os-boundary-inference",
+                        "title": "Context preparation and output recovery",
+                        "doc": "design-docs/simplified-os/boundary/inference.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-simplified-os-boundary-retries",
+                        "title": "Inference retry and model fallback",
+                        "doc": "design-docs/simplified-os/boundary/retries.md",
+                        "files": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "feature-design-docs-langgraph-agent-readme",
+                    "title": "LangGraph agent design",
+                    "doc": "design-docs/langgraph-agent/README.md",
+                    "files": [
+                      "design-docs/langgraph-agent/contract.schema.json",
+                      "design-docs/langgraph-agent/examples.json"
+                    ]
+                  },
+                  {
+                    "id": "feature-design-docs-simplified-os-readme",
+                    "title": "Simplified OS design",
+                    "doc": "design-docs/simplified-os/README.md",
+                    "files": [
+                      "design-docs/simplified-os/core.schema.json",
+                      "design-docs/simplified-os/core-examples.json",
+                      "design-docs/simplified-os/polyinference-os-review.json"
+                    ],
+                    "children": [
+                      {
+                        "id": "doc-design-docs-simplified-os-design-revisions",
+                        "title": "Current design revisions â€” 2026-10-20",
+                        "doc": "design-docs/simplified-os/DESIGN_REVISIONS.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-simplified-os-agent-settings",
+                        "title": "OS settings for agent developers",
+                        "doc": "design-docs/simplified-os/AGENT_SETTINGS.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-simplified-os-runbook",
+                        "title": "Simple OS v1: deployment and recovery",
+                        "doc": "design-docs/simplified-os/RUNBOOK.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-simplified-os-implementation",
+                        "title": "Simple OS v1 implementation",
+                        "doc": "design-docs/simplified-os/IMPLEMENTATION.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-simplified-os-validation",
+                        "title": "Simple OS v1 validation â€” 17 October 2026",
+                        "doc": "design-docs/simplified-os/VALIDATION.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-simplified-os-sources",
+                        "title": "Source consolidation and decisions",
+                        "doc": "design-docs/simplified-os/SOURCES.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-os-v1-prompt",
+                        "title": "os-v1-prompt",
+                        "doc": "design-docs/os-v1-prompt.md",
+                        "files": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "feature-design-docs-implementation-readme",
+                    "title": "Implementation notes",
+                    "doc": "design-docs/implementation/README.md",
+                    "files": [
+                      "design-docs/implementation/user-agent-review.json"
+                    ],
+                    "children": [
+                      {
+                        "id": "doc-design-docs-implementation-provider-setup",
+                        "title": "Provider setup on this machine",
+                        "doc": "design-docs/implementation/PROVIDER_SETUP.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-implementation-validation",
+                        "title": "Validation record â€” 17 October 2026",
+                        "doc": "design-docs/implementation/VALIDATION.md",
+                        "files": []
+                      },
+                      {
+                        "id": "reliability-fix-log",
+                        "title": "Reliability branch implementation fixes",
+                        "doc": "design-docs/implementation/FIXES.md",
+                        "files": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "feature-design-docs-polyinference-design-readme",
+                    "title": "Design provenance",
+                    "doc": "design-docs/polyinference-design/README.md",
+                    "files": [
+                      "design-docs/polyinference-design/ai-modified_agent_graph.html",
+                      "design-docs/polyinference-design/modified_agent_graph.json",
+                      "design-docs/polyinference-design/polyinference-agent-design-merged.html",
+                      "design-docs/polyinference-design/polyinference-agent-design-merged.json",
+                      "design-docs/polyinference-design/polyinference-agent-graph.html"
+                    ],
+                    "children": [
+                      {
+                        "id": "doc-design-docs-polyinference-design-project-brief",
+                        "title": "Polyinference â€” project brief",
+                        "doc": "design-docs/polyinference-design/PROJECT_BRIEF.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-polyinference-design-agent-suggestion",
+                        "title": "Agent suggestions",
+                        "doc": "design-docs/polyinference-design/agent_suggestion.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-polyinference-design-project-design",
+                        "title": "Polyinference OS: project design",
+                        "doc": "design-docs/polyinference-design/project_design.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-polyinference-design-concurrent-coding-protocol",
+                        "title": "Concurrent coding protocol",
+                        "doc": "design-docs/polyinference-design/concurrent_coding_protocol.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-polyinference-design-merged-agent-design-notes",
+                        "title": "Merged agent design",
+                        "doc": "design-docs/polyinference-design/merged-agent-design-notes.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-design-docs-polyinference-design-os-research-readme",
+                        "title": "Polyinference OS research notes",
+                        "doc": "design-docs/polyinference-design/os-research/README.md",
+                        "files": [],
+                        "children": [
+                          {
+                            "id": "doc-design-docs-polyinference-design-os-research-01-cs350-1-foundations",
+                            "title": "Polyinference OS design â€” 1. Kernel boundary and the two-tier agent",
+                            "doc": "design-docs/polyinference-design/os-research/01-CS350-1-foundations.md",
+                            "files": []
+                          },
+                          {
+                            "id": "doc-design-docs-polyinference-design-os-research-02-cs350-2-processes",
+                            "title": "Polyinference OS design â€” 2. Processes, requests and tier handoffs",
+                            "doc": "design-docs/polyinference-design/os-research/02-CS350-2-processes.md",
+                            "files": []
+                          },
+                          {
+                            "id": "doc-design-docs-polyinference-design-os-research-03-cs350-3-threads",
+                            "title": "Polyinference OS design â€” 3. LangGraph execution and bounded host tasks",
+                            "doc": "design-docs/polyinference-design/os-research/03-CS350-3-threads.md",
+                            "files": []
+                          },
+                          {
+                            "id": "doc-design-docs-polyinference-design-os-research-04-cs350-4-concurrency",
+                            "title": "Polyinference OS design â€” 4. Synchronizing plans, work, memory and results",
+                            "doc": "design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md",
+                            "files": []
+                          },
+                          {
+                            "id": "doc-design-docs-polyinference-design-os-research-05-cs350-5-scalability-and-deadlocks",
+                            "title": "Polyinference OS design â€” 5. Scaling the two-tier pipeline and preventing deadlocks",
+                            "doc": "design-docs/polyinference-design/os-research/05-CS350-5-scalability-and-deadlocks.md",
+                            "files": []
+                          }
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "id": "feature-design-docs-visuals-readme",
+                    "title": "Historical visual design readers",
+                    "doc": "design-docs/visuals/README.md",
+                    "files": [
+                      "design-docs/visuals/agent-design.html",
+                      "design-docs/visuals/os-design.html"
+                    ]
+                  },
+                  {
+                    "id": "doc-design-docs-integration-audit",
+                    "title": "Joint OS and agent design audit",
+                    "doc": "design-docs/INTEGRATION_AUDIT.md",
+                    "files": []
+                  },
+                  {
+                    "id": "doc-project-brief",
+                    "title": "Polyinference â€” project brief",
+                    "doc": "PROJECT_BRIEF.md",
+                    "files": []
+                  },
+                  {
+                    "id": "doc-implementation-plan",
+                    "title": "Agent implementation plan",
+                    "doc": "IMPLEMENTATION_PLAN.md",
+                    "files": []
+                  }
+                ]
+              },
+              {
+                "id": "doc-references-readme",
+                "title": "Reference materials",
+                "doc": "references/README.md",
+                "files": [],
+                "children": [
+                  {
+                    "id": "feature-references-docs-readme",
+                    "title": "Original exports and agent research",
+                    "doc": "references/docs/README.md",
+                    "files": [
+                      "references/docs/agent-design/editor.html",
+                      "references/docs/agent-structures.html",
+                      "references/docs/polyinference-agent-structure-v0.json",
+                      "references/docs/polyinference-agent-structure-v1.json",
+                      "references/docs/polyinference-agent-v1-1.html",
+                      "references/docs/polyinference-agent-v1.html"
+                    ],
+                    "children": [
+                      {
+                        "id": "doc-references-docs-claude-code-agent-handbook",
+                        "title": "Claude Code agent architecture: a source-grounded handbook",
+                        "doc": "references/docs/claude-code-agent-handbook.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-references-docs-deepagents-agent-handbook",
+                        "title": "Deep Agents: architecture and builder's handbook",
+                        "doc": "references/docs/deepagents-agent-handbook.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-references-docs-mini-swe-agent-handbook",
+                        "title": "mini-swe-agent: architecture and builder's handbook",
+                        "doc": "references/docs/mini-swe-agent-handbook.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-references-docs-repo-mapping-guide",
+                        "title": "Repository mapping for AI coding agents",
+                        "doc": "references/docs/repo-mapping-guide.md",
+                        "files": []
+                      },
+                      {
+                        "id": "doc-references-docs-agent-design-readme",
+                        "title": "Polyinference sprint architecture v1",
+                        "doc": "references/docs/agent-design/README.md",
+                        "files": []
+                      }
+                    ]
+                  },
+                  {
+                    "id": "doc-references-codex-agent-proxy-brief",
+                    "title": "Codex agent proxies: build brief",
+                    "doc": "references/codex-agent-proxy-brief.md",
+                    "files": []
+                  }
+                ]
+              }
+            ]
           },
           {
             "id": "doc-docs-testing",
@@ -1039,154 +962,586 @@
             "doc": "docs/testing.md",
             "files": [
               "tests/test_cloud_recovery.py"
-            ]
-          },
-          {
-            "id": "feature-docs-modules-design-tools",
-            "title": "Design contract, graph and reader tools",
-            "doc": "docs/modules/design-tools.md",
-            "files": [
-              "design-docs/langgraph-agent/contracts.py",
-              "design-docs/langgraph-agent/validate_contracts.py",
-              "design-docs/simplified-os/contracts.py",
-              "design-docs/simplified-os/validate_contracts.py",
-              "design-docs/polyinference-design/merge-agent-graphs.py",
-              "design-docs/polyinference-design/check-merged-graph.cjs",
-              "design-docs/visuals/build.py",
-              "design-docs/visuals/content.py",
-              "design-docs/visuals/template.html",
-              "design-docs/visuals/atlas.js",
-              "design-docs/visuals/atlas.css",
-              "design-docs/visuals/zh-CN.json",
-              "references/docs/agent-design/build.cjs",
-              "references/docs/agent-design/verify.cjs"
-            ]
-          },
-          {
-            "id": "feature-docs-modules-documentation",
-            "title": "Documentation and tree tooling",
-            "doc": "docs/modules/documentation.md",
-            "files": [
-              "scripts/project_docs.py",
-              "docs/file-tree.json",
-              "docs/file-tree.html",
-              "docs/tree-template.html",
-              "docs/tree.css",
-              "docs/tree.js",
-              "tests/test_project_docs.py",
-              ".github/workflows/docs.yml"
+            ],
+            "children": [
+              {
+                "id": "feature-tests-readme",
+                "title": "Test suite",
+                "doc": "tests/README.md",
+                "files": [
+                  "tests/conftest.py",
+                  "tests/test_agent.py",
+                  "tests/test_agent_transitions.py",
+                  "tests/test_anthropic.py",
+                  "tests/test_capability_boundary.py",
+                  "tests/test_context_safety.py",
+                  "tests/test_contracts.py",
+                  "tests/test_costs.py",
+                  "tests/test_endpoints.py",
+                  "tests/test_history.py",
+                  "tests/test_http_integration.py",
+                  "tests/test_in_place_repository.py",
+                  "tests/test_incident_fixes.py",
+                  "tests/test_model_retries.py",
+                  "tests/test_native_events.py",
+                  "tests/test_native_worker.py",
+                  "tests/test_os.py",
+                  "tests/test_output_limits.py",
+                  "tests/test_outputs.py",
+                  "tests/test_recovery.py",
+                  "tests/test_resume.py",
+                  "tests/test_regressions.py",
+                  "tests/test_runtime.py",
+                  "tests/test_runtime_general.py",
+                  "tests/test_saved_credentials.py",
+                  "tests/test_setup_tools.py",
+                  "tests/test_sim_batch.py",
+                  "tests/test_inference_simulation.py",
+                  "tests/test_tool_environment.py",
+                  "tests/test_ui.py",
+                  "tests/test_ui_agents.py",
+                  "tests/test_ui_frontend.py",
+                  "tests/test_ui_os.py",
+                  "tests/test_user_briefs.py",
+                  "tests/test_workspace_outputs.py",
+                  "tests/ui_start.test.cjs",
+                  "tests/test_inference_lifecycle.py",
+                  "tests/test_check_diagnosis.py",
+                  "tests/test_exception_recovery.py",
+                  "tests/test_inference_retry.py",
+                  "tests/test_module_planning.py",
+                  "tests/test_progress.py",
+                  "tests/test_retry_export.py",
+                  "tests/test_semantic_review.py",
+                  "tests/test_validation_feedback.py",
+                  "tests/test_cli.py",
+                  "tests/test_branch_integration.py",
+                  "tests/test_model_fallback.py",
+                  "tests/test_four_repairs.py",
+                  "tests/test_os_config.py",
+                  "tests/test_p0_repairs.py",
+                  "tests/test_testing_tasks.py",
+                  "tests/test_cli_status.py"
+                ]
+              },
+              {
+                "id": "workflow-qualification",
+                "title": "Small integrated workflow qualification",
+                "doc": "docs/guides/qualification.md",
+                "files": [
+                  "src/polyinference/agent/qualification.py",
+                  "scripts/qualify_workflow.py",
+                  "scripts/browser_check.mjs",
+                  "tests/test_reliability_plan.py"
+                ]
+              }
             ]
           },
           {
             "id": "doc-docs-maintenance",
-            "title": "Maintaining documentation and navigation",
+            "title": "Maintain the documentation",
             "doc": "docs/maintenance.md",
-            "files": []
-          },
-          {
-            "id": "doc-docs-modules-readme",
-            "title": "Module guides",
-            "doc": "docs/modules/README.md",
-            "files": []
-          },
-          {
-            "id": "feature-docs-modules-live-smoke",
-            "title": "Opt-in live smoke runner",
-            "doc": "docs/modules/live-smoke.md",
-            "files": [
-              "scripts/smoke_os_codex.py"
-            ]
-          },
-          {
-            "id": "feature-docs-modules-packaging",
-            "title": "Packaging and repository hygiene",
-            "doc": "docs/modules/packaging.md",
-            "files": [
-              ".gitignore",
-              "pyproject.toml",
-              "requirements.lock"
-            ]
-          },
-          {
-            "id": "doc-agents",
-            "title": "Repository instructions for agents",
-            "doc": "AGENTS.md",
-            "files": []
-          },
-          {
-            "id": "feature-tests-readme",
-            "title": "Test suite",
-            "doc": "tests/README.md",
-            "files": [
-              "tests/conftest.py",
-              "tests/test_agent.py",
-              "tests/test_agent_transitions.py",
-              "tests/test_anthropic.py",
-              "tests/test_capability_boundary.py",
-              "tests/test_context_safety.py",
-              "tests/test_contracts.py",
-              "tests/test_costs.py",
-              "tests/test_endpoints.py",
-              "tests/test_history.py",
-              "tests/test_http_integration.py",
-              "tests/test_in_place_repository.py",
-              "tests/test_incident_fixes.py",
-              "tests/test_model_retries.py",
-              "tests/test_native_events.py",
-              "tests/test_native_worker.py",
-              "tests/test_os.py",
-              "tests/test_output_limits.py",
-              "tests/test_outputs.py",
-              "tests/test_recovery.py",
-              "tests/test_resume.py",
-              "tests/test_regressions.py",
-              "tests/test_runtime.py",
-              "tests/test_runtime_general.py",
-              "tests/test_saved_credentials.py",
-              "tests/test_setup_tools.py",
-              "tests/test_sim_batch.py",
-              "tests/test_inference_simulation.py",
-              "tests/test_tool_environment.py",
-              "tests/test_ui.py",
-              "tests/test_ui_agents.py",
-              "tests/test_ui_frontend.py",
-              "tests/test_ui_os.py",
-              "tests/test_user_briefs.py",
-              "tests/test_workspace_outputs.py",
-              "tests/ui_start.test.cjs",
-              "tests/test_inference_lifecycle.py",
-              "tests/test_check_diagnosis.py",
-              "tests/test_exception_recovery.py",
-              "tests/test_inference_retry.py",
-              "tests/test_module_planning.py",
-              "tests/test_progress.py",
-              "tests/test_retry_export.py",
-              "tests/test_semantic_review.py",
-              "tests/test_validation_feedback.py",
-              "tests/test_cli.py",
-              "tests/test_branch_integration.py",
-              "tests/test_model_fallback.py",
-              "tests/test_four_repairs.py",
-              "tests/test_os_config.py",
-              "tests/test_p0_repairs.py",
-              "tests/test_testing_tasks.py"
+            "files": [],
+            "children": [
+              {
+                "id": "doc-obsidian-graph",
+                "title": "Browse and maintain the Obsidian graph",
+                "doc": "docs/obsidian-graph.md",
+                "files": [
+                  "docs/obsidian-graph.json",
+                  "docs/reading-map.canvas"
+                ]
+              }
             ]
           }
         ]
       },
       {
-        "id": "qualification",
-        "title": "Workflow qualification",
+        "id": "doc-development-docs-readme",
+        "title": "Development records",
+        "doc": "development-docs/README.md",
+        "files": [],
         "children": [
           {
-            "id": "workflow-qualification",
-            "title": "Small integrated workflow qualification",
-            "doc": "docs/guides/qualification.md",
-            "files": [
-              "src/polyinference/agent/qualification.py",
-              "scripts/qualify_workflow.py",
-              "scripts/browser_check.mjs",
-              "tests/test_reliability_plan.py"
+            "id": "doc-development-docs-current-iter-issues",
+            "title": "Current work",
+            "doc": "development-docs/current-iter-issues.md",
+            "files": [],
+            "children": [
+              {
+                "id": "doc-development-docs-tasks-agent-workflow",
+                "title": "Agent workflow tasks",
+                "doc": "development-docs/tasks/agent-workflow.md",
+                "files": []
+              },
+              {
+                "id": "doc-development-docs-tasks-runtime-and-providers",
+                "title": "Runtime and provider tasks",
+                "doc": "development-docs/tasks/runtime-and-providers.md",
+                "files": []
+              },
+              {
+                "id": "doc-development-docs-tasks-qualification",
+                "title": "Qualification and product tasks",
+                "doc": "development-docs/tasks/qualification.md",
+                "files": []
+              }
+            ]
+          },
+          {
+            "id": "doc-development-docs-next-iteration",
+            "title": "Next iteration backlog",
+            "doc": "development-docs/next-iteration.md",
+            "files": [],
+            "children": [
+              {
+                "id": "doc-development-docs-router-distillation-tutorial",
+                "title": "Distill an agent-selection model from Opus",
+                "doc": "development-docs/router-distillation-tutorial.md",
+                "files": [
+                  "development-docs/router-training-guide.html"
+                ]
+              }
+            ]
+          },
+          {
+            "id": "doc-development-docs-fixes",
+            "title": "Fix history and design principles",
+            "doc": "development-docs/FIXES.md",
+            "files": [],
+            "children": [
+              {
+                "id": "doc-development-docs-chat-history",
+                "title": "Past chat audit and fix-history sources",
+                "doc": "development-docs/CHAT_HISTORY.md",
+                "files": []
+              }
+            ]
+          },
+          {
+            "id": "doc-development-docs-implementation-records",
+            "title": "Implementation and verification records",
+            "doc": "development-docs/implementation-records.md",
+            "files": [],
+            "children": [
+              {
+                "id": "p0-repairs-2026-10-29",
+                "title": "Current P0 repairs and token configuration",
+                "doc": "development-docs/p0-repairs-2026-10-29.md",
+                "files": []
+              },
+              {
+                "id": "doc-development-docs-four-repairs-2026-10-28",
+                "title": "Four scheduled repairs: implementation and verification",
+                "doc": "development-docs/four-repairs-implementation-2026-10-28.md",
+                "files": []
+              },
+              {
+                "id": "model-fallback-browser-repair-20261028",
+                "title": "Agent-selected model fallback and existing browser repair",
+                "doc": "development-docs/model-fallback-browser-repair-2026-10-28.md",
+                "files": []
+              },
+              {
+                "id": "reliability-implementation-20261027",
+                "title": "Reliability implementation and verification",
+                "doc": "development-docs/reliability-implementation-2026-10-27.md",
+                "files": []
+              },
+              {
+                "id": "doc-development-docs-io-safety-verification-2026-10-20",
+                "title": "I/O safety implementation verification â€” 2026-10-20",
+                "doc": "development-docs/io-safety-verification-2026-10-20.md",
+                "files": []
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": "doc-docs-temporary-readme",
+        "title": "Temporary notes and archive",
+        "doc": "docs/temporary/README.md",
+        "files": [],
+        "children": [
+          {
+            "id": "doc-development-docs-proposals",
+            "title": "Proposals and design drafts",
+            "doc": "docs/temporary/proposals/README.md",
+            "files": [],
+            "children": [
+              {
+                "id": "standalone-scheduler-design-20261108",
+                "title": "Process-only scheduler and OS resource distribution (proposed)",
+                "doc": "docs/temporary/proposals/2026-11-08-standalone-scheduler-design.md",
+                "files": [],
+                "children": [
+                  {
+                    "id": "doc-docs-temporary-proposals-2026-11-08-scheduler-os-support",
+                    "title": "Proposed OS support for process scheduling",
+                    "doc": "docs/temporary/proposals/2026-11-08-scheduler-os-support.md",
+                    "files": []
+                  },
+                  {
+                    "id": "doc-docs-temporary-proposals-2026-11-08-scheduler-process-policy",
+                    "title": "Proposed scheduler process policy",
+                    "doc": "docs/temporary/proposals/2026-11-08-scheduler-process-policy.md",
+                    "files": []
+                  },
+                  {
+                    "id": "scheduler-os-impact-audit-20261109",
+                    "title": "Process scheduler / OS resource boundary and compatibility audit",
+                    "doc": "docs/temporary/investigations/2026-11-09-scheduler-os-impact.md",
+                    "files": []
+                  }
+                ]
+              },
+              {
+                "id": "doc-development-docs-in-place-repository-plan",
+                "title": "Plan: develop in the user's actual repository",
+                "doc": "docs/temporary/proposals/2026-10-19-in-place-repository-plan.md",
+                "files": []
+              },
+              {
+                "id": "doc-development-docs-optional-os-context-management-proposal-2026-10-20",
+                "title": "Optional OS context handling and memory compaction",
+                "doc": "docs/temporary/proposals/2026-10-20-optional-os-context-proposal.md",
+                "files": []
+              },
+              {
+                "id": "doc-development-docs-inference-overflow-safety-proposal-2026-10-20",
+                "title": "Proposed OS input/output overflow safety",
+                "doc": "docs/temporary/proposals/2026-10-20-os-overflow-proposal.md",
+                "files": []
+              },
+              {
+                "id": "doc-development-docs-agent-os-overflow-responsibility-proposal-2026-10-20",
+                "title": "Proposed split between the OS, shared agent support and applications",
+                "doc": "docs/temporary/proposals/2026-10-20-overflow-responsibility-proposal.md",
+                "files": []
+              },
+              {
+                "id": "local-task-cloud-recovery-20261027",
+                "title": "Local task granularity and cloud worker recovery (2026-10-27)",
+                "doc": "docs/temporary/proposals/2026-10-27-local-task-and-cloud-recovery.md",
+                "files": []
+              },
+              {
+                "id": "run-reliability-implementation-plan-20261027",
+                "title": "Run reliability implementation plan and historical failure coverage (2026-10-27)",
+                "doc": "docs/temporary/proposals/2026-10-27-run-reliability-plan.md",
+                "files": []
+              },
+              {
+                "id": "agent-prompting-audit-20261104",
+                "title": "Prompting proposal audit and corrected implementation plan",
+                "doc": "docs/temporary/proposals/2026-11-04-agent-prompting-audit.md",
+                "files": []
+              },
+              {
+                "id": "agent-prompting-proposal-20261104",
+                "title": "Simpler agent prompts and milestone-driven sprint planning proposal",
+                "doc": "docs/temporary/proposals/2026-11-04-agent-prompting-proposal.md",
+                "files": []
+              },
+              {
+                "id": "mcp-support-design-20261113",
+                "title": "MCP support design and investigation journal",
+                "doc": "docs/temporary/proposals/2026-11-13-mcp-support-design.md",
+                "files": []
+              }
+            ]
+          },
+          {
+            "id": "doc-development-docs-investigations",
+            "title": "Investigations and run evidence",
+            "doc": "docs/temporary/investigations/README.md",
+            "files": [],
+            "children": [
+              {
+                "id": "doc-development-docs-run-analysis-8e83ed155ae2",
+                "title": "Run analysis: 8e83ed155ae2",
+                "doc": "docs/temporary/investigations/2026-10-19-run-8e83ed155ae2.md",
+                "files": []
+              },
+              {
+                "id": "doc-development-docs-run-d434799ad8e4-analysis",
+                "title": "Empty model response in run d434799ad8e4",
+                "doc": "docs/temporary/investigations/2026-10-19-run-d434799ad8e4.md",
+                "files": []
+              },
+              {
+                "id": "doc-development-docs-workspace-output-and-native-boundary",
+                "title": "Build outputs and native harness boundary â€” 19 October 2026",
+                "doc": "docs/temporary/investigations/2026-10-19-workspace-output-and-native-boundary.md",
+                "files": []
+              },
+              {
+                "id": "doc-development-docs-inference-cap-safeguards-audit-2026-10-20",
+                "title": "Input and output cap safeguards: current behavior",
+                "doc": "docs/temporary/investigations/2026-10-20-inference-cap-safeguards.md",
+                "files": []
+              },
+              {
+                "id": "doc-development-docs-memory-implementation-report-2026-10-20",
+                "title": "Current memory implementation â€” 2026-10-20",
+                "doc": "docs/temporary/investigations/2026-10-20-memory-implementation.md",
+                "files": []
+              },
+              {
+                "id": "feature-development-docs-memory-records-audit-2026-10-20",
+                "title": "Historical memory audit",
+                "doc": "docs/temporary/investigations/2026-10-20-memory-records.md",
+                "files": [
+                  "docs/temporary/investigations/memory-records-audit-2026-10-20.json"
+                ]
+              },
+              {
+                "id": "doc-development-docs-pause-retry-audit-2026-10-20",
+                "title": "Pause and retry audit â€” 2026-10-20",
+                "doc": "docs/temporary/investigations/2026-10-20-pause-and-retry.md",
+                "files": []
+              },
+              {
+                "id": "doc-development-docs-run-2de3d5c5ab9b-analysis",
+                "title": "Run 2de3d5c5ab9b: context accounting failure",
+                "doc": "docs/temporary/investigations/2026-10-20-run-2de3d5c5ab9b.md",
+                "files": []
+              },
+              {
+                "id": "feature-development-docs-run-a1859f8644a5-analysis",
+                "title": "First two-slot run analysis",
+                "doc": "docs/temporary/investigations/2026-10-20-run-a1859f8644a5.md",
+                "files": [
+                  "docs/temporary/investigations/run-a1859f8644a5-evidence.json"
+                ]
+              },
+              {
+                "id": "doc-development-docs-run-eb66fc618354-analysis",
+                "title": "Run eb66fc618354: interrupted inventory repair",
+                "doc": "docs/temporary/investigations/2026-10-20-run-eb66fc618354.md",
+                "files": []
+              },
+              {
+                "id": "doc-development-docs-run-7086c575ef94-analysis",
+                "title": "Haiku timeout boundary and foundation test grants",
+                "doc": "docs/temporary/investigations/2026-10-21-run-7086c575ef94.md",
+                "files": []
+              },
+              {
+                "id": "branch-integration-audit",
+                "title": "Reliability/simple OS integration audit",
+                "doc": "docs/temporary/investigations/2026-10-26-branch-integration-audit.md",
+                "files": []
+              },
+              {
+                "id": "local-strata-live-test-20261026",
+                "title": "Real local Qwen/Strata Minecraft investigation",
+                "doc": "docs/temporary/investigations/2026-10-26-local-strata-live-test.md",
+                "files": []
+              },
+              {
+                "id": "documentation-reliability-audit-20261027",
+                "title": "Documentation compliance and workflow reliability review (2026-10-27)",
+                "doc": "docs/temporary/investigations/2026-10-27-documentation-and-reliability-audit.md",
+                "files": []
+              },
+              {
+                "id": "workflow-readiness-analysis-20261027",
+                "title": "Workflow readiness engineering analysis (2026-10-27)",
+                "doc": "docs/temporary/investigations/2026-10-27-workflow-readiness-analysis.md",
+                "files": []
+              },
+              {
+                "id": "workflow-readiness-brief-20261027",
+                "title": "Workflow readiness management brief (2026-10-27)",
+                "doc": "docs/temporary/investigations/2026-10-27-workflow-readiness-brief.md",
+                "files": []
+              },
+              {
+                "id": "minecraft-failure-isolation-20261028",
+                "title": "Minecraft failure isolation and proposed repair order (2026-10-28)",
+                "doc": "docs/temporary/investigations/2026-10-28-minecraft-failure-isolation.md",
+                "files": []
+              },
+              {
+                "id": "minecraft-live-test-20261028-1930",
+                "title": "Local Minecraft continuation result (28 October, 19:30)",
+                "doc": "docs/temporary/investigations/2026-10-28-minecraft-live-test-1930.md",
+                "files": []
+              },
+              {
+                "id": "minecraft-live-test-20261028",
+                "title": "Scheduled real-local Minecraft result and limits (2026-10-28)",
+                "doc": "docs/temporary/investigations/2026-10-28-minecraft-live-test.md",
+                "files": []
+              },
+              {
+                "id": "langchain-v1-gap-20261113",
+                "title": "PolyInference OS V1 and LangChain agents",
+                "doc": "docs/temporary/investigations/2026-11-13-langchain-v1-gap.md",
+                "files": []
+              }
+            ]
+          },
+          {
+            "id": "doc-docs-temporary-incidents-readme",
+            "title": "Issue and incident archive",
+            "doc": "docs/temporary/incidents/README.md",
+            "files": [],
+            "children": [
+              {
+                "id": "doc-docs-temporary-incidents-2026-11-06-haiku-input-overflow",
+                "title": "Haiku input overflow and missing cloud handoff",
+                "doc": "docs/temporary/incidents/2026-11-06-haiku-input-overflow.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-11-04-review-allowance",
+                "title": "Senior review allowance incident",
+                "doc": "docs/temporary/incidents/2026-11-04-review-allowance.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-11-04-prompting",
+                "title": "Prompting redesign scope",
+                "doc": "docs/temporary/incidents/2026-11-04-prompting.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-11-02-native-setup-interruption",
+                "title": "Native setup interruption",
+                "doc": "docs/temporary/incidents/2026-11-02-native-setup-interruption.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-29-p0-scope-and-status",
+                "title": "P0 repairs and remaining work",
+                "doc": "docs/temporary/incidents/2026-10-29-p0-scope-and-status.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-29-implementation-milestones",
+                "title": "OS implementation milestones",
+                "doc": "docs/temporary/incidents/2026-10-29-implementation-milestones.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-27-local-cloud-recovery",
+                "title": "Local task sizing and cloud recovery",
+                "doc": "docs/temporary/incidents/2026-10-27-local-cloud-recovery.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-23-ui-resume-design",
+                "title": "Run Resume design and implementation history",
+                "doc": "docs/temporary/incidents/2026-10-23-ui-resume-design.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-23-portable-endpoint-design",
+                "title": "Portable endpoint lifecycle proposal",
+                "doc": "docs/temporary/incidents/2026-10-23-portable-endpoint-design.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-22-router-tutorial-record",
+                "title": "Router tutorial history",
+                "doc": "docs/temporary/incidents/2026-10-22-router-tutorial-record.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-21-inference-simulation",
+                "title": "Inference simulation design",
+                "doc": "docs/temporary/incidents/2026-10-21-inference-simulation.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-21-haiku-timeout-findings",
+                "title": "Haiku timeout follow-ups",
+                "doc": "docs/temporary/incidents/2026-10-21-haiku-timeout-findings.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-21-completed-implementation-queue",
+                "title": "October implementation queue",
+                "doc": "docs/temporary/incidents/2026-10-21-completed-implementation-queue.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-20-two-slot-run-findings",
+                "title": "Two-slot run follow-ups",
+                "doc": "docs/temporary/incidents/2026-10-20-two-slot-run-findings.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-20-memory-management-modes",
+                "title": "Memory management proposals",
+                "doc": "docs/temporary/incidents/2026-10-20-memory-management-modes.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-20-context-inspector-design",
+                "title": "OS memory and context inspection design",
+                "doc": "docs/temporary/incidents/2026-10-20-context-inspector-design.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-20-concurrency-audit",
+                "title": "OS concurrency audit",
+                "doc": "docs/temporary/incidents/2026-10-20-concurrency-audit.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-19-repository-and-os-boundary",
+                "title": "Repository integration and separation of coding policy",
+                "doc": "docs/temporary/incidents/2026-10-19-repository-and-os-boundary.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-19-recovery-and-tool-incidents",
+                "title": "Agent recovery and tool incidents",
+                "doc": "docs/temporary/incidents/2026-10-19-recovery-and-tool-incidents.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-19-generalization-audit",
+                "title": "Generalization audit",
+                "doc": "docs/temporary/incidents/2026-10-19-generalization-audit.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-incidents-2026-10-18-os-agent-failure-investigation",
+                "title": "Early OS and agent failure investigation",
+                "doc": "docs/temporary/incidents/2026-10-18-os-agent-failure-investigation.md",
+                "files": []
+              }
+            ]
+          },
+          {
+            "id": "doc-docs-temporary-handoffs-readme",
+            "title": "Handoffs and retained context",
+            "doc": "docs/temporary/handoffs/README.md",
+            "files": [],
+            "children": [
+              {
+                "id": "doc-development-docs-handoff-2026-10-20-io",
+                "title": "I/O safety implementation handoff â€” 2026-10-20",
+                "doc": "docs/temporary/handoffs/2026-10-20-io-safety-handoff.md",
+                "files": []
+              },
+              {
+                "id": "doc-development-docs-handoff-2026-10-20",
+                "title": "Handoff â€” 2026-10-20 â€” OS retries and pause audit",
+                "doc": "docs/temporary/handoffs/2026-10-20-retry-and-pause-handoff.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-handoffs-2026-11-12-retained-agent-notes",
+                "title": "Earlier retained project notes",
+                "doc": "docs/temporary/handoffs/2026-11-12-retained-agent-notes.md",
+                "files": []
+              }
             ]
           }
         ]

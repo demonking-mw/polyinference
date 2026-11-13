@@ -1,6 +1,6 @@
 # Qualify a small coding workflow
 
-[Reliability](agent-reliability.md) · [Checks](checks.md) · [Implementation record](../../development-docs/reliability-implementation-2026-10-27.md)
+Reliability (`docs/guides/agent-reliability.md`) · Checks (`docs/guides/checks.md`) · Implementation record (`development-docs/reliability-implementation-2026-10-27.md`)
 
 Qualification uses fresh disposable projects and independent behavior checks. It
 does not resume preserved Minecraft runs or certify a broader product objective.

@@ -1,5 +1,8 @@
 # Polyinference — project brief
 
+This brief records the original research goals. Current behavior and open work
+are described in `docs/architecture.md` and `development-docs/current-iter-issues.md`.
+
 ## Purpose
 
 Polyinference explores how a long-running agent can combine the cost efficiency of local language models with the stronger capabilities of cloud models. A local model may handle a bounded task well while struggling with the full range of agent decisions. Cloud models can cover those gaps, but using them for every inference can be expensive.

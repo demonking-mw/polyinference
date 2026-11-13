@@ -26,44 +26,53 @@ a later RLAIF path. The user reports written Anthropic permission for this
 research project. This is documentation, not an implemented routing feature;
 production data, evaluation gates, settings integration and deployment remain
 future design work. Current-version documentation record:
-[FIX-0106](FIXES.md#fix-0106) and [current tracker](current-iter-issues.md#router-distillation-tutorial).
+`development-docs/FIXES.md#fix-0106` and current tracker (`docs/temporary/incidents/2026-10-22-router-tutorial-record.md#router-distillation-tutorial`).
 The HTML guide also records optional thinking, targeted synthetic-data and
 summarize-then-route experiments, plus distinct DPO and online RLAIF procedures.
-These remain research options; [FIX-0107](FIXES.md#fix-0107) records documentation
+These remain research options; `development-docs/FIXES.md#fix-0107` records documentation
 verification, not implementation or training results.
 
 <a id="quota-aware-task-scheduler"></a>
-## Quota-aware task scheduler — proposed on 2026-10-21
+## Quota-aware process scheduler — proposed on 2026-10-21
 
 Status: proposed for the next iteration; outside the current implementation scope.
 Source: the user's next-iteration request.
 
-Design a scheduler that considers all tasks and their settings, especially
-priority, fidelity and time sensitivity, together with cloud-inference rate
-limits, remaining quota and reset windows. It should schedule the whole task
-set, commanding the OS to add/submit tasks or withhold them from running for a
-specified duration, then reconsider the schedule as tasks and capacity change.
+Research/design is in the standalone scheduler report (`docs/temporary/proposals/2026-11-08-standalone-scheduler-design.md`),
+developed 8 November and authority-corrected 9 November. **V1 scheduler authority
+is only individual-process admission, waiting or preemption requests. The OS
+distributes resources.** This supersedes earlier wording assigning task submission,
+operation dispatch, placement, resource claims or quota allocation to the scheduler.
+All new interfaces remain unimplemented; no current-version work or live run is
+authorized by this proposal.
 
-Include multi-window provider limits, such as the user's example of Codex
-five-hour and weekly usage windows. These are planning examples, not fixed or
-verified account entitlements; use the configured or reported limits for the
-actual account/provider.
+Part 1 specifies OS process-control support, resource admission/accounting,
+safe suspension/readmission, observations and shared provider ownership. Part 2
+defines only ranking/fairness and run/wait/preempt decisions for existing process
+IDs. Read the corrected OS impact audit (`docs/temporary/investigations/2026-11-09-scheduler-os-impact.md`)
+and `development-docs/FIXES.md#fix-0183` before implementation.
 
-Scheduling policy belongs in a scheduler/controller above the OS. The OS should
-provide generic submission, timed deferral and admission mechanisms, enforce
-grants and resource limits, and report execution/quota facts without interpreting
-coding tasks. Deferring pending starts must be distinguished from interrupting
-running work; safe interruption/resumption and the timing/quota contract remain
-future design work. Coordinate with the routing proposal when selected agents
-or settings affect quota demand.
+The scheduler may observe urgency, time sensitivity and OS-reported quota/resource
+blockers to choose which individual processes may run or should leave the running
+set. It cannot create tasks/programs, pick endpoints/models, assign slots/tokens,
+reserve quota, dispatch operations or attest release. Parent admission does not
+automatically admit children. A run decision is eligibility; the OS can still
+report a resource wait. A preemption request is pending until the OS establishes
+a safe continuation and actual retained/released resources.
+
+The OS owns resource distribution, authorized routing, capacity and every applicable
+quota/rate gate. Five-hour/weekly Codex windows remain planning examples, not verified
+entitlements. Optional placement and pacing research is OS-owned, independently
+of process scheduling. Fidelity optimization remains future work; current hard
+constraints, grants, budgets/deadlines, protected progress and unknown holds remain.
 
 <a id="shared-agent-support-library"></a>
 ## Shared agent support library — deferred on 2026-10-20
 
 Status: proposed for the next stage; explicitly excluded from the current fix.
 Source: the user's request to keep the current system split between OS and agent.
-Earlier design: [three-layer responsibility proposal](agent-os-overflow-responsibility-proposal-2026-10-20.md).
-Current plan: [optional OS context handling](optional-os-context-management-proposal-2026-10-20.md).
+Earlier design: three-layer responsibility proposal (`docs/temporary/proposals/2026-10-20-overflow-responsibility-proposal.md`).
+Current plan: optional OS context handling (`docs/temporary/proposals/2026-10-20-optional-os-context-proposal.md`).
 
 Consider an optional caller-side library once several real agent implementations
 show which patterns are worth sharing. Candidate helpers include declarative
