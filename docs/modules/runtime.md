@@ -9,8 +9,6 @@ accounting. General programs can use it without the coding workflow.
 - [Capability registration and tool ABI](capabilities.md)
 - [Persistence, exclusive resources and blocking I/O](storage.md)
 - [Endpoint admission and provider adapters](inference.md)
-- [Optional context preparation](context.md)
-- [Bounded OS model retries](retries.md)
 - [Optional workspaces and source classification](workspaces.md)
 - [File tools, checks and foreground commands](commands.md)
 - [Settings and example configurations](settings.md)

@@ -25,6 +25,9 @@ files under one guide when their responsibilities belong together.
    Record date, source and status. When decisions land, update the maintained
    guide and mark the temporary note. Preserve unique evidence linked by a FIX.
    Before removing a script, check references, callers, CI and reusable tests.
+5. Update the Obsidian module group for new or moved notes. Review the key
+   navigation group, reading map and searches when a primary route changes.
+   Validate the shared preset before handing off.
 
 ## Finish the change
 
@@ -37,6 +40,7 @@ and `docs/project-memory.md` when rules, ownership, setup or automation change.
 ```bash
 python scripts/project_docs.py
 python scripts/project_docs.py --check
+python scripts/obsidian_graph.py --check
 ```
 
 CI verifies file ownership, source links, note-tree structure, maintained HTML
@@ -64,3 +68,5 @@ If the vault also contains local state or upstream repositories, exclude
 `testing/`, `references/claude-code/`, `references/deepagents/`,
 `references/mini-swe-agent/` and other local output folders in **Files and links
 → Excluded files**. Keep `docs/temporary/` visible.
+
+- [Browse and maintain the Obsidian graph](obsidian-graph.md)

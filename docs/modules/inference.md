@@ -1,5 +1,9 @@
 # Endpoint admission and provider adapters
 
+- [Optional context preparation](context.md)
+- [Bounded OS model retries](retries.md)
+- [Optional application inference simulator](inference-simulation.md)
+
 Raw inference and native tool-using jobs have different wire/effect behavior and share bounded admission.
 
 | File | Responsibility |

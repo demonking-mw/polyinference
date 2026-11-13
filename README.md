@@ -8,13 +8,11 @@ preset can stand in for a local endpoint; it does not measure local hardware.
 For Obsidian, open the repository as a vault and start at `README.md`.
 On Windows with a WSL checkout, run [the Linux Obsidian launcher](scripts/open_obsidian.sh)
 inside WSL. You can also use the [searchable file map](docs/file-tree.html).
+In Obsidian, open the [reading map](docs/reading-map.canvas) for a fixed overview.
 
+- [Agents must read the repository instructions](AGENTS.md)
 - [Set up on Linux, macOS or WSL](setup.md)
 - [Use PolyInference](docs/README.md)
 - [Develop and contribute](dev-readme.md)
 - [Current work, decisions and verification](development-docs/README.md)
 - [Temporary notes and archive](docs/temporary/README.md)
-
-Agents: read `development-docs/FIXES.md` before work. Update affected guides and
-append a FIX entry before handoff. Put drafts, analyses, proposals and handoffs
-in `docs/temporary/` as `YYYY-MM-DD-short-topic.md` and register them in that branch.

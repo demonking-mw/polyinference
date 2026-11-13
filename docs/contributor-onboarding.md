@@ -14,12 +14,13 @@
    reload next session. Do not save secrets, private instructions or run state.
 5. Inspect the working tree and preserve existing edits, staged work and
    historical pins. Review `docs/maintenance.md` before handing off. Update the
-   relevant docs and fix log in the same task and report the checks actually run.
+   relevant docs and fix log in the same task. When notes or reading routes
+   change, follow `docs/obsidian-graph.md` to keep Graph View and the reading
+   map current. Report the checks actually run.
 
 For another harness, supply the project rules and readable documentation through
 its instruction mechanism. Onboarding by itself does not authorize implementation,
 provider calls or historical Resume. Refresh from source before each task and
 after context loss; pass these requirements along if delegation is authorized.
 
-- [Repository instructions for agents](../AGENTS.md)
 - [Project knowledge to retain](project-memory.md)

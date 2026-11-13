@@ -18,6 +18,12 @@
     "files": [],
     "children": [
       {
+        "id": "doc-agents",
+        "title": "Repository instructions for agents",
+        "doc": "AGENTS.md",
+        "files": []
+      },
+      {
         "id": "doc-setup",
         "title": "Setup",
         "doc": "setup.md",
@@ -282,12 +288,6 @@
             "files": [],
             "children": [
               {
-                "id": "doc-agents",
-                "title": "Repository instructions for agents",
-                "doc": "AGENTS.md",
-                "files": []
-              },
-              {
                 "id": "doc-project-memory",
                 "title": "Project knowledge to retain",
                 "doc": "docs/project-memory.md",
@@ -370,14 +370,6 @@
                           "src/polyinference/agent/repository.py",
                           "src/polyinference/agent/reports.py",
                           "src/polyinference/os_contracts.py"
-                        ]
-                      },
-                      {
-                        "id": "inference-simulation",
-                        "title": "Optional application inference simulator",
-                        "doc": "docs/modules/inference-simulation.md",
-                        "files": [
-                          "src/polyinference/agent/inference_simulation.py"
                         ]
                       },
                       {
@@ -466,24 +458,34 @@
                           "src/polyinference/runtime/inference.py",
                           "src/polyinference/runtime/codex.py",
                           "src/polyinference/runtime/inference_stream.py"
-                        ]
-                      },
-                      {
-                        "id": "context",
-                        "title": "Optional context preparation",
-                        "doc": "docs/modules/context.md",
-                        "files": [
-                          "src/polyinference/runtime/context.py"
-                        ]
-                      },
-                      {
-                        "id": "retries",
-                        "title": "Bounded OS model retries",
-                        "doc": "docs/modules/retries.md",
-                        "files": [
-                          "src/polyinference/runtime/model_retries.py",
-                          "src/polyinference/runtime/retry.py",
-                          "src/polyinference/runtime/model_fallback.py"
+                        ],
+                        "children": [
+                          {
+                            "id": "context",
+                            "title": "Optional context preparation",
+                            "doc": "docs/modules/context.md",
+                            "files": [
+                              "src/polyinference/runtime/context.py"
+                            ]
+                          },
+                          {
+                            "id": "retries",
+                            "title": "Bounded OS model retries",
+                            "doc": "docs/modules/retries.md",
+                            "files": [
+                              "src/polyinference/runtime/model_retries.py",
+                              "src/polyinference/runtime/retry.py",
+                              "src/polyinference/runtime/model_fallback.py"
+                            ]
+                          },
+                          {
+                            "id": "inference-simulation",
+                            "title": "Optional application inference simulator",
+                            "doc": "docs/modules/inference-simulation.md",
+                            "files": [
+                              "src/polyinference/agent/inference_simulation.py"
+                            ]
+                          }
                         ]
                       },
                       {
@@ -595,7 +597,8 @@
                           "docs/tree.css",
                           "docs/tree.js",
                           "tests/test_project_docs.py",
-                          ".github/workflows/docs.yml"
+                          ".github/workflows/docs.yml",
+                          "scripts/obsidian_graph.py"
                         ]
                       },
                       {
@@ -1038,7 +1041,18 @@
             "id": "doc-docs-maintenance",
             "title": "Maintain the documentation",
             "doc": "docs/maintenance.md",
-            "files": []
+            "files": [],
+            "children": [
+              {
+                "id": "doc-obsidian-graph",
+                "title": "Browse and maintain the Obsidian graph",
+                "doc": "docs/obsidian-graph.md",
+                "files": [
+                  "docs/obsidian-graph.json",
+                  "docs/reading-map.canvas"
+                ]
+              }
+            ]
           }
         ]
       },

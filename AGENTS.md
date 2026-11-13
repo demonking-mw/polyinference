@@ -35,6 +35,12 @@ Every feature has one primary `doc` explaining its owned code. Put draft analysi
 proposals and handoffs in `docs/temporary/` as `YYYY-MM-DD-short-topic.md`.
 Verify callers, CI and test-suite membership before deleting any script.
 
+Maintain the Obsidian graph as part of doc changes. Keep the graph filter and
+module groups current when notes are added, moved or reclassified. Keep the
+README accent, key navigation group, spare colors and search examples usable.
+Update the reading map when critical routes change. Follow
+`docs/obsidian-graph.md` for the preset, layout, and validation commands.
+
 Update `development-docs/FIXES.md` in the same task. Use the next ID and the
 entry template: symptom/trigger, owning root cause, concrete change or findings,
 design principle, and actual checks and limits. Link recurrences to earlier fixes.

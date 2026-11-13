@@ -234,6 +234,7 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0188](#FIX-0188%20%E2%80%94%202026-11-13%20%E2%80%94%20Select%20native%20Wayland%20for%20Obsidian%20on%20WSLg) | 2026-11-13 | Select native Wayland for Obsidian on WSLg |
 | [FIX-0189](#fix-0189) | 2026-11-13 | Mark scheduler OS support against current code |
 | [FIX-0190](#fix-0190) | 2026-11-13 | Design MCP admission, execution and recovery boundaries |
+| [FIX-0191](#fix-0191) | 2026-11-13 | Organize the Obsidian graph by module and reading route |
 
 
 ## Entry template
@@ -9526,3 +9527,39 @@ Updated proposal navigation and the runtime/provider design-review task. Adjacen
 module, runtime-boundary, setup, usage and configuration guides describe shipped
 behavior and need no new MCP instructions yet. Project memory was retained and
 read back in AGENTS.md; onboarding rules were unchanged.
+
+<a id="fix-0191"></a>
+
+## FIX-0191 — 2026-11-13 — Organize the Obsidian graph by module and reading route
+
+Status: implemented and applied to the local vault. Related: [FIX-0184](#fix-0184).
+
+### Problem and cause
+
+The project graph used the vault defaults. Unresolved links and unrelated notes
+crowded the view, module nodes shared one color, and there was no fixed map.
+The root README reached the agent instructions indirectly.
+
+### Change and design principle
+
+Added a shared preset with nine exclusive color groups, a project note filter,
+and shorter links with stronger repulsion. Put related inference guides under
+the inference hub and linked AGENTS.md directly from README. Added a fixed
+Canvas reading map and a guide with the legend, spare colors and search queries.
+Documented graph upkeep in agent rules, onboarding, retained memory and the
+maintenance guide. CI checks color coverage and reading map references.
+
+Keep one Markdown parent per note. The graph shows the full tree and the
+reading map shows selected routes in fixed groups. Use the shared preset as
+the source and apply it to local settings with an original graph backup.
+
+### Verification
+
+Validated the shared files for 203 notes and nine groups. Applied the preset
+after quitting Linux Obsidian and reopened the existing vault. Visually checked
+the colored graph, reduced clutter, README route and Canvas group layout.
+Both documentation commands passed for 396 maintained files and 202 note links.
+All 26 focused navigation regressions and the whitespace check passed. Read
+back the graph upkeep rule in AGENTS.md and verified the original settings backup.
+Reviewed product setup and runtime guides. Their procedures and contracts do not
+cover Obsidian presentation and required no edits.

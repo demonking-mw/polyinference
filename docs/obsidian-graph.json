@@ -1,0 +1,84 @@
+{
+  "search": "path:/^(README|AGENTS|setup|dev-readme|codex-haiku-setup|IMPLEMENTATION_PLAN|PROJECT_BRIEF|(docs|design-docs|development-docs)\\/.+|tests\\/README|references\\/(README|codex-agent-proxy-brief|docs\\/.+))\\.md$/",
+  "showTags": false,
+  "showAttachments": false,
+  "hideUnresolved": true,
+  "showOrphans": false,
+  "collapse-filter": true,
+  "collapse-color-groups": false,
+  "collapse-display": true,
+  "collapse-forces": true,
+  "showArrow": false,
+  "textFadeMultiplier": -0.45,
+  "nodeSizeMultiplier": 1.12,
+  "lineSizeMultiplier": 1,
+  "centerStrength": 0.42,
+  "repelStrength": 13,
+  "linkStrength": 1,
+  "linkDistance": 140,
+  "colorGroups": [
+    {
+      "query": "path:/^README\\.md$/",
+      "color": {
+        "a": 1,
+        "rgb": 14702418
+      }
+    },
+    {
+      "query": "path:/^(AGENTS|setup|dev-readme|docs\\/(README|architecture|contributor-onboarding|project-memory|maintenance|obsidian-graph|testing|modules\\/README)|design-docs\\/README|development-docs\\/(README|FIXES|current-iter-issues|next-iteration))\\.md$/",
+      "color": {
+        "a": 1,
+        "rgb": 12947746
+      }
+    },
+    {
+      "query": "path:/^docs\\/temporary\\/(proposals\\/2026-11-08-(standalone-scheduler-design|scheduler-(os-support|process-policy))|investigations\\/2026-11-09-scheduler-os-impact)\\.md$/",
+      "color": {
+        "a": 1,
+        "rgb": 9987531
+      }
+    },
+    {
+      "query": "path:/^(codex-haiku-setup|docs\\/modules\\/(inference(-simulation)?|context|retries)|docs\\/guides\\/(inference-controls|context-measurement|endpoint-(testing|probes)|model-fallback|sim-inference|local-token-limits|strata-startup-config|providers|setup-providers|anthropic-key|codex-login|cloud-agent-timeouts)|design-docs\\/simplified-os\\/boundary\\/(inference|retries)|design-docs\\/implementation\\/PROVIDER_SETUP)\\.md$/",
+      "color": {
+        "a": 1,
+        "rgb": 2530441
+      }
+    },
+    {
+      "query": "path:/^((docs\\/modules\\/(agent(-workflow|-workers|-services)?|assignment-contracts|repository)|docs\\/guides\\/(agent-reliability|worker-recovery)|design-docs\\/(langgraph-agent\\/README|implementation\\/(README|FIXES|VALIDATION|WORKER_RECOVERY|PROGRESS_MONITORING)|simplified-os\\/boundary\\/repository)|development-docs\\/tasks\\/agent-workflow)\\.md|docs\\/temporary\\/proposals\\/2026-11-04-agent-prompting-(audit|proposal)\\.md)$/",
+      "color": {
+        "a": 1,
+        "rgb": 5156180
+      }
+    },
+    {
+      "query": "path:/^(docs\\/modules\\/(runtime|sdk|kernel|processes|capabilities|storage|workspaces|commands|settings)\\.md|docs\\/(guides\\/os-tuning|os-config-inventory)\\.md|design-docs\\/simplified-os\\/(?!boundary\\/(inference|retries|repository)\\.md$).+\\.md|design-docs\\/os-v1-prompt\\.md)$/",
+      "color": {
+        "a": 1,
+        "rgb": 4688848
+      }
+    },
+    {
+      "query": "path:/^docs\\/(modules\\/(interfaces|cli|ui|inspection|delivery)|guides\\/(install|first-run|projects|launching|ui|cli|run-configuration|configuration|checks|budgets|run-results|results|exports|recovery|retrying|archives|state-layout|troubleshooting))\\.md$/",
+      "color": {
+        "a": 1,
+        "rgb": 13332544
+      }
+    },
+    {
+      "query": "path:/^(docs\\/(modules\\/(tooling|documentation|design-tools|packaging|live-smoke)|guides\\/qualification)|tests\\/README|development-docs\\/tasks\\/qualification)\\.md$/",
+      "color": {
+        "a": 1,
+        "rgb": 12212624
+      }
+    },
+    {
+      "query": "path:/^(docs\\/temporary\\/(?!(proposals\\/2026-11-08-|proposals\\/2026-11-04-agent-prompting-|investigations\\/2026-11-09-scheduler-os-impact\\.md$)).+|references\\/(README|codex-agent-proxy-brief|docs\\/.+)|development-docs\\/(?!(README|FIXES|current-iter-issues|next-iteration|tasks\\/agent-workflow|tasks\\/qualification)\\.md$).+|design-docs\\/(polyinference-design\\/.+|visuals\\/README|INTEGRATION_AUDIT)|IMPLEMENTATION_PLAN|PROJECT_BRIEF)\\.md$/",
+      "color": {
+        "a": 1,
+        "rgb": 8030104
+      }
+    }
+  ]
+}

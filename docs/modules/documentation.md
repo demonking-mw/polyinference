@@ -3,6 +3,7 @@
 | File | Responsibility |
 | --- | --- |
 | [scripts/project_docs.py](../../scripts/project_docs.py) | Check ownership, paths, anchors and the exact set of note links allowed by the tree. Render offline HTML. |
+| [scripts/obsidian_graph.py](../../scripts/obsidian_graph.py) | Check note color coverage and map targets, and apply the shared preset on request. |
 | [scripts/open_obsidian.sh](../../scripts/open_obsidian.sh) | Install Obsidian on Ubuntu amd64 when requested. Open the existing vault through WSLg with native Wayland when available and an explicit X11 fallback. |
 | [docs/file-tree.json](../file-tree.json) | Version 2 note hierarchy rooted at `README.md`. Each node has one primary `doc`, its `files` and optional `children`. Paths are repository-relative POSIX paths. |
 | [docs/tree-template.html](../tree-template.html) | Offline HTML shell with placeholders for JSON and static feature links. |

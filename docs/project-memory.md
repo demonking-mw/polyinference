@@ -37,3 +37,6 @@ incoming note link per non-root note. CI checks structure and exported settings;
 run the required checks and report actual results and limits. Use dated
 temporary notes and promote durable decisions into the maintained guide and
 FIXES.md. Loading these rules does not install hooks or automation.
+
+Keep the Obsidian filter, module colors, search examples and reading map current.
+Find the maintenance procedure in `docs/obsidian-graph.md`.
