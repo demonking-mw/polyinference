@@ -58,10 +58,10 @@ scheduling. The proposed scheduler only requests run, wait or preemption for
 individual processes. Preserve original authority and evidence. This is
 repository guidance; it installs no runtime hook or automation.
 
-## Retained checklist refreshed 2026-11-13
+## Retained checklist refreshed 2026-11-15
 
-Source: docs/project-memory.md at working checkout HEAD da94312; existing
-uncommitted documentation retained. Review date: 2026-11-13.
+Source: docs/project-memory.md at working checkout HEAD 55c66c6; clean
+checkout before this task. Review date: 2026-11-15.
 
 ### Project knowledge to retain
 

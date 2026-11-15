@@ -1,0 +1,30 @@
+{
+  "repository": "../general-agent-input-not-used",
+  "state_directory": "../.polyinference/general-agent-run",
+  "local": {
+    "protocol": "chat",
+    "base_url": "http://127.0.0.1:8000/v1",
+    "model": "your-local-model",
+    "inference_location": "local",
+    "max_inflight": 1
+  },
+  "cloud": {
+    "protocol": "chat",
+    "base_url": "https://your-cloud-provider.example/v1",
+    "model": "your-cloud-model",
+    "api_key_env": "CLOUD_API_KEY",
+    "inference_location": "cloud",
+    "max_inflight": 1
+  },
+  "role_bindings": {
+    "general": "cloud",
+    "local": "local",
+    "cloud": "cloud"
+  },
+  "prepare_repository": false,
+  "checks": [],
+  "allowed_write_paths": [],
+  "shell_execution": "disabled",
+  "check_execution": "disabled",
+  "model_call_retries": 1
+}

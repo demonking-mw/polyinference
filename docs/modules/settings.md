@@ -16,6 +16,7 @@ One OS settings schema, adjacent coding defaults, and explicit application workf
 | [examples/agent.codex.json](../../examples/agent.codex.json) | Brokered Codex sample. |
 | [examples/agent.openai.json](../../examples/agent.openai.json) | Raw OpenAI endpoint sample. |
 | [examples/agent.gemini.json](../../examples/agent.gemini.json) | Raw Gemini endpoint sample. |
+| [examples/general-agents.v1.json](../../examples/general-agents.v1.json) | OS-only raw local/cloud bindings for the four non-coding graphs; no coding settings. |
 
 ## Interface and ownership
 

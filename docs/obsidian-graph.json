@@ -53,6 +53,13 @@
       }
     },
     {
+      "query": "path:/^docs\\/modules\\/general-agents\\.md$/",
+      "color": {
+        "a": 1,
+        "rgb": 5333959
+      }
+    },
+    {
       "query": "path:/^(docs\\/modules\\/(runtime|sdk|kernel|processes|capabilities|storage|workspaces|commands|settings)\\.md|docs\\/(guides\\/os-tuning|os-config-inventory)\\.md|design-docs\\/simplified-os\\/(?!boundary\\/(inference|retries|repository)\\.md$).+\\.md|design-docs\\/os-v1-prompt\\.md)$/",
       "color": {
         "a": 1,

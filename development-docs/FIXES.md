@@ -9563,3 +9563,60 @@ All 26 focused navigation regressions and the whitespace check passed. Read
 back the graph upkeep rule in AGENTS.md and verified the original settings backup.
 Reviewed product setup and runtime guides. Their procedures and contracts do not
 cover Obsidian presentation and required no edits.
+
+<a id="fix-0192"></a>
+
+## FIX-0192 — 2026-11-15 — Ship four small LangGraph agents through the OS V1 boundary
+
+Status: implemented; offline workflow and journal checks passed. Related:
+[FIX-0007](#fix-0007), [FIX-0022](#fix-0022), [FIX-0032](#fix-0032),
+[FIX-0117](#fix-0117), and [FIX-0186](#fix-0186).
+
+### Symptom and owning cause
+
+The repository offered one complex coding application despite V1's generic
+process/effect contract. A stock LangChain tool agent is not directly compatible:
+V1 raw requests return text, and its process contract pins one role and one active
+top-level effect. The compatibility investigation in FIX-0186 identified these
+as adapter boundaries rather than a reason to put new agent policy into the OS.
+
+### Concrete change
+
+Added four standalone public-API LangGraph graphs: a bounded simple ReAct-like
+agent, a cloud planner/local worker supervisor, a supplied-corpus research
+lead/local extractor, and a cloud evaluator/local writing drafter. The fourth
+follows the established evaluator–optimizer pattern because the request asked
+for four agents but named three categories. The graphs depend on an `AgentIO`
+context protocol and were built before the V1 adapter. The adapter supplies
+raw `ModelQuery` text turns, a read-only typed corpus lookup, static cloud/local
+process roles, durable request IDs and OS artifact results. A new `run-agent`
+CLI command and OS-only example configuration make them runnable without coding
+settings, Git, checks or source writes. The guide records exact adaptations and
+difficulty at `docs/modules/general-agents.md`.
+
+### Design principle
+
+Keep agent patterns and response grammar in LangGraph applications. The OS
+continues to own grants, admission, accounting, effect certainty and replay.
+Simple serial workflows fit V1 without native tool calls, OS changes or framework
+patches; external search, stock `create_agent` tool turns, arbitrary graph
+interrupts and generic chat-session continuation remain separate capabilities.
+
+### Verification and limits
+
+`tests/test_general_agents.py`: 9 passed. Four tests exercised all graph routes
+with scripted replies. Four exercised their actual V1 process, model and
+capability effects, checked settled journal entries and replayed from fresh
+graph state with no duplicate model requests. One rejected multi-level routing
+without distinct declared local/cloud locations. The OS tests substituted an
+in-memory LangGraph saver because even a minimal `aiosqlite` connection/close
+stalled on this host; SQLite graph-checkpoint recovery remains unverified.
+`ruff check` passed for changed Python files; CLI help and example RuntimeConfig
+validation passed. `project_docs.py` generation and `--check` passed for 402 files
+and 204 notes; `obsidian_graph.py --check` passed for 10 groups. No local model,
+live cloud endpoint, browser/UI path, model-quality benchmark or generic
+interrupted-graph Resume was run. The current UI and coding agent were not
+changed. Their task/Git/acceptance interfaces, setup procedure and existing
+OS contracts remain accurate; no adjacent code or settings-schema edit was
+needed. Project memory was refreshed and read back in `AGENTS.md` from
+`docs/project-memory.md` at HEAD `55c66c6`.

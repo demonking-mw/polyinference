@@ -16,7 +16,7 @@ from pathlib import Path
 
 from .agent.controller import ProjectAgent
 from .agent.services import AgentServices
-from .config import AgentConfig
+from .config import AgentConfig, RuntimeConfig
 from .history import save_run_history
 from .os_config import BOUNDS
 from .primitives import canonical
@@ -227,6 +227,11 @@ def main():
         item.add_argument("config")
         if name == "resume":
             item.add_argument("--text", default="", help="Optional instructions for continuing the run")
+    item = sub.add_parser("run-agent", help="Run one of the four general LangGraph agents on OS V1")
+    item.add_argument("config", help="OS-only RuntimeConfig JSON; use fresh state for each task")
+    item.add_argument("design", choices=["simple", "supervisor", "research", "writer"])
+    item.add_argument("task")
+    item.add_argument("--documents", help="JSON object mapping source IDs to supplied document text")
     item = sub.add_parser("ui")
     item.add_argument("--port", type=int, default=8765)
     item.add_argument("--config")
@@ -287,6 +292,19 @@ def main():
     args = parser.parse_args()
     try:
         load_saved_credentials()
+        if args.command == "run-agent":
+            from .general_agents.os_v1 import run_v1
+
+            source = Path(args.config).resolve()
+            config = RuntimeConfig.model_validate_json(source.read_text())
+            config = config.model_copy(update={
+                "repository": str((source.parent / config.repository).resolve()),
+                "state_directory": str((source.parent / config.state_directory).resolve()),
+            })
+            documents = json.loads(Path(args.documents).read_text()) if args.documents else {}
+            result = asyncio.run(run_v1(args.design, config, args.task, documents))
+            print(json.dumps(result, indent=2))
+            return
         if args.command == "configure-local":
             from .agent.local_provider import sync_local_provider
             print(json.dumps(sync_local_provider(load_config(args.config), args.strata_config), indent=2))

@@ -5,6 +5,7 @@ Documentation (`docs/README.md`) · Setup (`setup.md`) · Developer guide (`dev-
 | Path | Purpose |
 | --- | --- |
 | `src/polyinference/agent/` | Controller, independent worker graphs, senior review, setup, routing and prompts. |
+| `src/polyinference/general_agents/` | Four non-coding public LangGraph graphs and their OS V1 adapter. |
 | `src/polyinference/runtime/` | Simple OS kernel, admission, process supervision, provider clients and workspace/tool broker. |
 | `src/polyinference/contracts.py` / `workspace_contracts.py` | Packaged SDK wire and workspace types. |
 | `src/polyinference/ports.py` | Runtime service interfaces implemented by the bundled kernel. |

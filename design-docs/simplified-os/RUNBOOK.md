@@ -56,6 +56,11 @@ research agents through the OS and terminates them without coding tasks, checks,
 file workspaces or a Git store. `tests/test_outputs.py` covers optional delivery,
 conflicts and interrupted-write recovery.
 
+Four small non-coding LangGraph applications now use this boundary through
+`polyinference run-agent`. `docs/modules/general-agents.md` records their design,
+supplied-corpus lookup, V1 adaptation and validation limits. Their raw text
+queries do not imply native LangChain tool-turn support.
+
 ### Automatic inference retry
 
 The bare OS has one native extra attempt; fresh coding-agent configs choose two.

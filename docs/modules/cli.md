@@ -10,6 +10,10 @@ The CLI loads configuration/environment and invokes application/runtime services
 
 The installed `polyinference` entry point calls main(). Paths in configuration
 resolve from its parent directory. CLI and UI share application/snapshot paths.
+`run-agent CONFIG DESIGN TASK [--documents JSON]` loads the generic `RuntimeConfig`
+and dispatches one of four non-coding graphs through OS V1. It resolves its two
+paths relative to the configuration file, prints an answer artifact, and reuses
+the exact input/intent on same-state retry. See `docs/modules/general-agents.md`.
 execute(..., resume_request_ref=...) calls ProjectAgent.resume after loading the
 saved configuration and validating program compatibility. Coding recovery policy
 lives in agent/resume.py; apply_resume remains a compatibility wrapper. CLI resume

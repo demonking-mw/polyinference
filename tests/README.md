@@ -17,6 +17,7 @@ need separately stated checks. Update affected docs and FIXES.md with every fix.
 | [test_contracts.py](test_contracts.py) | Packaged wire/schema invariants. |
 | [test_costs.py](test_costs.py) | Usage/pricing estimates and aggregation. |
 | [test_endpoints.py](test_endpoints.py) | Endpoint transport, admission, routing and concurrency. |
+| [test_general_agents.py](test_general_agents.py) | Four scripted LangGraph flows and all four OS V1 journal/replay paths with a disposable graph saver. |
 | [test_history.py](test_history.py) | Shared snapshot archives, retention and failure isolation. |
 | [test_http_integration.py](test_http_integration.py) | Complete coding workflow over real local HTTP fixtures. |
 | [test_in_place_repository.py](test_in_place_repository.py) | Git setup, verified integration, concurrent/serial worktrees, source reuse and retained current-source review evidence. |

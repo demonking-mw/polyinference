@@ -36,6 +36,9 @@ permission or task policy. The agent still rejects empty scope for edits. Test o
 - Stable identity pins the complete intent; changed arguments require a new intent.
 - Providers, persistence and scheduling stay outside the port definitions.
 - A general process can complete with arbitrary artifacts and no code/check/Git.
+- The four shipped general graphs use role-pinned process/effect requests and a
+  read-only capability through this boundary; their application policy lives in
+  `src/polyinference/general_agents/`.
 - Design fixture copies are provenance, not proof of implemented guarantees.
 
 ## Verification and related reading

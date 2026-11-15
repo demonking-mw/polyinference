@@ -8,6 +8,7 @@
 		{"id":"operations","type":"group","x":0,"y":805,"width":340,"height":275,"color":"#CB7040","label":"Use and operations"},
 		{"id":"verification","type":"group","x":360,"y":805,"width":340,"height":275,"color":"#BA5990","label":"Checks and tooling"},
 		{"id":"records","type":"group","x":720,"y":805,"width":340,"height":275,"color":"#7A8798","label":"Work and evidence"},
+		{"id":"general","type":"group","x":1080,"y":805,"width":340,"height":275,"color":"#5163C7","label":"General agents"},
 		{"id":"readme","type":"text","x":535,"y":32,"width":350,"height":143,"color":"#E05752","text":"## [[README.md|PolyInference README]]\n\nStart here for the project and its documentation."},
 		{"id":"rules","type":"text","x":24,"y":212,"width":320,"height":120,"color":"#C59122","text":"## [[AGENTS.md|Agent instructions]]\n\nRequired reading and handoff rules"},
 		{"id":"develop","type":"text","x":364,"y":212,"width":320,"height":120,"color":"#C59122","text":"## [[dev-readme.md|Developer guide]]\n\nOnboarding and contributor checks"},
@@ -28,7 +29,8 @@
 		{"id":"verification-1","type":"text","x":378,"y":909,"width":304,"height":58,"color":"#BA5990","text":"## [[docs/guides/qualification.md|Qualification]]"},
 		{"id":"records-0","type":"text","x":738,"y":840,"width":304,"height":58,"color":"#7A8798","text":"## [[development-docs/current-iter-issues.md|Current work]]"},
 		{"id":"records-1","type":"text","x":738,"y":909,"width":304,"height":58,"color":"#7A8798","text":"## [[development-docs/FIXES.md|Fix history]]"},
-		{"id":"records-2","type":"text","x":738,"y":978,"width":304,"height":58,"color":"#7A8798","text":"## [[docs/temporary/README.md|Temporary notes]]"}
+		{"id":"records-2","type":"text","x":738,"y":978,"width":304,"height":58,"color":"#7A8798","text":"## [[docs/temporary/README.md|Temporary notes]]"},
+		{"id":"general-0","type":"text","x":1098,"y":840,"width":304,"height":58,"color":"#5163C7","text":"## [[docs/modules/general-agents.md|Four agent designs]]"}
 	],
 	"edges":[
 		{"id":"readme-rules","fromNode":"readme","fromSide":"bottom","toNode":"rules","toSide":"top","toEnd":"arrow"},
