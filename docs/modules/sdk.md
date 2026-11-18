@@ -14,7 +14,9 @@ The packaged boundary between agent programs and replaceable OS implementations.
 ## Interface and ownership
 
 Applications call `RuntimePorts`; `KernelRuntime` is one implementation. Bootstrap
-registers explicit capabilities/protocols. OperationPorts.prepare_resume(request_ref)
+registers explicit capabilities and native protocols. A native protocol may
+require the Codex ChatGPT subscription with `codex_subscription=True`.
+OperationPorts.prepare_resume(request_ref)
 is the generic asynchronous execution-preparation boundary; caller-owned workflow
 policy consumes its ready state and retained results. InferencePolicy is a generic caller declaration in runtime/inference-policy
 (version 1): additional_retries and replace_undelivered. It grants no capacity or
@@ -24,6 +26,8 @@ belongs to ports; runtime.workspace_state retains a compatibility re-export.
 ContextPart.retention_priority is an optional caller retention hint from 0 to 100; zero is omitted
 from serialization. Required parts and whole tool groups retain their protections. This generic
 mechanism conveys no task-completion or memory policy; see context (`docs/modules/context.md`).
+In `ModelQuery`, set `temperature` to `null` to use provider-default sampling.
+The required field also accepts existing explicit values from 0 through 2.
 Some shared wire types retain coding
 records for compatibility; their presence does not make coding mandatory.
 The shared `TaskSpec.allowed_change_scope` accepts an empty list to represent no source-write

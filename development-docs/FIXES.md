@@ -236,6 +236,11 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0190](#fix-0190) | 2026-11-13 | Design MCP admission, execution and recovery boundaries |
 | [FIX-0191](#fix-0191) | 2026-11-13 | Organize the Obsidian graph by module and reading route |
 
+| [FIX-0208](#fix-0208) | 2026-11-18 | Host a concurrent general-agent batch on one kernel |
+| [FIX-0209](#fix-0209) | 2026-11-18 | Bound Research plan validation and correction |
+| [FIX-0210](#fix-0210) | 2026-11-18 | Return evidence around matching terms |
+| [FIX-0211](#fix-0211) | 2026-11-18 | Identify where agent graphs spend cloud turns |
+
 
 ## Entry template
 
@@ -9620,3 +9625,123 @@ changed. Their task/Git/acceptance interfaces, setup procedure and existing
 OS contracts remain accurate; no adjacent code or settings-schema edit was
 needed. Project memory was refreshed and read back in `AGENTS.md` from
 `docs/project-memory.md` at HEAD `55c66c6`.
+
+
+<a id="fix-0208"></a>
+
+## FIX-0208 — 2026-11-18 — Host a concurrent general-agent batch on one kernel
+
+Status: implemented. Related to [FIX-0192](#fix-0192).
+
+### Trigger and owning cause
+
+The first live harness followed the one-invocation runner and opened multiple
+kernels. The shared-kernel harness had to supply independent workflow identities
+and scope document access itself. This ownership belongs to the application
+adapter.
+
+### Change and design principle
+
+Added `run-agents CONFIG MANIFEST` and a batch adapter with one kernel, static
+model roles, invocation-scoped checkpoint/process/record IDs and separately
+granted corpus capabilities. All invocations share the OS journal, budget and
+endpoint admission. The batch validates its size and inputs before dispatch and
+pins the manifest for replay. The existing single-run API keeps its record and
+checkpoint naming. The batch is a CLI entry point. It also includes the provider prerequisites for
+the tested profile. Native Codex jobs opt in to ChatGPT authentication, and
+Anthropic queries can omit sampling temperature to use provider defaults.
+
+### Verification and limits
+
+The general-agent and provider suites passed 44 tests in an isolated checkout.
+The four-agent fixture exercised two Research and two Simple graphs on one real kernel, verified
+corpus isolation and admission, replayed without inference, and rejected changed
+inputs. A separate CLI smoke used scripted loopback HTTP on both bindings and
+verified two effects in one journal. Ruff passed on changed Python files. The
+installed providers and historical state were not used. Reviewed the applicable
+fix entries. Updated the CLI, agent, kernel, inference and SDK guides.
+The separate browser workspace and its documentation are outside this commit.
+
+<a id="fix-0209"></a>
+
+## FIX-0209 — 2026-11-18 — Bound Research plan validation and correction
+
+Status: implemented. Observed in the live general-agent tests.
+
+### Trigger and owning cause
+
+All four initial Research invocations got settled Cloud plans whose questions
+exceeded the graph's hidden 500-character validator. Lookup inputs shared the
+same effective limit without a graph-level correction.
+
+### Change and design principle
+
+The Research prompt, list validator and lookup contract share the limit. One
+settled invalid reply admits a new `plan-repair` step with the same Cloud role
+and task. A second invalid reply raises a clear error. Provider failure and
+uncertain execution keep their usual OS handling. The correction belongs to the
+agent and uses a distinct effect identity.
+
+### Verification and limits
+
+The regression reproduced the overlong reply, completed after a valid correction,
+and stopped after one repeated invalid reply. It passed in the focused suite
+listed in FIX-0208. No live planner quality evaluation was used.
+
+<a id="fix-0210"></a>
+
+## FIX-0210 — 2026-11-18 — Return evidence around matching terms
+
+Status: excerpt fix implemented; document ranking evaluated separately.
+Observed in the live general-agent tests.
+
+### Trigger and owning cause
+
+Corpus lookup ranked documents using their full contents but returned only the
+first 2,000 characters. Evidence later in matching documents could disappear
+from the agent's context.
+
+### Change and design principle
+
+Select a bounded overlapping window that covers the most distinct query terms
+for each hit. Preserve source IDs, the three-hit cap and earliest ties. A fixture
+verified a late matching passage is retained as a contiguous excerpt and stays
+within the cap. It passed in the focused suite listed in FIX-0208.
+
+### Ranking investigation and limits
+
+Two retained queries named RouteLLM, HM-Router and EvoRouter. The current ranker
+returned zero of the three in either query. An offline BM25 prototype scoring
+source ID and content returned all three for each query. An explicit source
+alias variant gave the same results on this sample. The sample is one corpus
+and two near-duplicate queries. Evaluate named and paraphrased queries, long
+documents, collisions and empty relevance under the same excerpt limit before
+choosing a ranking policy. BEIR provides evidence for a lexical baseline across
+diverse tasks. [BEIR](https://arxiv.org/abs/2104.08663)
+
+<a id="fix-0211"></a>
+
+## FIX-0211 — 2026-11-18 — Identify where agent graphs spend cloud turns
+
+Status: investigation. Cloud turn selection and graph roles did not change.
+Observed in the live single-kernel rerun.
+
+### Trigger and owning cause
+
+The four-workflow run queued six Cloud reservations. Research spent one Cloud
+turn on planning and one on reporting per workflow. Cloud Simple spent one on
+choosing a lookup and one on answering. The 32.7-second longest GPT queue wait
+occurred under the one-slot configuration, so routing experiments should control
+for capacity and research quality.
+
+### Proposed evaluation and design principle
+
+Compare the current graphs with a one-turn Simple path that prefetches explicitly
+selected sources through the existing lookup grant, and a local planner with a
+Cloud synthesis step for Research. Keep the routing rule and fallback in the
+agent and respect the configured model choices. Compare exact answer success,
+evidence coverage, unsupported citations, requests per successful task,
+latency including queueing, and fallback rate on matched prompts and corpora.
+Cascades have research support, but the prior ledger prompts and lookup journals
+do not establish equivalence for general tasks.
+[FrugalGPT](https://arxiv.org/abs/2305.05176)

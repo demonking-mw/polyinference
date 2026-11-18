@@ -197,12 +197,15 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
             return code.model_dump(mode="json")
         return await self.outputs.deliver(arguments["delivery_id"], arguments["files"])
 
-    def register_agent_protocol(self, name, schema, *, workspace="snapshot", brokered=False, instructions=""):
+    def register_agent_protocol(self, name, schema, *, workspace="snapshot", brokered=False, instructions="",
+                                codex_subscription=False):
         """The calling agent owns its output grammar and phase policy."""
         if workspace not in {"snapshot", "workspace", "none"}:
             raise ValueError("Unknown native workspace kind")
         definition = {"schema": schema, "workspace": workspace, "brokered": brokered,
                       "instructions": instructions}
+        if codex_subscription:
+            definition["codex_subscription"] = True
         if name in self.agent_protocols and self.agent_protocols[name] != definition:
             raise ValueError("Native protocol already registered with another definition")
         self.records.put_once("runtime/agent-protocol/" + name, {"digest": digest(canonical(definition))})
@@ -764,6 +767,8 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                         or isinstance(output_tokens, bool) or output_tokens < 1):
                     raise ValueError("Invalid output-token allowance")
                 protocol = self.agent_protocols.get(payload.required_phase_protocol) if isinstance(payload, AgentJob) else None
+                if protocol and protocol.get("codex_subscription") and not isinstance(client, CodexAppServer):
+                    raise EndpointError("This native protocol requires the Codex subscription backend")
                 measurement_cache = {}
                 async def measure(messages):
                     if isinstance(client, HTTPInference):
@@ -973,6 +978,8 @@ class KernelRuntime(ExecutionProgress, ProcessLifecycle, InferenceRetries):
                                     session_ref=(payload.session_ref
                                         if request.extensions.get("runtime/model-fallback") else None),
                                 )
+                                if protocol.get("codex_subscription"):
+                                    options["require_subscription"] = True
                             elif isinstance(client, CodexProxy):
                                 options.update(max_output=output_tokens, prepared=prepared)
                             warn_only = (endpoint.physical_location == "cloud"

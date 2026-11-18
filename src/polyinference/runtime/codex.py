@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import shutil
 from collections import Counter, deque
 from pathlib import Path
@@ -198,7 +199,7 @@ class CodexAppServer:
 
     async def generate_job(self, messages, snapshot, schema, callback=None, observer=None,
                            *, tools=None, instructions="", max_output=None, prepared=None, session_ref=None,
-                           enforce_timeout=True):
+                           enforce_timeout=True, require_subscription=False):
         if callback and not tools:
             raise NativeJobStopped("Brokered jobs require explicitly granted tool descriptors")
         wire = prepared or self.prepare(messages, schema, tools=tools, instructions=instructions, max_output=max_output)
@@ -227,6 +228,10 @@ class CodexAppServer:
             )
             + "}"
         )
+        environment = None
+        if require_subscription:
+            environment = {key: value for key, value in os.environ.items()
+                           if key not in {"OPENAI_API_KEY", "CODEX_API_KEY", "OPENAI_BASE_URL"}}
         proc = await asyncio.create_subprocess_exec(
             *command,
             "-c",
@@ -241,6 +246,7 @@ class CodexAppServer:
             stderr=asyncio.subprocess.DEVNULL,
             limit=self.tuning.native_line_bytes,
             start_new_session=True,
+            **({"env": environment} if require_subscription else {}),
         )
         serial, thread_id, turn_id = 0, None, None
         event_log = NativeEventLog(self.output_cap, tuning=self.tuning)
@@ -333,6 +339,11 @@ class CodexAppServer:
                 },
             )
             await send({"method": "initialized", "params": {}})
+            if require_subscription:
+                account = await rpc("account/read", {"refreshToken": False})
+                if (account.get("account") or {}).get("type") != "chatgpt":
+                    raise NativeJobStopped("Codex Cloud requires a ChatGPT login. Run codex login.",
+                                           retryable=False)
             params = {
                 "model": self.endpoint.model,
                 "cwd": str(snapshot),
@@ -346,12 +357,18 @@ class CodexAppServer:
             }
             if callback and not session_ref:
                 params["dynamicTools"] = wire["dynamicTools"]
+            if require_subscription:
+                params["modelProvider"] = "openai"
             if session_ref:
                 params["threadId"] = session_ref
             else:
                 # Model routing is owned and recorded by the OS, not an opaque provider fallback.
                 params["allowProviderModelFallback"] = False
             thread = await rpc("thread/resume" if session_ref else "thread/start", params)
+            if require_subscription and (thread.get("model") != self.endpoint.model
+                                         or thread.get("modelProvider") != "openai"):
+                raise NativeJobStopped("Codex did not confirm the configured Cloud model and provider",
+                                       retryable=False)
             sandbox = thread.get("sandbox") or {}
             if (sandbox.get("type") != "readOnly" or sandbox.get("networkAccess", False)
                     or thread.get("approvalPolicy") != "never"):

@@ -17,6 +17,10 @@ Raw inference and native tool-using jobs have different wire/effect behavior and
 HTTPInference supports chat/Responses/Anthropic/Gemini protocols. CodexAppServer
 uses registered application schemas/instructions and explicit brokered tools;
 CodexProxy forwards query-only work to a separately installed service.
+A subscription-only app-server job checks the ChatGPT account and confirms the
+configured model and native OpenAI provider before the turn. The child does
+not receive inherited OpenAI or Codex API keys. The ordinary native path
+retains its existing authentication behavior.
 HTTPInference.count_input optionally posts the exact prepared raw body to an explicitly declared
 same-provider counting route. Response size/type/deadline are bounded, redirects remain disabled,
 and failures retain conservative measurement provenance. No generation is issued or charged. See
@@ -72,7 +76,8 @@ Follow documentation maintenance (`docs/maintenance.md`) in the same task.
 
 Raw prepared payloads forward an explicitly requested temperature, including SSE
 and operation-aware adapter paths. Endpoint.supports_temperature rejects unsupported
-requests. Results retain requested/sent settings; provider-effective values may
+requests. A `ModelQuery.temperature` of `null` leaves the field out of the provider
+body. Results retain requested/sent settings; provider-effective values may
 remain unknown. Native turns use Endpoint.reasoning_effort and readable task inputs;
 application instructions enter developerInstructions while native safety/broker
 restrictions, immutable views and rolling event retention remain enforced.

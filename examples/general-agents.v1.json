@@ -9,11 +9,11 @@
     "max_inflight": 1
   },
   "cloud": {
-    "protocol": "chat",
-    "base_url": "https://your-cloud-provider.example/v1",
-    "model": "your-cloud-model",
-    "api_key_env": "CLOUD_API_KEY",
+    "protocol": "codex_app_server",
+    "command": ["codex", "app-server"],
+    "model": "gpt-6.1-sol",
     "inference_location": "cloud",
+    "timeout_seconds": 1800,
     "max_inflight": 1
   },
   "role_bindings": {

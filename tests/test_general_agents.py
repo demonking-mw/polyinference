@@ -130,3 +130,123 @@ async def test_multi_level_graphs_use_distinct_v1_roles(tmp_path, monkeypatch, d
         assert all(row[2]["state"] == "succeeded" for row in records.scan("effect/"))
     finally:
         records.db.close()
+
+
+
+async def test_research_repairs_an_overlong_plan_at_most_once():
+    import json
+
+    from polyinference.general_agents.graphs import MAX_PLAN_ITEM_CHARS
+
+    overlong = json.dumps({"questions": ["x" * (MAX_PLAN_ITEM_CHARS + 1)]})
+    good = json.dumps({"questions": ["usable evidence"]})
+    graph = BUILDERS["research"]()
+    io = ScriptedIO([overlong, good, "finding [doc]", "answer [doc]"])
+    result = await graph.ainvoke({"task": "Find the evidence"}, context=GraphContext(io))
+    assert result["answer"] == "answer [doc]"
+    assert io.calls[:3] == [
+        ("cloud", "research_plan", "plan"),
+        ("cloud", "research_plan", "plan-repair"),
+        ("lookup", "usable evidence", "evidence-0"),
+    ]
+
+    invalid = ScriptedIO([overlong, overlong])
+    with pytest.raises(ValueError, match="invalid after one correction"):
+        await graph.ainvoke({"task": "Find the evidence"}, context=GraphContext(invalid))
+    assert [call[2] for call in invalid.calls] == ["plan", "plan-repair"]
+
+
+def test_lookup_returned_excerpt_covers_match_beyond_document_prefix():
+    from polyinference.general_agents.os_v1 import _search
+
+    passage = "The queue timeout is 35 milliseconds."
+    docs = {"manual": "Unrelated instructions. " * 150 + passage, "other": "General overview."}
+    result = _search(docs, "queue timeout")
+    assert [hit["source_id"] for hit in result["hits"]] == ["manual"]
+    excerpt = result["hits"][0]["excerpt"]
+    assert passage in excerpt
+    assert len(excerpt) <= 2000 and excerpt in docs["manual"]
+
+
+async def test_batch_shares_one_kernel_and_isolates_corpora_and_replay(tmp_path, monkeypatch):
+    import asyncio
+    import json
+    from collections import Counter
+
+    from polyinference.general_agents.os_v1 import BatchInvocation, run_v1_batch
+
+    local = Endpoint(model="local-fixture", inference_location="local", max_inflight=1)
+    cloud = Endpoint(model="cloud-fixture", inference_location="cloud", max_inflight=1)
+    config = RuntimeConfig(repository=str(tmp_path / "unused"), state_directory=str(tmp_path / "state"),
+        local=local, cloud=cloud, role_bindings={"general": "cloud", "local": "local", "cloud": "cloud"},
+        prepare_repository=False, checks=[], allowed_write_paths=[], max_workers=4)
+    opens = []
+    open_kernel = kernel.KernelRuntime.open
+
+    async def count_open(self):
+        opens.append(self.config.state_path)
+        return await open_kernel(self)
+
+    monkeypatch.setattr(kernel.KernelRuntime, "open", count_open)
+    active, peaks = Counter(), Counter()
+    calls = []
+
+    async def generate(self, messages, _max_output, _response_schema=None, **kwargs):
+        model = self.endpoint.model
+        active[model] += 1
+        peaks[model] = max(peaks[model], active[model])
+        try:
+            await asyncio.sleep(.015)
+            payload = json.dumps(messages)
+            calls.append((model, payload))
+            if "Research task:" in payload:
+                reply = '{"questions":["ledger"]}'
+            elif "Extract only claims" in payload:
+                marker, = [value for value in ("CEDAR", "MARBLE") if value in payload]
+                assert model == "local-fixture"
+                reply = marker
+            elif "Answer using the findings only" in payload:
+                marker, = [value for value in ("CEDAR", "MARBLE") if value in payload]
+                assert model == "cloud-fixture"
+                reply = marker
+            elif "Previous observation: none" in payload:
+                reply = '{"lookup":"ledger"}'
+            else:
+                marker, = [value for value in ("ORCHID", "JASPER") if value in payload]
+                assert model == ("cloud-fixture" if marker == "ORCHID" else "local-fixture")
+                reply = json.dumps({"final": marker})
+            return {"text": reply, "model": model, "usage": {"total_tokens": 5}}
+        finally:
+            active[model] -= 1
+
+    monkeypatch.setattr(HTTPInference, "generate", generate)
+    manifest = [
+        BatchInvocation(id="ra", design="research", task="Task A", documents={"ledger": "ledger CEDAR"}),
+        BatchInvocation(id="rb", design="research", task="Task B", documents={"ledger": "ledger MARBLE"}),
+        BatchInvocation(id="sc", design="simple", binding="cloud", task="Task C",
+                        documents={"ledger": "ledger ORCHID"}),
+        BatchInvocation(id="sl", design="simple", binding="local", task="Task D",
+                        documents={"ledger": "ledger JASPER"}),
+    ]
+    first = await run_v1_batch(config, manifest)
+    assert opens == [config.state_path]
+    assert [row.get("answer") for row in first] == ["CEDAR", "MARBLE", "ORCHID", "JASPER"], first
+    assert peaks == {"cloud-fixture": 1, "local-fixture": 1}
+    assert len(calls) == 10
+    assert await run_v1_batch(config, manifest) == first
+    assert len(calls) == 10
+
+    changed = [manifest[0].model_copy(update={"task": "Changed"}), *manifest[1:]]
+    with pytest.raises(ValueError, match="Saved agent batch changed"):
+        await run_v1_batch(config, changed)
+    with pytest.raises(ValueError, match="IDs must be unique"):
+        await run_v1_batch(config, [manifest[0], manifest[0]])
+
+    records = Records(config.state_path / "records.sqlite")
+    try:
+        assert len(records.scan("effect/")) == 14
+        assert all(body["state"] == "succeeded" for _, _, body in records.scan("effect/"))
+        assert all(body["state"] == "released" for _, _, body in records.scan("reservation/"))
+        assert len({k for k, _, _ in records.scan("runtime/capability/sources.lookup.")}) == 4
+    finally:
+        records.db.close()

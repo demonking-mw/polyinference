@@ -24,6 +24,11 @@ Native protocol definitions (schema, instructions, brokerage and workspace mode)
 are likewise pinned under `runtime/agent-protocol/<name>`. Reinstalling the same
 definition is valid; changing it under the same identity is rejected after restart.
 
+A registered native protocol can opt in to `codex_subscription=True`. The
+runtime pins that requirement and rejects incompatible transports. The Codex
+adapter checks for a ChatGPT account and the configured model before starting
+the turn. The registration supplies no tool or workspace authority.
+
 For example, with an open runtime and an application-owned `ProcessSpec`:
 
 ```python

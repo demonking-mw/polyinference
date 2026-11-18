@@ -46,12 +46,17 @@ def _object(raw: str) -> dict:
     return value
 
 
+MAX_PLAN_ITEM_CHARS = 500
+
+
 def _items(raw: str, key: str, maximum: int = 3) -> list[str]:
     value = _object(raw).get(key)
     if not isinstance(value, list) or not 1 <= len(value) <= maximum or any(
-        not isinstance(item, str) or not item.strip() or len(item) > 500 for item in value
+        not isinstance(item, str) or not item.strip() or len(item) > MAX_PLAN_ITEM_CHARS for item in value
     ):
-        raise ValueError(f"Expected 1 to {maximum} nonempty {key} strings")
+        raise ValueError(
+            f"Expected 1 to {maximum} nonempty {key} strings, each at most {MAX_PLAN_ITEM_CHARS} characters"
+        )
     return [item.strip() for item in value]
 
 
@@ -122,9 +127,28 @@ def build_supervisor(checkpointer=None):
 def build_research(checkpointer=None):
     """Lead researcher plans; local workers inspect supplied evidence; lead cites."""
     async def plan(state: AgentState, runtime: Runtime[GraphContext]):
-        raw = await runtime.context.io.model("cloud", "research_plan", "Plan 1-3 distinct evidence questions. "
-            'Return only JSON {"questions":["..."]}. Research task: ' + state["task"], "plan")
-        return {"plan": _items(raw, "questions"), "index": 0, "findings": []}
+        io = runtime.context.io
+        requirements = (
+            "Plan 1-3 distinct evidence questions. Each question must be nonempty and "
+            f"at most {MAX_PLAN_ITEM_CHARS} characters. "
+            'Return only JSON {"questions":["..."]}. '
+        )
+        task = "Research task: " + state["task"]
+        raw = await io.model("cloud", "research_plan", requirements + task, "plan")
+        try:
+            questions = _items(raw, "questions")
+        except ValueError:
+            # A settled but unusable response can trigger one new plan.
+            corrected = await io.model(
+                "cloud", "research_plan",
+                "The previous plan failed validation. Generate a corrected plan. " + requirements + task,
+                "plan-repair",
+            )
+            try:
+                questions = _items(corrected, "questions")
+            except ValueError as exc:
+                raise ValueError("Research plan is invalid after one correction: " + str(exc)) from exc
+        return {"plan": questions, "index": 0, "findings": []}
 
     async def investigate(state: AgentState, runtime: Runtime[GraphContext]):
         index = state["index"]

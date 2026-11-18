@@ -41,6 +41,16 @@ def haiku_token_limits():
     return LocalTokenLimits(input_tokens=96000, output_tokens=32000)
 
 
+def general_agent_haiku_simulation(config):
+    """Apply the two-slot Haiku stand-in for general-agent batches."""
+    return type(config).model_validate({
+        **config.model_dump(mode="json"),
+        "local": haiku_endpoint().model_copy(update={"max_inflight": 2}),
+        "local_token_limits": haiku_token_limits(),
+        "role_bindings": {**config.role_bindings, "local": "local"},
+    }, context={"resolve_environment_capacity": False})
+
+
 def simulation_config(config, slots):
     """Pure invocation policy; the OS receives ordinary fully validated settings."""
     if type(slots) is not int or not 1 <= slots <= 16:

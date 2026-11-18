@@ -411,7 +411,7 @@ class ModelQuery(Wire):
     context: ContextView
     response_schema_ref: Identifier
     capability_requirements: list[Requirement]
-    temperature: Annotated[float, Field(ge=0, le=2)]
+    temperature: Annotated[float, Field(ge=0, le=2)] | None
     session_ref: Identifier | None
 
 

@@ -119,3 +119,34 @@ for line in sys.stdin:
                         command=[sys.executable, str(script), json.dumps(permissions)], timeout_seconds=5)
     with pytest.raises(NativeJobStopped, match="did not confirm read-only"):
         await CodexAppServer(endpoint).generate_job([], tmp_path, {"type": "object"})
+
+
+async def test_codex_subscription_rejects_api_key_mode_before_thread_start(tmp_path, monkeypatch):
+    script = tmp_path / "account_server.py"
+    started = tmp_path / "thread-started"
+    monkeypatch.setenv("OPENAI_API_KEY", "fixture-inherited-key")
+    monkeypatch.setenv("CODEX_API_KEY", "fixture-inherited-key")
+    script.write_text("""import json, os, sys
+from pathlib import Path
+assert "OPENAI_API_KEY" not in os.environ
+assert "CODEX_API_KEY" not in os.environ
+for line in sys.stdin:
+    request = json.loads(line)
+    method = request["method"]
+    if method == "initialize":
+        result = {}
+    elif method == "account/read":
+        assert request["params"] == {"refreshToken": False}
+        result = {"account": {"type": "apiKey"}}
+    elif method == "thread/start":
+        Path(sys.argv[1]).touch()
+        break
+    else:
+        continue
+    print(json.dumps({"id": request["id"], "result": result}), flush=True)
+""")
+    endpoint = Endpoint(model="gpt-6.1-sol", protocol="codex_app_server",
+                        command=[sys.executable, str(script), str(started)], timeout_seconds=5)
+    with pytest.raises(NativeJobStopped, match="requires a ChatGPT login"):
+        await CodexAppServer(endpoint).generate_job([], tmp_path, {"type": "object"}, require_subscription=True)
+    assert not started.exists()
