@@ -20,6 +20,7 @@ Change preferences before a fresh run; old runs retain their saved pair.
 
 Generic OS defaults remain 24000 input and 4000 output tokens. The bundled Haiku
 UI preset and mixed/Anthropic examples select 96000 input + 32000 output = 128000.
+The general-agent workspace `--sim-haiku` uses the same pair.
 Explicit simulation that replaces a different/local endpoint with the complete
 Haiku preset selects that same pair; an already configured remote Anthropic
 endpoint retains its explicit pair. Machine preferences and explicit configurations

@@ -19,7 +19,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
-from .cli import execute, load_config, record_steering
+from .cli import execute, load_config, load_runtime_config, record_steering
 from .config import AgentConfig
 from .costs import combine_costs, run_cost
 from .domain import Check
@@ -665,7 +665,7 @@ class TestUI:
         return detail(state, node, read_records(state))
 
 
-def make_server(manager, port=8765):
+def make_server(manager, port=8765, *, workspace=None):
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *args):
             pass
@@ -688,12 +688,33 @@ def make_server(manager, port=8765):
             self.end_headers()
             self.wfile.write(body)
 
+        def workspace_get(self, path, query):
+            assets = {
+                "/": ("ui-workspace.html", "text/html"),
+                "/ui-workspace.css": ("ui-workspace.css", "text/css"),
+                "/ui-workspace.js": ("ui-workspace.js", "text/javascript"),
+            }
+            if path in assets:
+                name, content_type = assets[path]
+                return self.respond(200, Path(__file__).with_name(name).read_text(encoding="utf-8"), content_type)
+            if path == "/api/workspace":
+                return self.respond(200, workspace.index())
+            if path == "/api/workspace/chat":
+                return self.respond(200, workspace.chat(query["id"][0]))
+            if path == "/api/workspace/invocation":
+                return self.respond(200, workspace.inspect(query["id"][0]))
+            if path == "/api/workspace/os":
+                return self.respond(200, workspace.inspect_os())
+            return self.respond(404, {"error": "Not found"})
+
         def do_GET(self):
             if not self.allowed_host():
                 return self.respond(403, {"error": "Local access only"})
             url = urlsplit(self.path)
             query = parse_qs(url.query)
             try:
+                if workspace is not None:
+                    return self.workspace_get(url.path, query)
                 if url.path == "/":
                     return self.respond(200, Path(__file__).with_name("ui.html").read_text(), "text/html")
                 if url.path == "/ui-monitor.js":
@@ -762,15 +783,20 @@ def make_server(manager, port=8765):
             }
             if not self.allowed_host() or self.headers.get("Origin") not in expected:
                 return self.respond(403, {"error": "Use the local test page"})
-            if self.path not in {"/api/run", "/api/steer", "/api/resume", "/api/endpoint-test"}:
+            routes = ({"/api/workspace/send"} if workspace is not None
+                      else {"/api/run", "/api/steer", "/api/resume", "/api/endpoint-test"})
+            if self.path not in routes:
                 return self.respond(404, {"error": "Not found"})
             try:
                 length = int(self.headers.get("Content-Length", "0"))
-                if not 0 < length <= 65536 or self.headers.get("Content-Type") != "application/json":
+                maximum = 1_048_576 if workspace is not None else 65_536
+                if not 0 < length <= maximum or self.headers.get("Content-Type") != "application/json":
                     raise ValueError("Expected a small JSON request")
                 data = json.loads(self.rfile.read(length))
                 if not isinstance(data, dict):
                     raise ValueError("Expected an object")
+                if workspace is not None:
+                    return self.respond(202, workspace.start(data))
                 if self.path == "/api/endpoint-test":
                     return self.respond(202, manager.test_endpoint(data.get("endpoint_profile")))
                 if self.path == "/api/resume":
@@ -799,6 +825,21 @@ def make_server(manager, port=8765):
                 self.respond(400, {"error": str(exc)})
 
     return ThreadingHTTPServer(("127.0.0.1", port), Handler)
+
+
+def serve_workspace(config_path, port=8765, *, sim_haiku=False):
+    from .ui_workspace import Workspace
+
+    workspace = Workspace(load_runtime_config(config_path), sim_haiku=sim_haiku)
+    try:
+        with make_server(None, port, workspace=workspace) as server:
+            print(f"PolyInference workspace: http://localhost:{server.server_port}", flush=True)
+            try:
+                server.serve_forever()
+            except KeyboardInterrupt:
+                pass
+    finally:
+        workspace.close()
 
 
 def serve(port=8765, config_path=None, state=None, *, sim_batch=None, sim_inference=False):

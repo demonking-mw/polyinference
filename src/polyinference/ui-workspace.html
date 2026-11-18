@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>PolyInference Workspace</title>
+  <link rel="stylesheet" href="/ui-workspace.css">
+  <script src="/ui-workspace.js" defer></script>
+</head>
+<body>
+  <a class="skip" href="#workspace">Skip to workspace</a>
+  <header class="header">
+    <div class="brand"><span class="brand-mark" aria-hidden="true"></span> PolyInference</div>
+    <nav class="views" aria-label="Workspace view">
+      <button type="button" data-view="chat" aria-current="page">Chat</button>
+      <button type="button" data-view="os">OS Monitoring</button>
+      <button type="button" data-view="agents">Agent Monitoring</button>
+    </nav>
+    <span class="connection" id="connection">Connecting…</span>
+  </header>
+  <div class="app-error" role="alert" id="app-error" hidden></div>
+  <main id="workspace" tabindex="-1">
+    <section class="chat-view" id="chat-view" aria-label="Chat">
+      <aside class="sidebar" aria-label="Conversations">
+        <button class="new-chat" id="new-chat" type="button"><span aria-hidden="true">+</span> New chat</button>
+        <details open class="recent">
+          <summary>Recent chats</summary>
+          <div class="chat-list" id="chat-list"></div>
+        </details>
+      </aside>
+      <div class="conversation">
+        <div class="conversation-heading"><h1 id="chat-title">New chat</h1></div>
+        <div class="transcript" id="transcript" tabindex="0" aria-label="Conversation messages">
+          <div class="empty"><h2>What would you like to work on?</h2></div>
+        </div>
+        <form class="composer" id="composer">
+          <label class="sr-only" for="message">Message</label>
+          <textarea id="message" name="message" rows="3" maxlength="12000" placeholder="Write a message…" required></textarea>
+          <div class="draft-options">
+            <button type="button" class="quiet" id="attach">Attach documents</button>
+            <input type="file" id="files" aria-label="Attach UTF-8 text documents" multiple hidden>
+            <span id="files-summary"></span>
+            <button type="button" class="quiet" id="clear-files" hidden>Clear documents</button>
+            <label id="context-option" hidden><input type="checkbox" id="include-previous"> Include previous exchange</label>
+          </div>
+          <div class="composer-controls">
+            <label class="control">Agent <select id="agent"></select></label>
+            <div id="models" class="models"></div>
+            <label class="control schedule">Scheduling
+              <select id="scheduling" disabled aria-describedby="schedule-note">
+                <option>Unavailable</option>
+              </select>
+            </label>
+            <button class="primary" id="send" type="submit" disabled>Send</button>
+          </div>
+          <div class="composer-notes">
+            <span id="destination"></span>
+            <span id="schedule-note">Scheduler support is pending.</span>
+          </div>
+          <p class="form-status" id="send-status" role="status" hidden></p>
+          <p class="form-error" id="send-error" role="alert" hidden></p>
+        </form>
+      </div>
+    </section>
+
+    <section class="monitor-view" id="os-view" aria-labelledby="os-title" hidden>
+      <div class="view-heading">
+        <div><h1 id="os-title" tabindex="-1">OS Monitoring</h1><p>Status and resource usage across this workspace.</p></div>
+      </div>
+      <div id="os-data"></div>
+    </section>
+
+    <section class="monitor-view" id="agents-view" aria-labelledby="agents-title" hidden>
+      <div class="view-heading">
+        <div><h1 id="agents-title" tabindex="-1">Agent Monitoring</h1><p>Inspect processes and model attempts.</p></div>
+        <label class="control">Invocation <select id="agents-run"></select></label>
+      </div>
+      <div class="monitor-toolbar">
+        <div class="filters" role="group" aria-label="Process status">
+          <button type="button" data-filter="all" aria-pressed="true">All</button>
+          <button type="button" data-filter="running" aria-pressed="false">Running</button>
+          <button type="button" data-filter="preempted" aria-pressed="false" aria-describedby="agents-observation"
+                  disabled>Preempted</button>
+          <button type="button" data-filter="waiting" aria-pressed="false">Waiting</button>
+          <button type="button" data-filter="finished" aria-pressed="false">Finished</button>
+        </div>
+        <div class="search-tools">
+          <label class="sr-only" for="search">Search processes</label>
+          <input type="search" id="search" placeholder="Search processes…">
+          <label class="sr-only" for="binding">Binding</label>
+          <select id="binding"><option value="">All bindings</option><option value="local">Local binding</option><option value="cloud">Cloud binding</option></select>
+        </div>
+      </div>
+      <p class="observation" id="agents-observation"></p>
+      <div class="process-layout">
+        <div class="process-table" tabindex="0" aria-label="Process table">
+          <table>
+            <thead><tr>
+              <th scope="col"><button type="button" data-sort="name">Process</button></th>
+              <th scope="col"><button type="button" data-sort="binding">Binding</button></th>
+              <th scope="col"><button type="button" data-sort="status">Status</button></th>
+              <th scope="col"><button type="button" data-sort="started_at">Started</button></th>
+              <th scope="col">Latest detail</th>
+            </tr></thead>
+            <tbody id="process-rows"></tbody>
+          </table>
+          <p class="empty-table" id="process-empty">No invocations yet.</p>
+        </div>
+        <aside class="inspector" aria-label="Selected process" id="process-detail"></aside>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

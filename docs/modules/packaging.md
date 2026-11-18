@@ -6,7 +6,9 @@
 | [requirements.lock](../../requirements.lock) | Recorded tested transitive Python environment. |
 | [.gitignore](../../.gitignore) | Exclude credentials, caches, builds, generated projects, runtime state and local Obsidian preferences. |
 
-The wheel packages `src/polyinference`, including `ui.html` and `ui-monitor.js`.
+The wheel packages `src/polyinference`, including the coding console assets
+`ui.html` and `ui-monitor.js` and the chat workspace's `ui-workspace.html`,
+`ui-workspace.css`, and `ui-workspace.js`.
 Documentation/navigation tooling runs from the checkout and is not a runtime
 service or dependency. No frontend build is required for the local UI.
 

@@ -16,7 +16,7 @@ from pathlib import Path
 
 from .agent.controller import ProjectAgent
 from .agent.services import AgentServices
-from .config import AgentConfig
+from .config import AgentConfig, RuntimeConfig
 from .history import save_run_history
 from .os_config import BOUNDS
 from .primitives import canonical
@@ -68,6 +68,15 @@ def load_config(path, *, context=None):
                if config.output_directory is not None else {}),
         }
     )
+
+
+def load_runtime_config(path):
+    source = Path(path).resolve()
+    config = RuntimeConfig.model_validate_json(source.read_text(encoding="utf-8"))
+    return config.model_copy(update={
+        "repository": str((source.parent / config.repository).resolve()),
+        "state_directory": str((source.parent / config.state_directory).resolve()),
+    })
 
 
 async def apply_resume(engine, request_ref):
@@ -227,6 +236,19 @@ def main():
         item.add_argument("config")
         if name == "resume":
             item.add_argument("--text", default="", help="Optional instructions for continuing the run")
+    item = sub.add_parser("run-agent", help="Run one of the four general LangGraph agents on OS V1")
+    item.add_argument("config", help="OS-only RuntimeConfig JSON; use fresh state for each task")
+    item.add_argument("design", choices=["simple", "supervisor", "research", "writer"])
+    item.add_argument("task")
+    item.add_argument("--documents", help="JSON object mapping source IDs to supplied document text")
+    item = sub.add_parser("run-agents", help="Run a concurrent general-agent batch on one OS kernel")
+    item.add_argument("config", help="OS-only RuntimeConfig JSON; use fresh state for a new batch")
+    item.add_argument("manifest", help="JSON array of invocation objects; set max_workers for the batch size")
+    item.add_argument("--sim-haiku", action="store_true", help="Use remote Haiku for the local role")
+    item = sub.add_parser("workspace", help="Open the local chat and monitoring workspace")
+    item.add_argument("config", help="OS-only RuntimeConfig JSON for general agents")
+    item.add_argument("--port", type=int, default=8765)
+    item.add_argument("--sim-haiku", action="store_true", help="Use remote Haiku for the local role")
     item = sub.add_parser("ui")
     item.add_argument("--port", type=int, default=8765)
     item.add_argument("--config")
@@ -287,6 +309,35 @@ def main():
     args = parser.parse_args()
     try:
         load_saved_credentials()
+        if args.command == "run-agent":
+            from .general_agents.os_v1 import run_v1
+
+            config = load_runtime_config(args.config)
+            documents = json.loads(Path(args.documents).read_text()) if args.documents else {}
+            result = asyncio.run(run_v1(args.design, config, args.task, documents))
+            print(json.dumps(result, indent=2))
+            return
+        if args.command == "run-agents":
+            from pydantic import TypeAdapter
+
+            from .general_agents.os_v1 import BatchInvocation, run_v1_batch
+
+            config = load_runtime_config(args.config)
+            if args.sim_haiku:
+                from .agent.system_settings import general_agent_haiku_simulation
+
+                config = general_agent_haiku_simulation(config)
+            invocations = TypeAdapter(list[BatchInvocation]).validate_json(Path(args.manifest).read_bytes())
+            results = asyncio.run(run_v1_batch(config, invocations, simulated_local=args.sim_haiku))
+            print(json.dumps(results, indent=2))
+            if any(row["status"] == "failed" for row in results):
+                raise SystemExit(1)
+            return
+        if args.command == "workspace":
+            from .ui import serve_workspace
+
+            serve_workspace(args.config, args.port, sim_haiku=args.sim_haiku)
+            return
         if args.command == "configure-local":
             from .agent.local_provider import sync_local_provider
             print(json.dumps(sync_local_provider(load_config(args.config), args.strata_config), indent=2))

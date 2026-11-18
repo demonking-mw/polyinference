@@ -57,7 +57,15 @@
                 "id": "doc-docs-guides-codex-login",
                 "title": "Codex installation and login",
                 "doc": "docs/guides/codex-login.md",
-                "files": []
+                "files": [],
+                "children": [
+                  {
+                    "id": "doc-docs-guides-cloud-codex-default",
+                    "title": "Default cloud model for PolyInference agents",
+                    "doc": "docs/guides/cloud-codex-default.md",
+                    "files": []
+                  }
+                ]
               },
               {
                 "id": "doc-docs-guides-anthropic-key",
@@ -93,7 +101,9 @@
             "id": "doc-docs-guides-launching",
             "title": "Launch the local UI",
             "doc": "docs/guides/launching.md",
-            "files": []
+            "files": [
+              "scripts/launch-v2.sh"
+            ]
           },
           {
             "id": "doc-docs-guides-ui",
@@ -393,6 +403,17 @@
                     ]
                   },
                   {
+                    "id": "general-agents",
+                    "title": "Four general LangGraph agents on OS V1",
+                    "doc": "docs/modules/general-agents.md",
+                    "files": [
+                      "src/polyinference/general_agents/__init__.py",
+                      "src/polyinference/general_agents/graphs.py",
+                      "src/polyinference/general_agents/os_v1.py",
+                      "examples/general-agents.v1.json"
+                    ]
+                  },
+                  {
                     "id": "doc-docs-modules-runtime",
                     "title": "Runtime modules",
                     "doc": "docs/modules/runtime.md",
@@ -550,6 +571,10 @@
                         "files": [
                           "src/polyinference/ui.py",
                           "src/polyinference/ui.html",
+                          "src/polyinference/ui_workspace.py",
+                          "src/polyinference/ui-workspace.html",
+                          "src/polyinference/ui-workspace.css",
+                          "src/polyinference/ui-workspace.js",
                           "src/polyinference/ui_repository.py",
                           "src/polyinference/agent/endpoint_probe.py"
                         ]
@@ -714,7 +739,7 @@
                     "children": [
                       {
                         "id": "doc-design-docs-simplified-os-design-revisions",
-                        "title": "Current design revisions â€” 2026-10-20",
+                        "title": "Current design revisions \u00e2\u20ac\u201d 2026-10-20",
                         "doc": "design-docs/simplified-os/DESIGN_REVISIONS.md",
                         "files": []
                       },
@@ -738,7 +763,7 @@
                       },
                       {
                         "id": "doc-design-docs-simplified-os-validation",
-                        "title": "Simple OS v1 validation â€” 17 October 2026",
+                        "title": "Simple OS v1 validation \u00e2\u20ac\u201d 17 October 2026",
                         "doc": "design-docs/simplified-os/VALIDATION.md",
                         "files": []
                       },
@@ -772,7 +797,7 @@
                       },
                       {
                         "id": "doc-design-docs-implementation-validation",
-                        "title": "Validation record â€” 17 October 2026",
+                        "title": "Validation record \u00e2\u20ac\u201d 17 October 2026",
                         "doc": "design-docs/implementation/VALIDATION.md",
                         "files": []
                       },
@@ -798,7 +823,7 @@
                     "children": [
                       {
                         "id": "doc-design-docs-polyinference-design-project-brief",
-                        "title": "Polyinference â€” project brief",
+                        "title": "Polyinference \u00e2\u20ac\u201d project brief",
                         "doc": "design-docs/polyinference-design/PROJECT_BRIEF.md",
                         "files": []
                       },
@@ -834,31 +859,31 @@
                         "children": [
                           {
                             "id": "doc-design-docs-polyinference-design-os-research-01-cs350-1-foundations",
-                            "title": "Polyinference OS design â€” 1. Kernel boundary and the two-tier agent",
+                            "title": "Polyinference OS design \u00e2\u20ac\u201d 1. Kernel boundary and the two-tier agent",
                             "doc": "design-docs/polyinference-design/os-research/01-CS350-1-foundations.md",
                             "files": []
                           },
                           {
                             "id": "doc-design-docs-polyinference-design-os-research-02-cs350-2-processes",
-                            "title": "Polyinference OS design â€” 2. Processes, requests and tier handoffs",
+                            "title": "Polyinference OS design \u00e2\u20ac\u201d 2. Processes, requests and tier handoffs",
                             "doc": "design-docs/polyinference-design/os-research/02-CS350-2-processes.md",
                             "files": []
                           },
                           {
                             "id": "doc-design-docs-polyinference-design-os-research-03-cs350-3-threads",
-                            "title": "Polyinference OS design â€” 3. LangGraph execution and bounded host tasks",
+                            "title": "Polyinference OS design \u00e2\u20ac\u201d 3. LangGraph execution and bounded host tasks",
                             "doc": "design-docs/polyinference-design/os-research/03-CS350-3-threads.md",
                             "files": []
                           },
                           {
                             "id": "doc-design-docs-polyinference-design-os-research-04-cs350-4-concurrency",
-                            "title": "Polyinference OS design â€” 4. Synchronizing plans, work, memory and results",
+                            "title": "Polyinference OS design \u00e2\u20ac\u201d 4. Synchronizing plans, work, memory and results",
                             "doc": "design-docs/polyinference-design/os-research/04-CS350-4-concurrency.md",
                             "files": []
                           },
                           {
                             "id": "doc-design-docs-polyinference-design-os-research-05-cs350-5-scalability-and-deadlocks",
-                            "title": "Polyinference OS design â€” 5. Scaling the two-tier pipeline and preventing deadlocks",
+                            "title": "Polyinference OS design \u00e2\u20ac\u201d 5. Scaling the two-tier pipeline and preventing deadlocks",
                             "doc": "design-docs/polyinference-design/os-research/05-CS350-5-scalability-and-deadlocks.md",
                             "files": []
                           }
@@ -883,7 +908,7 @@
                   },
                   {
                     "id": "doc-project-brief",
-                    "title": "Polyinference â€” project brief",
+                    "title": "Polyinference \u00e2\u20ac\u201d project brief",
                     "doc": "PROJECT_BRIEF.md",
                     "files": []
                   },
@@ -973,55 +998,57 @@
                   "tests/test_agent.py",
                   "tests/test_agent_transitions.py",
                   "tests/test_anthropic.py",
+                  "tests/test_branch_integration.py",
                   "tests/test_capability_boundary.py",
+                  "tests/test_check_diagnosis.py",
+                  "tests/test_cli.py",
+                  "tests/test_cli_status.py",
                   "tests/test_context_safety.py",
                   "tests/test_contracts.py",
                   "tests/test_costs.py",
                   "tests/test_endpoints.py",
+                  "tests/test_exception_recovery.py",
+                  "tests/test_four_repairs.py",
+                  "tests/test_general_agents.py",
                   "tests/test_history.py",
                   "tests/test_http_integration.py",
                   "tests/test_in_place_repository.py",
                   "tests/test_incident_fixes.py",
+                  "tests/test_inference_lifecycle.py",
+                  "tests/test_inference_retry.py",
+                  "tests/test_inference_simulation.py",
+                  "tests/test_model_fallback.py",
                   "tests/test_model_retries.py",
+                  "tests/test_module_planning.py",
                   "tests/test_native_events.py",
                   "tests/test_native_worker.py",
                   "tests/test_os.py",
+                  "tests/test_os_config.py",
                   "tests/test_output_limits.py",
                   "tests/test_outputs.py",
+                  "tests/test_p0_repairs.py",
+                  "tests/test_progress.py",
                   "tests/test_recovery.py",
-                  "tests/test_resume.py",
                   "tests/test_regressions.py",
+                  "tests/test_resume.py",
+                  "tests/test_retry_export.py",
                   "tests/test_runtime.py",
                   "tests/test_runtime_general.py",
                   "tests/test_saved_credentials.py",
+                  "tests/test_semantic_review.py",
                   "tests/test_setup_tools.py",
                   "tests/test_sim_batch.py",
-                  "tests/test_inference_simulation.py",
+                  "tests/test_testing_tasks.py",
                   "tests/test_tool_environment.py",
                   "tests/test_ui.py",
                   "tests/test_ui_agents.py",
                   "tests/test_ui_frontend.py",
                   "tests/test_ui_os.py",
+                  "tests/test_ui_workspace.py",
                   "tests/test_user_briefs.py",
-                  "tests/test_workspace_outputs.py",
-                  "tests/ui_start.test.cjs",
-                  "tests/test_inference_lifecycle.py",
-                  "tests/test_check_diagnosis.py",
-                  "tests/test_exception_recovery.py",
-                  "tests/test_inference_retry.py",
-                  "tests/test_module_planning.py",
-                  "tests/test_progress.py",
-                  "tests/test_retry_export.py",
-                  "tests/test_semantic_review.py",
                   "tests/test_validation_feedback.py",
-                  "tests/test_cli.py",
-                  "tests/test_branch_integration.py",
-                  "tests/test_model_fallback.py",
-                  "tests/test_four_repairs.py",
-                  "tests/test_os_config.py",
-                  "tests/test_p0_repairs.py",
-                  "tests/test_testing_tasks.py",
-                  "tests/test_cli_status.py"
+                  "tests/test_workspace_outputs.py",
+                  "tests/ui_start.test.cjs"
                 ]
               },
               {
@@ -1150,7 +1177,7 @@
               },
               {
                 "id": "doc-development-docs-io-safety-verification-2026-10-20",
-                "title": "I/O safety implementation verification â€” 2026-10-20",
+                "title": "I/O safety implementation verification \u00e2\u20ac\u201d 2026-10-20",
                 "doc": "development-docs/io-safety-verification-2026-10-20.md",
                 "files": []
               }
@@ -1249,6 +1276,12 @@
                 "title": "MCP support design and investigation journal",
                 "doc": "docs/temporary/proposals/2026-11-13-mcp-support-design.md",
                 "files": []
+              },
+              {
+                "id": "chat-workspace-design-20261116",
+                "title": "Workspace UI for chat, OS monitoring, and agent monitoring (proposed)",
+                "doc": "docs/temporary/proposals/2026-11-16-chat-workspace-design.md",
+                "files": []
               }
             ]
           },
@@ -1258,6 +1291,12 @@
             "doc": "docs/temporary/investigations/README.md",
             "files": [],
             "children": [
+              {
+                "id": "workspace-research-haiku-failure-20261116",
+                "title": "Workspace Research run rejected by Haiku",
+                "doc": "docs/temporary/investigations/2026-11-16-workspace-research-haiku-failure.md",
+                "files": []
+              },
               {
                 "id": "doc-development-docs-run-analysis-8e83ed155ae2",
                 "title": "Run analysis: 8e83ed155ae2",
@@ -1272,7 +1311,7 @@
               },
               {
                 "id": "doc-development-docs-workspace-output-and-native-boundary",
-                "title": "Build outputs and native harness boundary â€” 19 October 2026",
+                "title": "Build outputs and native harness boundary \u00e2\u20ac\u201d 19 October 2026",
                 "doc": "docs/temporary/investigations/2026-10-19-workspace-output-and-native-boundary.md",
                 "files": []
               },
@@ -1284,7 +1323,7 @@
               },
               {
                 "id": "doc-development-docs-memory-implementation-report-2026-10-20",
-                "title": "Current memory implementation â€” 2026-10-20",
+                "title": "Current memory implementation \u00e2\u20ac\u201d 2026-10-20",
                 "doc": "docs/temporary/investigations/2026-10-20-memory-implementation.md",
                 "files": []
               },
@@ -1298,7 +1337,7 @@
               },
               {
                 "id": "doc-development-docs-pause-retry-audit-2026-10-20",
-                "title": "Pause and retry audit â€” 2026-10-20",
+                "title": "Pause and retry audit \u00e2\u20ac\u201d 2026-10-20",
                 "doc": "docs/temporary/investigations/2026-10-20-pause-and-retry.md",
                 "files": []
               },
@@ -1380,6 +1419,12 @@
                 "id": "langchain-v1-gap-20261113",
                 "title": "PolyInference OS V1 and LangChain agents",
                 "doc": "docs/temporary/investigations/2026-11-13-langchain-v1-gap.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-investigations-2026-11-17-general-agent-concurrency-tests",
+                "title": "General-agent live concurrency tests",
+                "doc": "docs/temporary/investigations/2026-11-17-general-agent-concurrency-tests.md",
                 "files": []
               }
             ]
@@ -1526,13 +1571,13 @@
             "children": [
               {
                 "id": "doc-development-docs-handoff-2026-10-20-io",
-                "title": "I/O safety implementation handoff â€” 2026-10-20",
+                "title": "I/O safety implementation handoff \u00e2\u20ac\u201d 2026-10-20",
                 "doc": "docs/temporary/handoffs/2026-10-20-io-safety-handoff.md",
                 "files": []
               },
               {
                 "id": "doc-development-docs-handoff-2026-10-20",
-                "title": "Handoff â€” 2026-10-20 â€” OS retries and pause audit",
+                "title": "Handoff \u00e2\u20ac\u201d 2026-10-20 \u00e2\u20ac\u201d OS retries and pause audit",
                 "doc": "docs/temporary/handoffs/2026-10-20-retry-and-pause-handoff.md",
                 "files": []
               },

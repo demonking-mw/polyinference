@@ -1,5 +1,30 @@
 # Launch the local UI
 
+## V2 workspace
+
+From the checkout in WSL, Linux, or macOS, run:
+
+```bash
+./scripts/launch-v2.sh
+```
+
+The [launcher](../../scripts/launch-v2.sh) serves the v2 chat and monitoring UI
+at [localhost:8766](http://localhost:8766). The workspace starts its OS kernel
+for each invocation and launches Codex app-server on demand. Haiku handles the
+simulated local binding with two inference slots. Complete the project install,
+Codex ChatGPT sign-in and Anthropic key setup first (`setup.md`).
+Pass your existing configuration to reuse its state and optionally pass a port:
+`./scripts/launch-v2.sh CONFIG 8766`. The default configuration is
+`examples/general-agents.v1.json`. Press Ctrl+C in the terminal to stop the server.
+To use a real local model, run `polyinference workspace CONFIG --port 8766`
+with its configured endpoint. See `docs/guides/ui.md` for workspace controls.
+
+The coding console uses `ui --sim-batch N` for its Haiku worker slots.
+Both examples use GPT‑6.1 Sol through the ChatGPT Codex login for Cloud.
+See `docs/guides/cloud-codex-default.md`.
+
+## Coding console
+
 From the PolyInference checkout, with the virtual environment active and credentials
 loaded:
 

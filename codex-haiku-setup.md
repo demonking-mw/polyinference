@@ -8,7 +8,7 @@ the lockfile recipe when reproducing a recorded Linux/macOS environment.
 
 | Lane / role | Pinned UI preset |
 | --- | --- |
-| `local` / `worker` | Anthropic `claude-haiku-5-5`, one in-flight request |
+| `local` / `worker` | Anthropic `claude-haiku-5-5`, one in-flight request, 96,000 input and 32,000 output tokens |
 | `cloud` / `senior`, `specialist` | `codex_app_server`, `gpt-6.1-sol`, medium turn effort, brokered tools, one request |
 
 This checklist describes the bundled preset without machine preferences (`docs/guides/configuration.md`).
@@ -18,6 +18,11 @@ for serial local admission; this is neither Anthropic's Batch API nor a hardware
 performance model. One worker and one inference slot are separate limits. Model
 IDs require account access; record rejections and agree on replacements before
 comparing results.
+
+For general-agent chat, run `./scripts/launch-v2.sh` from the checkout. It uses
+two Haiku slots with the same token pair per slot. See `docs/guides/launching.md`
+for configuration and port overrides. Its streaming Messages request sends `max_tokens: 32000`, uses
+default adaptive thinking, and omits sampling controls.
 
 1. Install and authenticate Codex on the backend host (`docs/guides/codex-login.md`).
    WSL needs its own Linux Codex installation/login. The backend launches stdio
@@ -32,8 +37,10 @@ comparing results.
    ```
 
    The variable applies only to this launch. The default UI has one worker,
-   trusted shell/check execution and 27 sprints. The bundled Haiku pair is 96000 input/32000 output tokens;
-   native Codex cloud agents have no OS per-call token cap. The mixed JSON example has different concurrency.
+   trusted shell/check execution and 27 sprints. Haiku's 32,000-token output cap
+   includes thinking and yields a 128,000-token total reservation per slot.
+   Native Codex cloud agents have no OS per-call token cap. The mixed JSON
+   example has different concurrency.
 4. Follow the greeting smoke test (`docs/guides/first-run.md`). Inspect worker
    calls on `local` and senior/specialist calls on `cloud`; the saved config must
    show `max_workers:1` and both `max_inflight:1`. Require final acceptance/check

@@ -9,6 +9,12 @@ For the bundled cloud senior preset, install and sign in to Codex on the
 same host. For the bundled Haiku worker preset, configure Anthropic credentials.
 A real local server can replace the stand-in. Install the target project's own
 check tools; the bundled PolyInference UI needs no frontend build.
+For native Codex on Linux or WSL, put `bwrap` on PATH if the Codex CLI
+installation has no bundled bubblewrap helper. See `docs/guides/codex-login.md`.
+
+The general-agent chat workspace also needs no frontend build. Prepare a
+copy of `examples/general-agents.v1.json` with your inference endpoints and
+use `polyinference workspace CONFIG`. See `docs/guides/ui.md`.
 
 Linux supports the optional bubblewrap command backend. On macOS, explicitly
 choose the trusted backend if you authorize host commands. Read the provider

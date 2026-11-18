@@ -15,3 +15,4 @@ parts are still open.
 - [Simpler agent prompts and milestone-driven sprint planning proposal](2026-11-04-agent-prompting-proposal.md)
 
 - [MCP support design and investigation journal](2026-11-13-mcp-support-design.md)
+- [Workspace UI for chat, OS monitoring, and agent monitoring (proposed)](2026-11-16-chat-workspace-design.md)

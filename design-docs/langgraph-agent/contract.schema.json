@@ -2790,10 +2790,17 @@
           "type": "array"
         },
         "temperature": {
-          "maximum": 2,
-          "minimum": 0,
-          "title": "Temperature",
-          "type": "number"
+          "anyOf": [
+            {
+              "maximum": 2,
+              "minimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Temperature"
         },
         "session_ref": {
           "anyOf": [

@@ -17,6 +17,7 @@ need separately stated checks. Update affected docs and FIXES.md with every fix.
 | [test_contracts.py](test_contracts.py) | Packaged wire/schema invariants. |
 | [test_costs.py](test_costs.py) | Usage/pricing estimates and aggregation. |
 | [test_endpoints.py](test_endpoints.py) | Endpoint transport, admission, routing and concurrency. |
+| [test_general_agents.py](test_general_agents.py) | Four scripted LangGraph flows and all four OS V1 journal/replay paths with a disposable graph saver. |
 | [test_history.py](test_history.py) | Shared snapshot archives, retention and failure isolation. |
 | [test_http_integration.py](test_http_integration.py) | Complete coding workflow over real local HTTP fixtures. |
 | [test_in_place_repository.py](test_in_place_repository.py) | Git setup, verified integration, concurrent/serial worktrees, source reuse and retained current-source review evidence. |
@@ -45,6 +46,7 @@ need separately stated checks. Update affected docs and FIXES.md with every fix.
 | [test_ui_agents.py](test_ui_agents.py) | Coding task/review/history projections. |
 | [test_ui_frontend.py](test_ui_frontend.py) | Python wrapper invoking supported Node frontend checks. |
 | [test_ui_os.py](test_ui_os.py) | Generic OS snapshot/inspection projections. |
+| [test_ui_workspace.py](test_ui_workspace.py) | Loopback workspace, role selection, real OS journal observations with scripted inference, idempotent Send, and retained holds across restart. |
 | [test_user_briefs.py](test_user_briefs.py) | Durable notifications and evidence-based senior briefs. |
 | [test_workspace_outputs.py](test_workspace_outputs.py) | Declared output/source precedence and dependency environments. |
 | [ui_start.test.cjs](ui_start.test.cjs) | UI JavaScript launch/snapshot/inspection, direct Resume, optional persistent instructions, request replay, progress, guards and stale replies. |

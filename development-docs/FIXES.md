@@ -235,6 +235,26 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0189](#fix-0189) | 2026-11-13 | Mark scheduler OS support against current code |
 | [FIX-0190](#fix-0190) | 2026-11-13 | Design MCP admission, execution and recovery boundaries |
 | [FIX-0191](#fix-0191) | 2026-11-13 | Organize the Obsidian graph by module and reading route |
+| [FIX-0192](#fix-0192) | 2026-11-15 | Ship four small LangGraph agents through the OS V1 boundary |
+| [FIX-0193](#fix-0193) | 2026-11-16 | Locate UI design evidence and propose a chat workspace |
+| [FIX-0194](#fix-0194) | 2026-11-16 | Specify the workspace navigation and process monitor |
+| [FIX-0195](#fix-0195) | 2026-11-16 | Put the workspace selector in the top header |
+| [FIX-0196](#fix-0196) | 2026-11-16 | Specify role-aware model selection in chat |
+| [FIX-0197](#fix-0197) | 2026-11-16 | Launch the general-agent workspace with OS-backed monitoring |
+| [FIX-0198](#fix-0198) | 2026-11-16 | Launch the workspace with a remote Haiku local stand-in |
+| [FIX-0199](#fix-0199) | 2026-11-16 | Explain the workspace Cloud binding and native Codex gap |
+| [FIX-0200](#fix-0200) | 2026-11-16 | Standardize application Cloud on the Codex subscription |
+| [FIX-0201](#fix-0201) | 2026-11-16 | Show the entire workspace in OS Monitoring |
+| [FIX-0202](#fix-0202) | 2026-11-16 | Explain the Research run's Haiku temperature rejection |
+| [FIX-0203](#fix-0203) | 2026-11-16 | Omit temperature from general-agent Anthropic requests |
+| [FIX-0204](#fix-0204) | 2026-11-16 | Document the Haiku workspace preset and request settings |
+| [FIX-0205](#fix-0205) | 2026-11-16 | Launch the v2 workspace with two Haiku slots |
+| [FIX-0206](#fix-0206) | 2026-11-17 | Qualify general-agent concurrency and distinguish shared endpoint limits |
+| [FIX-0207](#fix-0207) | 2026-11-18 | Rerun the concurrent workflows on one kernel |
+| [FIX-0208](#fix-0208) | 2026-11-18 | Host a concurrent general-agent batch on one kernel |
+| [FIX-0209](#fix-0209) | 2026-11-18 | Bound Research plan validation and correction |
+| [FIX-0210](#fix-0210) | 2026-11-18 | Return evidence around matching terms |
+| [FIX-0211](#fix-0211) | 2026-11-18 | Identify where agent graphs spend cloud turns |
 
 
 ## Entry template
@@ -9563,3 +9583,898 @@ All 26 focused navigation regressions and the whitespace check passed. Read
 back the graph upkeep rule in AGENTS.md and verified the original settings backup.
 Reviewed product setup and runtime guides. Their procedures and contracts do not
 cover Obsidian presentation and required no edits.
+
+<a id="fix-0192"></a>
+
+## FIX-0192 — 2026-11-15 — Ship four small LangGraph agents through the OS V1 boundary
+
+Status: implemented; offline workflow and journal checks passed. Related:
+[FIX-0007](#fix-0007), [FIX-0022](#fix-0022), [FIX-0032](#fix-0032),
+[FIX-0117](#fix-0117), and [FIX-0186](#fix-0186).
+
+### Symptom and owning cause
+
+The repository offered one complex coding application despite V1's generic
+process/effect contract. A stock LangChain tool agent is not directly compatible:
+V1 raw requests return text, and its process contract pins one role and one active
+top-level effect. The compatibility investigation in FIX-0186 identified these
+as adapter boundaries rather than a reason to put new agent policy into the OS.
+
+### Concrete change
+
+Added four standalone public-API LangGraph graphs: a bounded simple ReAct-like
+agent, a cloud planner/local worker supervisor, a supplied-corpus research
+lead/local extractor, and a cloud evaluator/local writing drafter. The fourth
+follows the established evaluator–optimizer pattern because the request asked
+for four agents but named three categories. The graphs depend on an `AgentIO`
+context protocol and were built before the V1 adapter. The adapter supplies
+raw `ModelQuery` text turns, a read-only typed corpus lookup, static cloud/local
+process roles, durable request IDs and OS artifact results. A new `run-agent`
+CLI command and OS-only example configuration make them runnable without coding
+settings, Git, checks or source writes. The guide records exact adaptations and
+difficulty at `docs/modules/general-agents.md`.
+
+### Design principle
+
+Keep agent patterns and response grammar in LangGraph applications. The OS
+continues to own grants, admission, accounting, effect certainty and replay.
+Simple serial workflows fit V1 without native tool calls, OS changes or framework
+patches; external search, stock `create_agent` tool turns, arbitrary graph
+interrupts and generic chat-session continuation remain separate capabilities.
+
+### Verification and limits
+
+`tests/test_general_agents.py`: 9 passed. Four tests exercised all graph routes
+with scripted replies. Four exercised their actual V1 process, model and
+capability effects, checked settled journal entries and replayed from fresh
+graph state with no duplicate model requests. One rejected multi-level routing
+without distinct declared local/cloud locations. The OS tests substituted an
+in-memory LangGraph saver because even a minimal `aiosqlite` connection/close
+stalled on this host; SQLite graph-checkpoint recovery remains unverified.
+`ruff check` passed for changed Python files; CLI help and example RuntimeConfig
+validation passed. `project_docs.py` generation and `--check` passed for 402 files
+and 204 notes; `obsidian_graph.py --check` passed for 10 groups. No local model,
+live cloud endpoint, browser/UI path, model-quality benchmark or generic
+interrupted-graph Resume was run. The current UI and coding agent were not
+changed. Their task/Git/acceptance interfaces, setup procedure and existing
+OS contracts remain accurate; no adjacent code or settings-schema edit was
+needed. Project memory was refreshed and read back in `AGENTS.md` from
+`docs/project-memory.md` at HEAD `55c66c6`.
+
+<a id="fix-0193"></a>
+
+## FIX-0193 — 2026-11-16 — Locate UI design evidence and propose a chat workspace
+
+Status: investigation and draft proposal. No implementation changed.
+Related: [FIX-0037](#fix-0037), [FIX-0183](#fix-0183),
+[FIX-0189](#fix-0189) and [FIX-0192](#fix-0192).
+
+### Trigger and owning gap
+
+The branch adds four OS V1 agents, but its supported entry point is the CLI.
+The current browser client is a coding-run test UI. A chat product surface
+needs an application-owned conversation model and a display of agent process
+evidence. That application gap does not require the OS to own conversations.
+
+### Findings and proposal
+
+At `feature/simple-agents` HEAD `3d39890`, the project brief mentions one
+conversation and working state. The UI guide, context drawer and Resume notes
+describe the existing run interface, and the design atlas is an architecture
+reader. The standalone scheduler has its own proposal. No chat UI specification
+or mockup was found in the checkout or by targeted searches of available Git
+commit subjects and tracked filenames. This does not rule out an external or
+untracked design.
+
+Recorded a draft in
+`docs/temporary/proposals/2026-11-16-chat-workspace-design.md`. It proposes an
+agent picker at Send, separate importance/time sensitivity presets, and a
+collapsible activity view showing process state and local/cloud binding.
+
+### Design principle
+
+Select a workflow and pin it per invocation. Keep the transcript, processes and
+model operations separately identified. Scheduler eligibility and preemption
+intent are separate from OS resource waits and observed release. Priority does
+not change placement, authority, accounts or deadlines.
+
+### Verification and limits
+
+Reviewed the UI, inspection, general-agent, CLI, runtime/settings and design
+guides and current work. Setup, usage, module, scheduler and task instructions
+need no changes for an unapproved product proposal. The new draft is indexed
+under Proposals and the existing Records and research graph group; no graph
+layout or key reading route changed. Refreshed the retained checklist in
+`AGENTS.md` and verified its text matches `docs/project-memory.md`.
+`python3 scripts/project_docs.py` and its `--check` mode passed in WSL
+for 403 files, 205 notes and 204 note links; both retained the existing
+general-agent guide length advisory. `python3 scripts/obsidian_graph.py --check`
+passed for 10 groups, and `git diff --check` passed. These are documentation
+checks only; no UI, runtime, provider or execution tests were performed.
+
+<a id="fix-0194"></a>
+
+## FIX-0194 — 2026-11-16 — Specify the workspace navigation and process monitor
+
+Status: design proposal revised. No implementation changed.
+Related: [FIX-0037](#fix-0037), [FIX-0183](#fix-0183),
+[FIX-0189](#fix-0189) and [FIX-0193](#fix-0193).
+
+### Trigger and owning gap
+
+The initial chat draft used an Activity drawer as its primary monitoring
+surface. The requested workspace needs persistent navigation to OS resources
+and processes, with clear evidence for each lifecycle state. The UI owns
+navigation and presentation. The OS reports execution and suspension evidence.
+
+### Design change
+
+Revised `docs/temporary/proposals/2026-11-16-chat-workspace-design.md` with a
+Codex-style sidebar for Chat, OS Monitor, and Processes. Added wireframes for
+all three views, a Task Manager-style process grid with filters and an inspector,
+status labels and evidence requirements, and review scenarios. Chat retains
+the agent selector and scheduling presets. Links from chat replies and OS
+resource pools open the relevant processes.
+
+### Design principle
+
+Preemption intent, OS-confirmed suspension, resource release, and terminal
+outcome each require their own evidence. Keep the same process identity across
+readmission. Let the user inspect retained holds even when the process has
+a terminal outcome. The scheduler's per-process authority stays as proposed.
+
+### Verification and limits
+
+Reviewed the labels against the process contract, inspection guide and
+scheduler proposal. The existing proposal parent, map and graph group still
+cover the note. The setup, usage, module, configuration, scheduler and task
+guides describe current behavior or existing work and need no change for this
+design. Verified the retained checklist in `AGENTS.md` matches
+`docs/project-memory.md` at `3d39890`.
+
+Both `python3 scripts/project_docs.py` and its `--check` mode passed for
+403 files, 205 notes and 204 note links. The existing general-agent guide
+length advisory remains. `python3 scripts/obsidian_graph.py --check` passed
+for 10 groups. `git diff --check` passed. The wireframes are illustrative.
+No browser, scheduler or provider execution was tested.
+
+<a id="fix-0195"></a>
+
+## FIX-0195 — 2026-11-16 — Put the workspace selector in the top header
+
+Status: design proposal revised. No implementation changed.
+Related: [FIX-0194](#fix-0194).
+
+### Trigger and owning gap
+
+The wireframe placed the three workspace views in the chat sidebar below New
+chat. The user asked for a selector at the top and named its three options.
+Placement and naming belong to the workspace shell.
+
+### Design change
+
+Updated `docs/temporary/proposals/2026-11-16-chat-workspace-design.md` to place
+Chat, OS Monitoring, and Agent Monitoring in the top header of every wireframe.
+The chat sidebar shows New chat and Recent chats. Agent Monitoring contains the
+process table. Updated the navigation labels and the review scenario for
+moving between a reply, its processes, and the related OS resource pool.
+
+### Design principle
+
+Use one workspace-level selector and preserve the chat draft when switching.
+Links from replies and resource pools select Agent Monitoring with the matching
+filter. Process state labels still follow OS and scheduler evidence.
+
+### Verification and limits
+
+Reviewed the proposal and its navigation. Setup, usage, and module guides
+describe shipped behavior. The scheduler and task guides need no new contract
+or work item for a change to the wireframes. The proposal keeps its existing
+note parent and Obsidian group.
+
+Verified all three wireframes show the selector and the chat frame aligns.
+Read back the retained checklist in `AGENTS.md` against `docs/project-memory.md`
+at `3d39890`. Documentation generation and `--check` passed for 403 files,
+205 notes and 204 note links, with the existing general-agent guide length
+advisory. The Obsidian check passed for 10 groups, and `git diff --check`
+passed. No browser or runtime tests were run for the design edit.
+
+<a id="fix-0196"></a>
+
+## FIX-0196 — 2026-11-16 — Specify role-aware model selection in chat
+
+Status: design proposal and configuration guidance updated. No implementation
+changed. Related: [FIX-0192](#fix-0192), [FIX-0194](#fix-0194).
+
+### Trigger and owning gap
+
+The composer selected a workflow and a scheduling preference. It needed a
+model choice that respects the workflow's role bindings. Each Simple model
+step uses `general`, which can bind to either configured endpoint. Its
+brokered lookup still requires a `local` role. The other three graphs require
+distinct bindings declared local and cloud. These constraints belong to the
+agent and launch configuration.
+
+### Design change
+
+Added a single Model menu for Simple and a Models menu with local and cloud
+role fields for Supervisor, Research, and Writer in
+`docs/temporary/proposals/2026-11-16-chat-workspace-design.md`. The proposal
+covers eligibility, destination preview, fresh invocation pins, the reply
+summary, and process evidence. Updated `docs/modules/general-agents.md` to
+describe the shipped `role_bindings.general` configuration.
+
+### Design principle
+
+Choose a configured endpoint per model role before submission. Preserve each
+workflow's placement constraints and OS data policy. Record the pinned
+choices alongside observed model-attempt facts. The scheduler continues to
+decide process eligibility.
+
+### Verification and limits
+
+Reviewed graph roles, adapter validation, RuntimeConfig, sample configuration,
+and existing test coverage. The setup, UI usage, settings schema, runtime
+boundary, scheduler and task guides need no change for this design. The
+proposal and module guide retain their existing reading routes and graph
+groups. Read back the retained checklist in `AGENTS.md` against
+`docs/project-memory.md` at `3d39890`.
+
+Documentation generation and `--check` passed for 403 files, 205 notes and
+204 note links, with the existing general-agent guide length advisory. The
+Obsidian check passed for 10 groups. Wireframe alignment and whitespace
+checks passed. No browser, runtime, or live model tests were run.
+
+<a id="fix-0197"></a>
+
+## FIX-0197 — 2026-11-16 — Launch the general-agent workspace with OS-backed monitoring
+
+Status: initial workspace implemented. Related: [FIX-0037](#fix-0037),
+[FIX-0183](#fix-0183), [FIX-0192](#fix-0192), [FIX-0195](#fix-0195),
+and [FIX-0196](#fix-0196).
+
+### Trigger and owning gap
+
+The four general agents were available through the CLI and had no chat launch
+or workspace monitor. The new UI needs to choose role bindings before starting
+fresh general-agent runs. The application owns chat and model selection. The
+runtime supplies process, resource, and effect evidence.
+
+### Change
+
+Added `polyinference workspace CONFIG`, with a persistent top selector for
+Chat, OS Monitoring, and Agent Monitoring. Chat supports the four agent
+graphs, compatible role-specific model selection, supplied documents, and
+explicit previous-exchange context. A Send pins an effective configuration,
+records its identity, and runs the existing V1 adapter. Duplicate sends return
+the original acknowledgement. The workspace retains completed and interrupted
+chats and accepts one active invocation at a time.
+
+The monitors read the OS journal for a selected invocation. The table has
+sorting, binding and state filters, a process inspector, and links to the chat
+and resource view. It reports actual model-attempt evidence where available.
+Used UI/UX Pro Max 2.15.0 design-system, UX, and stack guidance for the
+neutral palette, visible focus, state labels, and responsive table treatment.
+
+### Design principle
+
+Preserve original data policy and keep cloud/local model roles explicit.
+Process observation does not confer scheduling control. A stale running
+record or a paused continuation is insufficient evidence of preemption.
+Unconfirmed execution and retained holds remain visible across restart and
+block new work in that workspace. Shared admission, policy selection,
+preemption acknowledgements, and detached snapshot import remain proposed.
+
+### Verification and limits
+
+Updated setup and usage entry points, CLI, architecture, settings,
+workspace and inspection guides, design, task backlog, and file navigation.
+The current runtime boundary and coding console recovery rules need no edit
+for the opt-in general-agent surface. The note tree and Obsidian groups keep
+their existing routes. The retained checklist in `AGENTS.md` was read back
+from `docs/project-memory.md` for `3d39890`.
+
+All 78 focused pytest cases passed across the workspace, general agents,
+OS inspection, coding console, and its Node frontend wrapper. The workspace
+cases used actual SQLite checkpoints and the OS journal with scripted inference.
+Headless Chromium verified the selector, both role layouts, draft retention,
+reply-to-process-and-back navigation, the OS view, and layout at 1,440 and
+390 pixels. A direct CLI launch/shutdown and wheel asset inspection passed.
+Ruff, JavaScript syntax, and `git diff --check` passed. Documentation
+generation and `--check` passed for 408 files, 205 notes and 204 links, with
+guide length advisories. The Obsidian graph check passed for 10 groups.
+No real model provider, scheduler, or shared resource service was exercised.
+
+<a id="fix-0198"></a>
+
+## FIX-0198 — 2026-11-16 — Launch the workspace with a remote Haiku local stand-in
+
+Status: implemented and launched. Related: [FIX-0092](#fix-0092),
+[FIX-0192](#fix-0192), and [FIX-0197](#fix-0197).
+
+### Trigger and owning gap
+
+The coding console could run Haiku as a remote stand-in for local inference.
+The workspace required actual local placement for a mixed graph's local role.
+The user needed to launch the workspace without a local model engine. The
+stand-in is a launch and agent binding choice.
+
+### Change
+
+Added `workspace CONFIG --sim-haiku`. The app overlays the existing Haiku
+preset on the logical local binding and the adapter preserves the endpoint's
+cloud location when checking the local role. The original data policy has to
+authorize this destination. The workspace labels the stand-in separately
+from the cloud role and stores the distinction in each new invocation.
+Ordinary launches keep their existing placement rules. Updated the launch,
+usage, CLI, settings, general agents, UI, and design guides. Setup, task
+tracking, scheduler authority, and document navigation need no changes.
+
+### Design principle
+
+A simulated local role is still a cloud destination. Simulation cannot
+broaden data policy, change saved bindings, or establish local hardware
+capacity. Mixed phases use distinct logical bindings and still share real
+provider constraints where configured against the same provider.
+
+### Verification and limits
+
+Opened both local services and verified their Haiku configuration without
+sending a model request. The workspace exposed all four agent choices and
+reported Cloud (local stand-in). Stopped the old coding UI at the user's
+request and verified port 8765 closed while the workspace on 8766 served HTTP
+200. The scripted tests cover simulated mixed routing and rejection under a
+local-only data policy.
+
+All 12 workspace and general-agent tests passed. Ruff and JavaScript syntax
+checks passed. Documentation generation and `--check` passed for 408 files
+and 205 notes, with existing guide length advisories. The Obsidian graph
+and whitespace checks passed. The retained checklist in `AGENTS.md` matches
+`docs/project-memory.md` at source pin `3d39890`.
+
+<a id="fix-0199"></a>
+
+## FIX-0199 — 2026-11-16 — Explain the workspace Cloud binding and native Codex gap
+
+Status: configuration investigation and documentation clarification. No
+implementation changed. Related: [FIX-0186](#fix-0186), [FIX-0192](#fix-0192),
+and [FIX-0198](#fix-0198).
+
+### Trigger and owning cause
+
+The running workspace on port 8766 showed Haiku for both model choices. Its
+launch config explicitly assigned Anthropic Haiku to the cloud binding, and
+`--sim-haiku` supplied Haiku for the local role. The coding UI defaults to
+`gpt-6.1-sol` through Codex app-server. The generic OS accepts role bindings
+from each application's configuration.
+
+### Findings and clarification
+
+The workspace runner currently emits `ModelQuery`, which accepts raw chat,
+Responses, Gemini and Anthropic endpoints. The runtime requires `AgentJob`
+for native Codex. The active server exposes both Haiku choices with distinct
+binding IDs and there was no OpenAI API key in the inspected launch
+environment. Reusing subscription-backed Codex needs an adapter for tool-free
+native jobs and retained results. Renaming the model or changing the endpoint
+protocol alone would leave the workspace without a usable cloud role.
+
+### Design principle
+
+Display the provider and model from the effective application binding. Keep
+raw requests and native job contracts explicit and preserve placement,
+authority, and execution evidence across either route.
+
+### Verification and limits
+
+Confirmed the active catalog and sanitized launch config over loopback.
+Reviewed the coding preset, workspace adapter, and OS protocol dispatch.
+Updated usage, the general-agent guide, and the task backlog. Setup, settings
+schema, runtime boundary, and navigation need no changes. No provider calls
+or changes to the running server were made.
+
+Documentation generation, `--check`, and the Obsidian and whitespace checks
+passed for 408 files and 205 notes, with existing guide length advisories.
+Verified the retained checklist in `AGENTS.md` against `docs/project-memory.md`
+at `3d39890`.
+
+<a id="fix-0200"></a>
+
+## FIX-0200 — 2026-11-16 — Standardize application Cloud on the Codex subscription
+
+Status: implemented. Supersedes the native workspace gap in
+[FIX-0199](#fix-0199). Related: [FIX-0192](#fix-0192) and
+[FIX-0198](#fix-0198).
+
+### Trigger and owning cause
+
+The workspace offered Haiku on both bindings because the general agents
+previously submitted only raw model queries. The desired Cloud model for
+all the agents is GPT‑6.1 Sol through the same existing Codex ChatGPT login
+as the coding console. That is an application binding and authentication
+requirement.
+
+### Change
+
+Normalized the shared Cloud preset and the general-agent example to
+`gpt-6.1-sol` on native `codex app-server`. The general-agent adapter
+registers a subscription-only, tool-free protocol and unwraps the typed
+reply into the graph's existing text contract. Before each subscription job
+starts a turn, the provider adapter verifies a ChatGPT account and confirms
+the requested model and native OpenAI provider. API key environment values
+are excluded for this path. The local Haiku overlay preserves the Cloud
+binding and the configured default for Simple.
+
+Restarted the idle workspace on 8766 with the new binding and the same
+workspace state root. It offers GPT‑6.1 Sol to all four agents and keeps
+Haiku as the local stand-in. The old console stayed stopped.
+
+### Design principle
+
+Keep the shared default above the OS. The runtime enforces the requested
+authentication, data policy, budgets and effect evidence. Native turns use
+an empty, read-only view without coding services. Protocols that do not opt
+in keep their original digest. Existing runs retain their source,
+configuration and results.
+
+### Verification and limits
+
+The installed Codex CLI reported ChatGPT authentication. The first live
+smoke stopped before inference because the Linux sandbox helper was absent.
+Extracted Ubuntu's bubblewrap package into the ignored workspace tools
+directory and verified read-only sandbox launch. A fresh synthetic Simple
+check then returned `SUBSCRIPTION_OK`. The journal recorded
+`agent_job / gpt-6.1-sol / codex_app_server`. Checked the served workspace
+catalog at 8766. No real Haiku request or full live mixed workflow was run.
+
+Added the standard note under Codex login, updated the launch, setup,
+settings, design and affected module guides, closed the native-binding
+backlog row, and updated the Obsidian provider group and reading map.
+Process lifecycle and scheduler guides need no edits because their
+interfaces and behavior were unchanged.
+
+54 scripted workspace, general-agent, native-event, capability and runtime
+tests passed. Coverage includes all four Cloud routes and API-key rejection
+before thread creation. One interruption fixture emitted an asyncio task
+cleanup warning. Ruff and JavaScript syntax checks passed. Both documentation
+commands passed for 409 files, 206 notes and 205 note links with guide length
+advisories. The Obsidian graph and whitespace checks passed. Saved the
+retained Cloud default in `AGENTS.md` and verified it matches
+`docs/project-memory.md` at `3d39890`.
+
+<a id="fix-0201"></a>
+
+## FIX-0201 — 2026-11-16 — Show the entire workspace in OS Monitoring
+
+Status: implemented. Related: [FIX-0014](#fix-0014),
+[FIX-0037](#fix-0037), and [FIX-0197](#fix-0197).
+
+### Trigger and owning cause
+
+The workspace OS tab used the same invocation selector and observation as
+Agent Monitoring. It went blank before the first Send and showed only one
+retained run's resources once runs existed. The old console's OS panel put
+capacity, processes, holds and effects together. Scope selection belongs to
+the workspace's read-only projection.
+
+### Change
+
+OS Monitoring now reads `/api/workspace/os` without an invocation ID. It
+shows current launch capacity even when idle, live reservations and waiters,
+retained holds, process and effect counts, and reported token usage across
+retained invocations. Missing journal or usage evidence is visible. Source
+runs and processes remain available as drill-downs in Agent Monitoring.
+
+### Design principle
+
+Count current configured capacity once and distinguish live reservations
+from retained ownership. Count provider reports with their provenance and
+deduplicate cumulative native session totals. A workspace observation does
+not establish provider-wide quotas, release, or shared admission authority.
+
+### Verification and limits
+
+Updated the UI, inspection, design and task guides. Launch, provider
+configuration, and OS scheduling contracts need no changes. The view only
+reads retained state.
+
+All 18 workspace and OS inspection tests passed. Ruff and JavaScript syntax
+checks passed. Chromium verified the idle and retained views without an
+invocation selector. Restarted the idle workspace without replay. The
+served aggregate showed two journals, three finished processes, one paused
+process, zero outstanding holds, and 31,729 reported Cloud tokens. There
+were no model calls in verification.
+
+<a id="fix-0202"></a>
+
+## FIX-0202 — 2026-11-16 — Explain the Research run's Haiku temperature rejection
+
+Status: investigated. No implementation changed for the run failure.
+Related: [FIX-0117](#fix-0117), [FIX-0198](#fix-0198), and [FIX-0200](#fix-0200).
+
+### Trigger and owning cause
+
+Research failed in its first simulated-local extraction after successful
+Codex planning and document lookup. The general-agent runner supplied
+`temperature: 0.0`. The Anthropic adapter sent it and the provider rejected
+the field for the configured Haiku model with HTTP 400.
+
+### Findings
+
+Read both invocation metadata files, both retained journals, and the
+digest-verified provider diagnostic and lookup artifacts. The two invocations
+were sequential. The rejected effect stopped and released its slot. The
+following Simple invocation used GPT‑6.1 Sol and completed. Evidence and limits
+are in
+`docs/temporary/investigations/2026-11-16-workspace-research-haiku-failure.md`.
+
+### Design principle
+
+Distinguish workflow success, provider rejection and OS resource settlement.
+An empty document lookup is separate from an input validation rejection.
+An independent Cloud success does not qualify the simulated-local request.
+
+### Verification and limits
+
+No provider traffic, replay, reconciliation, configuration change or fix
+was made for the failure. Added an investigation and open task. The adapter,
+provider setup, and recovery guides retain the same shipped behavior.
+
+Ran the documentation generator, its `--check`, the Obsidian graph check
+and the whitespace check. All passed for 410 files, 207 notes and 206 links
+with guide length advisories. The report uses the existing investigation
+parent and archive graph group. The main reading map is unaffected.
+Verified that the retained checklist in `AGENTS.md` matches
+`docs/project-memory.md` at `3d39890`.
+
+<a id="fix-0203"></a>
+
+## FIX-0203 — 2026-11-16 — Omit temperature from general-agent Anthropic requests
+
+Status: implemented. Related: [FIX-0202](#fix-0202) and [FIX-0117](#fix-0117).
+
+### Trigger and owning cause
+
+Research's simulated-local extraction received HTTP 400 from Haiku 5.5.
+The general-agent runner supplied a numeric temperature when Anthropic's
+model required provider-default sampling. The runtime request contract
+previously required a number.
+
+### Change
+
+The `ModelQuery` field accepts `null`, which the existing HTTP adapter
+omits from the provider body. The general-agent adapter supplies `null`
+for Anthropic. Explicit numeric values continue to use the existing
+endpoint settings and validation. Updated the mirrored design schema,
+SDK, inference and agent guides, and closed the open incident task.
+
+Reviewed the [Haiku 5.5 migration guide](https://platform.claude.com/docs/en/models/haiku-5-5/migration-guide)
+and [Anthropic Messages API reference](https://platform.claude.com/docs/en/api/messages/create).
+The stand-in uses the configured API version, streaming, a top-level system
+instruction, a final user message, and a 32,000-token output limit. The
+body relies on default adaptive thinking and sends no legacy sampling fields.
+
+### Design principle
+
+Represent provider-default sampling explicitly at the request boundary.
+Preserve existing numeric intents, endpoint capabilities and historical evidence.
+
+### Verification and limits
+
+117 offline workspace, agent, endpoint, retry and resume tests passed. The
+Research regression inspected the actual HTTP request and completed the graph
+after an Anthropic-style stream with thinking and text blocks. Ruff passed.
+The changed `ModelQuery` definition matches the mirrored Python and frozen
+JSON schemas. Existing wire examples validate. The full contract parity test
+still finds the existing `TaskSpec` mismatch, confirmed against `3d39890`.
+The standalone design validator still finds an existing historical HTML
+digest mismatch after schema validation. The pinned design evidence was preserved.
+
+Reloaded the idle workspace on port 8766 and verified the same two retained
+runs, model catalog and responsive OS Monitoring. No live inference or replay
+was used to verify the change. Launch, provider configuration, UI and recovery
+guides needed no updates because the request fix adds no setup or operating steps.
+Documentation generation, its `--check`, the Obsidian graph check and the
+whitespace check passed for the same 410 files, 207 notes and 206 links. No note
+or reading route changed. The checklist retained in `AGENTS.md` was read back
+and compared with `docs/project-memory.md`.
+
+<a id="fix-0204"></a>
+
+## FIX-0204 — 2026-11-16 — Document the Haiku workspace preset and request settings
+
+Status: documentation updated. No implementation or configuration changed.
+Related: [FIX-0203](#fix-0203) and FIX-0179.
+
+### Trigger and owning cause
+
+The Codex + Haiku setup checklist described the coding console without covering
+the general-agent workspace's use of the shared Haiku preset or the current
+Messages request. The user confirmed keeping the 32,000-token output cap.
+
+### Change
+
+Documented the workspace launch, 96,000 input tokens, 32,000 output tokens
+including thinking, and 128,000 tokens of total reservation per Haiku slot.
+Recorded the workspace's streaming request settings in the setup checklist and
+clarified which launch controls select the shared application preset. The launch,
+provider and recovery instructions already cover their existing commands and
+configuration. No note was added, moved or reclassified.
+
+### Design principle
+
+Describe the resolved application preset and its precedence separately from
+provider capabilities and generic OS settings. Preserve saved run configuration.
+
+### Verification and limits
+
+55 offline workspace, provider and simulation tests passed, including the
+actual serialized `max_tokens: 32000` regression. Both Haiku examples resolve
+the documented pair. The running workspace reported the 128,000-token total
+capacity for its local stand-in. No restart or inference call was needed.
+Documentation generation and validation passed for 410 files and 207 notes.
+The Obsidian graph, settings export and whitespace checks passed. Verified the
+retained checklist in `AGENTS.md` against `docs/project-memory.md` at `3d39890`.
+
+<a id="fix-0205"></a>
+
+## FIX-0205 — 2026-11-16 — Launch the v2 workspace with two Haiku slots
+
+### Trigger and owning cause
+
+The workspace's simulated local binding inherited the coding preset's one
+in-flight request. Starting v2 required composing the workspace CLI arguments.
+
+### Change
+
+The workspace sim overlay sets two Haiku slots. Each slot retains 96,000 input
+and 32,000 output tokens. The launcher selects the project virtual environment,
+example configuration and port 8766, with optional configuration and port
+arguments. It execs the existing workspace entry point so one process serves
+the UI and opens the OS kernel when an invocation starts. Updated the launch,
+usage, CLI, settings and Haiku setup docs and added the script to the file map.
+
+### Design principle
+
+The workspace chooses the preset and the OS projects and enforces its resolved
+capacity. The workspace admits one invocation at a time and its graphs retain
+their current execution order. The provider owns actual model scheduling.
+
+### Verification and limits
+
+27 offline workspace, agent and OS inspection tests passed. Bash syntax and
+Ruff passed. Reloaded the idle workspace via the launcher with its existing
+configuration and verified the UI, two Haiku slots, 256,000 aggregate reserved
+token capacity and two retained runs. No provider call was made. Credential
+setup and recovery instructions still apply through the existing entry point.
+Read back the retained project checklist in `AGENTS.md`.
+
+
+<a id="fix-0206"></a>
+
+## FIX-0206 — 2026-11-17 — Qualify general-agent concurrency and distinguish shared endpoint limits
+
+Status: live testing and investigation; no production implementation changed.
+Related: [FIX-0182](#fix-0182), [FIX-0189](#fix-0189),
+[FIX-0192](#fix-0192), [FIX-0200](#fix-0200) and [FIX-0205](#fix-0205).
+
+### Trigger and owning cause
+
+The user requested sequential concurrency scenarios using the new Research and
+Simple agents and observation of endpoint optimization. Workspace serialization,
+adapter invocation-level identity pins and kernel-local admission prevent these
+runs from proving a shared multi-agent endpoint pool.
+
+### Concrete findings
+
+All eight workloads in the qualifying GPT-6.1 Sol + Haiku profile completed:
+Research/cloud Simple, Research/local-role Simple and two Research/two Simple.
+Each invocation used a fresh kernel. Concurrent one-slot Cloud holds overlapped
+across kernels. A separate single-kernel five-effect probe exercised bounded
+endpoint slots and waiters with explicit resident capacity. There was no dynamic
+model/endpoint optimization. Detailed timings, failures and limits are in
+`docs/temporary/investigations/2026-11-17-general-agent-concurrency-tests.md`.
+
+The first Research plans exceeded the 500-character question validator; bounded
+test prompts subsequently passed. Initial Haiku calls received HTTP 401; calls
+after the user's requested retry succeeded. An intermediate harness corpus-write
+race failed one child before OS startup; corrected fresh stress testing passed.
+These observations and workarounds are not implementation fixes. Only the Research
+graph performed the requested router/REA research. No engineering agent performed
+topic synthesis, and no model training or REA target execution occurred.
+
+### Design principle
+
+Report authority at the scope enforced: kernel-local counters do not establish a
+shared endpoint pool, role names do not prove physical placement, and successful
+overlap does not prove optimal cost/latency. Distinguish agent grammar failures,
+authentication rejection, tester harness faults and OS resource settlement.
+
+### Verification and limits
+
+27 focused offline general-agent/workspace/monitor tests passed. Live SQLite and
+provider evidence is retained separately from fixtures; final metrics use settled
+journals. Successful qualifying effects left no unknown execution or outstanding
+inference reservations. Failed known effects retained paused residency separately.
+No physical local inference, browser flow, billing benchmark or full suite ran.
+The complete historical fix ledger was not reviewed; relevant entries and current
+owning guidance were reviewed. Saved and read back the current project checklist
+in the task's project-specific `work/polyinference-content.md`.
+
+Updated the primary agent guide, runtime/provider backlog, investigation parent
+and file map. Setup, launch, configuration, runtime boundary and recovery behavior
+are unchanged and need no edit. The existing archive graph group covers the new
+note and no primary reading route changed. Documentation generation/check, graph
+validation and source/index preservation results are in the delivered test report.
+
+Documentation generation and --check passed for 412 files, 208 notes and 207
+links; graph/reading-map validation passed for 10 groups. Working and staged
+whitespace checks passed. Hash comparison verified 405 starting tracked files,
+including 151 source/test/script/example files: only six intended documentation
+files changed, none disappeared, and the Git index was unchanged. The new dated
+investigation is the only added repository note. The current report and corrected
+tester harness remain outside the repository.
+
+
+<a id="fix-0207"></a>
+
+## FIX-0207 — 2026-11-18 — Rerun the concurrent workflows on one kernel
+
+Status: live testing and investigation. No production implementation changed.
+Corrects the qualifying topology and follow-up of [FIX-0206](#fix-0206).
+
+### Trigger and owning cause
+
+The three scenarios must run sequentially through one kernel, with concurrent
+workflows within each case. The initial tester harness used a kernel per
+invocation, following the shipped runner's ownership and fixed identity pins.
+Free endpoint choice under fidelity is unimplemented and outside the rerun.
+
+### Findings and design principle
+
+A test-only adapter coordinated the shipped graphs in one live kernel, scoping
+invocation pins, process IDs, checkpoint threads and corpus access. All eight
+workflows completed and all resources settled between cases. The OS enforced
+one GPT slot and two Haiku slots with four resident slots configured. A
+cross-kernel broker is outside the single-kernel deployment. The remaining
+application integration is to submit independent invocations to one OS owner.
+The observed workload requires no change to the kernel's endpoint admission.
+
+### Verification and limits
+
+One open, one PID and one journal held all 36 settled effects.
+Verified unique operations, expected backends, corpus-scoped lookup, exact
+Simple outputs, non-overlapping case timestamps and zero residual resources.
+The documentation guide, task list and existing investigation record reflect
+the rerun. Setup, launch/settings, runtime boundaries and navigation needed
+no behavior edits because the explicit test configuration lives in the harness.
+The browser/CLI hosting path, default two-resident-slot stress behavior and
+physical local inference were not qualified. Reviewed relevant fix entries
+and refreshed and read back the retained project checklist in the task's
+`work/polyinference-content.md`. The complete archival ledger was not reread.
+
+
+<a id="fix-0208"></a>
+
+## FIX-0208 — 2026-11-18 — Host a concurrent general-agent batch on one kernel
+
+Status: implemented. Related to [FIX-0207](#fix-0207) and [FIX-0192](#fix-0192).
+
+### Trigger and owning cause
+
+The first live harness followed the one-invocation runner and opened multiple
+kernels. The shared-kernel harness had to supply independent workflow identities
+and scope document access itself. This ownership belongs to the application
+adapter.
+
+### Change and design principle
+
+Added `run-agents CONFIG MANIFEST` and a batch adapter with one kernel, static
+model roles, invocation-scoped checkpoint/process/record IDs and separately
+granted corpus capabilities. All invocations share the OS journal, budget and
+endpoint admission. The batch validates its size and inputs before dispatch and
+pins the manifest for replay. The existing single-run API keeps its record and
+checkpoint naming. The browser workspace still processes one Send at a time.
+A shared workspace runner requires a lifecycle and journal projection compatible
+with existing browser history and interruption behavior.
+
+### Verification and limits
+
+The focused general-agent and workspace suite passed 19 tests. A separate
+checkout of the batch-only commit passed 44 general-agent and provider tests.
+The four-agent fixture exercised two Research and two Simple graphs on one real kernel, verified
+corpus isolation and admission, replayed without inference, and rejected changed
+inputs. A separate CLI smoke used scripted loopback HTTP on both bindings and
+verified two effects in one journal. Ruff passed on changed Python files. The
+installed providers and historical state were not used. Reviewed the applicable
+fix entries and refreshed the retained checklist in the task's
+`work/polyinference-content.md`; the full archival history was not reread.
+Updated the entry-point and agent guides and backlog. Setup, UI, navigation,
+kernel and provider behavior did not change, so their operating guides needed
+no edits for the batch runner. When the workspace was committed separately,
+43 focused workspace, frontend, monitoring, agent and native event tests
+passed using Node 22 for the frontend check. A local wheel verified that all
+three workspace browser assets are included.
+
+<a id="fix-0209"></a>
+
+## FIX-0209 — 2026-11-18 — Bound Research plan validation and correction
+
+Status: implemented. Related to [FIX-0206](#fix-0206).
+
+### Trigger and owning cause
+
+All four initial Research invocations got settled Cloud plans whose questions
+exceeded the graph's hidden 500-character validator. Lookup inputs shared the
+same effective limit without a graph-level correction.
+
+### Change and design principle
+
+The Research prompt, list validator and lookup contract share the limit. One
+settled invalid reply admits a new `plan-repair` step with the same Cloud role
+and task. A second invalid reply raises a clear error. Provider failure and
+uncertain execution keep their usual OS handling. The correction belongs to the
+agent and uses a distinct effect identity.
+
+### Verification and limits
+
+The regression reproduced the overlong reply, completed after a valid correction,
+and stopped after one repeated invalid reply. It passed in the focused suite
+listed in FIX-0208. No live planner quality evaluation was used.
+
+<a id="fix-0210"></a>
+
+## FIX-0210 — 2026-11-18 — Return evidence around matching terms
+
+Status: excerpt fix implemented; document ranking evaluated separately.
+Related to [FIX-0206](#fix-0206).
+
+### Trigger and owning cause
+
+Corpus lookup ranked documents using their full contents but returned only the
+first 2,000 characters. Evidence later in matching documents could disappear
+from the agent's context.
+
+### Change and design principle
+
+Select a bounded overlapping window that covers the most distinct query terms
+for each hit. Preserve source IDs, the three-hit cap and earliest ties. A fixture
+verified a late matching passage is retained as a contiguous excerpt and stays
+within the cap. It passed in the focused suite listed in FIX-0208.
+
+### Ranking investigation and limits
+
+Two retained queries named RouteLLM, HM-Router and EvoRouter. The current ranker
+returned zero of the three in either query. An offline BM25 prototype scoring
+source ID and content returned all three for each query. An explicit source
+alias variant gave the same results on this sample. The sample is one corpus
+and two near-duplicate queries. Evaluate named and paraphrased queries, long
+documents, collisions and empty relevance under the same excerpt limit before
+choosing a ranking policy. BEIR provides evidence for a lexical baseline across
+diverse tasks. [BEIR](https://arxiv.org/abs/2104.08663)
+
+<a id="fix-0211"></a>
+
+## FIX-0211 — 2026-11-18 — Identify where agent graphs spend cloud turns
+
+Status: investigation. Cloud turn selection and graph roles did not change.
+Related to [FIX-0207](#fix-0207).
+
+### Trigger and owning cause
+
+The four-workflow run queued six Cloud reservations. Research spent one Cloud
+turn on planning and one on reporting per workflow. Cloud Simple spent one on
+choosing a lookup and one on answering. The 32.7-second longest GPT queue wait
+occurred under the one-slot configuration, so routing experiments should control
+for capacity and research quality.
+
+### Proposed evaluation and design principle
+
+Compare the current graphs with a one-turn Simple path that prefetches explicitly
+selected sources through the existing lookup grant, and a local planner with a
+Cloud synthesis step for Research. Keep the routing rule and fallback in the
+agent and respect the configured model choices. Compare exact answer success,
+evidence coverage, unsupported citations, requests per successful task,
+latency including queueing, and fallback rate on matched prompts and corpora.
+Cascades have research support, but the prior ledger prompts and lookup journals
+do not establish equivalence for general tasks.
+[FrugalGPT](https://arxiv.org/abs/2305.05176)

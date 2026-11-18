@@ -41,6 +41,16 @@ def haiku_token_limits():
     return LocalTokenLimits(input_tokens=96000, output_tokens=32000)
 
 
+def general_agent_haiku_simulation(config):
+    """Apply the two-slot local stand-in used by the workspace and batch runner."""
+    return type(config).model_validate({
+        **config.model_dump(mode="json"),
+        "local": haiku_endpoint().model_copy(update={"max_inflight": 2}),
+        "local_token_limits": haiku_token_limits(),
+        "role_bindings": {**config.role_bindings, "local": "local"},
+    }, context={"resolve_environment_capacity": False})
+
+
 def simulation_config(config, slots):
     """Pure invocation policy; the OS receives ordinary fully validated settings."""
     if type(slots) is not int or not 1 <= slots <= 16:
@@ -55,16 +65,21 @@ def simulation_config(config, slots):
         context={"resolve_environment_capacity": False})
 
 
-def ui_system_settings(source):
-    """The UI coding agent's complete OS preferences, configured together."""
-    endpoint = Endpoint(
+def codex_subscription_endpoint(*, brokered_tools=False):
+    """Application preset using the existing Codex CLI login."""
+    return Endpoint(
         protocol="codex_app_server",
         model="gpt-6.1-sol",
         command=["codex", "app-server"],
         max_inflight=1,
         timeout_seconds=1800,
         inference_location="cloud",
+        brokered_tools=brokered_tools,
     )
+
+
+def ui_system_settings(source):
+    """The UI coding agent's complete OS preferences, configured together."""
     settings = {**coding_system_defaults(), **dict(
         shell_execution="trusted",
         repository=str(source),
@@ -74,7 +89,7 @@ def ui_system_settings(source):
         check_execution="trusted",
         local=haiku_endpoint(),
         local_token_limits=haiku_token_limits(),
-        cloud=endpoint.model_copy(update={"brokered_tools": True}),
+        cloud=codex_subscription_endpoint(brokered_tools=True),
         max_workers=1,
         limits=default_limits(),
     )}

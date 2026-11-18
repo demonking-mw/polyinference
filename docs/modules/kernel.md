@@ -15,6 +15,10 @@ KernelRuntime composes OS services and settles stable operation intents with ret
 Open KernelRuntime, install trusted application handlers/protocols and register
 processes before dispatch. execute(original) follows retained OS retry outcomes;
 individual attempts remain immutable. Generic publication invokes installed policy.
+The kernel pins optional subscription requirements in native protocols and
+rejects transports that cannot enforce them. Codex verifies its account and
+model before sending the turn. Protocols without that requirement retain
+their existing definition digest.
 Endpoint retry_model is caller-selected; the kernel runs durable availability
 routing through ModelFallback (`docs/modules/retries.md`) without choosing a coding model default.
 Context preparation measures the complete adapter body, bounds counting by the original deadline,

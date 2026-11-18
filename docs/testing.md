@@ -41,6 +41,12 @@ controller dispatch to a fixture cloud worker, quota immunity, shared accounts/
 deadlines, transitive pending-plan rewiring, finite attempts and hard blockers.
 They establish policy behavior, not live model convergence or product acceptance.
 
+The workspace integration cases in `tests/test_ui_workspace.py` exercise the
+loopback server and OS journal with scripted inference. Use Chromium to check
+the top selector, both model picker layouts, draft retention, and process
+inspection at desktop and narrow widths. A fixture proves the UI flow and
+binding path. Real endpoint behavior requires separate verification.
+
 ## Documentation checks
 
 ```bash

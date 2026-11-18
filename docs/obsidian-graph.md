@@ -10,22 +10,25 @@ hub at depth 1–2 to follow its immediate links.
 | Navigation | Gold `#C59122` | Agent instructions, setup, architecture, current work and fix history |
 | OS runtime | Blue `#478BD0` | Kernel, processes, capabilities, storage and runtime contracts |
 | Coding agent | Green `#4EAD54` | Workflows, assignments, repository policy and recovery |
+| General agents | Indigo `#5163C7` | Four non-coding LangGraph programs and their OS V1 adapter |
 | Inference | Teal `#269C89` | Providers, admission, context, retries and simulation |
 | Scheduler | Violet `#9865CB` | Proposed scheduler policy and OS support |
 | Use and operations | Orange `#CB7040` | Launch, configure, inspect, recover and export |
 | Verification and tooling | Rose `#BA5990` | Tests, qualification and contributor tools |
 | Records and research | Slate `#7A8798` | Implementation records, draft designs and run evidence |
 
-Reserved for future modules: `#5163C7` (indigo), `#8E7047` (bronze) and
-`#7EAB29` (lime).
+Reserved for future modules: `#8E7047` (bronze) and `#7EAB29` (lime).
 
 | To find | Enter in Obsidian Search |
 | --- | --- |
 | Pending work | `path:"development-docs/tasks/"` |
 | A fix by ID | `path:"development-docs/FIXES.md" "FIX-0191"` |
 | Inference and retry docs | `path:/^docs\/(guides|modules)\// file:(inference OR endpoint OR retry OR fallback)` |
+| General agents | `path:"docs/modules/general-agents.md"` |
+| Default cloud model | `path:"docs/guides/cloud-codex-default.md"` |
 | Scheduler designs and audit | `path:"docs/temporary/" file:scheduler` |
-| Run reports | `path:"docs/temporary/investigations/" file:(run OR minecraft)` |
+| Workspace UI design | `path:"docs/temporary/proposals/" file:chat-workspace` |
+| Run reports | `path:"docs/temporary/investigations/" file:(run OR minecraft OR workspace-research)` |
 
 The [shared graph preset](obsidian-graph.json) limits the graph to project notes
 and hides unresolved targets, orphans, tags and attachments. It uses shorter

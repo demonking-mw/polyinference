@@ -35,4 +35,4 @@ target-version = "py310"
 line-length = 110
 
 [tool.setuptools.package-data]
-polyinference = ["ui.html", "ui-monitor.js"]
+polyinference = ["ui.html", "ui-monitor.js", "ui-workspace.html", "ui-workspace.css", "ui-workspace.js"]

@@ -59,7 +59,7 @@ def inspection_connection(path, tuning=None):
         db.close()
 
 
-def read_snapshot(state, tuning=None):
+def read_snapshot(state, tuning=None, *, include_events=True):
     result = {"records": {}, "revisions": {}, "events": [], "captured_at": datetime.now(timezone.utc).isoformat()}
     path = Path(state) / "records.sqlite"
     if not path.is_file():
@@ -71,7 +71,7 @@ def read_snapshot(state, tuning=None):
             for key, revision, body in db.execute("SELECT key,revision,body FROM records ORDER BY key"):
                 result["records"][key] = json.loads(body)
                 result["revisions"][key] = revision
-        if "events" in tables:
+        if include_events and "events" in tables:
             result["events"] = [
                 {**json.loads(body), "sequence": sequence}
                 for sequence, body in db.execute("SELECT sequence,body FROM events ORDER BY sequence")

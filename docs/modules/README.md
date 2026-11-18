@@ -5,6 +5,7 @@ each module. Related code shares a guide when it has one owner. The exact
 file inventory is in the [JSON map](../file-tree.json).
 
 - [Coding agent modules](agent.md)
+- [Four general LangGraph agents on OS V1](general-agents.md)
 - [Runtime modules](runtime.md)
 - [Application interfaces](interfaces.md)
 - [Developer tooling](tooling.md)
