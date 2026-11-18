@@ -4,12 +4,44 @@ The local test runner hosts fresh runs, project selection and inspection without
 
 | File | Responsibility |
 | --- | --- |
-| [src/polyinference/ui.py](../../src/polyinference/ui.py) | Loopback HTTP server, run manager, default fixture/config, launch/steer/resume/export APIs and terminal reporting. |
+| [src/polyinference/ui.py](../../src/polyinference/ui.py) | Loopback HTTP server, workspace routes, coding run manager, launch/steer/resume/export and terminal reporting. |
 | [src/polyinference/ui.html](../../src/polyinference/ui.html) | Packaged UI shell, launch controls, saved-run selection, snapshot opening and frontend behavior. |
+| [src/polyinference/ui_workspace.py](../../src/polyinference/ui_workspace.py) | Workspace launch, role-aware model catalog, durable chat metadata, request deduplication and an OS observation projection. |
+| [ui-workspace.html](../../src/polyinference/ui-workspace.html), [ui-workspace.css](../../src/polyinference/ui-workspace.css), [ui-workspace.js](../../src/polyinference/ui-workspace.js) | Workspace header, chat composer, system-wide OS Monitoring and invocation-specific Agent Monitoring. |
 | [src/polyinference/agent/endpoint_probe.py](../../src/polyinference/agent/endpoint_probe.py) | Application-owned artifact-only 64-token endpoint probe using ordinary OS grants/accounting, without coding services or Git. |
 | [src/polyinference/ui_repository.py](../../src/polyinference/ui_repository.py) | Filesystem/project picker, new/nested project observations and suggested checks. |
 
 ## Interface and ownership
+
+`polyinference workspace CONFIG` serves a separate local workspace using
+generic `RuntimeConfig`. The peer `polyinference ui` command serves the coding
+console. The workspace accepts a message ID, agent and compatible binding for
+each model role, prompt, optional corpus, and explicit previous-exchange choice.
+It checks those inputs before recording an invocation. The same message ID
+and input returns the original acknowledgement. Changed input is rejected.
+Each Send pins a fresh configuration under
+`STATE/invocations/ID/config.json` and places the graph journal under
+`STATE/invocations/ID/state/`. The application retains replies and source names.
+Model selection validates configured locations, protocol, credentials and
+applicable data policy. The standard GPT‑6.1 Sol Cloud option uses the
+Codex subscription. The agent runner and OS verify the native account
+and model before a turn. See `docs/guides/cloud-codex-default.md`.
+The `--sim-haiku` launch flag overlays the local binding with the Haiku
+preset with two slots. The model picker and pinned invocation identify it as a cloud
+stand-in. The adapter preserves the other role and narrows the original data
+policy to the authorized destination for each simulated step.
+
+One workspace server owns a state root and accepts one active invocation at a
+time. This bounds admission within that workspace. A restart keeps earlier
+transcripts and reports interrupted work without replay. Durable holds or
+unknown execution block new submissions in the workspace.
+`GET /api/workspace/os` reads the workspace-wide observation independently
+of the selected reply or invocation. Agent Monitoring keeps the per-invocation
+process view and displays the scheduler capability as unavailable.
+See `docs/guides/ui.md` for usage and
+`docs/temporary/proposals/2026-11-16-chat-workspace-design.md` for the design.
+
+### Coding console
 
 Without machine preferences, the preset uses Haiku workers/Codex seniors with one worker/slot.
 Machine defaults (`docs/guides/configuration.md`) replace local serving settings for plain UI launches. The launch footer displays the effective model, location/protocol, context, slots, workers
@@ -66,6 +98,9 @@ definition; the client retains rejected drafts without an independent fixed cap.
 
 [UI](../../tests/test_ui.py), [frontend wrapper](../../tests/test_ui_frontend.py)
 and [browser logic](../../tests/ui_start.test.cjs).
+The [workspace integration](../../tests/test_ui_workspace.py) exercises role
+selection, the loopback routes, live and finished inspection, deduplication and
+restart using the real OS with scripted inference.
 
 UI guide (`docs/guides/ui.md`) · Project guide (`docs/guides/projects.md`) · Inspection (`docs/modules/inspection.md`).
 

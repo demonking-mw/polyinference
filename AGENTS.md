@@ -58,10 +58,10 @@ scheduling. The proposed scheduler only requests run, wait or preemption for
 individual processes. Preserve original authority and evidence. This is
 repository guidance; it installs no runtime hook or automation.
 
-## Retained checklist refreshed 2026-11-15
+## Retained checklist refreshed 2026-11-16
 
-Source: docs/project-memory.md at working checkout HEAD 55c66c6; clean
-checkout before this task. Review date: 2026-11-15.
+Source: docs/project-memory.md at feature/simple-agents HEAD 3d39890.
+Review date: 2026-11-16.
 
 ### Project knowledge to retain
 
@@ -96,9 +96,16 @@ provider-owned. The UI may stop only a Strata instance it started and owns.
 Use fresh state for changed program/configuration pins. Current compatibility is
 documented in the runtime boundary's Resume guide.
 
+The standard application Cloud binding is GPT‑6.1 Sol through the ChatGPT
+Codex subscription. The Haiku simulation changes only the local binding.
+See `docs/guides/cloud-codex-default.md`.
+
 Before work read the complete fix history. Update all affected documentation and
 the history in the same task. Maintain one primary guide per module and one
 incoming note link per non-root note. CI checks structure and exported settings;
 run the required checks and report actual results and limits. Use dated
 temporary notes and promote durable decisions into the maintained guide and
 FIXES.md. Loading these rules does not install hooks or automation.
+
+Keep the Obsidian filter, module colors, search examples and reading map current.
+Find the maintenance procedure in `docs/obsidian-graph.md`.

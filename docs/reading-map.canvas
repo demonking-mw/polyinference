@@ -20,6 +20,7 @@
 		{"id":"agent-1","type":"text","x":378,"y":574,"width":304,"height":58,"color":"#4EAD54","text":"## [[docs/modules/agent-workers.md|Worker and senior graphs]]"},
 		{"id":"inference-0","type":"text","x":738,"y":505,"width":304,"height":58,"color":"#269C89","text":"## [[docs/modules/inference.md|Inference module]]"},
 		{"id":"inference-1","type":"text","x":738,"y":574,"width":304,"height":58,"color":"#269C89","text":"## [[docs/guides/inference-controls.md|Inference controls]]"},
+		{"id":"inference-2","type":"text","x":738,"y":643,"width":304,"height":58,"color":"#269C89","text":"## [[docs/guides/cloud-codex-default.md|Default cloud model]]"},
 		{"id":"scheduler-0","type":"text","x":1098,"y":505,"width":304,"height":58,"color":"#9865CB","text":"## [[docs/temporary/proposals/2026-11-08-standalone-scheduler-design.md|Scheduler design]]"},
 		{"id":"scheduler-1","type":"text","x":1098,"y":574,"width":304,"height":58,"color":"#9865CB","text":"## [[docs/temporary/investigations/2026-11-09-scheduler-os-impact.md|OS support audit]]"},
 		{"id":"operations-0","type":"text","x":18,"y":840,"width":304,"height":58,"color":"#CB7040","text":"## [[setup.md|Set up]]"},

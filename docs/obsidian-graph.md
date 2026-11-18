@@ -25,8 +25,10 @@ Reserved for future modules: `#8E7047` (bronze) and `#7EAB29` (lime).
 | A fix by ID | `path:"development-docs/FIXES.md" "FIX-0191"` |
 | Inference and retry docs | `path:/^docs\/(guides|modules)\// file:(inference OR endpoint OR retry OR fallback)` |
 | General agents | `path:"docs/modules/general-agents.md"` |
+| Default cloud model | `path:"docs/guides/cloud-codex-default.md"` |
 | Scheduler designs and audit | `path:"docs/temporary/" file:scheduler` |
-| Run reports | `path:"docs/temporary/investigations/" file:(run OR minecraft)` |
+| Workspace UI design | `path:"docs/temporary/proposals/" file:chat-workspace` |
+| Run reports | `path:"docs/temporary/investigations/" file:(run OR minecraft OR workspace-research)` |
 
 The [shared graph preset](obsidian-graph.json) limits the graph to project notes
 and hides unresolved targets, orphans, tags and attachments. It uses shorter

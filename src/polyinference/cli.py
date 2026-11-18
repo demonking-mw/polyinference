@@ -245,6 +245,10 @@ def main():
     item.add_argument("config", help="OS-only RuntimeConfig JSON; use fresh state for a new batch")
     item.add_argument("manifest", help="JSON array of invocation objects; set max_workers for the batch size")
     item.add_argument("--sim-haiku", action="store_true", help="Use remote Haiku for the local role")
+    item = sub.add_parser("workspace", help="Open the local chat and monitoring workspace")
+    item.add_argument("config", help="OS-only RuntimeConfig JSON for general agents")
+    item.add_argument("--port", type=int, default=8765)
+    item.add_argument("--sim-haiku", action="store_true", help="Use remote Haiku for the local role")
     item = sub.add_parser("ui")
     item.add_argument("--port", type=int, default=8765)
     item.add_argument("--config")
@@ -328,6 +332,11 @@ def main():
             print(json.dumps(results, indent=2))
             if any(row["status"] == "failed" for row in results):
                 raise SystemExit(1)
+            return
+        if args.command == "workspace":
+            from .ui import serve_workspace
+
+            serve_workspace(args.config, args.port, sim_haiku=args.sim_haiku)
             return
         if args.command == "configure-local":
             from .agent.local_provider import sync_local_provider

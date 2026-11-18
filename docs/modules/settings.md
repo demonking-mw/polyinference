@@ -16,9 +16,20 @@ One OS settings schema, adjacent coding defaults, and explicit application workf
 | [examples/agent.codex.json](../../examples/agent.codex.json) | Brokered Codex sample. |
 | [examples/agent.openai.json](../../examples/agent.openai.json) | Raw OpenAI endpoint sample. |
 | [examples/agent.gemini.json](../../examples/agent.gemini.json) | Raw Gemini endpoint sample. |
-| [examples/general-agents.v1.json](../../examples/general-agents.v1.json) | OS-only raw local/cloud bindings for the four non-coding graphs; no coding settings. |
+| [examples/general-agents.v1.json](../../examples/general-agents.v1.json) | OS-only raw local and native Codex subscription Cloud bindings for the four non-coding graphs. |
 
 ## Interface and ownership
+
+The general-agent workspace uses generic `RuntimeConfig`. Its model picker
+selects from configured raw-text or native Codex subscription endpoints and pins compatible roles in a
+fresh invocation configuration. The original config file remains the source of
+endpoint, grant, budget and deadline settings. See `docs/guides/ui.md`.
+The shared application Cloud default is described in
+`docs/guides/cloud-codex-default.md`.
+An explicit `workspace --sim-haiku` launch overlays the configured local
+binding for new invocations using the existing Haiku preset and retains the
+cloud destination declaration. The source configuration file and schema
+are unchanged.
 
 JSON groups OS preferences under `system`; workflow fields stay at the top level.
 Legacy flat input remains accepted, but duplicate placements are rejected.
@@ -39,8 +50,10 @@ values without rereading ambient overrides. No simulation flag is serialized.
 The coding settings module owns the complete Haiku factory and pure simulation
 overlay (worker binding/cap, slots, full-context reservations), preserving custom
 Anthropic fields and other providers/bindings. haiku_token_limits supplies the application
-96000-input/32000-output preset for fresh Haiku UI runs and complete endpoint replacement;
-explicit remote Anthropic pairs, machine preferences and generic OS defaults remain authoritative.
+96000-input/32000-output preset for fresh Haiku UI runs and complete endpoint replacement.
+The workspace `--sim-haiku` overlay uses the same pair with two slots. For the coding UI, explicit
+remote Anthropic pairs and machine preferences retain their documented precedence.
+The preset is application policy and leaves the generic OS defaults independent.
 OS admission remains generic.
 The optional application simulator (`docs/modules/inference-simulation.md`) uses
 SimulationAgentConfig for enabled buggy/slow runs; its saved inference_simulation

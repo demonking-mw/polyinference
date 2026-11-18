@@ -361,12 +361,14 @@ packing; disable compaction; reserve 32000 control tokens; and use the envelope
 above with max_repairs=2 and the finishing reserve above.
 UI preferences in the same module select endpoints, grants, checks, one worker,
 96000 input / 32000 output allowances and trusted shell/check backends. The Haiku
-examples use the same allowances with 128000-token endpoint context envelopes.
-The Anthropic adapter sends the local pair's 32000 output cap as `max_tokens`;
-there is no separate smaller target. Explicit configuration and machine preferences
-retain their own pairs. Selecting a complete remote Haiku simulation preset replaces
-the local pair with 96000/32000; existing remote Anthropic configurations retain their
-explicit pair. Native cloud jobs have no enforced hard generation-token parameter.
+examples and general-agent workspace `--sim-haiku` use the same allowances with
+128000-token endpoint context envelopes.
+The Anthropic adapter sends the local pair's 32000 output cap as `max_tokens`.
+In the coding UI, explicit configuration and machine preferences can select a
+different pair. The `--sim-batch` overlay uses 96000/32000 when it replaces the
+endpoint with the complete Haiku preset. It retains the explicit pair for an
+already configured remote Anthropic endpoint. Native cloud jobs have no
+enforced hard generation-token parameter.
 
 Coding-only fields remain outside system: objective, repository_mode, git_policy,
 dependency_prepare, prerequisite_checks, acceptance_checks,

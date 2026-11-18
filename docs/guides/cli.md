@@ -19,6 +19,7 @@ any saved commit as final success.
 | `polyinference run CONFIG` | Start/drive a run in the configured state directory. Use fresh state for a new run. |
 | `polyinference run-agent CONFIG DESIGN TASK [--documents JSON]` | Run `simple`, `supervisor`, `research` or `writer` with generic OS settings and a fresh state per task. `research` reads only supplied documents. See `docs/modules/general-agents.md`. |
 | `polyinference run-agents CONFIG MANIFEST [--sim-haiku]` | Run a JSON batch of general-agent invocations concurrently on one kernel. Set `max_workers` for the batch size. The manifest format and replay rules are in `docs/modules/general-agents.md`. |
+| `polyinference workspace CONFIG [--port PORT] [--sim-haiku]` | Open chat and monitoring with a generic OS configuration. The flag assigns two remote Haiku slots to the local binding. The bundled launcher is `./scripts/launch-v2.sh`. See `docs/guides/ui.md`. |
 | `polyinference status STATE` | Inspect application status, task reports, heads and uncertain effects. |
 | `polyinference steer STATE 'Updated instructions'` | Record steering for the running coordinator to consume. |
 | `polyinference resume CONFIG [--text "Instructions"]` | Record a run-level Resume request and continue through the same agent/OS recovery service as the UI. |

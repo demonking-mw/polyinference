@@ -39,7 +39,7 @@
       }
     },
     {
-      "query": "path:/^(codex-haiku-setup|docs\\/modules\\/(inference(-simulation)?|context|retries)|docs\\/guides\\/(inference-controls|context-measurement|endpoint-(testing|probes)|model-fallback|sim-inference|local-token-limits|strata-startup-config|providers|setup-providers|anthropic-key|codex-login|cloud-agent-timeouts)|design-docs\\/simplified-os\\/boundary\\/(inference|retries)|design-docs\\/implementation\\/PROVIDER_SETUP)\\.md$/",
+      "query": "path:/^(codex-haiku-setup|docs\\/modules\\/(inference(-simulation)?|context|retries)|docs\\/guides\\/(inference-controls|context-measurement|endpoint-(testing|probes)|model-fallback|sim-inference|local-token-limits|strata-startup-config|providers|setup-providers|anthropic-key|codex-login|cloud-codex-default|cloud-agent-timeouts)|design-docs\\/simplified-os\\/boundary\\/(inference|retries)|design-docs\\/implementation\\/PROVIDER_SETUP)\\.md$/",
       "color": {
         "a": 1,
         "rgb": 2530441

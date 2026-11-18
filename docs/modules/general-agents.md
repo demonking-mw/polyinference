@@ -1,14 +1,16 @@
 # Four general LangGraph agents on OS V1
 
 These are small, trusted Python applications. The graphs have no PolyInference
-import; the adapter uses the shipped OS. Use `polyinference run-agent` for one task or `polyinference run-agents` for a concurrent batch.
+import. The adapter uses the shipped OS. Invoke them with `polyinference
+run-agent`, `polyinference run-agents` for a concurrent batch, or from the
+local chat workspace (`docs/guides/ui.md`).
 
 | File | Responsibility |
 | --- | --- |
 | [graphs.py](../../src/polyinference/general_agents/graphs.py) | Four public `StateGraph` designs and their `AgentIO` context protocol. |
 | [os_v1.py](../../src/polyinference/general_agents/os_v1.py) | Bind graph model/lookup requests to V1 processes, durable effects and artifacts. |
 | [__init__.py](../../src/polyinference/general_agents/__init__.py) | Export graph builders and context for external LangGraph callers. |
-| [general-agents.v1.json](../../examples/general-agents.v1.json) | OS-only `RuntimeConfig` with raw local and GPT-6.1 Sol via the Codex ChatGPT subscription. |
+| [general-agents.v1.json](../../examples/general-agents.v1.json) | OS-only `RuntimeConfig` with raw local inference and GPT‑6.1 Sol over native Codex Cloud. |
 
 | Design | LangGraph path | Roles | Source pattern |
 | --- | --- | --- | --- |
@@ -27,13 +29,19 @@ qualification on its target models and tasks.
 
 ## Run
 
-Edit `examples/general-agents.v1.json` for your raw-text local endpoint and
-a **fresh** state directory per task or batch. The example uses GPT-6.1 Sol
-through the Codex ChatGPT subscription. Authenticate first with `codex login`.
-You may also configure a compatible raw-text Cloud endpoint. The three
-multi-level designs require distinct bindings declared `inference_location`
-`local` and `cloud` in the ordinary profile. The explicit Haiku stand-in uses
-cloud inference and must also satisfy cloud placement policy.
+Edit `examples/general-agents.v1.json` for the local raw-text endpoint and a
+**fresh** state directory per task. Cloud defaults to GPT‑6.1 Sol through
+the ChatGPT Codex login. See `docs/guides/cloud-codex-default.md`. The
+three multi-level designs require distinct bindings declared `inference_location`
+`local` and `cloud`; the declarations do not measure actual hardware or model quality.
+The workspace's explicit `--sim-haiku` mode assigns the local role to remote
+Haiku and retains its cloud location in policy and records. Ordinary
+`run-agent` launches keep the original placement validation.
+
+For Simple, set `role_bindings.general` to `local` or `cloud` to choose the
+endpoint for all its model steps. The example selects cloud. Keep the
+`local` role configured for the brokered document lookup.
+
 `repository` field is required by V1 settings but the path is not opened. No Git,
 checks, source writes, native tool calls, package install or local model startup is
 part of these programs. The CLI takes the task as text and optionally a JSON object
@@ -76,12 +84,8 @@ effect identities, result and corpus grant. Results arrive as an array with one
 entry per invocation; CLI exit status is nonzero if any invocation fails.
 An identical completed batch can be read from its saved state without submitting
 new inference. A paused or uncertain effect needs operator inspection.
-
-`--sim-haiku` uses the remote Claude Haiku 5.5 stand-in at the local role.
-Both model bindings then use cloud-hosted inference.
-
-Research states its 500-character question limit and permits one corrected
-plan after a settled invalid reply. A correction uses its own journaled step.
+`--sim-haiku` uses remote Haiku with the same placement rules as the workspace.
+The browser workspace retains its one-active-invocation interface.
 
 ## V1 adaptation and difficulty
 
@@ -103,7 +107,6 @@ output ceiling, a top-level system instruction and a final user message.
 Anthropic documents the removal of legacy sampling fields and the default
 adaptive thinking behavior in its [Haiku 5.5 migration guide](https://platform.claude.com/docs/en/models/haiku-5-5/migration-guide).
 
-
 | Modification | Difficulty | Reason |
 | --- | --- | --- |
 | Pass `model` and `lookup` through graph context | Low | Public `context_schema` and async nodes suffice. |
@@ -113,8 +116,8 @@ adaptive thinking behavior in its [Haiku 5.5 migration guide](https://platform.c
 
 The graph driver itself runs in trusted application Python; every model and lookup
 effect enters OS V1. This is not an isolation boundary for arbitrary third-party
-Python plugins. The CLI is the supported entry; the current UI remains the coding
-application UI. The adapter supports whole-invocation replay for settled effects,
+Python plugins. The chat workspace starts a fresh invocation per Send through
+this adapter. The adapter supports whole-invocation replay for settled effects,
 not generic human interrupts or independent multi-turn chat sessions. It executes
 workers serially because V1 permits one active top-level effect per process.
 
@@ -128,7 +131,32 @@ These are shape and boundary checks, not model-quality evaluations. No local
 inference or live cloud call was made. See `development-docs/FIXES.md#fix-0192`
 for exact results and host limits.
 
-A four-invocation regression uses the real journal and SQLite checkpoints
-with scripted providers. It verifies one kernel, endpoint limits, corpus
-isolation and replay of a completed batch. The scoped CLI verification
-used loopback HTTP for both bindings with scripted responses.
+## Live concurrency qualification — 17 November 2026
+
+The GPT-6.1 Sol + remote Haiku local-role cases completed concurrently in separate
+fresh kernels: Research/cloud Simple, Research/local-role Simple and two of each.
+This does not qualify multi-invocation hosting in one kernel. The workspace still
+allows one active invocation; adapter program/input keys are invocation scoped;
+endpoint admission is kernel local. A separate five-process single-kernel probe
+exercised bounded Cloud/Haiku admission and queueing with explicit resident capacity.
+No dynamic endpoint optimization or physical local hardware was demonstrated.
+See `docs/temporary/investigations/2026-11-17-general-agent-concurrency-tests.md`.
+
+The live tests also exposed planning questions exceeding the 500-character
+validator and keyword lookup missing supplied sources. Shorter test prompts and
+smaller research corpora are diagnostic input changes; those application limits
+remain open. The earlier fixture-only results above retain their historical scope.
+
+## Single-kernel rerun — 18 November 2026
+
+The three live cases above passed sequentially on one kernel with four resident
+process slots, one GPT slot and two Haiku slots. A test adapter scoped graph
+records and checkpoints by invocation and selected the corpus by process scope.
+The test used an external adapter. The CLI now supports the same hosting pattern
+for batches of independent invocations. See `development-docs/FIXES.md#fix-0207`
+for the live test and `development-docs/FIXES.md#fix-0208` for the supported CLI.
+
+Research now states its 500-character question limit and can request one corrected
+plan after a settled invalid reply. A correction uses its own journaled step.
+The lookup returns a matching passage when evidence occurs later in a document.
+Document ranking and choice of agent/model turns remain topics for evaluation.

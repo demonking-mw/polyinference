@@ -20,6 +20,18 @@ refresh preserves typed text. Offline snapshots cannot submit operator signals.
 
 ## Interface and ownership
 
+The general-agent workspace's OS Monitoring view combines records from all
+invocations in its state root. It shows the launch configuration's capacity
+once, active reservations and waiters, and retained holds separately. Usage
+comes from provider token reports in retained effects. Native cumulative
+reports use the highest retained total per invocation, binding and provider
+session. Unreported submissions and unreadable journals are shown separately.
+External workloads, account quotas and hardware utilization require their own
+authoritative source. Workspace monitor reads skip event history. Agent
+Monitoring keeps the per-invocation process inspector for pinned bindings and
+observed attempts. A generic paused process does not establish preemption.
+See `docs/modules/ui.md`.
+
 UI Save and automatic archives use the same serializer. Records/events share
 a read transaction; checkpoints/artifacts are separate reads. Costs are diagnostic
 estimates, not provider billing or subscription allowance.

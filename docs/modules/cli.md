@@ -18,6 +18,9 @@ the exact input/intent on same-state retry. See `docs/modules/general-agents.md`
 agents on one kernel, with distinct workflow IDs and a shared endpoint budget.
 It prints individual outcomes in input order and exits unsuccessfully if any
 invocation fails. Use fresh state for a changed manifest.
+`workspace CONFIG [--port PORT] [--sim-haiku]` serves the general-agent chat workspace from
+a generic RuntimeConfig. Its state directory becomes the workspace root for
+fresh invocations and retained chats. See `docs/modules/ui.md`.
 execute(..., resume_request_ref=...) calls ProjectAgent.resume after loading the
 saved configuration and validating program compatibility. Coding recovery policy
 lives in agent/resume.py; apply_resume remains a compatibility wrapper. CLI resume

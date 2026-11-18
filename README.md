@@ -4,9 +4,10 @@ PolyInference pairs a LangGraph coding agent with a small orchestration OS.
 Cloud models plan and review; local workers implement tasks through bounded,
 recorded model and tool calls. Run it on Linux, macOS or WSL. The remote Haiku
 preset can stand in for a local endpoint; it does not measure local hardware.
-Four smaller non-coding LangGraph designs are also available through
-`polyinference run-agent` and the concurrent `polyinference run-agents` batch
-command. Both use the same V1 effect boundary.
+Four smaller non-coding LangGraph designs use the same V1 effect boundary.
+Run one with `polyinference run-agent`, run a concurrent batch on one kernel
+with `polyinference run-agents CONFIG MANIFEST`, or open the local chat workspace
+with `polyinference workspace CONFIG`.
 
 For Obsidian, open the repository as a vault and start at `README.md`.
 On Windows with a WSL checkout, run [the Linux Obsidian launcher](scripts/open_obsidian.sh)

@@ -388,6 +388,9 @@ Historical audit statements below describe their original baseline.
 
 [contracts.py](contracts.py) defines validated proposed wire models. [contract.schema.json](contract.schema.json) exports JSON Schema; [examples.json](examples.json) provides linked examples. These are design artifacts, not an agent/OS implementation. Semantic checks below supplement structural validation.
 
+`ModelQuery.temperature` is a required field. Use `null` to delegate sampling
+to the provider or supply a number from 0 through 2 to request a value.
+
 The [core extension schema](../simplified-os/contracts.py) adds a minimal deployment profile and scoped workspace/delta/view contracts. Workspace-bound effect envelopes declare required feature `runtime/workspace-view` version `1` and extension `polyinference/workspace-view` containing workspace ID, manifest reference, generation and view. Scoped-copy creation similarly declares `runtime/scoped-workspace-copy`. A core adapter validates these negotiated payloads before effects. Existing 2.0 envelopes need no breaking change; an adapter missing a mandatory feature rejects it instead of ignoring generation checks.
 
 ### Identities and state ownership

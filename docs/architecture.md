@@ -10,6 +10,7 @@ Documentation (`docs/README.md`) · Setup (`setup.md`) · Developer guide (`dev-
 | `src/polyinference/contracts.py` / `workspace_contracts.py` | Packaged SDK wire and workspace types. |
 | `src/polyinference/ports.py` | Runtime service interfaces implemented by the bundled kernel. |
 | `src/polyinference/ui.py` / `ui.html` | Local testing backend and frontend. |
+| `src/polyinference/ui_workspace.py` / `ui-workspace.*` | General-agent chat, model selection, and read-only OS and process monitoring. |
 | `examples/` | Editable provider/task configurations. |
 | `tests/` | Implementation tests. |
 | `testing/` | Ignored disposable projects created while testing the agent. |

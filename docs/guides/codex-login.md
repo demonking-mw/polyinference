@@ -35,6 +35,8 @@ shown by the CLI. Run `codex login status` afterward to confirm the authenticati
 method. For the default mixed setup, an `OPENAI_API_KEY` is not required.
 [Device authentication instructions](https://learn.chatgpt.com/docs/auth#login-on-headless-devices).
 
+- [Default cloud model for PolyInference agents](cloud-codex-default.md)
+
 
 
 Next: Anthropic credentials (`docs/guides/anthropic-key.md`) · Launch (`docs/guides/launching.md`).

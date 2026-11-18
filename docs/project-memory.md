@@ -31,6 +31,10 @@ provider-owned. The UI may stop only a Strata instance it started and owns.
 Use fresh state for changed program/configuration pins. Current compatibility is
 documented in the runtime boundary's Resume guide.
 
+The standard application Cloud binding is GPT‑6.1 Sol through the ChatGPT
+Codex subscription. The Haiku simulation changes only the local binding.
+See `docs/guides/cloud-codex-default.md`.
+
 Before work read the complete fix history. Update all affected documentation and
 the history in the same task. Maintain one primary guide per module and one
 incoming note link per non-root note. CI checks structure and exported settings;

@@ -24,3 +24,6 @@ accepted behavior and current settings in the maintained guides.
 - [Local Minecraft continuation result (28 October, 19:30)](2026-10-28-minecraft-live-test-1930.md)
 - [Scheduled real-local Minecraft result and limits (2026-10-28)](2026-10-28-minecraft-live-test.md)
 - [PolyInference OS V1 and LangChain agents](2026-11-13-langchain-v1-gap.md)
+- [Workspace Research run rejected by Haiku](2026-11-16-workspace-research-haiku-failure.md)
+
+- [General-agent live concurrency tests](2026-11-17-general-agent-concurrency-tests.md)

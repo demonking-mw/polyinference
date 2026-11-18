@@ -57,7 +57,15 @@
                 "id": "doc-docs-guides-codex-login",
                 "title": "Codex installation and login",
                 "doc": "docs/guides/codex-login.md",
-                "files": []
+                "files": [],
+                "children": [
+                  {
+                    "id": "doc-docs-guides-cloud-codex-default",
+                    "title": "Default cloud model for PolyInference agents",
+                    "doc": "docs/guides/cloud-codex-default.md",
+                    "files": []
+                  }
+                ]
               },
               {
                 "id": "doc-docs-guides-anthropic-key",
@@ -93,7 +101,9 @@
             "id": "doc-docs-guides-launching",
             "title": "Launch the local UI",
             "doc": "docs/guides/launching.md",
-            "files": []
+            "files": [
+              "scripts/launch-v2.sh"
+            ]
           },
           {
             "id": "doc-docs-guides-ui",
@@ -561,6 +571,10 @@
                         "files": [
                           "src/polyinference/ui.py",
                           "src/polyinference/ui.html",
+                          "src/polyinference/ui_workspace.py",
+                          "src/polyinference/ui-workspace.html",
+                          "src/polyinference/ui-workspace.css",
+                          "src/polyinference/ui-workspace.js",
                           "src/polyinference/ui_repository.py",
                           "src/polyinference/agent/endpoint_probe.py"
                         ]
@@ -1030,6 +1044,7 @@
                   "tests/test_ui_agents.py",
                   "tests/test_ui_frontend.py",
                   "tests/test_ui_os.py",
+                  "tests/test_ui_workspace.py",
                   "tests/test_user_briefs.py",
                   "tests/test_validation_feedback.py",
                   "tests/test_workspace_outputs.py",
@@ -1261,6 +1276,12 @@
                 "title": "MCP support design and investigation journal",
                 "doc": "docs/temporary/proposals/2026-11-13-mcp-support-design.md",
                 "files": []
+              },
+              {
+                "id": "chat-workspace-design-20261116",
+                "title": "Workspace UI for chat, OS monitoring, and agent monitoring (proposed)",
+                "doc": "docs/temporary/proposals/2026-11-16-chat-workspace-design.md",
+                "files": []
               }
             ]
           },
@@ -1270,6 +1291,12 @@
             "doc": "docs/temporary/investigations/README.md",
             "files": [],
             "children": [
+              {
+                "id": "workspace-research-haiku-failure-20261116",
+                "title": "Workspace Research run rejected by Haiku",
+                "doc": "docs/temporary/investigations/2026-11-16-workspace-research-haiku-failure.md",
+                "files": []
+              },
               {
                 "id": "doc-development-docs-run-analysis-8e83ed155ae2",
                 "title": "Run analysis: 8e83ed155ae2",
@@ -1392,6 +1419,12 @@
                 "id": "langchain-v1-gap-20261113",
                 "title": "PolyInference OS V1 and LangChain agents",
                 "doc": "docs/temporary/investigations/2026-11-13-langchain-v1-gap.md",
+                "files": []
+              },
+              {
+                "id": "doc-docs-temporary-investigations-2026-11-17-general-agent-concurrency-tests",
+                "title": "General-agent live concurrency tests",
+                "doc": "docs/temporary/investigations/2026-11-17-general-agent-concurrency-tests.md",
                 "files": []
               }
             ]

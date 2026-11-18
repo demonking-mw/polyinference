@@ -46,6 +46,7 @@ need separately stated checks. Update affected docs and FIXES.md with every fix.
 | [test_ui_agents.py](test_ui_agents.py) | Coding task/review/history projections. |
 | [test_ui_frontend.py](test_ui_frontend.py) | Python wrapper invoking supported Node frontend checks. |
 | [test_ui_os.py](test_ui_os.py) | Generic OS snapshot/inspection projections. |
+| [test_ui_workspace.py](test_ui_workspace.py) | Loopback workspace, role selection, real OS journal observations with scripted inference, idempotent Send, and retained holds across restart. |
 | [test_user_briefs.py](test_user_briefs.py) | Durable notifications and evidence-based senior briefs. |
 | [test_workspace_outputs.py](test_workspace_outputs.py) | Declared output/source precedence and dependency environments. |
 | [ui_start.test.cjs](ui_start.test.cjs) | UI JavaScript launch/snapshot/inspection, direct Resume, optional persistent instructions, request replay, progress, guards and stale replies. |
