@@ -51,6 +51,7 @@ DEFAULTS = {
         "brokered_tools": False,
         "inference_location": None,
         "supports_temperature": True,
+        "max_output_tokens": None,
         "reasoning_effort": "medium",
         "retry_model": None,
         "input_token_count_path": None,

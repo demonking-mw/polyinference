@@ -236,7 +236,7 @@ async def diagnose(app, state, trigger, evidence=None, reason=None):
                     context=context,
                     response_schema_ref="diagnosis/1",
                     capability_requirements=[],
-                    temperature=0,
+                    temperature=0 if endpoint.supports_temperature else None,
                     session_ref=None,
                 )
             result, output = await app.effect(pid, "diagnostic-model", payload)

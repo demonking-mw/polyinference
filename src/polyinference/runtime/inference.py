@@ -396,7 +396,12 @@ class HTTPInference:
             }
         if max_output is None:
             # Native/cloud callers delegate per-call token policy to the provider.
-            payload.pop("max_tokens", None)
+            # An endpoint may declare its own cap for providers that require the field
+            # (Anthropic Messages rejects requests without max_tokens).
+            if endpoint.protocol == "anthropic" and endpoint.max_output_tokens is not None:
+                payload["max_tokens"] = endpoint.max_output_tokens
+            else:
+                payload.pop("max_tokens", None)
             payload.pop("max_output_tokens", None)
             if endpoint.protocol == "gemini":
                 payload["generationConfig"].pop("maxOutputTokens", None)

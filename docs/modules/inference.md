@@ -57,6 +57,8 @@ helpers and kernel-created primary/fallback clients share the canonical defaults
 - Cloud AgentJob timeout behavior follows cloud_agent_timeout_interrupt: default false disables native stdio/proxy endpoint interruption; the kernel warns once and retains the same live task. True enforces the endpoint timeout. Original deadlines/cancellation remain hard.
 - Bound streaming telemetry without losing terminal/tool evidence.
 - Cloud inference has no OS per-call token cap; native provider completion is distinct from cumulative usage.
+  A provider that requires an output field (Anthropic `max_tokens`) sends the endpoint's explicit
+  `max_output_tokens` when declared; there is no hidden default.
 - Local completed overages retain complete output as CompletedBudgetExceeded, without smaller-response replay.
 - Local raw adapters submit the canonical output cap; strict native enforcement requirements reject.
 - Provider token/GPU scheduling is outside the OS.
@@ -76,7 +78,8 @@ Follow documentation maintenance (`docs/maintenance.md`) in the same task.
 
 Raw prepared payloads forward an explicitly requested temperature, including SSE
 and operation-aware adapter paths. Endpoint.supports_temperature rejects unsupported
-requests. A `ModelQuery.temperature` of `null` leaves the field out of the provider
+requests; the adapter never drops an explicit temperature. Callers that only prefer
+deterministic sampling request it when the endpoint supports it. A `ModelQuery.temperature` of `null` leaves the field out of the provider
 body. Results retain requested/sent settings; provider-effective values may
 remain unknown. Native turns use Endpoint.reasoning_effort and readable task inputs;
 application instructions enter developerInstructions while native safety/broker

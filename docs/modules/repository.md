@@ -37,6 +37,7 @@ owned by this application.
 - Protect root branch/HEAD/index and existing edits before integration.
 - Preserve failed/uncertain source privately; reuse needs explicit resume_from, scope and base checks.
 - Git mutations and SQLite report publication are separate effects; uncertain outcomes stop mutation.
+- The repository-policy query requests `temperature: 0` only when the senior endpoint supports temperature; otherwise `null`.
 
 ## Verification and related reading
 

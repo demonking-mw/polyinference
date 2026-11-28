@@ -314,6 +314,19 @@
             "title": "Max Inflight",
             "type": "integer"
           },
+          "max_output_tokens": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Output Tokens"
+          },
           "model": {
             "title": "Model",
             "type": "string"
@@ -1917,6 +1930,19 @@
             "maximum": 32,
             "title": "Max Inflight",
             "type": "integer"
+          },
+          "max_output_tokens": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Max Output Tokens"
           },
           "model": {
             "title": "Model",

@@ -23,7 +23,7 @@ See token settings and required-field API differences (`docs/guides/local-token-
 
 | Backend | Endpoint configuration | Authentication / example |
 | --- | --- | --- |
-| Anthropic | `protocol: "anthropic"`, `base_url: "https://api.anthropic.com/v1"` | `api_key_env: "ANTHROPIC_API_KEY"`; [Claude example](../../examples/agent.anthropic.json) |
+| Anthropic | `protocol: "anthropic"`, `base_url: "https://api.anthropic.com/v1"`; on the cloud lane also set `max_output_tokens` (Messages requires `max_tokens`) and `supports_temperature: false` for models that reject sampling fields | `api_key_env: "ANTHROPIC_API_KEY"`; [Claude example](../../examples/agent.anthropic.json) |
 | OpenAI API | `protocol: "responses"` or `"chat"`, `base_url: "https://api.openai.com/v1"` | `api_key_env: "OPENAI_API_KEY"`; [OpenAI example](../../examples/agent.openai.json) |
 | Gemini | `protocol: "gemini"`, `base_url: "https://generativelanguage.googleapis.com/v1beta"` | `api_key_env: "GEMINI_API_KEY"`; [Gemini example](../../examples/agent.gemini.json) |
 | Local compatible server | `protocol: "chat"`, `"responses"` or `"anthropic"` (e.g. Strata), URL of your running server | Set its served model ID and any required credential variable. |

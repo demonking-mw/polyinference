@@ -49,8 +49,10 @@ The cloud lane has no PolyInference per-call input/output token cap or aggregate
 endpoint context-token admission ceiling. Codex receives no token allowance in
 its instructions, even when bound to the local worker lane. A provider-completed response is not rejected for cumulative
 thread output usage. Native hidden context remains unmeasured. Cloud raw requests
-omit optional output-token fields; a provider requiring an explicit output field
-must be used through the capped local lane or a provider-managed native harness.
+omit optional output-token fields. Anthropic Messages requires `max_tokens`, so a
+cloud Anthropic endpoint can declare its own `max_output_tokens`, which uncapped
+requests then send. The cap is never inferred from the local pair. Without it, use
+Anthropic through the capped local lane or a provider-managed native harness.
 
 Campaign call/step/time/token/spend accounts, byte transport bounds, authority and
 confirmed-termination guards still apply. Provider-reported usage settles accounts;

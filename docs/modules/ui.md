@@ -93,6 +93,7 @@ definition; the client retains rejected drafts without an independent fixed cap.
 - Reporting observes durable state without controlling or replacing it.
 - Memory / context is read-only, uses existing record/artifact endpoints, and works offline.
 - Simulation never mutates environment/defaults/old state or bypasses Git/task policy.
+- The endpoint probe requests `temperature: 0` only when the probed endpoint supports temperature; otherwise `null`.
 
 ## Verification and related reading
 
