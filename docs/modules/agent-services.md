@@ -44,6 +44,7 @@ targets; the OS executes bounded retries without reading coding task/grammar pol
 - Role labels never grant capability or management authority.
 - Validate task lifecycle changes in the agent; generic records supply atomicity.
 - Context omissions/summaries must not rewrite canonical memory or user constraints.
+- Request deterministic sampling (`temperature: 0`) only when the bound endpoint's `supports_temperature` is true; otherwise send `null` so the adapter's explicit-temperature check is never reached.
 
 ## Verification and related reading
 

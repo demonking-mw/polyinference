@@ -55,6 +55,7 @@ capabilities: no browser/MCP/persistent service API. See recovery (`docs/guides/
 - Partial/incomplete model output must never become executable actions.
 - Product acceptance needs meaningful evidence; a build or candidate alone is insufficient.
 - Preserve the full objective, declared outputs and write authority in worker inputs.
+- Diagnostic queries request `temperature: 0` only when the bound endpoint supports temperature; otherwise `null`.
 
 ## Verification and related reading
 

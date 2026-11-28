@@ -894,7 +894,7 @@ class AgentServices:
                 context=context,
                 response_schema_ref="senior/1" if senior else "worker/1",
                 capability_requirements=[],
-                temperature=0,
+                temperature=0 if endpoint.supports_temperature else None,
                 session_ref=None,
             )
         view = None

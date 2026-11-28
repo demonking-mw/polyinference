@@ -184,7 +184,8 @@ Linux sandbox. Neither backend grants additional source paths.
 | readonly_snapshot_root | null | Proxy's separately configured exact read-only snapshot root. |
 | brokered_tools | false | Native endpoint supports explicitly granted host callbacks. |
 | inference_location | null | Explicit local/cloud physical location. Otherwise localhost chat/Responses is inferred local; other cases cloud. |
-| supports_temperature | true | Reject an explicit sampling request when false; supported requests forward the requested temperature. |
+| supports_temperature | true | Reject an explicit sampling request when false; supported requests forward the requested temperature. Coding-agent callers request `temperature: 0` only when true. |
+| max_output_tokens | null (omitted) | Per-call output field for uncapped requests to a provider that requires one (Anthropic Messages `max_tokens`). Never inferred from the local pair; a role output cap takes precedence. |
 | reasoning_effort | medium | Native turn effort: none/minimal/low/medium/high/xhigh/max/ultra. The explicit turn value takes precedence over a startup command default. |
 | retry_model | null | Optional caller-selected alternate on this provider/protocol. Fields: model (required), reasoning_effort (medium), fallback_calls (7; 1–32). Distinct primary required; codex_proxy unsupported. Explicit null survives serialization. |
 | input_token_count_path | null | Opt-in same-provider relative counting route, e.g. /chat/completions/input_tokens or /messages/count_tokens. Receives the prepared raw request body and must return integer input_tokens. Native hidden context is unsupported; failure uses a labeled conservative bound. |

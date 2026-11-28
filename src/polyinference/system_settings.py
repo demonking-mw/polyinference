@@ -87,6 +87,8 @@ class Endpoint(OSSettings):
     brokered_tools: bool = default("Endpoint", "brokered_tools")
     inference_location: Literal["local", "cloud"] | None = default("Endpoint", "inference_location")
     supports_temperature: bool = default("Endpoint", "supports_temperature")
+    max_output_tokens: Annotated[int, Field(gt=0)] | None = Field(
+        default=default("Endpoint", "max_output_tokens"), exclude_if=lambda value: value is None)
     reasoning_effort: Literal["none", "minimal", "low", "medium", "high", "xhigh", "max", "ultra"] = default("Endpoint", "reasoning_effort")
     retry_model: RetryModel | None = Field(default=default("Endpoint", "retry_model"), exclude_if=lambda value: value is None)
     input_token_count_path: Annotated[str, Field(pattern=r"^/(?:[A-Za-z0-9_-]+/)*(?:input_tokens|count_tokens)$")] | None = Field(

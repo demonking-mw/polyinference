@@ -255,6 +255,7 @@ not cover the later provider's enclosing-repository trigger.
 | [FIX-0209](#fix-0209) | 2026-11-18 | Bound Research plan validation and correction |
 | [FIX-0210](#fix-0210) | 2026-11-18 | Return evidence around matching terms |
 | [FIX-0211](#fix-0211) | 2026-11-18 | Identify where agent graphs spend cloud turns |
+| [FIX-0212](#fix-0212) | 2026-11-27 | Run the coding senior on a cloud Anthropic endpoint without hidden request edits |
 
 
 ## Entry template
@@ -10478,3 +10479,65 @@ latency including queueing, and fallback rate on matched prompts and corpora.
 Cascades have research support, but the prior ledger prompts and lookup journals
 do not establish equivalence for general tasks.
 [FrugalGPT](https://arxiv.org/abs/2305.05176)
+
+<a id="fix-0212"></a>
+
+## FIX-0212 — 2026-11-27 — Run the coding senior on a cloud Anthropic endpoint without hidden request edits
+
+Status: implemented.
+Related history: [FIX-0203](#fix-0203) (provider-default sampling as `null`),
+[FIX-0204](#fix-0204) (32,000-token Haiku output cap) and FIX-0167's design
+principle that cloud generation limits are provider-owned and never inferred
+from the local pair.
+
+### Problem
+
+A coding run with `senior` and `specialist` bound to a cloud Anthropic endpoint
+(Sonnet 5.5, `supports_temperature: false`) could not make its first senior call.
+The coding services always built `ModelQuery.temperature = 0`, so the adapter
+raised "Endpoint does not support the requested temperature". With that removed,
+the uncapped cloud request omitted `max_tokens`, which Anthropic Messages rejects
+with HTTP 400. The first patch in this PR silently dropped the temperature and
+hardcoded `max_tokens: 32000` inside the adapter; the owner's tests
+`test_unsupported_temperature_is_not_silently_dropped` and
+`test_provider_wire_uses_same_local_output_cap_and_omits_cloud_cap[anthropic-max_tokens]`
+correctly rejected both edits.
+
+### What was wrong
+
+Temperature: the coding agent (services, repository policy, diagnostics and the
+endpoint probe) asked for a sampling setting without consulting the bound
+endpoint's declared capability. The decision belongs to the caller, as in
+FIX-0203, not to the adapter. Output cap: the configuration had no way to state a
+provider-required per-call output field for a cloud endpoint, so the documented
+route for such providers was the capped local lane only.
+
+### How it was fixed
+
+- The four coding-agent `ModelQuery` builders request `temperature: 0` only when
+  `endpoint.supports_temperature` is true and otherwise send `null`. The adapter
+  keeps rejecting an explicit unsupported temperature and drops nothing.
+- New optional `Endpoint.max_output_tokens` (default `null`, omitted when unset).
+  For an uncapped request on the `anthropic` protocol, the adapter sends it as
+  `max_tokens`. A role output cap from the local pair still takes precedence, and
+  every other protocol and unset endpoint keeps omitting the field.
+- The 32,000 default and the silent temperature drop are removed. Updated the
+  settings reference, exported settings schema, inference/settings/agent module
+  guides, local token limits and provider guides.
+
+### Design principle enforced or reconstructed
+
+Settings are decided where intent is known. Callers request only capabilities
+that the endpoint declares, and the adapter never rewrites an explicit request.
+A provider-required value comes from explicit endpoint configuration, not a
+hidden default or the local pair.
+
+### Verification
+
+Added `test_anthropic_cloud_endpoint_sends_its_declared_output_cap`. The owner's
+temperature and cloud-cap tests pass unchanged. Focused endpoint, Anthropic,
+output-limit, retry, context-safety, HTTP-integration and P0 suites passed. The
+remaining failure (`test_one_pair_overrides_legacy_projections_and_survives_restart`)
+also fails on `main` at `66a9bd3`. Full-suite results, the settings export check
+and the documentation checks are listed in the PR. No live provider call or
+historical Resume was used to verify this change.

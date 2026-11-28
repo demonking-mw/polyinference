@@ -111,7 +111,7 @@ class RepositoryWorkspaces(Workspaces):
             else:
                 payload = ModelQuery(role="senior", phase="repository_policy", prompt_template_ref="git-policy/1",
                                      context=context, response_schema_ref="git-policy/1", capability_requirements=[],
-                                     temperature=0, session_ref=None)
+                                     temperature=0 if endpoint.supports_temperature else None, session_ref=None)
             request = app.ensure_request(pid, "repository-policy", payload)
             try:
                 _, output = await app.model_result(request)

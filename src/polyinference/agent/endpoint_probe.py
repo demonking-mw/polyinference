@@ -54,7 +54,7 @@ async def probe_endpoint(config, state_directory):
                                source_ref="probe", required=True)], memory_snapshot_refs=[],
             tool_catalog_digest=digest(b"none"), maximum_input_tokens=config.local_token_limits.input_tokens, omitted_refs=[])
         payload = ModelQuery(role="probe", phase="probe", prompt_template_ref="probe/1", context=context,
-            response_schema_ref="text/plain", capability_requirements=[], temperature=0, session_ref=None)
+            response_schema_ref="text/plain", capability_requirements=[], temperature=0 if endpoint.supports_temperature else None, session_ref=None)
         request = OperationRequest(record_id="request/probe", revision=1, scope=scope, created_at=now(),
             operation_id="probe", logical_step_id="probe", intent_digest=digest(b"pending"),
             causal_parent_ref=None, trace_id=rt.run_id, grant_ref="grant/run", owner_generation=1,

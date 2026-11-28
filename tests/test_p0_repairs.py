@@ -144,6 +144,16 @@ async def test_provider_wire_uses_same_local_output_cap_and_omits_cloud_cap(tmp_
         await client.close()
 
 
+async def test_anthropic_cloud_endpoint_sends_its_declared_output_cap(tmp_path):
+    # Anthropic Messages requires max_tokens; an uncapped (cloud) call uses only the endpoint's own value.
+    client = HTTPInference(Endpoint(protocol="anthropic", model="fixture", max_output_tokens=4321), httpx.AsyncClient())
+    try:
+        assert client.prepare([{"role": "user", "content": "task"}], None)["payload"]["max_tokens"] == 4321
+        assert client.prepare([{"role": "user", "content": "task"}], 2345)["payload"]["max_tokens"] == 2345
+    finally:
+        await client.close()
+
+
 @pytest.mark.parametrize("inline", [False, True])
 def test_strata_startup_sync_changes_only_context_and_is_idempotent(tmp_path, inline):
     config = runtime_config(tmp_path, local_token_limits={"input_tokens": 49152, "output_tokens": 16384})

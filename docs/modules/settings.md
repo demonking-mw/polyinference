@@ -59,7 +59,8 @@ The optional application simulator (`docs/modules/inference-simulation.md`) uses
 SimulationAgentConfig for enabled buggy/slow runs; its saved inference_simulation
 block pins settings/seed for recovery. RuntimeConfig has no simulator policy.
 Absent Endpoint.lifecycle and agent inference_policy fields are omitted. Cloud endpoint context-token
-caps are absent. Legacy token fields migrate to system.local_token_limits; see
+caps are absent. Optional Endpoint.max_output_tokens (omitted when unset) supplies the per-call output
+field only for uncapped requests to providers that require one (Anthropic Messages `max_tokens`). Legacy token fields migrate to system.local_token_limits; see
 one local pair and provider startup (`docs/guides/local-token-limits.md`). --sim-inference is a UI invocation flag.
 
 Optional Endpoint.lifecycle selects explicit transport/connect/first-output/idle/
